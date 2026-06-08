@@ -520,7 +520,7 @@ const HOVER_CARD_STYLES = `
     box-shadow:
       0 8px 32px rgba(0, 0, 0, 0.6),
       0 0 0 1px rgba(255, 255, 255, 0.03) inset;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     color: #e8e6e1;
     opacity: 0;
     transform: translateY(8px) scale(0.96);
@@ -868,5 +868,25 @@ const HOVER_CARD_STYLES = `
     padding: 24px;
     color: rgba(232, 230, 225, 0.35);
     font-size: 13px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .subsume-hover-card {
+      transition: none;
+    }
+    .subsume-spinner {
+      animation: none;
+      border-top-color: #c9a84c;
+    }
+    .subsume-btn,
+    .subsume-btn-primary,
+    .subsume-btn-secondary {
+      transition: none;
+    }
+    .subsume-btn:active,
+    .subsume-btn-primary:hover,
+    .subsume-btn-secondary:hover {
+      transform: none;
+    }
   }
 `;

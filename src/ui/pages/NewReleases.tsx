@@ -65,7 +65,7 @@ export function NewReleases() {
       <div className="library-content">
         {loading ? (
           <div className="empty-state">
-            <div className="subsume-spinner" style={{ borderColor: 'rgba(255,255,255,0.1)', borderTopColor: '#a78bfa', width: 32, height: 32, borderWidth: 3}} />
+            <div className="subsume-spinner" />
             <p style={{ marginTop: 16, color: 'var(--color-text-secondary)' }}>Consulting the pop-culture oracle...</p>
           </div>
         ) : items.length === 0 ? (

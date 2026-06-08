@@ -1,5 +1,5 @@
 import { h } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useState, useRef } from 'preact/hooks';
 import { Home } from './pages/Home';
 import { Library } from './pages/Library';
 import { Recommendations } from './pages/Recommendations';
@@ -21,17 +21,67 @@ interface LibraryStats {
   tvCount: number;
 }
 
-const NAV_ITEMS: { key: Page; label: string; icon: string }[] = [
-  { key: 'home', label: 'Home', icon: '🏠' },
-  { key: 'library', label: 'Library', icon: '📚' },
-  { key: 'search', label: 'Search', icon: '🔍' },
-  { key: 'people', label: 'Filmmakers', icon: '👤' },
-  { key: 'stats', label: 'Stats', icon: '📊' },
-  { key: 'recommendations', label: 'Recommendations', icon: '✨' },
-  { key: 'new-releases', label: "What's New", icon: '🆕' },
-  { key: 'alerts', label: 'Alerts', icon: '🔔' },
-  { key: 'settings', label: 'Settings', icon: '⚙️' },
+interface NavItem {
+  key: Page;
+  label: string;
+  icon: string;
+}
+
+interface NavSection {
+  label: string;
+  items: NavItem[];
+}
+
+const NAV_SECTIONS: NavSection[] = [
+  {
+    label: 'Main',
+    items: [
+      { key: 'home', label: 'Home', icon: '🏠' },
+      { key: 'library', label: 'Library', icon: '📚' },
+      { key: 'search', label: 'Search', icon: '🔍' },
+    ],
+  },
+  {
+    label: 'Discover',
+    items: [
+      { key: 'recommendations', label: 'Recommendations', icon: '✨' },
+      { key: 'new-releases', label: "What's New", icon: '🆕' },
+      { key: 'people', label: 'Filmmakers', icon: '👤' },
+      { key: 'stats', label: 'Stats', icon: '📊' },
+      { key: 'alerts', label: 'Alerts', icon: '🔔' },
+    ],
+  },
+  {
+    label: 'App',
+    items: [{ key: 'settings', label: 'Settings', icon: '⚙️' }],
+  },
 ];
+
+const PREFETCH_BY_PAGE: Partial<Record<Page, Array<{ type: MessageType; payload?: unknown }>>> = {
+  home: [
+    { type: MessageType.GET_WEEKLY_DIGEST },
+    { type: MessageType.GET_RECOMMENDATIONS },
+    { type: MessageType.GET_LIBRARY },
+  ],
+  library: [{ type: MessageType.GET_LIBRARY }],
+  recommendations: [{ type: MessageType.GET_RECOMMENDATIONS }],
+  'new-releases': [{ type: MessageType.GET_LATEST_RELEASES, payload: { type: 'movie' } }],
+  stats: [{ type: MessageType.GET_LIBRARY }],
+  people: [{ type: MessageType.GET_ALL_PEOPLE }],
+  alerts: [{ type: MessageType.GET_WATCH_ALERTS }],
+};
+
+const prefetchedPages = new Set<Page>();
+
+function prefetchPage(page: Page) {
+  if (prefetchedPages.has(page)) return;
+  const requests = PREFETCH_BY_PAGE[page];
+  if (!requests) return;
+  prefetchedPages.add(page);
+  for (const req of requests) {
+    sendMessage(req.type, req.payload ?? {}).catch(() => {});
+  }
+}
 
 function getInitialPage(): Page {
   const page = new URLSearchParams(window.location.search).get('page');
@@ -39,11 +89,24 @@ function getInitialPage(): Page {
   return 'home';
 }
 
+function NavIcon({ item }: { item: NavItem }) {
+  if (item.key === 'people') {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ display: 'block' }}>
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
+      </svg>
+    );
+  }
+  return <>{item.icon}</>;
+}
+
 export function App() {
   const [currentPage, setCurrentPage] = useState<Page>(getInitialPage);
   const [prefs, setPrefs] = useState<UserPreferences | null>(null);
   const [stats, setStats] = useState<LibraryStats>({ movieCount: 0, tvCount: 0 });
   const [peopleCount, setPeopleCount] = useState(0);
+  const initialPrefetchDone = useRef(false);
 
   useEffect(() => {
     sendMessage<any, UserPreferences>(MessageType.GET_PREFERENCES, {}).then((res) => {
@@ -68,6 +131,13 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    if (!initialPrefetchDone.current) {
+      initialPrefetchDone.current = true;
+      prefetchPage(currentPage);
+    }
+  }, [currentPage]);
+
+  useEffect(() => {
     const handleMessage = (message: any) => {
       if (message && message.type === 'FILMMAKERS_UPDATED') {
         sendMessage<any, { people: PersonItem[] }>(MessageType.GET_ALL_PEOPLE, {}).then((res) => {
@@ -89,7 +159,33 @@ export function App() {
   };
 
   if (!prefs) {
-    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>Loading...</div>;
+    return (
+      <div className="app-layout">
+        <aside className="sidebar">
+          <div className="sidebar-header">
+            <div className="sidebar-logo">
+              <div className="sidebar-logo-icon">S</div>
+              <h1 className="sidebar-title">Subsume</h1>
+            </div>
+          </div>
+          <nav className="sidebar-nav">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div key={i} className="skeleton skeleton-nav-item" style={{ animationDelay: `${i * 40}ms` }} />
+            ))}
+          </nav>
+        </aside>
+        <main className="main-content">
+          <div className="page-container">
+            <div className="skeleton" style={{ height: 32, width: 200, marginBottom: 16 }} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, padding: '0 32px' }}>
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="skeleton skeleton-stat" style={{ animationDelay: `${i * 40}ms` }} />
+              ))}
+            </div>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   if (!prefs.onboardingComplete) {
@@ -121,7 +217,6 @@ export function App() {
 
   return (
     <div className="app-layout">
-      {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-header">
           <div className="sidebar-logo">
@@ -132,42 +227,50 @@ export function App() {
         </div>
 
         <nav className="sidebar-nav">
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item.key}
-              className={`sidebar-nav-item ${currentPage === item.key ? 'active' : ''}`}
-              onClick={() => setCurrentPage(item.key)}
-              style={{ display: 'flex', alignItems: 'center', width: '100%', textAlign: 'left' }}
-            >
-              <span className="sidebar-nav-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 20 }}>
-                {item.key === 'people' ? (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ display: 'block' }}>
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                  </svg>
-                ) : item.icon}
-              </span>
-              <span className="sidebar-nav-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                <span>{item.label}</span>
-                {item.key === 'people' && peopleCount > 0 && (
+          {NAV_SECTIONS.map((section) => (
+            <div key={section.label} className="sidebar-nav-section">
+              <span className="sidebar-nav-section-label">{section.label}</span>
+              {section.items.map((item) => (
+                <button
+                  key={item.key}
+                  className={`sidebar-nav-item ${currentPage === item.key ? 'active' : ''}`}
+                  onClick={() => setCurrentPage(item.key)}
+                  onMouseEnter={() => prefetchPage(item.key)}
+                  onFocus={() => prefetchPage(item.key)}
+                  style={{ display: 'flex', alignItems: 'center', width: '100%', textAlign: 'left' }}
+                >
                   <span
-                    className="sidebar-nav-badge"
-                    style={{
-                      background: 'var(--gold)',
-                      color: '#121212',
-                      borderRadius: 10,
-                      padding: '1px 6px',
-                      fontSize: 10,
-                      fontWeight: 'bold',
-                      marginLeft: 8,
-                      lineHeight: '1.2'
-                    }}
+                    className="sidebar-nav-icon"
+                    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 20 }}
                   >
-                    {peopleCount}
+                    <NavIcon item={item} />
                   </span>
-                )}
-              </span>
-            </button>
+                  <span
+                    className="sidebar-nav-label"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}
+                  >
+                    <span>{item.label}</span>
+                    {item.key === 'people' && peopleCount > 0 && (
+                      <span
+                        className="sidebar-nav-badge stat-value"
+                        style={{
+                          background: 'var(--primary)',
+                          color: '#121212',
+                          borderRadius: 10,
+                          padding: '1px 6px',
+                          fontSize: 10,
+                          fontWeight: 'bold',
+                          marginLeft: 8,
+                          lineHeight: '1.2',
+                        }}
+                      >
+                        {peopleCount}
+                      </span>
+                    )}
+                  </span>
+                </button>
+              ))}
+            </div>
           ))}
         </nav>
 
@@ -186,10 +289,7 @@ export function App() {
         </div>
       </aside>
 
-      {/* Main content */}
-      <main className="main-content">
-        {renderPage()}
-      </main>
+      <main className="main-content">{renderPage()}</main>
     </div>
   );
 }

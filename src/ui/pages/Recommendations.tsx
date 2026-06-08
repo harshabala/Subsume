@@ -385,7 +385,7 @@ export function Recommendations() {
       {/* ── Existing rule-based section (unchanged) ── */}
       {loading ? (
         <div className="empty-state">
-           <div className="subsume-spinner" style={{ borderColor: 'rgba(255,255,255,0.1)', borderTopColor: '#a78bfa', width: 32, height: 32, borderWidth: 3}} />
+           <div className="subsume-spinner" />
            <p style={{ marginTop: 16, color: 'var(--color-text-secondary)' }}>Analyzing library...</p>
         </div>
       ) : hasNoRecs ? (
@@ -519,7 +519,7 @@ export function Recommendations() {
                   background: 'var(--bg-elevated)',
                   borderRadius: 'var(--radius-md)',
                   animation: 'subsume-pulse 1.5s ease-in-out infinite',
-                  animationDelay: `${i * 0.15}s`,
+                  animationDelay: `${i * 0.04}s`,
                 }} />
               ))}
             </div>

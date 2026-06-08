@@ -261,7 +261,7 @@ export function Settings() {
                   type="checkbox"
                   checked={prefs.favoriteGenres.includes(g.id)}
                   onChange={() => toggleArrayItem('favoriteGenres', g.id)}
-                  style={{ accentColor: '#a78bfa' }}
+                  style={{ accentColor: 'var(--primary)' }}
                 />
                 <span style={{ fontSize: 13 }}>{g.name}</span>
               </label>
@@ -278,7 +278,7 @@ export function Settings() {
                   type="checkbox"
                   checked={prefs.platforms.includes(p.id)}
                   onChange={() => toggleArrayItem('platforms', p.id)}
-                  style={{ accentColor: '#a78bfa' }}
+                  style={{ accentColor: 'var(--primary)' }}
                 />
                 <span style={{ fontSize: 13 }}>{p.name}</span>
               </label>
@@ -302,7 +302,7 @@ export function Settings() {
           />
           <p style={{ color: 'var(--color-text-secondary)', fontSize: 12, marginTop: 6 }}>
             Required for fetching movie and TV show data. Get a free key at{' '}
-            <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener" style={{ color: '#a78bfa' }}>themoviedb.org</a>.
+            <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener" style={{ color: 'var(--primary)' }}>themoviedb.org</a>.
           </p>
         </div>
 
@@ -317,7 +317,7 @@ export function Settings() {
           />
           <p style={{ color: 'var(--color-text-secondary)', fontSize: 12, marginTop: 6 }}>
             Optional. Enriches titles with IMDb and Rotten Tomatoes ratings. Get a free key at{' '}
-            <a href="https://www.omdbapi.com/apikey.aspx" target="_blank" rel="noopener" style={{ color: '#a78bfa' }}>omdbapi.com</a>.
+            <a href="https://www.omdbapi.com/apikey.aspx" target="_blank" rel="noopener" style={{ color: 'var(--primary)' }}>omdbapi.com</a>.
           </p>
         </div>
 
@@ -331,7 +331,7 @@ export function Settings() {
               type="checkbox" 
               checked={prefs.llmEnabled}
               onChange={(e) => handleChange('llmEnabled', e.currentTarget.checked)}
-              style={{ width: 18, height: 18, accentColor: '#a78bfa' }}
+              style={{ width: 18, height: 18, accentColor: 'var(--primary)' }}
             />
             <span style={{ fontSize: 15, fontWeight: 500 }}>Enable LLM-enhanced recommendations</span>
           </label>
@@ -382,7 +382,7 @@ export function Settings() {
               type="checkbox" 
               checked={prefs.hoverCardsEnabled}
               onChange={(e) => handleChange('hoverCardsEnabled', e.currentTarget.checked)}
-              style={{ width: 18, height: 18, accentColor: '#a78bfa' }}
+              style={{ width: 18, height: 18, accentColor: 'var(--primary)' }}
             />
             <span style={{ fontSize: 15, fontWeight: 500 }}>Show Hover Cards</span>
           </label>
@@ -397,7 +397,7 @@ export function Settings() {
               type="checkbox"
               checked={prefs.posterOverlaysEnabled ?? true}
               onChange={(e) => handleChange('posterOverlaysEnabled', e.currentTarget.checked)}
-              style={{ width: 18, height: 18, accentColor: '#a78bfa' }}
+              style={{ width: 18, height: 18, accentColor: 'var(--primary)' }}
             />
             <span style={{ fontSize: 15, fontWeight: 500 }}>Show Poster Rating Badges</span>
           </label>

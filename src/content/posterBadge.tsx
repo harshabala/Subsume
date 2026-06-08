@@ -101,7 +101,7 @@ const BADGE_STYLES = `
     inset: 0;
     pointer-events: none;
     z-index: 2147483646;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
 
   .subsume-badge-root {
@@ -140,10 +140,12 @@ const BADGE_STYLES = `
 
   .subsume-badge-action {
     position: absolute;
-    bottom: 6px;
-    right: 6px;
-    width: 26px;
-    height: 26px;
+    bottom: 4px;
+    right: 4px;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
     border: none;
     border-radius: 50%;
     background: #c9a84c;
@@ -169,6 +171,15 @@ const BADGE_STYLES = `
     background: rgba(34, 197, 94, 0.9);
     color: #fff;
     cursor: default;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .subsume-badge-action {
+      transition: none;
+    }
+    .subsume-badge-action:hover:not(:disabled) {
+      transform: none;
+    }
   }
 
   .subsume-badge-action:disabled {

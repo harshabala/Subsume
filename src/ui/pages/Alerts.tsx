@@ -236,7 +236,7 @@ export function Alerts() {
                       type="checkbox"
                       checked={(form.genres || []).includes(genre.id)}
                       onChange={() => toggleFormArrayItem('genres', genre.id)}
-                      style={{ accentColor: '#a78bfa' }}
+                      style={{ accentColor: 'var(--primary)' }}
                     />
                     <span style={{ fontSize: 13 }}>{genre.name}</span>
                   </label>
@@ -266,7 +266,7 @@ export function Alerts() {
                       type="checkbox"
                       checked={(form.platforms || []).includes(platform.id)}
                       onChange={() => toggleFormArrayItem('platforms', platform.id)}
-                      style={{ accentColor: '#a78bfa' }}
+                      style={{ accentColor: 'var(--primary)' }}
                     />
                     <span style={{ fontSize: 13 }}>{platform.name}</span>
                   </label>
@@ -308,16 +308,7 @@ export function Alerts() {
 
         {loading ? (
           <div className="empty-state">
-            <div
-              className="subsume-spinner"
-              style={{
-                borderColor: 'rgba(255,255,255,0.1)',
-                borderTopColor: '#a78bfa',
-                width: 32,
-                height: 32,
-                borderWidth: 3,
-              }}
-            />
+            <div className="subsume-spinner" />
             <p style={{ marginTop: 16, color: 'var(--color-text-secondary)' }}>
               Loading alerts...
             </p>
@@ -385,7 +376,7 @@ export function Alerts() {
                         type="checkbox"
                         checked={alert.enabled}
                         onChange={() => handleToggleEnabled(alert)}
-                        style={{ accentColor: '#a78bfa' }}
+                        style={{ accentColor: 'var(--primary)' }}
                       />
                       Enabled
                     </label>

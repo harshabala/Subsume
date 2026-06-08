@@ -72,7 +72,7 @@ export function Stats() {
 
       {loading ? (
         <div className="empty-state">
-           <div className="subsume-spinner" style={{ borderColor: 'rgba(255,255,255,0.1)', borderTopColor: '#a78bfa', width: 32, height: 32, borderWidth: 3}} />
+           <div className="subsume-spinner" />
            <p style={{ marginTop: 16, color: 'var(--color-text-secondary)' }}>Calculating metrics...</p>
         </div>
       ) : totalWatched === 0 ? (
@@ -90,21 +90,21 @@ export function Stats() {
             {/* Stat Card 1 */}
             <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 24, textAlign: 'center' }}>
               <span style={{ fontSize: 24, display: 'block', marginBottom: 8 }}>🎬</span>
-              <span style={{ fontSize: 32, fontWeight: 700, color: 'var(--primary)', display: 'block' }}>{totalWatched}</span>
+              <span className="stat-value" style={{ fontSize: 32, fontWeight: 700, color: 'var(--primary)', display: 'block' }}>{totalWatched}</span>
               <span style={{ fontSize: 13, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Watched Titles</span>
             </div>
             
             {/* Stat Card 2 */}
             <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 24, textAlign: 'center' }}>
               <span style={{ fontSize: 24, display: 'block', marginBottom: 8 }}>⏳</span>
-              <span style={{ fontSize: 32, fontWeight: 700, color: 'var(--primary)', display: 'block' }}>{totalHours}</span>
+              <span className="stat-value" style={{ fontSize: 32, fontWeight: 700, color: 'var(--primary)', display: 'block' }}>{totalHours}</span>
               <span style={{ fontSize: 13, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Hours Logged</span>
             </div>
 
             {/* Stat Card 3 */}
             <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 24, textAlign: 'center' }}>
               <span style={{ fontSize: 24, display: 'block', marginBottom: 8 }}>⭐</span>
-              <span style={{ fontSize: 32, fontWeight: 700, color: 'var(--primary)', display: 'block' }}>{avgRating}</span>
+              <span className="stat-value" style={{ fontSize: 32, fontWeight: 700, color: 'var(--primary)', display: 'block' }}>{avgRating}</span>
               <span style={{ fontSize: 13, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Average Rating</span>
             </div>
           </div>

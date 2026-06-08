@@ -11,7 +11,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       <div style={{ fontSize: 64, marginBottom: 24 }}>✨</div>
 
       {/* Welcome Title */}
-      <h1 style={{ fontSize: 32, fontWeight: 700, marginBottom: 16, background: 'linear-gradient(135deg, #a78bfa, #c084fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+      <h1 style={{ fontSize: 32, fontWeight: 700, marginBottom: 16, background: 'linear-gradient(135deg, var(--primary), var(--primary-hover))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
         Welcome to Subsume
       </h1>
 

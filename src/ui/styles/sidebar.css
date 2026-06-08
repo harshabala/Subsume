@@ -81,6 +81,10 @@
   color: var(--color-text);
 }
 
+.sidebar-nav-item:active {
+  transform: scale(0.97);
+}
+
 .sidebar-nav-item.active {
   background: var(--color-accent-bg);
   color: var(--color-accent-light);
@@ -120,6 +124,7 @@
   font-size: var(--font-size-lg);
   font-weight: 800;
   color: #fff;
+  font-variant-numeric: tabular-nums;
 }
 
 .sidebar-stat-label {

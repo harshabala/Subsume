@@ -170,9 +170,17 @@ export function Home({ onNavigate }: HomeProps) {
       </header>
 
       {loading ? (
-        <div className="empty-state">
-          <div className="subsume-spinner" style={{ borderColor: 'rgba(255,255,255,0.1)', borderTopColor: '#c9a84c', width: 32, height: 32, borderWidth: 3 }} />
-          <p style={{ marginTop: 16, color: 'var(--color-text-secondary)' }}>Loading your dashboard...</p>
+        <div style={{ padding: '0 32px 32px', display: 'flex', flexDirection: 'column', gap: 32 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="skeleton skeleton-stat" style={{ animationDelay: `${i * 40}ms` }} />
+            ))}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="skeleton skeleton-card" style={{ animationDelay: `${i * 40}ms` }} />
+            ))}
+          </div>
         </div>
       ) : (
         <div style={{ padding: '0 32px 32px', display: 'flex', flexDirection: 'column', gap: 32 }}>
@@ -195,7 +203,7 @@ export function Home({ onNavigate }: HomeProps) {
                   color: 'inherit',
                 }}
               >
-                <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--primary)' }}>{stat.value}</div>
+                <div className="stat-value" style={{ fontSize: 28, fontWeight: 700, color: 'var(--primary)' }}>{stat.value}</div>
                 <div style={{ fontSize: 13, color: 'var(--fg-subtle)', marginTop: 4 }}>{stat.label}</div>
               </button>
             ))}
