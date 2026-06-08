@@ -4,7 +4,7 @@ import {
   MediaItem,
   UserPreferences,
 } from '@/shared/types';
-import { AVAILABLE_GENRES } from '@/shared/genres';
+import { AVAILABLE_GENRES, hasGenreMatch } from '@/shared/genres';
 import { AVAILABLE_PLATFORMS, formatPlatformName } from '@/shared/platforms';
 import { getLatestReleases } from './tmdb';
 import {
@@ -45,8 +45,7 @@ function hasPlatformMatch(alertPlatformNames: string[], media: MediaItem): boole
 }
 
 function hasGenreOverlap(alertGenreNames: string[], media: MediaItem): boolean {
-  if (alertGenreNames.length === 0) return true;
-  return alertGenreNames.some((genre) => media.genres.includes(genre));
+  return hasGenreMatch(alertGenreNames, media.genres);
 }
 
 function matchesKeyword(alert: WatchAlert, media: MediaItem): boolean {

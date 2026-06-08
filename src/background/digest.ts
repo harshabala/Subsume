@@ -5,7 +5,7 @@ import {
   WeeklyDigest,
   WeeklyDigestItem,
 } from '@/shared/types';
-import { resolveGenreNames } from '@/shared/genres';
+import { resolveGenreNames, genresMatch } from '@/shared/genres';
 import { getLatestReleases } from './tmdb';
 import { buildWatchProfile } from './context';
 import { getAllLibraryItems } from './storage';
@@ -195,7 +195,7 @@ export function generateRuleBasedDigest(
 
   if (favoriteGenreNames.length > 0) {
     const genreMatches = releases.filter((r) =>
-      r.genres.some((g) => favoriteGenreNames.includes(g))
+      r.genres.some((g) => favoriteGenreNames.some((fav) => genresMatch(fav, g)))
     );
     if (genreMatches.length > 0) {
       candidates = genreMatches;
@@ -205,7 +205,9 @@ export function generateRuleBasedDigest(
   const sorted = [...candidates].sort((a, b) => getTmdbRating(b) - getTmdbRating(a));
 
   return sorted.slice(0, RULE_BASED_COUNT).map((item) => {
-    const matchedGenre = item.genres.find((g) => favoriteGenreNames.includes(g));
+    const matchedGenre = item.genres.find((g) =>
+      favoriteGenreNames.some((fav) => genresMatch(fav, g))
+    );
     const rating = getTmdbRating(item);
     const reason = matchedGenre
       ? `Highly rated ${matchedGenre} release (${rating.toFixed(1)} on TMDb) matching your favorite genres.`

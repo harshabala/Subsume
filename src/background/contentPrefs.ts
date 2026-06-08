@@ -1,7 +1,16 @@
 import { ContentPrefs, UserPreferences } from '@/shared/types';
 
 export function isHostnameDisabled(hostname: string, disabledDomains: string[]): boolean {
-  return disabledDomains.some((d) => d === hostname || d === `.${hostname}`);
+  const normalizedHost = hostname.toLowerCase();
+  return disabledDomains.some((domain) => {
+    const rule = domain.trim().toLowerCase();
+    if (!rule) return false;
+    if (rule.startsWith('.')) {
+      const base = rule.slice(1);
+      return normalizedHost === base || normalizedHost.endsWith(rule);
+    }
+    return normalizedHost === rule || normalizedHost.endsWith(`.${rule}`);
+  });
 }
 
 /** Strip sensitive prefs down to fields safe for the content script. */

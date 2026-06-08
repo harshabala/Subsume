@@ -82,6 +82,8 @@ describe('isHostnameDisabled', () => {
   it('matches exact hostnames and dot-prefixed subdomain rules', () => {
     expect(isHostnameDisabled('blocked.com', ['blocked.com'])).toBe(true);
     expect(isHostnameDisabled('example.com', ['.example.com'])).toBe(true);
+    expect(isHostnameDisabled('www.example.com', ['.example.com'])).toBe(true);
+    expect(isHostnameDisabled('news.example.com', ['example.com'])).toBe(true);
     expect(isHostnameDisabled('safe.com', ['blocked.com'])).toBe(false);
   });
 });

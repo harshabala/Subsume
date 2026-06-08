@@ -78,7 +78,8 @@ vi.mock('@/background/contentPrefs', () => ({
 }));
 
 import { handlers } from '@/background/index';
-import { getLibraryItem, putLibraryItem } from '@/background/storage';
+import { getLibraryItem, putLibraryItem, getMediaItem } from '@/background/storage';
+import { MediaItem } from '@/shared/types';
 
 const sender = {} as chrome.runtime.MessageSender;
 
@@ -159,5 +160,92 @@ describe('UPDATE_STATUS validation', () => {
 
     expect(result).toEqual({ updated: false });
     expect(getLibraryItem).not.toHaveBeenCalled();
+  });
+});
+
+const sampleMedia: MediaItem = {
+  id: 'tmdb_movie_99',
+  canonicalTitle: 'Inception',
+  type: 'movie',
+  year: 2010,
+  genres: ['Science Fiction'],
+  ratings: [{ provider: 'tmdb', score: 8.8 }],
+  providers: [{ provider: 'tmdb', externalId: '99' }],
+  posterUrl: '',
+};
+
+describe('ADD_TO_LIST', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getMediaItem).mockResolvedValue(undefined);
+  });
+
+  it('preserves existing library status when re-adding', async () => {
+    vi.mocked(getLibraryItem).mockResolvedValue({
+      mediaId: 'tmdb_movie_99',
+      status: 'watched',
+      userRating: 9,
+      addedAt: 1000,
+      updatedAt: 1000,
+    });
+
+    const handler = handlers[MessageType.ADD_TO_LIST]!;
+    const result = await handler(
+      { mediaItem: sampleMedia, type: 'movie' },
+      sender
+    );
+
+    expect(result.status).toBe('watched');
+    expect(result.userRating).toBe(9);
+    expect(putLibraryItem).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'watched', userRating: 9 })
+    );
+  });
+
+  it('sets to-watch for new library entries', async () => {
+    vi.mocked(getLibraryItem).mockResolvedValue(undefined);
+
+    const handler = handlers[MessageType.ADD_TO_LIST]!;
+    const result = await handler(
+      { mediaItem: sampleMedia, type: 'movie' },
+      sender
+    );
+
+    expect(result.status).toBe('to-watch');
+    expect(putLibraryItem).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'to-watch' })
+    );
+  });
+});
+
+describe('SET_USER_NOTES and SET_USER_TAGS', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns updated false when library item does not exist (notes)', async () => {
+    vi.mocked(getLibraryItem).mockResolvedValue(undefined);
+
+    const handler = handlers[MessageType.SET_USER_NOTES]!;
+    const result = await handler(
+      { mediaId: 'tmdb_movie_1', notes: 'Great film' },
+      sender
+    );
+
+    expect(result).toEqual({ updated: false });
+    expect(putLibraryItem).not.toHaveBeenCalled();
+  });
+
+  it('returns updated false when library item does not exist (tags)', async () => {
+    vi.mocked(getLibraryItem).mockResolvedValue(undefined);
+
+    const handler = handlers[MessageType.SET_USER_TAGS]!;
+    const result = await handler(
+      { mediaId: 'tmdb_movie_1', tags: ['rewatch'] },
+      sender
+    );
+
+    expect(result).toEqual({ updated: false });
+    expect(putLibraryItem).not.toHaveBeenCalled();
   });
 });

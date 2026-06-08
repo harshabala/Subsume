@@ -202,16 +202,15 @@ const handlers: MessageHandlerMap = {
     await putMediaItem(mediaToStore);
 
     const existing = await getLibraryItem(req.mediaItem.id);
-    const libraryItem: LibraryItem = existing || {
-      mediaId: req.mediaItem.id,
-      status: 'to-watch',
-      addedAt: Date.now(),
-      updatedAt: Date.now(),
-    };
+    const libraryItem: LibraryItem = existing
+      ? { ...existing, updatedAt: Date.now() }
+      : {
+          mediaId: req.mediaItem.id,
+          status: 'to-watch',
+          addedAt: Date.now(),
+          updatedAt: Date.now(),
+        };
 
-    // Update status to 'to-watch' if it wasn't already being tracked
-    libraryItem.status = 'to-watch';
-    
     await putLibraryItem(libraryItem);
     invalidateProfileCache();
     await broadcastMessage({
@@ -273,35 +272,37 @@ const handlers: MessageHandlerMap = {
     const req = payload as SetUserTagsRequest;
     console.log('[Subsume] SET_USER_TAGS:', req.mediaId, '→', req.tags);
     const existing = await getLibraryItem(req.mediaId);
-    if (existing) {
-      existing.userTags = req.tags;
-      existing.updatedAt = Date.now();
-      await putLibraryItem(existing);
-      await broadcastMessage({
-        type: 'LIBRARY_UPDATED',
-        action: 'update',
-        mediaId: existing.mediaId,
-        libraryItem: existing,
-      });
+    if (!existing) {
+      return { updated: false };
     }
+    existing.userTags = req.tags;
+    existing.updatedAt = Date.now();
+    await putLibraryItem(existing);
+    await broadcastMessage({
+      type: 'LIBRARY_UPDATED',
+      action: 'update',
+      mediaId: existing.mediaId,
+      libraryItem: existing,
+    });
     return { updated: true };
   },
 
   [MessageType.SET_USER_NOTES]: async (payload) => {
     const req = payload as SetUserNotesRequest;
     const existing = await getLibraryItem(req.mediaId);
-    if (existing) {
-      existing.notes = req.notes.trim() || undefined;
-      existing.updatedAt = Date.now();
-      await putLibraryItem(existing);
-      invalidateProfileCache();
-      await broadcastMessage({
-        type: 'LIBRARY_UPDATED',
-        action: 'update',
-        mediaId: existing.mediaId,
-        libraryItem: existing,
-      });
+    if (!existing) {
+      return { updated: false };
     }
+    existing.notes = req.notes.trim() || undefined;
+    existing.updatedAt = Date.now();
+    await putLibraryItem(existing);
+    invalidateProfileCache();
+    await broadcastMessage({
+      type: 'LIBRARY_UPDATED',
+      action: 'update',
+      mediaId: existing.mediaId,
+      libraryItem: existing,
+    });
     return { updated: true };
   },
 

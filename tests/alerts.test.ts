@@ -78,6 +78,23 @@ describe('mediaMatchesWatchAlert', () => {
     expect(mediaMatchesWatchAlert(alert, media)).toBe(true);
   });
 
+  it('matches Science Fiction TMDb genre names against Sci-Fi alert IDs', () => {
+    const alert = makeAlert({
+      genres: ['878'],
+      platforms: ['8'],
+      type: 'movie',
+    });
+    const media = makeMedia(
+      'tmdb_movie_4',
+      'Arrival',
+      'movie',
+      ['Science Fiction', 'Drama'],
+      ['Netflix']
+    );
+
+    expect(mediaMatchesWatchAlert(alert, media)).toBe(true);
+  });
+
   it('matches TMDb provider aliases against alert platform IDs via formatPlatformName', () => {
     const alert = makeAlert({
       genres: ['878'],

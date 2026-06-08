@@ -100,6 +100,23 @@ describe('generateRuleBasedDigest', () => {
     expect(digest[0].reason).toContain('Action');
   });
 
+  it('matches Science Fiction TMDb names against Sci-Fi Settings genre IDs', () => {
+    const prefs: UserPreferences = {
+      ...basePrefs,
+      favoriteGenres: ['878'],
+    };
+    const releases = [
+      makeMedia('tmdb_movie_1', 'Arrival', 2024, 'movie', ['Science Fiction'], 8.2),
+      makeMedia('tmdb_movie_2', 'Comedy Miss', 2024, 'movie', ['Comedy'], 9.0),
+    ];
+
+    const digest = generateRuleBasedDigest(prefs, releases);
+
+    expect(digest).toHaveLength(1);
+    expect(digest[0].title).toBe('Arrival');
+    expect(digest[0].reason).toContain('Science Fiction');
+  });
+
   it('falls back to all releases when no favorite genres match', () => {
     const prefs: UserPreferences = {
       ...basePrefs,
