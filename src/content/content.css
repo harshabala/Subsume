@@ -1,0 +1,8 @@
+/* Content script host-page styles – minimal, only for the shadow root container */
+#subsume-hover-root {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2147483647;
+  pointer-events: none;
+}

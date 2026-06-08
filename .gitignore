@@ -1,0 +1,21 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+.env
+.env.*
+subsume.zip
+.vite/
+coverage/
+.agents/
+.claude/
+.windsurf/
+.brand-preview/
+Icon*
+build.log
+subsume.zip
+Icon
+skills-lock.json
+.impeccable.md
+vite.config.ts.timestamp-*.mjs
+package-lock\ 2.json
