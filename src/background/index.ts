@@ -153,6 +153,18 @@ async function fetchMediaDetails(tmdbId: string, mediaType: 'movie' | 'tv', apiK
 
 // ─── Message Handlers ─────────────────────────────────────────────────
 
+/**
+ * Returns a copy of UserPreferences with all sensitive API key fields removed.
+ * Used by GET_PREFERENCES so that content scripts running on arbitrary web
+ * pages cannot read the user's API credentials.
+ */
+function sanitizePreferencesForContentScript(
+  prefs: UserPreferences
+): Omit<UserPreferences, 'tmdbApiKey' | 'omdbApiKey' | 'llmApiKey'> {
+  const { tmdbApiKey: _tmdb, omdbApiKey: _omdb, llmApiKey: _llm, ...safe } = prefs;
+  return safe;
+}
+
 const handlers: MessageHandlerMap = {
   [MessageType.GET_TITLE_DETAILS]: async (payload) => {
     const req = payload as GetTitleDetailsRequest;
@@ -406,6 +418,13 @@ const handlers: MessageHandlerMap = {
   },
 
   [MessageType.GET_PREFERENCES]: async () => {
+    const prefs = await getPreferences();
+    return sanitizePreferencesForContentScript(prefs);
+  },
+
+  [MessageType.GET_FULL_PREFERENCES]: async () => {
+    // Returns the full unredacted preferences including API keys.
+    // Only the Settings UI should call this message type.
     return getPreferences();
   },
 

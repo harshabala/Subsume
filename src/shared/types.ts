@@ -123,6 +123,7 @@ export enum MessageType {
 
   // Preferences
   GET_PREFERENCES = 'GET_PREFERENCES',
+  GET_FULL_PREFERENCES = 'GET_FULL_PREFERENCES',
   SET_PREFERENCES = 'SET_PREFERENCES',
 
   // Filmmakers & Crew

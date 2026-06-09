@@ -11,7 +11,7 @@ export function Settings() {
 
   useEffect(() => {
     async function load() {
-      const res = await sendMessage<any, UserPreferences>(MessageType.GET_PREFERENCES, {});
+      const res = await sendMessage<any, UserPreferences>(MessageType.GET_FULL_PREFERENCES, {});
       if (res.success && res.data) {
         setPrefs(res.data);
       }
