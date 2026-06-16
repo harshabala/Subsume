@@ -1,4 +1,4 @@
-import { UserPreferences, LibraryItem, MediaItem, Recommendation, GroupedRecommendation, WatchProfile, PersonalizedRecommendation, RecommendationGroup } from '@/shared/types';
+import { UserPreferences, LibraryItem, MediaItem, Recommendation, GroupedRecommendation, WatchProfile, PersonalizedRecommendation, RecommendationGroup, LibraryMediaPair } from '@/shared/types';
 import { getAllLibraryItems, getAllMediaMap, getPreferences, putMediaItem, findMediaByTitle } from './storage';
 import { searchTitle } from './tmdb';
 import { buildWatchProfile } from './context';
@@ -18,28 +18,32 @@ export interface LLMRawGrouped {
 /**
  * Constructs a prompt for the LLM based on the user's local library.
  */
-function buildPrompt(watched: any[], toWatch: any[], seedTitles?: string[]): string {
+function buildPrompt(watched: LibraryMediaPair[], toWatch: LibraryMediaPair[], seedTitles?: string[]): string {
   let prompt = "You are an expert movie and TV show recommender.\n\n";
 
   if (watched.length > 0) {
-    prompt += "Here are the titles the user has already watched (with their ratings if available):\n";
-    watched.forEach(w => {
-      const ratingStr = w.library.userRating ? ` - Rated: ${w.library.userRating}/10` : '';
-      prompt += `- ${w.media.canonicalTitle} (${w.media.year}) [${w.media.genres.join(', ')}]${ratingStr}\n`;
-    });
-    prompt += "\n";
+    prompt += "Here are the titles the user has already watched (with their ratings if available) in JSON format:\n";
+    const watchedJson = watched.map(w => ({
+      title: w.media.canonicalTitle,
+      year: w.media.year,
+      genres: w.media.genres,
+      userRating: w.library.userRating || undefined
+    }));
+    prompt += JSON.stringify(watchedJson, null, 2) + "\n\n";
   }
 
   if (toWatch.length > 0) {
-    prompt += "Here are titles in the user's watchlist that they want to watch:\n";
-    toWatch.forEach(w => {
-      prompt += `- ${w.media.canonicalTitle} (${w.media.year}) [${w.media.genres.join(', ')}]\n`;
-    });
-    prompt += "\n";
+    prompt += "Here are titles in the user's watchlist that they want to watch in JSON format:\n";
+    const toWatchJson = toWatch.map(w => ({
+      title: w.media.canonicalTitle,
+      year: w.media.year,
+      genres: w.media.genres
+    }));
+    prompt += JSON.stringify(toWatchJson, null, 2) + "\n\n";
   }
 
   if (seedTitles && seedTitles.length > 0) {
-    prompt += `Given that they loved ${seedTitles.join(', ')}, recommend 8 NEW titles (movies or TV shows) that they haven't seen yet but would probably love, and group your recommendations under the seed title they most connect to.\n`;
+    prompt += `Given that they loved the following seed titles: ${JSON.stringify(seedTitles)}, recommend 8 NEW titles (movies or TV shows) that they haven't seen yet but would probably love, and group your recommendations under the seed title they most connect to.\n`;
     prompt += "Ensure you do NOT recommend titles already in the list.\n\n";
     prompt += "Respond strictly in the following JSON format without markdown code blocks:\n";
     prompt += `[
@@ -95,7 +99,10 @@ export async function callLLMProvider(prompt: string, prefs: UserPreferences): P
         temperature: 0.7,
       }),
     });
-    if (!res.ok) throw new Error('OpenAI API error: ' + await res.text());
+    if (!res.ok) {
+      console.error('OpenAI API error body:', await res.text());
+      throw new Error(`OpenAI API error (Status ${res.status})`);
+    }
     const data = await res.json();
     return data.choices[0].message.content;
   }
@@ -115,7 +122,10 @@ export async function callLLMProvider(prompt: string, prefs: UserPreferences): P
         messages: [{ role: 'user', content: prompt }],
       }),
     });
-    if (!res.ok) throw new Error('Anthropic API error: ' + await res.text());
+    if (!res.ok) {
+      console.error('Anthropic API error body:', await res.text());
+      throw new Error(`Anthropic API error (Status ${res.status})`);
+    }
     const data = await res.json();
     return data.content[0].text;
   }
@@ -128,7 +138,10 @@ export async function callLLMProvider(prompt: string, prefs: UserPreferences): P
         contents: [{ parts: [{ text: prompt }] }],
       }),
     });
-    if (!res.ok) throw new Error('Gemini API error: ' + await res.text());
+    if (!res.ok) {
+      console.error('Gemini API error body:', await res.text());
+      throw new Error(`Gemini API error (Status ${res.status})`);
+    }
     const data = await res.json();
     return data.candidates[0].content.parts[0].text;
   }
@@ -150,7 +163,9 @@ export async function generateLLMRecommendations(): Promise<Recommendation[] | G
   const mediaIds = library.map((l) => l.mediaId);
   const mediaMap = await getAllMediaMap(mediaIds);
 
-  const joined = library.map(l => ({ library: l, media: mediaMap[l.mediaId] })).filter(j => !!j.media);
+  const joined: LibraryMediaPair[] = library
+    .map(l => ({ library: l, media: mediaMap[l.mediaId] }))
+    .filter((j): j is LibraryMediaPair => !!j.media);
   const watched = joined.filter(j => j.library.status === 'watched');
   const toWatch = joined.filter(j => j.library.status === 'to-watch');
 
@@ -309,78 +324,55 @@ export async function generateLLMRecommendations(): Promise<Recommendation[] | G
  * Pure function — no side effects, no network calls.
  */
 function buildPersonalizedPrompt(profile: WatchProfile): string {
-  const lines: string[] = [];
+  const tasteProfile = {
+    highlyRated: profile.topRated.map(e => ({
+      title: e.title,
+      year: e.year,
+      genres: e.genres
+    })),
+    liked: profile.liked.map(e => ({
+      title: e.title,
+      year: e.year
+    })),
+    dislikedOrAbandoned: profile.disliked.map(e => ({
+      title: e.title
+    })),
+    watchedButUnrated: profile.unrated.map(e => ({
+      title: e.title,
+      year: e.year
+    })),
+    followedFilmmakers: profile.followedCreators.map(c => ({
+      name: c.name,
+      role: c.role
+    })),
+    preferredGenres: profile.favoriteGenres,
+    totalFilmsWatched: profile.totalWatched
+  };
 
-  // Section 1 — Taste profile
-  lines.push('TASTE PROFILE:');
+  const lines: string[] = [
+    'TASTE PROFILE (JSON):',
+    JSON.stringify(tasteProfile, null, 2),
+    '',
+    'TASK:',
+    'Recommend exactly 8 titles this person would rate 8 or higher based on their taste profile above.',
+    '',
+    'Rules:',
+    '- Prioritize craft, cinematography, thematic depth, and writing quality over general audience popularity',
+    '- A low IMDb or TMDb score does NOT disqualify a title if it matches their taste signals'
+  ];
 
-  if (profile.topRated.length > 0) {
-    const topRatedStr = profile.topRated
-      .map(e => `${e.title} (${e.year}) [${e.genres.join(', ')}]`)
-      .join(', ');
-    lines.push(`Highly rated (8–10/10): ${topRatedStr}`);
-  } else {
-    lines.push('Highly rated (8–10/10): none yet');
-  }
-
-  if (profile.liked.length > 0) {
-    const likedStr = profile.liked
-      .map(e => `${e.title} (${e.year})`)
-      .join(', ');
-    lines.push(`Liked (6–7/10): ${likedStr}`);
-  }
-
-  if (profile.disliked.length > 0) {
-    const dislikedStr = profile.disliked
-      .map(e => e.title)
-      .join(', ');
-    lines.push(`Disliked or abandoned (≤4/10): ${dislikedStr}`);
-  }
-
-  if (profile.unrated.length > 0) {
-    const unratedStr = profile.unrated
-      .map(e => `${e.title} (${e.year})`)
-      .join(', ');
-    lines.push(`Watched but unrated: ${unratedStr}`);
-  }
-
-  lines.push(`Total films watched: ${profile.totalWatched}`);
-  lines.push('');
-
-  // Section 2 — Creator affinities (only if followers exist)
-  if (profile.followedCreators.length > 0) {
-    lines.push('FOLLOWED FILMMAKERS:');
-    const creatorsStr = profile.followedCreators
-      .map(c => `${c.name} (${c.role})`)
-      .join(', ');
-    lines.push(creatorsStr);
-    lines.push('');
-  }
-
-  // Section 3 — Genre preferences
-  if (profile.favoriteGenres.length > 0) {
-    lines.push(`PREFERRED GENRES: ${profile.favoriteGenres.join(', ')}`);
-    lines.push('');
-  }
-
-  // Section 4 — Task instruction
   const alreadySeen = [
     ...profile.topRated.map(e => e.title),
     ...profile.liked.map(e => e.title),
     ...profile.disliked.map(e => e.title),
-  ].join(', ');
+  ];
 
-  lines.push('TASK:');
-  lines.push('Recommend exactly 8 titles this person would rate 8 or higher based on their taste profile above.');
-  lines.push('');
-  lines.push('Rules:');
-  lines.push('- Prioritize craft, cinematography, thematic depth, and writing quality over general audience popularity');
-  lines.push('- A low IMDb or TMDb score does NOT disqualify a title if it matches their taste signals');
-  if (alreadySeen) {
-    lines.push(`- Never recommend titles already in their lists above (${alreadySeen})`);
+  if (alreadySeen.length > 0) {
+    lines.push(`- Never recommend titles already in their lists: ${JSON.stringify(alreadySeen)}`);
   } else {
-    lines.push('- Never recommend titles already in their lists above');
+    lines.push('- Never recommend titles already in their lists');
   }
+
   lines.push('- For each recommendation identify the single title from their highly-rated list it most connects to (seedTitle)');
   lines.push('- Vary across decades and countries — do not cluster recommendations in one era or language');
   lines.push('');
@@ -408,20 +400,22 @@ function buildGroupingPrompt(
   profile: WatchProfile,
   recs: PersonalizedRecommendation[]
 ): string {
-  const recSummary = recs
-    .map(r => `${r.title} (${r.year}): ${r.reason}`)
-    .join('\n');
+  const recSummary = JSON.stringify(recs.map(r => ({
+    title: r.title,
+    year: r.year,
+    reason: r.reason
+  })), null, 2);
 
-  const topRatedSummary = profile.topRated
-    .slice(0, 5)
-    .map(e => `${e.title} (${e.year})`)
-    .join(', ');
+  const topRatedSummary = JSON.stringify(profile.topRated.slice(0, 5).map(e => ({
+    title: e.title,
+    year: e.year
+  })), null, 2);
 
   return [
-    'Given these 8 film recommendations:',
+    'Given these 8 film recommendations (JSON):',
     recSummary,
     '',
-    "And this viewer's top-rated films:",
+    "And this viewer's top-rated films (JSON):",
     topRatedSummary,
     '',
     'Group the 8 recommendations under the top-rated film they most connect to. Use at most 3 seed groups.',

@@ -50,9 +50,8 @@ const SKIP_SELECTORS = 'nav, footer, header, aside, [role="navigation"], [role="
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
-let nextId = 1;
 function mintId(): string {
-  return `sub-${nextId++}`;
+  return `sub-${crypto.randomUUID()}`;
 }
 
 function isVisible(el: Element): boolean {

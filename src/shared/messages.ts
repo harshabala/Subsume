@@ -48,6 +48,27 @@ export function createMessageRouter(handlers: MessageHandlerMap): void {
       sender: chrome.runtime.MessageSender,
       sendResponse: (response: ExtensionResponse) => void
     ) => {
+      const extensionOrigin = chrome.runtime.getURL('');
+      const isExtensionOrigin = sender.url ? sender.url.startsWith(extensionOrigin) : false;
+
+      const ALLOWED_CONTENT_SCRIPT_MESSAGES = new Set<string>([
+        MessageType.GET_CONTENT_PREFS,
+        MessageType.RESOLVE_POSTER,
+        MessageType.GET_TITLE_DETAILS,
+        MessageType.ADD_TO_LIST,
+        MessageType.REMOVE_FROM_LIBRARY,
+        MessageType.GET_LIBRARY,
+      ]);
+
+      if (!isExtensionOrigin && !ALLOWED_CONTENT_SCRIPT_MESSAGES.has(message.type)) {
+        console.warn(`[Subsume] Blocked unauthorized message type ${message.type} from origin ${sender.url}`);
+        sendResponse({
+          success: false,
+          error: `Unauthorized message type for this origin: ${message.type}`,
+        });
+        return false;
+      }
+
       const handler = handlers[message.type];
 
       if (!handler) {

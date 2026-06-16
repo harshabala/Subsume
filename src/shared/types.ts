@@ -50,6 +50,11 @@ export interface LibraryItem {
   notes?: string;
 }
 
+export interface LibraryMediaPair {
+  library: LibraryItem;
+  media: MediaItem;
+}
+
 export type CrewRole = 
   'director' | 'writer' | 'cinematographer' | 'actor' | 
   'composer' | 'producer' | 'editor';
@@ -82,7 +87,7 @@ export interface UserPreferences {
   platforms: string[];
   region: string;
   llmEnabled: boolean;
-  llmProvider?: 'openai' | 'anthropic' | 'gemini' | 'local';
+  llmProvider?: LLMProvider;
   llmApiKey?: string;
   tmdbApiKey?: string;
   omdbApiKey?: string;

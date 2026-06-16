@@ -33,6 +33,7 @@ const chromeMock = {
   },
   alarms: {
     create: vi.fn(),
+    get: vi.fn(),
     onAlarm: { addListener: vi.fn() },
   },
   notifications: {

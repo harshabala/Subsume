@@ -82,6 +82,9 @@ function getDb() {
         }
       },
     });
+    dbPromise.catch(() => {
+      dbPromise = null;
+    });
   }
   return dbPromise;
 }

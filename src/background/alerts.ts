@@ -124,7 +124,7 @@ export async function checkWatchAlerts(
     current.lastNotifiedMediaIds = [
       ...(current.lastNotifiedMediaIds || []),
       match.media.id,
-    ];
+    ].slice(-200);
     updatedAlerts.set(match.alert.id, current);
   }
 

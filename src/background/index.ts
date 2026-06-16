@@ -165,6 +165,24 @@ function sanitizePreferencesForContentScript(
   return safe;
 }
 
+function isValidUserPreferences(prefs: any): prefs is UserPreferences {
+  if (!prefs || typeof prefs !== 'object') return false;
+  if (!Array.isArray(prefs.favoriteGenres) || !prefs.favoriteGenres.every((g: any) => typeof g === 'string')) return false;
+  if (!Array.isArray(prefs.platforms) || !prefs.platforms.every((p: any) => typeof p === 'string')) return false;
+  if (typeof prefs.region !== 'string') return false;
+  if (typeof prefs.llmEnabled !== 'boolean') return false;
+  if (prefs.llmProvider !== undefined && !['openai', 'anthropic', 'gemini', 'local'].includes(prefs.llmProvider)) return false;
+  if (prefs.llmApiKey !== undefined && typeof prefs.llmApiKey !== 'string') return false;
+  if (prefs.tmdbApiKey !== undefined && typeof prefs.tmdbApiKey !== 'string') return false;
+  if (prefs.omdbApiKey !== undefined && typeof prefs.omdbApiKey !== 'string') return false;
+  if (typeof prefs.hoverCardsEnabled !== 'boolean') return false;
+  if (typeof prefs.posterOverlaysEnabled !== 'boolean') return false;
+  if (!Array.isArray(prefs.disabledDomains) || !prefs.disabledDomains.every((d: any) => typeof d === 'string')) return false;
+  if (!['low', 'medium', 'high'].includes(prefs.detectionSensitivity)) return false;
+  if (typeof prefs.onboardingComplete !== 'boolean') return false;
+  return true;
+}
+
 const handlers: MessageHandlerMap = {
   [MessageType.GET_TITLE_DETAILS]: async (payload) => {
     const req = payload as GetTitleDetailsRequest;
@@ -430,6 +448,9 @@ const handlers: MessageHandlerMap = {
 
   [MessageType.SET_PREFERENCES]: async (payload) => {
     const prefs = payload as UserPreferences;
+    if (!isValidUserPreferences(prefs)) {
+      throw new Error('Invalid preferences payload');
+    }
     await savePreferences(prefs);
     setTmdbApiKey(prefs.tmdbApiKey ?? '');
     setOmdbApiKey(prefs.omdbApiKey ?? '');
@@ -938,9 +959,18 @@ chrome.notifications.onClicked.addListener((notificationId) => {
   }
 });
 
-// Run once a day
-chrome.alarms.create('dailyRefresh', { periodInMinutes: 1440 });
-// Run once every 7 days
-chrome.alarms.create('weeklyDigest', { periodInMinutes: 10080 });
+// Run once a day (guarded to prevent resetting the schedule on MV3 restart)
+chrome.alarms.get('dailyRefresh', (alarm) => {
+  if (!alarm) {
+    chrome.alarms.create('dailyRefresh', { periodInMinutes: 1440 });
+  }
+});
+
+// Run once every 7 days (guarded to prevent resetting the schedule on MV3 restart)
+chrome.alarms.get('weeklyDigest', (alarm) => {
+  if (!alarm) {
+    chrome.alarms.create('weeklyDigest', { periodInMinutes: 10080 });
+  }
+});
 
 console.log('[Subsume] Background service worker started.');
