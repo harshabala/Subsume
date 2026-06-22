@@ -11,9 +11,10 @@ import { HoverCardManager } from './hoverCard';
 import { PosterBadgeManager } from './posterBadge';
 import { sendMessage } from '@/shared/messages';
 import { MessageType, PosterMatch, ContentPrefs } from '@/shared/types';
+import { logger } from '@/shared/logger';
 
 async function init(): Promise<void> {
-  console.log('[Subsume] Content script loaded.');
+  logger.log('[Subsume] Content script loaded.');
 
   const hostname = window.location.hostname;
 
@@ -29,12 +30,12 @@ async function init(): Promise<void> {
   const sensitivity = prefs?.detectionSensitivity || 'medium';
 
   if (prefs?.domainDisabled) {
-    console.log(`[Subsume] Domain ${hostname} is blacklisted. Exiting.`);
+    logger.log(`[Subsume] Domain ${hostname} is blacklisted. Exiting.`);
     return;
   }
 
   if (!hoverEnabled && !overlaysEnabled) {
-    console.log('[Subsume] Page scanning disabled in preferences. Exiting.');
+    logger.log('[Subsume] Page scanning disabled in preferences. Exiting.');
     return;
   }
 
@@ -57,7 +58,7 @@ async function init(): Promise<void> {
 
     const runInitialPosterScan = async (): Promise<void> => {
       if (catalogMode) {
-        console.log(
+        logger.log(
           `[Subsume] Catalog page detected (${highConfidenceRegions.length} region(s)); prioritizing poster scan.`
         );
         for (const region of highConfidenceRegions) {
@@ -69,7 +70,7 @@ async function init(): Promise<void> {
     };
 
     runInitialPosterScan().catch((err) => {
-      console.error('[Subsume] Initial poster scan failed:', err);
+      logger.error('[Subsume] Initial poster scan failed:', err);
     });
   }
 
@@ -84,12 +85,12 @@ async function init(): Promise<void> {
 
     const initialTitles = scanPage();
     if (initialTitles.length > 0) {
-      console.log(`[Subsume] Found ${initialTitles.length} title(s) on page.`);
+      logger.log(`[Subsume] Found ${initialTitles.length} title(s) on page.`);
       attachHoverListeners(initialTitles);
     }
 
     startObserving((newTitles) => {
-      console.log(`[Subsume] Found ${newTitles.length} new title(s) via mutation.`);
+      logger.log(`[Subsume] Found ${newTitles.length} new title(s) via mutation.`);
       attachHoverListeners(newTitles);
     });
   } else if (overlaysEnabled) {

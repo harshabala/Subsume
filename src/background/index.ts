@@ -1,4 +1,5 @@
 import { createMessageRouter, MessageHandlerMap } from '@/shared/messages';
+import { logger } from '@/shared/logger';
 import {
   MessageType,
   MediaItem,
@@ -72,7 +73,7 @@ async function broadcastMessage(message: any) {
       }
     }
   } catch (err) {
-    console.error('[Subsume] Failed to query tabs for broadcast:', err);
+    logger.error('[Subsume] Failed to query tabs for broadcast:', err);
   }
 }
 
@@ -186,12 +187,12 @@ function isValidUserPreferences(prefs: any): prefs is UserPreferences {
 const handlers: MessageHandlerMap = {
   [MessageType.GET_TITLE_DETAILS]: async (payload) => {
     const req = payload as GetTitleDetailsRequest;
-    console.log('[Subsume] GET_TITLE_DETAILS:', req.title);
+    logger.log('[Subsume] GET_TITLE_DETAILS:', req.title);
     
     // 1. Check local DB first
     const cached = await findMediaByTitle(req.title, req.yearGuess);
     if (cached) {
-      console.log('[Subsume] Found in local cache:', cached.canonicalTitle);
+      logger.log('[Subsume] Found in local cache:', cached.canonicalTitle);
       const prefs = await getPreferences();
       let result = cached;
 
@@ -223,7 +224,7 @@ const handlers: MessageHandlerMap = {
 
   [MessageType.ADD_TO_LIST]: async (payload) => {
     const req = payload as AddToListRequest;
-    console.log('[Subsume] ADD_TO_LIST:', req.mediaItem.canonicalTitle);
+    logger.log('[Subsume] ADD_TO_LIST:', req.mediaItem.canonicalTitle);
 
     const existingMedia = await getMediaItem(req.mediaItem.id);
     const mediaToStore = existingMedia
@@ -254,7 +255,7 @@ const handlers: MessageHandlerMap = {
 
   [MessageType.UPDATE_STATUS]: async (payload) => {
     const req = payload as UpdateStatusRequest;
-    console.log('[Subsume] UPDATE_STATUS:', req.mediaId, '→', req.status);
+    logger.log('[Subsume] UPDATE_STATUS:', req.mediaId, '→', req.status);
     const validStatuses = new Set(['to-watch', 'watching', 'watched', 'abandoned']);
     if (!validStatuses.has(req.status)) {
       return { updated: false };
@@ -300,7 +301,7 @@ const handlers: MessageHandlerMap = {
 
   [MessageType.SET_USER_TAGS]: async (payload) => {
     const req = payload as SetUserTagsRequest;
-    console.log('[Subsume] SET_USER_TAGS:', req.mediaId, '→', req.tags);
+    logger.log('[Subsume] SET_USER_TAGS:', req.mediaId, '→', req.tags);
     const existing = await getLibraryItem(req.mediaId);
     if (!existing) {
       return { updated: false };
@@ -362,7 +363,7 @@ const handlers: MessageHandlerMap = {
 
   [MessageType.GET_LIBRARY]: async (payload) => {
     const req = payload as GetLibraryRequest;
-    console.log('[Subsume] GET_LIBRARY with filters:', req);
+    logger.log('[Subsume] GET_LIBRARY with filters:', req);
     
     const items = await getAllLibraryItems();
     
@@ -392,7 +393,7 @@ const handlers: MessageHandlerMap = {
 
   [MessageType.GET_LIBRARY_PAGE]: async (payload) => {
     const req = payload as GetLibraryPageRequest;
-    console.log('[Subsume] GET_LIBRARY_PAGE limit:', req.limit, 'offset:', req.offset);
+    logger.log('[Subsume] GET_LIBRARY_PAGE limit:', req.limit, 'offset:', req.offset);
     const libraryItems = await getLibraryPage(req.limit, req.offset, req.type);
     const mediaIds = libraryItems.map((item) => item.mediaId);
     const mediaMap = await getAllMediaMap(mediaIds);
@@ -404,30 +405,30 @@ const handlers: MessageHandlerMap = {
 
   [MessageType.GET_RECOMMENDATIONS]: async (payload) => {
     const req = payload as GetRecommendationsRequest;
-    console.log('[Subsume] GET_RECOMMENDATIONS', req);
+    logger.log('[Subsume] GET_RECOMMENDATIONS', req);
     
     // Check if LLM is enabled and has a key
     const prefs = await getPreferences();
     if (prefs.llmEnabled && prefs.llmApiKey) {
       try {
-        console.log('[Subsume] Using LLM for recommendations...');
+        logger.log('[Subsume] Using LLM for recommendations...');
         const llmRecs = await generateLLMRecommendations();
         if (llmRecs.length > 0) {
           return llmRecs;
         }
       } catch (err) {
-        console.error('[Subsume] LLM recommendations failed, falling back to rule-based', err);
+        logger.error('[Subsume] LLM recommendations failed, falling back to rule-based', err);
       }
     }
     
-    console.log('[Subsume] Using rule-based recommendations fallback');
+    logger.log('[Subsume] Using rule-based recommendations fallback');
     return generateRuleBasedRecommendations(req?.basedOnMediaId);
   },
 
   [MessageType.GET_LATEST_RELEASES]: async (payload) => {
     const req = payload as GetLatestReleasesRequest;
     const type = req?.type || 'movie';
-    console.log(`[Subsume] GET_LATEST_RELEASES for ${type}`);
+    logger.log(`[Subsume] GET_LATEST_RELEASES for ${type}`);
     
     chrome.action.setBadgeText({ text: '' });
     
@@ -598,7 +599,7 @@ const handlers: MessageHandlerMap = {
       query?: string;
     };
 
-    console.log('[Subsume] RESOLVE_POSTER:', req.strategy, req.tmdbId || req.query);
+    logger.log('[Subsume] RESOLVE_POSTER:', req.strategy, req.tmdbId || req.query);
 
     let media: MediaItem | null = null;
 
@@ -615,7 +616,7 @@ const handlers: MessageHandlerMap = {
             await putMediaItem(media);
           }
         } catch (err) {
-          console.error('[Subsume] Failed to fetch tmdb-cdn details:', err);
+          logger.error('[Subsume] Failed to fetch tmdb-cdn details:', err);
         }
       }
     } else if ((req.strategy === 'alt-text' || req.strategy === 'ancestor-text') && req.query) {
@@ -639,7 +640,7 @@ const handlers: MessageHandlerMap = {
             }
           }
         } catch (err) {
-          console.error('[Subsume] Failed to search/resolve title:', err);
+          logger.error('[Subsume] Failed to search/resolve title:', err);
         }
       }
     }
@@ -697,7 +698,7 @@ const handlers: MessageHandlerMap = {
     const req = payload as { mediaId: string };
     // Validate mediaId format to prevent query-string injection into the extension URL.
     if (!/^tmdb_(movie|tv)_\d+$/.test(req.mediaId)) {
-      console.warn('[Subsume] OPEN_DETAIL rejected invalid mediaId:', req.mediaId);
+      logger.warn('[Subsume] OPEN_DETAIL rejected invalid mediaId:', req.mediaId);
       return { success: false, error: 'Invalid mediaId format' };
     }
     chrome.tabs.create({
@@ -724,7 +725,7 @@ const handlers: MessageHandlerMap = {
       const { flat, grouped } = await getPersonalizedRecommendations(prefs);
       return { flat, grouped };
     } catch (err) {
-      console.error('[Subsume] GET_PERSONALIZED_RECS failed:', err);
+      logger.error('[Subsume] GET_PERSONALIZED_RECS failed:', err);
       return { error: 'llm_failed', flat: [], grouped: null };
     }
   },
@@ -744,7 +745,7 @@ const handlers: MessageHandlerMap = {
           await saveWeeklyDigest(digest);
         })
         .catch((err) => {
-          console.error('[Subsume] Background weekly digest regen failed:', err);
+          logger.error('[Subsume] Background weekly digest regen failed:', err);
         });
       return cached;
     }
@@ -816,7 +817,7 @@ getPreferences().then((prefs) => {
 
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
-    console.log('[Subsume] Extension installed — welcome!');
+    logger.log('[Subsume] Extension installed — welcome!');
     chrome.tabs.create({ url: chrome.runtime.getURL('ui/index.html') });
   }
 });
@@ -890,7 +891,7 @@ const DAILY_RELEASE_WINDOW_DAYS = 7;
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === 'dailyRefresh') {
-    console.log('[Subsume] Daily refresh triggered.');
+    logger.log('[Subsume] Daily refresh triggered.');
     const prefs = await getPreferences();
 
     const [movies, tv] = await Promise.all([
@@ -926,7 +927,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
         dailyBadge = dailyBadge ?? 'watch-alert';
       }
     } catch (err) {
-      console.error('[Subsume] Watch alert check failed:', err);
+      logger.error('[Subsume] Watch alert check failed:', err);
     }
 
     if (dailyBadge) {
@@ -935,14 +936,14 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   }
 
   if (alarm.name === 'weeklyDigest') {
-    console.log('[Subsume] Weekly digest alarm triggered.');
+    logger.log('[Subsume] Weekly digest alarm triggered.');
     try {
       const prefs = await getPreferences();
       const digest = await generateWeeklyDigest(prefs);
       await saveWeeklyDigest(digest);
       await notifyWeeklyDigestReady(digest);
     } catch (err) {
-      console.error('[Subsume] Weekly digest generation failed:', err);
+      logger.error('[Subsume] Weekly digest generation failed:', err);
     }
   }
 });
@@ -973,4 +974,4 @@ chrome.alarms.get('weeklyDigest', (alarm) => {
   }
 });
 
-console.log('[Subsume] Background service worker started.');
+logger.log('[Subsume] Background service worker started.');
