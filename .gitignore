@@ -11,7 +11,7 @@ coverage/
 .claude/
 .windsurf/
 .brand-preview/
-Icon*
+/Icon
 build.log
 subsume.zip
 Icon

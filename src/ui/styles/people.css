@@ -1,0 +1,584 @@
+.page-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.people-header {
+  margin-bottom: 24px;
+}
+
+.people-tabs {
+  display: flex;
+  gap: 24px;
+  border-bottom: 1px solid var(--color-border);
+  padding: 0 32px;
+  margin-bottom: 24px;
+}
+
+.people-tab {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  padding: 12px 4px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.people-tab.active {
+  color: var(--color-text);
+  border-bottom: 2px solid var(--gold);
+}
+
+.people-content {
+  padding: 0 32px;
+}
+
+.people-empty-state, .people-loading {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.people-empty-state-text {
+  padding: 64px 32px;
+}
+
+.people-empty-state-text p {
+  margin: 0;
+}
+
+.people-empty-state-text .empty-title {
+  font-size: 16px;
+  font-style: italic;
+  margin-bottom: 8px;
+}
+
+.people-empty-state-text .empty-subtitle {
+  font-size: 14px;
+}
+
+.people-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.person-card {
+  position: relative;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.person-card:hover {
+  border-color: var(--gold);
+  transform: translateY(-2px);
+}
+
+.person-card-unfollow {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+
+.person-card-photo {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 12px;
+}
+
+.person-card-photo-placeholder {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-surface-hover);
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.person-card-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 6px;
+  margin-top: 0;
+}
+
+.person-card-role {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 2px 10px;
+  color: var(--color-text-secondary);
+  margin-bottom: 8px;
+}
+
+.person-card-stats {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.person-card-sync {
+  font-size: 11px;
+  font-style: italic;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+
+.api-key-warning {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 8px;
+  padding: 12px;
+  color: #f87171;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.people-search-input {
+  width: 100%;
+  max-width: 480px;
+  padding: 10px 14px;
+  background: var(--color-surface-hover);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  border-radius: 8px;
+  font-size: 15px;
+  margin-bottom: 24px;
+}
+
+.search-results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 16px;
+  gap: 16px;
+}
+
+.search-result-info-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.search-result-photo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.search-result-placeholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-surface-hover);
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.search-result-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 4px 0;
+}
+
+.search-result-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-result-dept {
+  font-size: 11px;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: var(--color-text-secondary);
+}
+
+.search-result-known-for {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 240px;
+}
+
+.search-result-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.role-select {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.search-empty-state {
+  color: var(--color-text-secondary);
+  padding: 24px 0;
+}
+
+/* Filmography styles */
+
+.filmography-container {
+  padding-bottom: 64px;
+}
+
+.filmography-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 0 32px;
+  margin-bottom: 24px;
+}
+
+.filmography-back-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 0;
+}
+
+.filmography-unfollow-btn {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 6px;
+  color: #f87171;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.filmography-bio-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 24px;
+  margin: 0 32px 24px 32px;
+  display: flex;
+  gap: 20px;
+}
+
+.filmography-bio-photo {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  align-self: flex-start;
+}
+
+.filmography-bio-placeholder {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--color-surface-hover);
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+  align-self: flex-start;
+}
+
+.filmography-bio-content {
+  flex: 1;
+}
+
+.filmography-bio-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filmography-bio-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.filmography-bio-role {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 2px 10px;
+  color: var(--color-text-secondary);
+}
+
+.filmography-bio-meta {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 6px;
+  display: flex;
+  gap: 8px;
+}
+
+.filmography-bio-refresh {
+  background: none;
+  border: none;
+  color: var(--gold);
+  cursor: pointer;
+  padding: 0;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.filmography-bio-text-wrapper {
+  margin-top: 12px;
+}
+
+.filmography-bio-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  margin: 0;
+  -webkit-line-clamp: 3;
+}
+
+.filmography-bio-text.expanded {
+  -webkit-line-clamp: unset;
+}
+
+.filmography-bio-expand {
+  background: none;
+  border: none;
+  color: var(--gold);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 6px;
+  padding: 0;
+}
+
+.filmography-bio-empty {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+
+.filmography-add-all {
+  margin-top: 16px;
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
+.filmography-filter-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 24px 32px;
+}
+
+.filmography-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filmography-filter-chip {
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filmography-filter-chip.active {
+  background: rgba(201, 168, 76, 0.15);
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+.filmography-sort-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filmography-sort-label {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.filmography-poster-card {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filmography-poster-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2/3;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #18181b;
+  border: 1px solid var(--color-border);
+}
+
+.filmography-poster-imdb {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: var(--gold);
+  color: #121212;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 4px;
+  z-index: 2;
+}
+
+.filmography-poster-tmdb {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 6px;
+  border-radius: 4px;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.filmography-poster-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.filmography-poster-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.filmography-poster-dot {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  z-index: 2;
+  box-shadow: 0 0 4px rgba(0,0,0,0.5);
+}
+
+.filmography-poster-dot.status-to-watch { background: var(--gold); }
+.filmography-poster-dot.status-watching { background: #60a5fa; }
+.filmography-poster-dot.status-watched { background: #4ade80; }
+.filmography-poster-dot.status-abandoned { background: #f87171; }
+
+.filmography-poster-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 4px 0 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filmography-poster-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.filmography-poster-year {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.filmography-poster-user-rating {
+  font-size: 11px;
+  color: var(--gold);
+  font-weight: 600;
+}
