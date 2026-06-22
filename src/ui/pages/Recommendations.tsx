@@ -11,14 +11,9 @@ import {
   WatchProfile,
 } from '@/shared/types';
 import { DetailModal } from '../components/DetailModal';
-
-// ─── Keyframe injection (pulse skeleton) ──────────────────────────────────
-const PULSE_STYLE = `
-@keyframes subsume-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-`;
+import { RecommendationMediaCard } from '../components/RecommendationMediaCard';
+import { RecommendationAiCard } from '../components/RecommendationAiCard';
+import '../styles/recommendations.css';
 
 export function Recommendations() {
   // ── Existing rule-based state ─────────────────────────────────────────
@@ -192,176 +187,6 @@ export function Recommendations() {
     }
   }
 
-  // ── Existing rule-based card renderer (untouched) ────────────────────
-  const renderMediaCard = ({ media, explanation }: (Recommendation & { media: MediaItem })) => (
-    <div key={media.id} className="media-card" style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer' }} onClick={() => setSelectedMedia(media)}>
-       <div style={{ display: 'flex', gap: 16, padding: 16 }}>
-         <div className="media-card-poster" style={{ width: 80, flexShrink: 0 }}>
-           {media.posterUrl ? (
-             <img src={media.posterUrl} alt={media.canonicalTitle} loading="lazy" />
-           ) : (
-             <div className="empty-poster text-center p-4">No Image</div>
-           )}
-         </div>
-         <div>
-           <h4 className="media-card-title">{media.canonicalTitle}</h4>
-           <div className="media-card-meta">
-             <span>{media.year}</span>
-             {media.ratings?.find(r => r.provider === 'tmdb') && (
-                <span className="media-card-rating">
-                  ⭐ {media.ratings.find(r => r.provider === 'tmdb')!.score.toFixed(1)}
-                </span>
-             )}
-           </div>
-           <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-              {media.genres.slice(0, 2).map((g) => (
-                <span key={g} style={{ fontSize: 10, padding: '2px 6px', background: 'rgba(255,255,255,0.1)', borderRadius: 4 }}>{g}</span>
-              ))}
-           </div>
-         </div>
-       </div>
-
-       <div style={{ background: 'rgba(124, 58, 237, 0.1)', padding: '12px 16px', borderTop: '1px solid rgba(124, 58, 237, 0.2)', flex: 1 }}>
-          <div style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
-            <span style={{ fontSize: 14 }}>💡</span>
-            <span style={{
-              fontSize: 13,
-              fontStyle: 'italic',
-              color: 'var(--fg-subtle)',
-              lineHeight: 1.4,
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis'
-            }}>
-              {explanation}
-            </span>
-          </div>
-       </div>
-    </div>
-  );
-
-  // ── Phase 4: AI poster card renderer ──────────────────────────────────
-  const renderAiCard = (rec: PersonalizedRecommendation, showSeedPill: boolean) => {
-    const tmdbRating = rec.ratings.find(r => r.provider === 'tmdb');
-    const isAdded = aiAddedIds.has(rec.tmdbId);
-
-    return (
-      <div
-        key={rec.tmdbId || rec.title}
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          background: 'var(--bg-elevated)',
-          borderRadius: 'var(--radius-md)',
-          border: '1px solid var(--border)',
-          overflow: 'hidden',
-          cursor: rec.tmdbId ? 'pointer' : 'default',
-          minWidth: 140,
-          flex: '0 0 auto',
-        }}
-        onClick={() => {
-          if (rec.tmdbId) {
-            const media: MediaItem = {
-              id: rec.tmdbId,
-              canonicalTitle: rec.title,
-              type: rec.type,
-              year: rec.year,
-              genres: [],
-              ratings: rec.ratings,
-              providers: [],
-              posterUrl: rec.posterUrl || '',
-            };
-            setSelectedMedia(media);
-          }
-        }}
-      >
-        {/* Poster */}
-        <div style={{ position: 'relative', aspectRatio: '2/3', background: 'var(--bg-sunken)' }}>
-          {rec.posterUrl ? (
-            <img
-              src={rec.posterUrl}
-              alt={rec.title}
-              loading="lazy"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-            />
-          ) : (
-            <div style={{
-              width: '100%', height: '100%', display: 'flex',
-              alignItems: 'center', justifyContent: 'center',
-              color: 'var(--fg-subtle)', fontSize: 11, padding: 8,
-              textAlign: 'center', lineHeight: 1.3,
-            }}>
-              {rec.title}
-            </div>
-          )}
-          {tmdbRating && (
-            <div style={{
-              position: 'absolute', top: 6, right: 6,
-              background: 'rgba(0,0,0,0.75)', color: '#fff',
-              fontSize: 10, fontWeight: 700,
-              padding: '2px 5px', borderRadius: 4,
-            }}>
-              ★ {tmdbRating.score.toFixed(1)}
-            </div>
-          )}
-        </div>
-
-        {/* Body */}
-        <div style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
-          <div style={{
-            fontWeight: 600, fontSize: 12, color: 'var(--fg-base)', lineHeight: 1.3,
-            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-          }}>
-            {rec.title}
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--fg-subtle)' }}>
-            {rec.year} · {rec.type === 'movie' ? 'Movie' : 'TV'}
-          </div>
-          <div style={{
-            fontSize: 12, fontStyle: 'italic', color: 'var(--fg-subtle)',
-            lineHeight: 1.4,
-            display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical',
-            overflow: 'hidden', textOverflow: 'ellipsis', flex: 1,
-          }}>
-            {rec.reason}
-          </div>
-          {showSeedPill && rec.seedTitle && (
-            <div style={{
-              fontSize: 10, color: 'var(--fg-subtle)',
-              background: 'var(--bg-sunken)', border: '1px solid var(--border)',
-              borderRadius: 99, padding: '2px 8px',
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              maxWidth: '100%',
-            }}>
-              Because you liked {rec.seedTitle}
-            </div>
-          )}
-          {rec.tmdbId && (
-            <button
-              disabled={isAdded}
-              onClick={e => { e.stopPropagation(); addAiRecToLibrary(rec); }}
-              style={{
-                marginTop: 4, fontSize: 11, fontWeight: 600,
-                background: isAdded ? 'var(--bg-sunken)' : 'var(--gold)',
-                color: isAdded ? 'var(--fg-subtle)' : '#121212',
-                border: 'none', borderRadius: 'var(--radius-sm)',
-                padding: '4px 10px',
-                cursor: isAdded ? 'default' : 'pointer',
-                transition: 'background 0.15s',
-                alignSelf: 'flex-start',
-              }}
-            >
-              {isAdded ? '✓ Added' : '+ Add'}
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  };
-
   const hasNoRecs = isGrouped ? groupedRecs.length === 0 : recs.length === 0;
   const hasEnoughHistory = watchProfile !== null && watchProfile.totalWatched >= 3;
   const topGenres = (watchProfile?.favoriteGenres || []).slice(0, 3);
@@ -373,9 +198,8 @@ export function Recommendations() {
 
   return (
     <div className="page-container">
-      <style>{PULSE_STYLE}</style>
       <header className="page-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="recommendations-header-badge">
           <h2 className="page-title">Recommendations</h2>
           <span className="status-badge to-watch">Algorithm</span>
         </div>
@@ -386,7 +210,7 @@ export function Recommendations() {
       {loading ? (
         <div className="empty-state">
            <div className="subsume-spinner" />
-           <p style={{ marginTop: 16, color: 'var(--color-text-secondary)' }}>Analyzing library...</p>
+           <p className="recommendations-loading-spinner-container">Analyzing library...</p>
         </div>
       ) : hasNoRecs ? (
         <div className="empty-state">
@@ -397,31 +221,31 @@ export function Recommendations() {
           </p>
         </div>
       ) : isGrouped ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+        <div className="recommendations-grouped-container">
           {groupedRecs.map(({ seedTitle, recommendations }) => {
             const isCollapsed = collapsedGroups[seedTitle] || false;
             return (
-              <div key={seedTitle} style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', padding: '16px' }}>
+              <div key={seedTitle} className="recommendations-rule-group">
                 <div 
-                  style={{ 
-                    display: 'flex', alignItems: 'center', gap: '12px', 
-                    cursor: 'pointer', userSelect: 'none',
-                    marginBottom: isCollapsed ? '0px' : '16px'
-                  }}
+                  className="recommendations-rule-group-header"
                   onClick={() => toggleGroup(seedTitle)}
+                  style={{ marginBottom: isCollapsed ? '0px' : '16px' }}
                 >
-                  <span style={{ 
-                    fontSize: '10px', color: 'var(--primary)',
-                    transform: isCollapsed ? 'rotate(-90deg)' : 'none',
-                    transition: 'transform 0.2s ease', display: 'inline-block'
-                  }}>▼</span>
-                  <h3 style={{ fontSize: '15px', fontWeight: '600', color: 'var(--fg-base)', margin: 0 }}>
-                    Because you watched <span style={{ color: 'var(--primary)', fontStyle: 'italic' }}>{seedTitle}</span>
+                  <span className={`recommendations-rule-group-icon ${isCollapsed ? 'recommendations-rule-group-icon-collapsed' : ''}`}>▼</span>
+                  <h3 className="recommendations-rule-group-title">
+                    Because you watched <span className="recommendations-rule-group-title-highlight">{seedTitle}</span>
                   </h3>
                 </div>
                 {!isCollapsed && (
-                  <div className="card-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
-                    {recommendations.map(r => renderMediaCard(r))}
+                  <div className="card-grid recommendations-rule-grid">
+                    {recommendations.map(r => (
+                      <RecommendationMediaCard
+                        key={r.media.id}
+                        media={r.media}
+                        explanation={r.explanation}
+                        onClick={() => setSelectedMedia(r.media)}
+                      />
+                    ))}
                   </div>
                 )}
               </div>
@@ -429,20 +253,24 @@ export function Recommendations() {
           })}
         </div>
       ) : (
-        <div className="card-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
-          {recs.map(r => renderMediaCard(r))}
+        <div className="card-grid recommendations-rule-grid">
+          {recs.map(r => (
+            <RecommendationMediaCard
+              key={r.media.id}
+              media={r.media}
+              explanation={r.explanation}
+              onClick={() => setSelectedMedia(r.media)}
+            />
+          ))}
         </div>
       )}
 
       {/* ── Phase 4: AI Personalized Section ── */}
-      <div style={{ marginTop: 48, borderTop: '1px solid var(--border)', paddingTop: 32 }}>
+      <div className="recommendations-ai-section">
 
         {/* Profile context strip */}
         {watchProfile && (
-          <p style={{
-            fontSize: 11, color: 'var(--fg-subtle)',
-            textAlign: 'center', marginBottom: 16, marginTop: 0,
-          }}>
+          <p className="recommendations-page-subtitle">
             Based on {watchProfile.totalWatched} film{watchProfile.totalWatched === 1 ? '' : 's'} watched
             {topGenres.length > 0 && ` · Top genres: ${topGenres.join(', ')}`}
           </p>
@@ -450,23 +278,18 @@ export function Recommendations() {
 
         {/* EMPTY STATE */}
         {!hasEnoughHistory && !recsLoading && personalizedRecs.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '24px 16px', color: 'var(--fg-subtle)' }}>
-            <p style={{ marginBottom: 4 }}>Start watching to unlock personalized picks.</p>
-            <p style={{ fontSize: 12, fontStyle: 'italic' }}>Rate at least 3 films to help Subsume understand your taste.</p>
+          <div className="recommendations-empty-container">
+            <p className="recommendations-empty-title">Start watching to unlock personalized picks.</p>
+            <p className="recommendations-empty-subtitle">Rate at least 3 films to help Subsume understand your taste.</p>
           </div>
         )}
 
         {/* GENERATE BUTTON */}
         {hasEnoughHistory && !recsLoading && personalizedRecs.length === 0 && !recsError && (
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
+          <div className="recommendations-action-container">
             <button
               onClick={generatePersonalized}
-              style={{
-                background: 'var(--gold)', color: '#121212',
-                border: 'none', borderRadius: 'var(--radius-md)',
-                padding: '10px 24px', fontWeight: 700, fontSize: 14,
-                cursor: 'pointer', transition: 'opacity 0.15s',
-              }}
+              className="recommendations-generate-button"
             >
               ✨ Get Personalized Recommendations
             </button>
@@ -475,14 +298,14 @@ export function Recommendations() {
 
         {/* NO KEY STATE */}
         {recsError === 'no_key' && (
-          <div style={{ textAlign: 'center', padding: '24px 16px' }}>
-            <p style={{ color: 'var(--fg-base)', marginBottom: 4 }}>No LLM provider configured.</p>
-            <p style={{ color: 'var(--fg-subtle)', fontSize: 13, marginBottom: 12 }}>
+          <div className="recommendations-error-container">
+            <p className="recommendations-error-title">No LLM provider configured.</p>
+            <p className="recommendations-error-subtitle">
               Add an API key in Settings to enable AI recommendations.
             </p>
             <button
               onClick={generatePersonalized}
-              style={{ marginTop: 8, fontSize: 12, background: 'transparent', color: 'var(--fg-subtle)', border: 'none', cursor: 'pointer' }}
+              className="recommendations-error-retry-text"
             >
               ↺ Retry
             </button>
@@ -491,18 +314,14 @@ export function Recommendations() {
 
         {/* FAILED STATE */}
         {recsError === 'failed' && (
-          <div style={{ textAlign: 'center', padding: '24px 16px' }}>
-            <p style={{ color: 'var(--fg-base)', marginBottom: 4 }}>Something went wrong with the AI provider.</p>
-            <p style={{ color: 'var(--fg-subtle)', fontSize: 13, marginBottom: 12 }}>
+          <div className="recommendations-error-container">
+            <p className="recommendations-error-title">Something went wrong with the AI provider.</p>
+            <p className="recommendations-error-subtitle">
               Check your API key in Settings and try again.
             </p>
             <button
               onClick={generatePersonalized}
-              style={{
-                marginTop: 8, background: 'var(--bg-elevated)', color: 'var(--fg-base)',
-                border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
-                padding: '6px 16px', fontSize: 13, cursor: 'pointer',
-              }}
+              className="recommendations-error-retry-btn"
             >
               ↺ Retry
             </button>
@@ -512,18 +331,12 @@ export function Recommendations() {
         {/* LOADING STATE */}
         {recsLoading && (
           <div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12 }}>
+            <div className="recommendations-loading-grid">
               {[0, 1, 2, 3].map(i => (
-                <div key={i} style={{
-                  width: '100%', height: 200,
-                  background: 'var(--bg-elevated)',
-                  borderRadius: 'var(--radius-md)',
-                  animation: 'subsume-pulse 1.5s ease-in-out infinite',
-                  animationDelay: `${i * 0.04}s`,
-                }} />
+                <div key={i} className="recommendations-loading-card" style={{ animationDelay: `${i * 0.04}s` }} />
               ))}
             </div>
-            <p style={{ textAlign: 'center', marginTop: 16, fontSize: 13, fontStyle: 'italic', color: 'var(--fg-subtle)' }}>
+            <p className="recommendations-loading-text">
               Curating picks based on your taste...
             </p>
           </div>
@@ -533,23 +346,16 @@ export function Recommendations() {
         {!recsLoading && personalizedRecs.length > 0 && (
           <div>
             {/* Header row */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-              <span style={{ fontWeight: 700, color: 'var(--fg-base)', fontSize: 15 }}>AI Picks for You</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div className="recommendations-results-header">
+              <span className="recommendations-results-title">AI Picks for You</span>
+              <div className="recommendations-results-actions">
                 {recGroups !== null && (
-                  <div style={{ display: 'flex', gap: 4, background: 'var(--bg-sunken)', borderRadius: 'var(--radius-sm)', padding: 3 }}>
+                  <div className="recommendations-view-mode-toggle">
                     {(['grouped', 'flat'] as const).map(mode => (
                       <button
                         key={mode}
                         onClick={() => setViewMode(mode)}
-                        style={{
-                          fontSize: 11, fontWeight: 600,
-                          padding: '3px 10px', border: 'none',
-                          borderRadius: 'var(--radius-sm)', cursor: 'pointer',
-                          background: viewMode === mode ? 'var(--gold)' : 'transparent',
-                          color: viewMode === mode ? '#000' : 'var(--fg-subtle)',
-                          transition: 'background 0.15s, color 0.15s',
-                        }}
+                        className={`recommendations-view-mode-btn ${viewMode === mode ? 'recommendations-view-mode-btn-active' : 'recommendations-view-mode-btn-inactive'}`}
                       >
                         {mode === 'grouped' ? 'By Theme' : 'All Titles'}
                       </button>
@@ -558,7 +364,7 @@ export function Recommendations() {
                 )}
                 <button
                   onClick={generatePersonalized}
-                  style={{ fontSize: 12, background: 'transparent', color: 'var(--fg-subtle)', border: 'none', cursor: 'pointer', padding: 0 }}
+                  className="recommendations-regenerate-btn"
                 >
                   ↺ Regenerate
                 </button>
@@ -567,32 +373,59 @@ export function Recommendations() {
 
             {/* FLAT VIEW */}
             {(viewMode === 'flat' || recGroups === null) && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12 }}>
-                {personalizedRecs.map(rec => renderAiCard(rec, true))}
+              <div className="recommendations-flat-grid">
+                {personalizedRecs.map(rec => (
+                  <RecommendationAiCard
+                    key={rec.tmdbId || rec.title}
+                    rec={rec}
+                    showSeedPill={true}
+                    isAdded={aiAddedIds.has(rec.tmdbId)}
+                    onCardClick={setSelectedMedia}
+                    onAddClick={addAiRecToLibrary}
+                  />
+                ))}
               </div>
             )}
 
             {/* GROUPED VIEW */}
             {viewMode === 'grouped' && recGroups !== null && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+              <div className="recommendations-grouped-container">
                 {recGroups.map(group => (
                   <div key={group.seedTitle}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                      <span style={{ display: 'inline-block', width: 3, height: '1.2em', background: 'var(--gold)', flexShrink: 0, alignSelf: 'center' }} />
-                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg-base)' }}>
+                    <div className="recommendations-grouped-section-header">
+                      <span className="recommendations-grouped-section-bar" />
+                      <span className="recommendations-grouped-section-title">
                         Because you loved {group.seedTitle}
                       </span>
                     </div>
-                    <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8, scrollbarWidth: 'none' } as any}>
-                      {group.recommendations.map(rec => renderAiCard(rec, false))}
+                    <div className="recommendations-grouped-section-scroll">
+                      {group.recommendations.map(rec => (
+                        <RecommendationAiCard
+                          key={rec.tmdbId || rec.title}
+                          rec={rec}
+                          showSeedPill={false}
+                          isAdded={aiAddedIds.has(rec.tmdbId)}
+                          onCardClick={setSelectedMedia}
+                          onAddClick={addAiRecToLibrary}
+                        />
+                      ))}
                     </div>
                   </div>
                 ))}
                 {ungroupedRecs.length > 0 && (
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg-base)', marginBottom: 12 }}>More Picks</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12 }}>
-                      {ungroupedRecs.map(rec => renderAiCard(rec, true))}
+                    <div className="recommendations-grouped-more-title">More Picks</div>
+                    <div className="recommendations-flat-grid">
+                      {ungroupedRecs.map(rec => (
+                        <RecommendationAiCard
+                          key={rec.tmdbId || rec.title}
+                          rec={rec}
+                          showSeedPill={true}
+                          isAdded={aiAddedIds.has(rec.tmdbId)}
+                          onCardClick={setSelectedMedia}
+                          onAddClick={addAiRecToLibrary}
+                        />
+                      ))}
                     </div>
                   </div>
                 )}
