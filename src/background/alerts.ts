@@ -20,7 +20,7 @@ const GENRE_ID_TO_NAME: Record<string, string> = Object.fromEntries(
 function platformNamesForAlert(alert: WatchAlert): string[] {
   return (alert.platforms || [])
     .map((id) => AVAILABLE_PLATFORMS.find((platform) => platform.id === id)?.name)
-    .filter((name): name is string => Boolean(name));
+    .filter((name) => name !== undefined) as string[];
 }
 
 function genreNamesForAlert(alert: WatchAlert): string[] {

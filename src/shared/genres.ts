@@ -11,7 +11,7 @@ export const AVAILABLE_GENRES = [
   { id: '53', name: 'Thriller' },
 ] as const;
 
-const GENRE_ID_TO_NAME = new Map(AVAILABLE_GENRES.map((g) => [g.id, g.name]));
+const GENRE_ID_TO_NAME = new Map<string, string>(AVAILABLE_GENRES.map((g) => [g.id, g.name]));
 
 /** TMDb API names that differ from our Settings labels. */
 const GENRE_ALIASES: Record<string, string[]> = {

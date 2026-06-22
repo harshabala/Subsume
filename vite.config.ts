@@ -47,6 +47,6 @@ export default defineConfig(({ command }) => ({
         },
       },
     },
-    minify: command === 'serve' ? false : 'esbuild',
+    minify: command === 'serve' ? false : true,
   },
 }));

@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 const DEBUG = import.meta.env.DEV;
 
 export const logger = {
