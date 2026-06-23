@@ -2,6 +2,7 @@ import { UserPreferences, LibraryItem, MediaItem, Recommendation, GroupedRecomme
 import { getAllLibraryItems, getAllMediaMap, getPreferences, putMediaItem, findMediaByTitle } from './storage';
 import { searchTitle } from './tmdb';
 import { buildWatchProfile } from './context';
+import { showRateLimitNotification } from './notifications';
 
 export interface LLMRawRecommendation {
   title: string;
@@ -78,75 +79,91 @@ function buildPrompt(watched: LibraryMediaPair[], toWatch: LibraryMediaPair[], s
 /**
  * Calls the specified LLM provider with the prompt.
  */
-export async function callLLMProvider(prompt: string, prefs: UserPreferences): Promise<string> {
+export async function callLLMProvider(prompt: string, prefs: UserPreferences, useSecondary = false): Promise<string> {
   const provider = prefs.llmProvider || 'openai';
-  const apiKey = prefs.llmApiKey;
+  const apiKey = useSecondary ? prefs.llmSecondaryApiKey : prefs.llmApiKey;
 
   if (!apiKey) {
-    throw new Error('LLM API key is missing. Please set it in Settings.');
+    throw new Error(`LLM ${useSecondary ? 'Secondary ' : ''}API key is missing. Please set it in Settings.`);
   }
 
-  if (provider === 'openai') {
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-      }),
-    });
-    if (!res.ok) {
-      console.error('OpenAI API error body:', await res.text());
-      throw new Error(`OpenAI API error (Status ${res.status})`);
+  try {
+    if (provider === 'openai') {
+      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.7,
+        }),
+      });
+      if (!res.ok) {
+        if (res.status === 429 || res.status === 401) throw new Error('RATE_LIMIT');
+        console.error('OpenAI API error body:', await res.text());
+        throw new Error(`OpenAI API error (Status ${res.status})`);
+      }
+      const data = await res.json();
+      return data.choices[0].message.content;
     }
-    const data = await res.json();
-    return data.choices[0].message.content;
-  }
 
-  if (provider === 'anthropic') {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: JSON.stringify({
-        model: 'claude-3-haiku-20240307',
-        max_tokens: 1024,
-        messages: [{ role: 'user', content: prompt }],
-      }),
-    });
-    if (!res.ok) {
-      console.error('Anthropic API error body:', await res.text());
-      throw new Error(`Anthropic API error (Status ${res.status})`);
+    if (provider === 'anthropic') {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({
+          model: 'claude-3-haiku-20240307',
+          max_tokens: 1024,
+          messages: [{ role: 'user', content: prompt }],
+        }),
+      });
+      if (!res.ok) {
+        if (res.status === 429 || res.status === 401) throw new Error('RATE_LIMIT');
+        console.error('Anthropic API error body:', await res.text());
+        throw new Error(`Anthropic API error (Status ${res.status})`);
+      }
+      const data = await res.json();
+      return data.content[0].text;
     }
-    const data = await res.json();
-    return data.content[0].text;
-  }
 
-  if (provider === 'gemini') {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-      }),
-    });
-    if (!res.ok) {
-      console.error('Gemini API error body:', await res.text());
-      throw new Error(`Gemini API error (Status ${res.status})`);
+    if (provider === 'gemini') {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+        }),
+      });
+      if (!res.ok) {
+        if (res.status === 429 || res.status === 401) throw new Error('RATE_LIMIT');
+        console.error('Gemini API error body:', await res.text());
+        throw new Error(`Gemini API error (Status ${res.status})`);
+      }
+      const data = await res.json();
+      return data.candidates[0].content.parts[0].text;
     }
-    const data = await res.json();
-    return data.candidates[0].content.parts[0].text;
-  }
 
-  throw new Error(`Unsupported LLM provider: ${provider}`);
+    throw new Error(`Unsupported LLM provider: ${provider}`);
+  } catch (err: any) {
+    if (err.message === 'RATE_LIMIT' && !useSecondary) {
+      if (prefs.llmSecondaryApiKey) {
+        showRateLimitNotification(provider, true);
+        return callLLMProvider(prompt, prefs, true);
+      } else {
+        showRateLimitNotification(provider, false);
+        throw new Error(`${provider} API rate limit exceeded.`);
+      }
+    }
+    throw err;
+  }
 }
 
 /**

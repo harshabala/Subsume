@@ -262,6 +262,20 @@ export function Settings() {
                 Note: Extension storage is not fully secure against local access.
               </p>
             </div>
+
+            <div className="settings-group">
+              <label className="settings-label">Secondary API Key (Fallback)</label>
+              <input 
+                type="password"
+                placeholder="sk-..."
+                value={prefs.llmSecondaryApiKey || ''}
+                onChange={(e) => handleChange('llmSecondaryApiKey', e.currentTarget.value)}
+                className="settings-input"
+              />
+              <p className="settings-help-text">
+                Used automatically if your primary API key hits a rate limit.
+              </p>
+            </div>
           </div>
         )}
 
