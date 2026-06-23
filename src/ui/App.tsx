@@ -10,11 +10,12 @@ import { Search } from './pages/Search';
 import { Stats } from './pages/Stats';
 import { People } from './pages/People';
 import { Alerts } from './pages/Alerts';
+import { Logs } from './pages/Logs';
 import { sendMessage } from '../shared/messages';
 import { MessageType, UserPreferences, LibraryItem, MediaItem, PersonItem } from '../shared/types';
 import './styles/sidebar.css';
 
-type Page = 'home' | 'library' | 'search' | 'people' | 'stats' | 'recommendations' | 'new-releases' | 'alerts' | 'settings';
+type Page = 'home' | 'library' | 'search' | 'people' | 'stats' | 'recommendations' | 'new-releases' | 'alerts' | 'settings' | 'logs';
 
 interface LibraryStats {
   movieCount: number;
@@ -53,7 +54,10 @@ const NAV_SECTIONS: NavSection[] = [
   },
   {
     label: 'App',
-    items: [{ key: 'settings', label: 'Settings', icon: '⚙️' }],
+    items: [
+      { key: 'settings', label: 'Settings', icon: '⚙️' },
+      { key: 'logs', label: 'Logs', icon: '📝' }
+    ],
   },
 ];
 
@@ -210,6 +214,8 @@ export function App() {
         return <NewReleases />;
       case 'alerts':
         return <Alerts />;
+      case 'logs':
+        return <Logs />;
       case 'settings':
         return <Settings />;
     }

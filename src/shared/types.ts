@@ -89,6 +89,7 @@ export interface UserPreferences {
   llmEnabled: boolean;
   llmProvider?: LLMProvider;
   llmApiKey?: string;
+  llmSecondaryApiKey?: string;
   tmdbApiKey?: string;
   omdbApiKey?: string;
   hoverCardsEnabled: boolean;
@@ -375,5 +376,12 @@ export interface PosterMatch {
   inLibrary: boolean;
   libraryStatus?: LibraryItem['status'];
   userRating?: number;
+}
+
+export interface SystemLog {
+  timestamp: number;
+  level: 'info' | 'warn' | 'error';
+  message: string;
+  details?: any;
 }
 
