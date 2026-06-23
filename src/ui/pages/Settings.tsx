@@ -10,6 +10,8 @@ import '../styles/settings.css';
 export function Settings() {
   const [prefs, setPrefs] = useState<UserPreferences | null>(null);
   const [saving, setSaving] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState<string | null>(null);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -55,6 +57,28 @@ export function Settings() {
     document.body.appendChild(downloadAnchorNode);
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
+  };
+
+  const handleCheckUpdate = () => {
+    setCheckingUpdate(true);
+    setUpdateStatus(null);
+    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.requestUpdateCheck) {
+      chrome.runtime.requestUpdateCheck((status) => {
+        setCheckingUpdate(false);
+        if (status === 'no_update') {
+          setUpdateStatus('Up to date');
+        } else if (status === 'update_available') {
+          setUpdateStatus('Update available!');
+        } else if (status === 'throttled') {
+          setUpdateStatus('Throttled. Please try again later.');
+        } else {
+          setUpdateStatus(`Status: ${status}`);
+        }
+      });
+    } else {
+      setCheckingUpdate(false);
+      setUpdateStatus('Update check not supported.');
+    }
   };
 
   const handleImport = (e: any) => {
@@ -270,6 +294,27 @@ export function Settings() {
           <p className="settings-help-text">
             Hover cards will not appear on these domains. Enter one domain per line.
           </p>
+        </div>
+
+        <hr className="settings-divider" />
+
+        <h3 className="settings-heading">About</h3>
+        
+        <div className="settings-group">
+          <label className="settings-label">Extension Updates</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
+            <button 
+              className="btn btn-secondary settings-action-btn"
+              onClick={handleCheckUpdate}
+              disabled={checkingUpdate}
+              style={{ width: 'auto', marginBottom: 0 }}
+            >
+              {checkingUpdate ? 'Checking...' : 'Check for Updates'}
+            </button>
+            {updateStatus && (
+              <span className="settings-help-text" style={{ marginTop: 0 }}>{updateStatus}</span>
+            )}
+          </div>
         </div>
 
         <hr className="settings-divider" />
