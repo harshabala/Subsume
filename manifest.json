@@ -3,7 +3,11 @@
   "name": "Subsume",
   "version": "0.1.0",
   "description": "Track movies & TV shows you discover while browsing. Get smart recommendations powered by AI.",
-  "permissions": ["storage", "activeTab", "notifications", "alarms"],
+  "permissions": ["storage", "activeTab", "notifications", "alarms", "identity"],
+  "oauth2": {
+    "client_id": "YOUR_CLIENT_ID_HERE",
+    "scopes": ["https://www.googleapis.com/auth/drive.appdata"]
+  },
   "host_permissions": [
     "https://api.themoviedb.org/*",
     "https://api.openai.com/*",

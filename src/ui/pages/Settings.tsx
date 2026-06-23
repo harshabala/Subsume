@@ -5,6 +5,7 @@ import { MessageType, UserPreferences, ImportLibraryData } from '@/shared/types'
 import { AVAILABLE_PLATFORMS } from '@/shared/platforms';
 import { AVAILABLE_GENRES } from '@/shared/genres';
 import { validateImportData } from '@/shared/validation';
+import { getAuthToken, uploadDatabaseBackup, downloadDatabaseBackup } from '@/background/drive-sync';
 import '../styles/settings.css';
 
 export function Settings() {
@@ -96,6 +97,38 @@ export function Settings() {
       }
     };
     reader.readAsText(file);
+  };
+
+  const handleConnectDrive = async () => {
+    try {
+      await getAuthToken(true);
+      alert('Successfully connected to Google Drive!');
+    } catch (e: any) {
+      alert('Failed to connect to Google Drive: ' + e.message);
+    }
+  };
+
+  const handleBackupNow = async () => {
+    try {
+      const res = await sendMessage(MessageType.EXPORT_LIBRARY, {});
+      if (!res.success || !res.data) throw new Error('Failed to export local data');
+      await uploadDatabaseBackup(JSON.stringify(res.data));
+      alert('Backup successful!');
+    } catch (e: any) {
+      alert('Backup failed: ' + e.message);
+    }
+  };
+
+  const handleRestoreBackup = async () => {
+    try {
+      const jsonString = await downloadDatabaseBackup();
+      const raw = JSON.parse(jsonString);
+      const data = validateImportData(raw);
+      await sendMessage(MessageType.IMPORT_LIBRARY, data);
+      alert('Restore successful!');
+    } catch (e: any) {
+      alert('Restore failed: ' + e.message);
+    }
   };
 
   if (!prefs) {
@@ -315,6 +348,33 @@ export function Settings() {
               <span className="settings-help-text" style={{ marginTop: 0 }}>{updateStatus}</span>
             )}
           </div>
+        </div>
+
+        <hr className="settings-divider" />
+
+        <h3 className="settings-heading">Cloud Sync</h3>
+        
+        <div className="settings-button-group">
+          <button 
+            className="btn btn-secondary settings-action-btn"
+            onClick={handleConnectDrive}
+          >
+            Connect to Google Drive
+          </button>
+          
+          <button 
+            className="btn btn-secondary settings-action-btn"
+            onClick={handleBackupNow}
+          >
+            Backup Now
+          </button>
+
+          <button 
+            className="btn btn-secondary settings-action-btn"
+            onClick={handleRestoreBackup}
+          >
+            Restore Backup
+          </button>
         </div>
 
         <hr className="settings-divider" />
