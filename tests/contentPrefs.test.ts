@@ -30,6 +30,7 @@ describe('buildContentPrefs', () => {
     expect(result).toEqual({
       hoverCardsEnabled: true,
       posterOverlaysEnabled: true,
+      screenplayDockEnabled: true,
       detectionSensitivity: 'high',
       disabledDomains: ['blocked.com'],
       domainDisabled: false,

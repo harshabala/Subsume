@@ -113,6 +113,7 @@ export interface UserPreferences {
   omdbApiKey?: string;
   hoverCardsEnabled: boolean;
   posterOverlaysEnabled: boolean;
+  screenplayDockEnabled?: boolean;
   disabledDomains: string[];
   detectionSensitivity: 'low' | 'medium' | 'high';
   onboardingComplete: boolean;
@@ -258,6 +259,7 @@ export interface GetContentPrefsRequest {
 export interface ContentPrefs {
   hoverCardsEnabled: boolean;
   posterOverlaysEnabled: boolean;
+  screenplayDockEnabled: boolean;
   detectionSensitivity: 'low' | 'medium' | 'high';
   disabledDomains: string[];
   domainDisabled: boolean;

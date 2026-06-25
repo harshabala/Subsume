@@ -21,6 +21,7 @@ export function buildContentPrefs(prefs: UserPreferences, hostname: string): Con
   return {
     hoverCardsEnabled: !domainDisabled && (prefs.hoverCardsEnabled ?? true),
     posterOverlaysEnabled: !domainDisabled && (prefs.posterOverlaysEnabled ?? true),
+    screenplayDockEnabled: !domainDisabled && (prefs.screenplayDockEnabled ?? true),
     detectionSensitivity: prefs.detectionSensitivity || 'medium',
     disabledDomains,
     domainDisabled,

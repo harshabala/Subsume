@@ -60,6 +60,7 @@ export function createMessageRouter(handlers: MessageHandlerMap): void {
         MessageType.GET_LIBRARY,
         MessageType.OPEN_DETAIL,
         MessageType.OPEN_CAPTURE_CANVAS,
+        MessageType.SET_USER_NOTES,
       ]);
 
       if (!isExtensionOrigin && !ALLOWED_CONTENT_SCRIPT_MESSAGES.has(message.type)) {

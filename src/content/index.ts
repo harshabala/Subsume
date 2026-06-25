@@ -9,6 +9,7 @@ import { scanPage, startObserving, scanImages, setImageScanConfig, DetectedTitle
 import { detectCatalogRegions } from './catalogDetector';
 import { HoverCardManager } from './hoverCard';
 import { MuseumPlaqueManager as PosterBadgeManager } from './overlay';
+import { AuteurScreenplayDock } from './dock';
 import { sendMessage } from '@/shared/messages';
 import { MessageType, PosterMatch, ContentPrefs } from '@/shared/types';
 import { logger } from '@/shared/logger';
@@ -28,6 +29,7 @@ async function init(): Promise<void> {
 
   const hoverEnabled = prefs?.hoverCardsEnabled ?? true;
   const overlaysEnabled = prefs?.posterOverlaysEnabled ?? true;
+  const dockEnabled = prefs?.screenplayDockEnabled ?? true;
   const sensitivity = prefs?.detectionSensitivity || 'medium';
 
   if (prefs?.domainDisabled) {
@@ -35,13 +37,19 @@ async function init(): Promise<void> {
     return;
   }
 
-  if (!hoverEnabled && !overlaysEnabled) {
-    logger.log('[Subsume] Page scanning disabled in preferences. Exiting.');
+  if (!hoverEnabled && !overlaysEnabled && !dockEnabled) {
+    logger.log('[Subsume] Page scanning and dock disabled in preferences. Exiting.');
     return;
   }
 
   let hoverManager: HoverCardManager | null = null;
   let badgeManager: PosterBadgeManager | null = null;
+  let dockManager: AuteurScreenplayDock | null = null;
+
+  if (dockEnabled) {
+    dockManager = new AuteurScreenplayDock();
+    dockManager.mount();
+  }
 
   const catalogRegions = detectCatalogRegions(document.body);
   const highConfidenceRegions = catalogRegions.filter((r) => r.confidence === 'high');
