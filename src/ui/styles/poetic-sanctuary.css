@@ -1,0 +1,170 @@
+:root {
+  --bg-sanctuary: hsl(240, 15%, 8%);
+  --text-sanctuary: hsl(40, 30%, 90%);
+  --accent-sanctuary: hsl(38, 45%, 65%);
+}
+
+.poetic-sanctuary-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-sanctuary);
+  color: var(--text-sanctuary);
+  font-family: 'Newsreader', Georgia, serif;
+  overflow: hidden;
+}
+
+.poetic-backdrop {
+  position: absolute;
+  inset: -5%;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.poetic-poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.25;
+}
+
+.poetic-content {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 680px;
+  padding: 3rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.poetic-heading {
+  font-size: 2.5rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  text-align: center;
+  color: var(--text-sanctuary);
+  margin: 0;
+}
+
+.poetic-textarea {
+  width: 100%;
+  min-height: 180px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-sanctuary);
+  font-family: inherit;
+  font-size: 1.5rem;
+  line-height: 1.6;
+  padding: 1rem 0;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.4s ease;
+}
+
+.poetic-textarea:focus {
+  border-bottom-color: var(--accent-sanctuary);
+}
+
+.progressive-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: fadeInSanctuary 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeInSanctuary {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.intent-selectors {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.intent-selectors button {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-sanctuary);
+  padding: 0.75rem 1.25rem;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.intent-selectors button.active {
+  background: var(--accent-sanctuary);
+  color: hsl(240, 20%, 6%);
+  border-color: var(--accent-sanctuary);
+}
+
+.rating-control {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.rating-control button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-sanctuary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.rating-control button.active {
+  background: var(--accent-sanctuary);
+  color: hsl(240, 20%, 6%);
+  border-color: var(--accent-sanctuary);
+}
+
+.poetic-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.poetic-actions button {
+  padding: 0.75rem 2rem;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.save-btn {
+  background: var(--accent-sanctuary);
+  color: hsl(240, 20%, 6%);
+  border: none;
+}
+
+.close-btn {
+  background: transparent;
+  color: var(--text-sanctuary);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}

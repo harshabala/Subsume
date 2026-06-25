@@ -11,6 +11,7 @@ import { Stats } from './pages/Stats';
 import { People } from './pages/People';
 import { Alerts } from './pages/Alerts';
 import { Logs } from './pages/Logs';
+import { PoeticCaptureCanvas } from './components/PoeticCaptureCanvas';
 import { sendMessage } from '../shared/messages';
 import { MessageType, UserPreferences, LibraryItem, MediaItem, PersonItem } from '../shared/types';
 import './styles/sidebar.css';
@@ -107,6 +108,13 @@ function NavIcon({ item }: { item: NavItem }) {
 
 export function App() {
   const [currentPage, setCurrentPage] = useState<Page>(getInitialPage);
+  const [captureMediaId, setCaptureMediaId] = useState<string | null>(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('act') === 'capture') {
+      return params.get('mediaId');
+    }
+    return null;
+  });
   const [prefs, setPrefs] = useState<UserPreferences | null>(null);
   const [stats, setStats] = useState<LibraryStats>({ movieCount: 0, tvCount: 0 });
   const [peopleCount, setPeopleCount] = useState(0);
@@ -295,7 +303,15 @@ export function App() {
         </div>
       </aside>
 
-      <main className="main-content">{renderPage()}</main>
+      <main className="main-content">
+        {renderPage()}
+        {captureMediaId && (
+          <PoeticCaptureCanvas
+            mediaId={captureMediaId}
+            onClose={() => setCaptureMediaId(null)}
+          />
+        )}
+      </main>
     </div>
   );
 }
