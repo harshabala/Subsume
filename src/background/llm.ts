@@ -266,7 +266,7 @@ export async function generateLLMRecommendations(): Promise<Recommendation[] | G
 
           return null;
         } catch (innerErr) {
-          console.warn(`[Subsume] Failed to resolve recommendation for "${item.raw.title}":`, innerErr);
+          logger.warn(`[Subsume] Failed to resolve recommendation for "${item.raw.title}":`, innerErr);
           return null;
         }
       });
@@ -327,7 +327,7 @@ export async function generateLLMRecommendations(): Promise<Recommendation[] | G
 
           return null;
         } catch (innerErr) {
-          console.warn(`[Subsume] Failed to resolve recommendation for "${raw.title}":`, innerErr);
+          logger.warn(`[Subsume] Failed to resolve recommendation for "${raw.title}":`, innerErr);
           return null;
         }
       });
@@ -552,7 +552,7 @@ export async function getPersonalizedRecommendations(
 
         return null;
       } catch (innerErr) {
-        console.warn(`[Subsume] Failed to resolve personalized rec "${rec.title}":`, innerErr);
+        logger.warn(`[Subsume] Failed to resolve personalized rec "${rec.title}":`, innerErr);
         return null;
       }
     })
@@ -595,7 +595,7 @@ export async function getPersonalizedRecommendations(
       }
     } catch (groupErr) {
       // Grouping call failure is non-fatal — flat recs are already resolved
-      console.warn('[Subsume] Grouping LLM call failed (non-fatal):', groupErr);
+      logger.warn('[Subsume] Grouping LLM call failed (non-fatal):', groupErr);
       grouped = null;
     }
   }
