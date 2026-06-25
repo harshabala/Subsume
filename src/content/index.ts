@@ -8,7 +8,7 @@
 import { scanPage, startObserving, scanImages, setImageScanConfig, DetectedTitle } from './scanner';
 import { detectCatalogRegions } from './catalogDetector';
 import { HoverCardManager } from './hoverCard';
-import { PosterBadgeManager } from './posterBadge';
+import { MuseumPlaqueManager as PosterBadgeManager } from './overlay';
 import { sendMessage } from '@/shared/messages';
 import { MessageType, PosterMatch, ContentPrefs } from '@/shared/types';
 import { logger } from '@/shared/logger';

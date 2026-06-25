@@ -263,4 +263,16 @@ export const titleHandlers: MessageHandlerMap = {
     });
     return { success: true };
   },
+
+  [MessageType.OPEN_CAPTURE_CANVAS]: async (payload) => {
+    const req = payload as { mediaId: string };
+    if (!/^tmdb_(movie|tv)_\d+$/.test(req.mediaId)) {
+      logger.warn('[Subsume] OPEN_CAPTURE_CANVAS rejected invalid mediaId:', req.mediaId);
+      return { success: false, error: 'Invalid mediaId format' };
+    }
+    chrome.tabs.create({
+      url: chrome.runtime.getURL(`ui/index.html?act=capture&mediaId=${req.mediaId}`)
+    });
+    return { success: true };
+  },
 };

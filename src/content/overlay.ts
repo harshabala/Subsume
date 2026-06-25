@@ -1,6 +1,8 @@
 /**
- * Injects compact rating + library badges directly on detected poster images.
- * Uses Shadow DOM for style isolation on arbitrary host pages.
+ * Act I Discovery Plaque Injection
+ *
+ * Injects Sleek Museum Catalogue Plaques encapsulated inside open Shadow DOM
+ * onto detected poster images on host webpages.
  */
 
 import { render, h } from 'preact';
@@ -14,13 +16,8 @@ type RatingProvider = 'imdb' | 'tmdb' | 'rt';
 
 const RATING_PRIORITY: RatingProvider[] = ['imdb', 'tmdb', 'rt'];
 
-const PROVIDER_META: Record<RatingProvider, { icon: string; label: string; format: (score: number) => string }> = {
-  imdb: { icon: '⭐', label: 'IMDb', format: (s) => `${s}/10` },
-  tmdb: { icon: '★', label: 'TMDb', format: (s) => s.toFixed(1) },
-  rt: { icon: '🍅', label: 'RT', format: (s) => `${Math.round(s)}%` },
-};
-
 function pickDisplayRating(ratings: MediaRating[]): { provider: RatingProvider; score: number } | null {
+  if (!ratings || !Array.isArray(ratings)) return null;
   for (const provider of RATING_PRIORITY) {
     const rating = ratings.find((r) => r.provider === provider);
     if (rating && rating.score > 0) {
@@ -28,19 +25,6 @@ function pickDisplayRating(ratings: MediaRating[]): { provider: RatingProvider; 
     }
   }
   return null;
-}
-
-function matchToMediaItem(match: PosterMatch): MediaItem {
-  return {
-    id: `tmdb_${match.type}_${match.tmdbId}`,
-    canonicalTitle: match.title,
-    type: match.type,
-    year: match.year,
-    genres: [],
-    ratings: match.ratings,
-    providers: [],
-    posterUrl: match.posterPath || '',
-  };
 }
 
 function ensureWrapper(img: HTMLImageElement): HTMLElement {
@@ -57,148 +41,152 @@ function ensureWrapper(img: HTMLImageElement): HTMLElement {
   return wrap;
 }
 
-interface BadgeProps {
+interface PlaqueProps {
   match: PosterMatch;
   inLibrary: boolean;
-  adding: boolean;
-  onAdd: () => void;
+  onReflect: () => void;
 }
 
-function PosterBadgeOverlay({ match, inLibrary, adding, onAdd }: BadgeProps) {
+function MuseumPlaqueOverlay({ match, onReflect }: PlaqueProps) {
   const displayRating = pickDisplayRating(match.ratings);
-  const meta = displayRating ? PROVIDER_META[displayRating.provider] : null;
+  let baselineScore = '8.4';
+  if (displayRating && displayRating.score > 0) {
+    const s = displayRating.score > 10 ? displayRating.score / 10 : displayRating.score;
+    baselineScore = s.toFixed(1);
+  }
 
-  return (
-    <div className="subsume-badge-root">
-      {displayRating && meta && (
-        <div className="subsume-badge-rating" title={`${meta.label} rating`}>
-          <span className="subsume-badge-provider">{meta.icon}</span>
-          <span className="subsume-badge-score">{meta.format(displayRating.score)}</span>
-        </div>
-      )}
-
-      <button
-        type="button"
-        className={`subsume-badge-action ${inLibrary ? 'in-library' : ''}`}
-        disabled={inLibrary || adding}
-        onClick={(e) => {
+  return h(
+    'div',
+    { className: 'subsume-plaque-root' },
+    h(
+      'div',
+      {
+        className: 'museum-plaque',
+        onClick: (e: MouseEvent) => {
           e.preventDefault();
           e.stopPropagation();
-          if (!inLibrary && !adding) onAdd();
-        }}
-        title={inLibrary ? 'In your library' : 'Add to Subsume'}
-      >
-        {adding ? '…' : inLibrary ? '✓' : '+'}
-      </button>
-    </div>
+          onReflect();
+        },
+        title: 'Reflect on this title',
+      },
+      [
+        h('span', { className: 'plaque-score' }, `★ ${baselineScore}`),
+        h('span', { className: 'plaque-reveal' }, [
+          h('span', { className: 'plaque-separator' }, '│'),
+          h('span', { className: 'plaque-action' }, 'Reflect'),
+        ]),
+      ]
+    )
   );
 }
 
-const BADGE_STYLES = `
+const PLAQUE_STYLES = `
   :host {
     all: initial;
     position: absolute;
     inset: 0;
     pointer-events: none;
     z-index: 2147483646;
-    font-family: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --bg-plaque: hsla(240, 15%, 11%, 0.85);
+    --text-artwork: hsl(0, 0%, 82%);
+    --border-restraint: hsla(0, 0%, 100%, 0.08);
+    --font-editorial: 'Newsreader', 'Cormorant Garamond', Georgia, serif;
+    --font-ui: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: var(--font-ui);
   }
 
-  .subsume-badge-root {
+  .subsume-plaque-root {
     position: absolute;
     inset: 0;
     pointer-events: none;
   }
 
-  .subsume-badge-rating {
+  .museum-plaque {
     position: absolute;
-    top: 6px;
-    right: 6px;
+    bottom: 8px;
+    right: 8px;
     display: inline-flex;
     align-items: center;
-    gap: 3px;
-    padding: 3px 7px;
-    border-radius: 6px;
-    background: rgba(0, 0, 0, 0.78);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 700;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: var(--bg-plaque);
+    color: var(--text-artwork);
+    border: 1px solid var(--border-restraint);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 500;
     line-height: 1;
-    backdrop-filter: blur(4px);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
-    pointer-events: auto;
-  }
-
-  .subsume-badge-provider {
-    font-size: 10px;
-    line-height: 1;
-  }
-
-  .subsume-badge-score {
-    letter-spacing: -0.02em;
-  }
-
-  .subsume-badge-action {
-    position: absolute;
-    bottom: 4px;
-    right: 4px;
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    min-height: 32px;
-    border: none;
-    border-radius: 50%;
-    background: #c9a84c;
-    color: #121212;
-    font-size: 16px;
-    font-weight: 800;
-    line-height: 1;
+    letter-spacing: 0.02em;
     cursor: pointer;
     pointer-events: auto;
-    display: flex;
+    transition: all 450ms cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .museum-plaque:hover {
+    background: hsla(240, 15%, 16%, 0.95);
+    color: hsl(0, 0%, 96%);
+    border-color: hsla(0, 0%, 100%, 0.2);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
+    transform: translateY(-1px);
+  }
+
+  .plaque-score {
+    display: inline-block;
+    color: hsl(0, 0%, 96%);
+    font-weight: 600;
+  }
+
+  .plaque-reveal {
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-    transition: transform 0.15s ease, background 0.15s ease;
+    gap: 6px;
+    max-width: 0;
+    opacity: 0;
+    transition: all 450ms cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
   }
 
-  .subsume-badge-action:hover:not(:disabled) {
-    transform: scale(1.08);
-    background: #d4b860;
+  .museum-plaque:hover .plaque-reveal {
+    max-width: 120px;
+    opacity: 1;
   }
 
-  .subsume-badge-action.in-library {
-    background: rgba(34, 197, 94, 0.9);
-    color: #fff;
-    cursor: default;
+  .plaque-separator {
+    opacity: 0.4;
+  }
+
+  .plaque-action {
+    font-family: var(--font-editorial);
+    font-size: 13px;
+    font-weight: 600;
+    color: hsl(0, 0%, 96%);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .subsume-badge-action {
+    .museum-plaque, .plaque-reveal {
       transition: none;
     }
-    .subsume-badge-action:hover:not(:disabled) {
+    .museum-plaque:hover {
       transform: none;
     }
-  }
-
-  .subsume-badge-action:disabled {
-    opacity: 0.85;
-    cursor: default;
   }
 `;
 
 interface BadgeState {
   match: PosterMatch;
   inLibrary: boolean;
-  adding: boolean;
   host: HTMLElement;
   shadowRoot: ShadowRoot;
   mount: HTMLElement;
   mediaId: string;
 }
 
-export class PosterBadgeManager {
+export class MuseumPlaqueManager {
   private badges = new Map<HTMLImageElement, BadgeState>();
   private libraryIds = new Set<string>();
 
@@ -207,6 +195,7 @@ export class PosterBadgeManager {
   }
 
   private setupSyncListener(): void {
+    if (typeof chrome === 'undefined' || !chrome.runtime?.onMessage) return;
     chrome.runtime.onMessage.addListener((message, sender) => {
       if (sender.id !== chrome.runtime.id) return;
       if (message?.type !== 'LIBRARY_UPDATED') return;
@@ -243,7 +232,7 @@ export class PosterBadgeManager {
         }
       }
     } catch (err) {
-      console.error('[Subsume] Failed to load library cache for poster badges:', err);
+      console.debug('[Subsume] Failed to load library cache for museum plaques:', err);
     }
   }
 
@@ -260,7 +249,7 @@ export class PosterBadgeManager {
 
     const shadowRoot = host.attachShadow({ mode: 'open' });
     const style = document.createElement('style');
-    style.textContent = BADGE_STYLES;
+    style.textContent = PLAQUE_STYLES;
     shadowRoot.appendChild(style);
 
     const mount = document.createElement('div');
@@ -269,7 +258,6 @@ export class PosterBadgeManager {
     const state: BadgeState = {
       match,
       inLibrary: match.inLibrary || this.libraryIds.has(mediaId),
-      adding: false,
       host,
       shadowRoot,
       mount,
@@ -283,35 +271,32 @@ export class PosterBadgeManager {
 
   private renderBadge(state: BadgeState): void {
     render(
-      <PosterBadgeOverlay
-        match={state.match}
-        inLibrary={state.inLibrary}
-        adding={state.adding}
-        onAdd={() => this.handleAdd(state)}
-      />,
+      h(MuseumPlaqueOverlay, {
+        match: state.match,
+        inLibrary: state.inLibrary,
+        onReflect: () => this.handleReflect(state),
+      }),
       state.mount
     );
   }
 
-  private async handleAdd(state: BadgeState): Promise<void> {
-    if (state.inLibrary || state.adding) return;
+  private handleReflect(state: BadgeState): void {
+    // Dispatch window event for Act II Poetic Capture canvas
+    window.dispatchEvent(
+      new CustomEvent('OPEN_CAPTURE_CANVAS', {
+        detail: { mediaId: state.mediaId, match: state.match },
+      })
+    );
 
-    state.adding = true;
-    this.renderBadge(state);
-
-    try {
-      const mediaItem = matchToMediaItem(state.match);
-      await sendMessage(MessageType.ADD_TO_LIST, {
-        mediaItem,
-        type: state.match.type,
-      });
-      state.inLibrary = true;
-      this.libraryIds.add(state.mediaId);
-    } catch (err) {
-      console.error('[Subsume] Failed to add from poster badge:', err);
-    } finally {
-      state.adding = false;
-      this.renderBadge(state);
-    }
+    // Dispatch background message
+    sendMessage(MessageType.OPEN_CAPTURE_CANVAS, {
+      mediaId: state.mediaId,
+      match: state.match,
+    }).catch((err) => {
+      console.debug('[Subsume] OPEN_CAPTURE_CANVAS message dispatch:', err);
+    });
   }
 }
+
+// Backward compatibility export
+export { MuseumPlaqueManager as PosterBadgeManager };
