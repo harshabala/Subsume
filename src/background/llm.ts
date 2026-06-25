@@ -3,6 +3,7 @@ import { getAllLibraryItems, getAllMediaMap, getPreferences, putMediaItem, findM
 import { searchTitle } from './tmdb';
 import { buildWatchProfile } from './context';
 import { showRateLimitNotification, showAuthErrorNotification } from './notifications';
+import { logger } from '@/shared/logger';
 
 export interface LLMRawRecommendation {
   title: string;
@@ -104,7 +105,7 @@ export async function callLLMProvider(prompt: string, prefs: UserPreferences, us
       if (!res.ok) {
         if (res.status === 401) throw new Error('AUTH_ERROR');
         if (res.status === 429) throw new Error('RATE_LIMIT');
-        console.error('OpenAI API error body:', await res.text());
+        logger.error('OpenAI API error body:', await res.text());
         throw new Error(`OpenAI API error (Status ${res.status})`);
       }
       const data = await res.json();
@@ -129,7 +130,7 @@ export async function callLLMProvider(prompt: string, prefs: UserPreferences, us
       if (!res.ok) {
         if (res.status === 401) throw new Error('AUTH_ERROR');
         if (res.status === 429) throw new Error('RATE_LIMIT');
-        console.error('Anthropic API error body:', await res.text());
+        logger.error('Anthropic API error body:', await res.text());
         throw new Error(`Anthropic API error (Status ${res.status})`);
       }
       const data = await res.json();
@@ -147,7 +148,7 @@ export async function callLLMProvider(prompt: string, prefs: UserPreferences, us
       if (!res.ok) {
         if (res.status === 401) throw new Error('AUTH_ERROR');
         if (res.status === 429) throw new Error('RATE_LIMIT');
-        console.error('Gemini API error body:', await res.text());
+        logger.error('Gemini API error body:', await res.text());
         throw new Error(`Gemini API error (Status ${res.status})`);
       }
       const data = await res.json();
@@ -218,7 +219,7 @@ export async function generateLLMRecommendations(): Promise<Recommendation[] | G
       try {
         rawGroups = JSON.parse(cleaned);
       } catch (parseErr) {
-        console.error('[Subsume] Failed to parse LLM response as JSON:', parseErr);
+        logger.error('[Subsume] Failed to parse LLM response as JSON:', parseErr);
         throw new Error('LLM returned invalid JSON format');
       }
 
@@ -295,7 +296,7 @@ export async function generateLLMRecommendations(): Promise<Recommendation[] | G
       try {
         rawRecs = JSON.parse(cleaned);
       } catch (parseErr) {
-        console.error('[Subsume] Failed to parse LLM response as JSON:', parseErr);
+        logger.error('[Subsume] Failed to parse LLM response as JSON:', parseErr);
         throw new Error('LLM returned invalid JSON format');
       }
 
@@ -337,7 +338,7 @@ export async function generateLLMRecommendations(): Promise<Recommendation[] | G
       return finalRecommendations;
     }
   } catch (err) {
-    console.error('LLM recommendation error:', err);
+    logger.error('LLM recommendation error:', err);
     throw err;
   }
 }
@@ -486,7 +487,7 @@ export async function getPersonalizedRecommendations(
   try {
     rawText = await callLLMProvider(fullPrompt, prefs);
   } catch (err) {
-    console.error('[Subsume] Primary LLM call failed:', err);
+    logger.error('[Subsume] Primary LLM call failed:', err);
     return { flat: [], grouped: null };
   }
 
@@ -505,7 +506,7 @@ export async function getPersonalizedRecommendations(
     parsedItems = JSON.parse(cleaned);
     if (!Array.isArray(parsedItems)) throw new Error('Expected JSON array');
   } catch (parseErr) {
-    console.error('[Subsume] Failed to parse personalized recs JSON:', parseErr, 'Raw:', rawText);
+    logger.error('[Subsume] Failed to parse personalized recs JSON:', parseErr, 'Raw:', rawText);
     return { flat: [], grouped: null };
   }
 

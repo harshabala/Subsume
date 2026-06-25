@@ -36,8 +36,8 @@ async function fetchDriveApi(url: string, init: RequestInit = {}): Promise<Respo
 }
 
 async function getBackupFileId(): Promise<string | null> {
-  const q = encodeURIComponent("name='subsume_backup.json' and 'appDataFolder' in parents and trashed=false");
-  const res = await fetchDriveApi(`https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${q}`);
+  const driveFileSearchQuery = encodeURIComponent("name='subsume_backup.json' and 'appDataFolder' in parents and trashed=false");
+  const res = await fetchDriveApi(`https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${driveFileSearchQuery}`);
   if (!res.ok) {
     throw new Error(`Google Drive backup file lookup failed: ${res.status} ${res.statusText}`);
   }
@@ -57,7 +57,7 @@ export async function uploadDatabaseBackup(jsonString: string): Promise<void> {
   const fileId = await getBackupFileId();
   const boundary = '-------314159265358979323846';
   const delimiter = "\r\n--" + boundary + "\r\n";
-  const close_delim = "\r\n--" + boundary + "--";
+  const closingMultipartDelimiter = "\r\n--" + boundary + "--";
 
   const multipartRequestBody =
       delimiter +
@@ -66,7 +66,7 @@ export async function uploadDatabaseBackup(jsonString: string): Promise<void> {
       delimiter +
       'Content-Type: application/json\r\n\r\n' +
       jsonString +
-      close_delim;
+      closingMultipartDelimiter;
 
   const method = fileId ? 'PATCH' : 'POST';
   const path = fileId ? `/upload/drive/v3/files/${fileId}` : '/upload/drive/v3/files';
