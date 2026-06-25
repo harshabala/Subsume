@@ -12,6 +12,7 @@ import { PosterBadgeManager } from './posterBadge';
 import { sendMessage } from '@/shared/messages';
 import { MessageType, PosterMatch, ContentPrefs } from '@/shared/types';
 import { logger } from '@/shared/logger';
+import './content.css';
 
 async function init(): Promise<void> {
   logger.log('[Subsume] Content script loaded.');
