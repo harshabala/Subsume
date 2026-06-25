@@ -161,8 +161,8 @@ async function fetchMediaDetails(tmdbId: string, mediaType: 'movie' | 'tv', apiK
  */
 function sanitizePreferencesForContentScript(
   prefs: UserPreferences
-): Omit<UserPreferences, 'tmdbApiKey' | 'omdbApiKey' | 'llmApiKey'> {
-  const { tmdbApiKey: _tmdb, omdbApiKey: _omdb, llmApiKey: _llm, ...safe } = prefs;
+): Omit<UserPreferences, 'tmdbApiKey' | 'omdbApiKey' | 'llmApiKey' | 'llmSecondaryApiKey'> {
+  const { tmdbApiKey: _tmdb, omdbApiKey: _omdb, llmApiKey: _llm, llmSecondaryApiKey: _llmSec, ...safe } = prefs;
   return safe;
 }
 
@@ -174,6 +174,7 @@ function isValidUserPreferences(prefs: any): prefs is UserPreferences {
   if (typeof prefs.llmEnabled !== 'boolean') return false;
   if (prefs.llmProvider !== undefined && !['openai', 'anthropic', 'gemini', 'local'].includes(prefs.llmProvider)) return false;
   if (prefs.llmApiKey !== undefined && typeof prefs.llmApiKey !== 'string') return false;
+  if (prefs.llmSecondaryApiKey !== undefined && typeof prefs.llmSecondaryApiKey !== 'string') return false;
   if (prefs.tmdbApiKey !== undefined && typeof prefs.tmdbApiKey !== 'string') return false;
   if (prefs.omdbApiKey !== undefined && typeof prefs.omdbApiKey !== 'string') return false;
   if (typeof prefs.hoverCardsEnabled !== 'boolean') return false;

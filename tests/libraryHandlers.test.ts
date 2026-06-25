@@ -78,7 +78,7 @@ vi.mock('@/background/contentPrefs', () => ({
 }));
 
 import { handlers } from '@/background/index';
-import { getLibraryItem, putLibraryItem, getMediaItem } from '@/background/storage';
+import { getLibraryItem, putLibraryItem, getMediaItem, getPreferences } from '@/background/storage';
 import { MediaItem } from '@/shared/types';
 
 const sender = {} as chrome.runtime.MessageSender;
@@ -247,5 +247,51 @@ describe('SET_USER_NOTES and SET_USER_TAGS', () => {
 
     expect(result).toEqual({ updated: false });
     expect(putLibraryItem).not.toHaveBeenCalled();
+  });
+});
+
+describe('GET_PREFERENCES sanitization', () => {
+  it('strips llmSecondaryApiKey alongside other API keys', async () => {
+    vi.mocked(getPreferences).mockResolvedValue({
+      region: 'US',
+      llmApiKey: 'secret-llm',
+      llmSecondaryApiKey: 'secret-secondary',
+      tmdbApiKey: 'secret-tmdb',
+      omdbApiKey: 'secret-omdb',
+    } as any);
+
+    const handler = handlers[MessageType.GET_PREFERENCES]!;
+    const result: any = await handler(undefined, sender);
+
+    expect(result.region).toBe('US');
+    expect(result).not.toHaveProperty('llmApiKey');
+    expect(result).not.toHaveProperty('llmSecondaryApiKey');
+    expect(result).not.toHaveProperty('tmdbApiKey');
+    expect(result).not.toHaveProperty('omdbApiKey');
+  });
+});
+
+describe('SET_PREFERENCES validation', () => {
+  const validBase = {
+    favoriteGenres: ['Sci-Fi'],
+    platforms: ['Netflix'],
+    region: 'US',
+    llmEnabled: true,
+    hoverCardsEnabled: true,
+    posterOverlaysEnabled: true,
+    disabledDomains: [],
+    detectionSensitivity: 'medium',
+    onboardingComplete: true,
+  };
+
+  it('accepts valid preferences with llmSecondaryApiKey', async () => {
+    const handler = handlers[MessageType.SET_PREFERENCES]!;
+    const res = await handler({ ...validBase, llmSecondaryApiKey: 'sec-key' }, sender);
+    expect(res).toEqual({ updated: true });
+  });
+
+  it('rejects preferences where llmSecondaryApiKey is not a string', async () => {
+    const handler = handlers[MessageType.SET_PREFERENCES]!;
+    await expect(handler({ ...validBase, llmSecondaryApiKey: 12345 }, sender)).rejects.toThrow('Invalid preferences payload');
   });
 });
