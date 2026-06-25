@@ -77,6 +77,29 @@ function buildPrompt(watched: LibraryMediaPair[], toWatch: LibraryMediaPair[], s
   return prompt;
 }
 
+export class LLMAuthError extends Error {
+  constructor(message = 'AUTH_ERROR') {
+    super(message);
+    this.name = 'LLMAuthError';
+  }
+}
+
+export class LLMRateLimitError extends Error {
+  constructor(message = 'RATE_LIMIT') {
+    super(message);
+    this.name = 'LLMRateLimitError';
+  }
+}
+
+async function assertResponseOk(res: Response, provider: string): Promise<void> {
+  if (!res.ok) {
+    if (res.status === 401) throw new LLMAuthError();
+    if (res.status === 429) throw new LLMRateLimitError();
+    logger.error(`${provider} API error body:`, await res.text());
+    throw new Error(`${provider} API error (Status ${res.status})`);
+  }
+}
+
 async function callOpenAI(prompt: string, apiKey: string): Promise<string> {
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -90,12 +113,7 @@ async function callOpenAI(prompt: string, apiKey: string): Promise<string> {
       temperature: 0.7,
     }),
   });
-  if (!res.ok) {
-    if (res.status === 401) throw new Error('AUTH_ERROR');
-    if (res.status === 429) throw new Error('RATE_LIMIT');
-    logger.error('OpenAI API error body:', await res.text());
-    throw new Error(`OpenAI API error (Status ${res.status})`);
-  }
+  await assertResponseOk(res, 'OpenAI');
   const data = await res.json();
   return data.choices[0].message.content;
 }
@@ -115,12 +133,7 @@ async function callAnthropic(prompt: string, apiKey: string): Promise<string> {
       messages: [{ role: 'user', content: prompt }],
     }),
   });
-  if (!res.ok) {
-    if (res.status === 401) throw new Error('AUTH_ERROR');
-    if (res.status === 429) throw new Error('RATE_LIMIT');
-    logger.error('Anthropic API error body:', await res.text());
-    throw new Error(`Anthropic API error (Status ${res.status})`);
-  }
+  await assertResponseOk(res, 'Anthropic');
   const data = await res.json();
   return data.content[0].text;
 }
@@ -133,15 +146,21 @@ async function callGemini(prompt: string, apiKey: string): Promise<string> {
       contents: [{ parts: [{ text: prompt }] }],
     }),
   });
-  if (!res.ok) {
-    if (res.status === 401) throw new Error('AUTH_ERROR');
-    if (res.status === 429) throw new Error('RATE_LIMIT');
-    logger.error('Gemini API error body:', await res.text());
-    throw new Error(`Gemini API error (Status ${res.status})`);
-  }
+  await assertResponseOk(res, 'Gemini');
   const data = await res.json();
   return data.candidates[0].content.parts[0].text;
 }
+
+type ProviderAdapter = (prompt: string, apiKey: string) => Promise<string>;
+
+const providerAdapters: Record<string, ProviderAdapter> = {
+  openai: callOpenAI,
+  anthropic: callAnthropic,
+  gemini: callGemini,
+  local: async () => {
+    throw new Error('Local LLM provider is not currently supported.');
+  },
+};
 
 /**
  * Calls the specified LLM provider with the prompt.
@@ -155,17 +174,17 @@ export async function callLLMProvider(prompt: string, prefs: UserPreferences, us
   }
 
   try {
-    if (provider === 'openai') return await callOpenAI(prompt, apiKey);
-    if (provider === 'anthropic') return await callAnthropic(prompt, apiKey);
-    if (provider === 'gemini') return await callGemini(prompt, apiKey);
-
-    throw new Error(`Unsupported LLM provider: ${provider}`);
-  } catch (err: any) {
-    if (err.message === 'AUTH_ERROR') {
+    const adapter = providerAdapters[provider];
+    if (!adapter) {
+      throw new Error(`Unsupported LLM provider: ${provider}`);
+    }
+    return await adapter(prompt, apiKey);
+  } catch (err: unknown) {
+    if (err instanceof LLMAuthError) {
       showAuthErrorNotification(provider);
       throw err;
     }
-    if (err.message === 'RATE_LIMIT' && !useSecondary) {
+    if (err instanceof LLMRateLimitError && !useSecondary) {
       if (prefs.llmSecondaryApiKey) {
         showRateLimitNotification(provider, true);
         return callLLMProvider(prompt, prefs, true);
