@@ -77,6 +77,72 @@ function buildPrompt(watched: LibraryMediaPair[], toWatch: LibraryMediaPair[], s
   return prompt;
 }
 
+async function callOpenAI(prompt: string, apiKey: string): Promise<string> {
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+    }),
+  });
+  if (!res.ok) {
+    if (res.status === 401) throw new Error('AUTH_ERROR');
+    if (res.status === 429) throw new Error('RATE_LIMIT');
+    logger.error('OpenAI API error body:', await res.text());
+    throw new Error(`OpenAI API error (Status ${res.status})`);
+  }
+  const data = await res.json();
+  return data.choices[0].message.content;
+}
+
+async function callAnthropic(prompt: string, apiKey: string): Promise<string> {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-3-haiku-20240307',
+      max_tokens: 1024,
+      messages: [{ role: 'user', content: prompt }],
+    }),
+  });
+  if (!res.ok) {
+    if (res.status === 401) throw new Error('AUTH_ERROR');
+    if (res.status === 429) throw new Error('RATE_LIMIT');
+    logger.error('Anthropic API error body:', await res.text());
+    throw new Error(`Anthropic API error (Status ${res.status})`);
+  }
+  const data = await res.json();
+  return data.content[0].text;
+}
+
+async function callGemini(prompt: string, apiKey: string): Promise<string> {
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+    }),
+  });
+  if (!res.ok) {
+    if (res.status === 401) throw new Error('AUTH_ERROR');
+    if (res.status === 429) throw new Error('RATE_LIMIT');
+    logger.error('Gemini API error body:', await res.text());
+    throw new Error(`Gemini API error (Status ${res.status})`);
+  }
+  const data = await res.json();
+  return data.candidates[0].content.parts[0].text;
+}
+
 /**
  * Calls the specified LLM provider with the prompt.
  */
@@ -89,71 +155,9 @@ export async function callLLMProvider(prompt: string, prefs: UserPreferences, us
   }
 
   try {
-    if (provider === 'openai') {
-      const res = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: [{ role: 'user', content: prompt }],
-          temperature: 0.7,
-        }),
-      });
-      if (!res.ok) {
-        if (res.status === 401) throw new Error('AUTH_ERROR');
-        if (res.status === 429) throw new Error('RATE_LIMIT');
-        logger.error('OpenAI API error body:', await res.text());
-        throw new Error(`OpenAI API error (Status ${res.status})`);
-      }
-      const data = await res.json();
-      return data.choices[0].message.content;
-    }
-
-    if (provider === 'anthropic') {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
-        },
-        body: JSON.stringify({
-          model: 'claude-3-haiku-20240307',
-          max_tokens: 1024,
-          messages: [{ role: 'user', content: prompt }],
-        }),
-      });
-      if (!res.ok) {
-        if (res.status === 401) throw new Error('AUTH_ERROR');
-        if (res.status === 429) throw new Error('RATE_LIMIT');
-        logger.error('Anthropic API error body:', await res.text());
-        throw new Error(`Anthropic API error (Status ${res.status})`);
-      }
-      const data = await res.json();
-      return data.content[0].text;
-    }
-
-    if (provider === 'gemini') {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-        }),
-      });
-      if (!res.ok) {
-        if (res.status === 401) throw new Error('AUTH_ERROR');
-        if (res.status === 429) throw new Error('RATE_LIMIT');
-        logger.error('Gemini API error body:', await res.text());
-        throw new Error(`Gemini API error (Status ${res.status})`);
-      }
-      const data = await res.json();
-      return data.candidates[0].content.parts[0].text;
-    }
+    if (provider === 'openai') return await callOpenAI(prompt, apiKey);
+    if (provider === 'anthropic') return await callAnthropic(prompt, apiKey);
+    if (provider === 'gemini') return await callGemini(prompt, apiKey);
 
     throw new Error(`Unsupported LLM provider: ${provider}`);
   } catch (err: any) {
