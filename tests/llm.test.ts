@@ -64,14 +64,28 @@ describe('LLM Recommendations Module', () => {
         'fetch',
         vi.fn().mockResolvedValue({
           ok: false,
-          status: 401,
-          text: async () => '{"error": {"message": "Invalid API Key"}}',
+          status: 500,
+          text: async () => '{"error": {"message": "Server Error"}}',
         })
       );
 
       await expect(callLLMProvider('prompt', prefs)).rejects.toThrow(
-        'OpenAI API error (Status 401)'
+        'OpenAI API error (Status 500)'
       );
+    });
+
+    it('throws AUTH_ERROR and notifies user on 401', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 401,
+          text: async () => '{"error": "Unauthorized"}',
+        })
+      );
+
+      await expect(callLLMProvider('prompt', prefs)).rejects.toThrow('AUTH_ERROR');
+      expect(chrome.notifications.create).toHaveBeenCalled();
     });
 
     it('sanitizes Anthropic API error response', async () => {

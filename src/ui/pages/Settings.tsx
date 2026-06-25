@@ -66,6 +66,10 @@ export function Settings() {
     if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.requestUpdateCheck) {
       chrome.runtime.requestUpdateCheck((status) => {
         setCheckingUpdate(false);
+        if (chrome.runtime.lastError) {
+          setUpdateStatus(chrome.runtime.lastError.message || 'Update check not supported.');
+          return;
+        }
         if (status === 'no_update') {
           setUpdateStatus('Up to date');
         } else if (status === 'update_available') {

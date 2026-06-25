@@ -2,7 +2,7 @@ import { UserPreferences, LibraryItem, MediaItem, Recommendation, GroupedRecomme
 import { getAllLibraryItems, getAllMediaMap, getPreferences, putMediaItem, findMediaByTitle } from './storage';
 import { searchTitle } from './tmdb';
 import { buildWatchProfile } from './context';
-import { showRateLimitNotification } from './notifications';
+import { showRateLimitNotification, showAuthErrorNotification } from './notifications';
 
 export interface LLMRawRecommendation {
   title: string;
@@ -102,7 +102,8 @@ export async function callLLMProvider(prompt: string, prefs: UserPreferences, us
         }),
       });
       if (!res.ok) {
-        if (res.status === 429 || res.status === 401) throw new Error('RATE_LIMIT');
+        if (res.status === 401) throw new Error('AUTH_ERROR');
+        if (res.status === 429) throw new Error('RATE_LIMIT');
         console.error('OpenAI API error body:', await res.text());
         throw new Error(`OpenAI API error (Status ${res.status})`);
       }
@@ -126,7 +127,8 @@ export async function callLLMProvider(prompt: string, prefs: UserPreferences, us
         }),
       });
       if (!res.ok) {
-        if (res.status === 429 || res.status === 401) throw new Error('RATE_LIMIT');
+        if (res.status === 401) throw new Error('AUTH_ERROR');
+        if (res.status === 429) throw new Error('RATE_LIMIT');
         console.error('Anthropic API error body:', await res.text());
         throw new Error(`Anthropic API error (Status ${res.status})`);
       }
@@ -143,7 +145,8 @@ export async function callLLMProvider(prompt: string, prefs: UserPreferences, us
         }),
       });
       if (!res.ok) {
-        if (res.status === 429 || res.status === 401) throw new Error('RATE_LIMIT');
+        if (res.status === 401) throw new Error('AUTH_ERROR');
+        if (res.status === 429) throw new Error('RATE_LIMIT');
         console.error('Gemini API error body:', await res.text());
         throw new Error(`Gemini API error (Status ${res.status})`);
       }
@@ -153,6 +156,10 @@ export async function callLLMProvider(prompt: string, prefs: UserPreferences, us
 
     throw new Error(`Unsupported LLM provider: ${provider}`);
   } catch (err: any) {
+    if (err.message === 'AUTH_ERROR') {
+      showAuthErrorNotification(provider);
+      throw err;
+    }
     if (err.message === 'RATE_LIMIT' && !useSecondary) {
       if (prefs.llmSecondaryApiKey) {
         showRateLimitNotification(provider, true);
