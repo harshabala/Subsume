@@ -203,9 +203,9 @@ export class MuseumPlaqueManager {
       if (!message || typeof message !== 'object') return;
       if (!('type' in message) || (message as Record<string, unknown>).type !== 'LIBRARY_UPDATED') return;
 
-      const msg = message as Record<string, any>;
-      const mediaId = typeof msg.mediaId === 'string' ? msg.mediaId : msg.libraryItem?.mediaId;
-      if (!mediaId || typeof mediaId !== 'string') return;
+      const msg = message as { mediaId?: unknown; libraryItem?: { mediaId?: unknown }; action?: unknown };
+      const mediaId = typeof msg.mediaId === 'string' ? msg.mediaId : (typeof msg.libraryItem?.mediaId === 'string' ? msg.libraryItem.mediaId : undefined);
+      if (!mediaId) return;
 
       if (msg.action === 'add' || msg.action === 'update') {
         this.libraryIds.add(mediaId);
