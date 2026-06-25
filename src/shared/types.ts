@@ -40,6 +40,8 @@ export interface MediaItem {
 
 export type LibraryStatus = 'to-watch' | 'watching' | 'watched' | 'abandoned';
 
+export type SanctuaryIntent = 'keep_memory' | 'revisit_this_month' | 'wishlist';
+
 export interface LibraryItem {
   mediaId: string;
   status: LibraryStatus;
@@ -48,6 +50,23 @@ export interface LibraryItem {
   userRating?: number;  // 1–10
   userTags?: string[];
   notes?: string;
+
+  // Compatibility properties
+  id?: string;
+  tmdbId?: number;
+  mediaType?: 'movie' | 'tv';
+  title?: string;
+  posterPath?: string | null;
+  releaseYear?: number;
+  directorNames?: string[];
+
+  // Upgraded Sanctuary architecture (v2.1)
+  sanctuaryIntent?: SanctuaryIntent;
+  emotionalRecall?: string; // "What stayed with you?" hero prompt
+  qualitativeNotes?: string; // Extended prose
+  scriptParallels?: string[]; // Screenplay dialogue echoes
+  originalScreenplaySparks?: string; // Story ideas
+  contemplatedAt?: number;
 }
 
 export interface LibraryMediaPair {

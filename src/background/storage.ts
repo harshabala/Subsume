@@ -7,6 +7,7 @@ import {
   WeeklyDigest,
   WatchAlert,
   ImportLibraryData,
+  SanctuaryIntent,
 } from '@/shared/types';
 
 interface SubsumeDB extends DBSchema {
@@ -147,13 +148,15 @@ export async function getAllMediaMap(ids: string[]): Promise<Record<string, Medi
 
 export async function putLibraryItem(item: LibraryItem): Promise<void> {
   const db = await getDb();
+  normalizeLibraryItem(item);
   item.updatedAt = Date.now();
   await db.put('library', item);
 }
 
 export async function getLibraryItem(mediaId: string): Promise<LibraryItem | undefined> {
   const db = await getDb();
-  return db.get('library', mediaId);
+  const item = await db.get('library', mediaId);
+  return item ? normalizeLibraryItem(item) : undefined;
 }
 
 export async function removeLibraryItem(mediaId: string): Promise<void> {
@@ -163,7 +166,8 @@ export async function removeLibraryItem(mediaId: string): Promise<void> {
 
 export async function getAllLibraryItems(): Promise<LibraryItem[]> {
   const db = await getDb();
-  return db.getAll('library');
+  const items = await db.getAll('library');
+  return items.map(normalizeLibraryItem);
 }
 
 // ─── Preferences Interface ───────────────────────────────────────────
@@ -237,8 +241,22 @@ export async function exportLibraryData(): Promise<ImportLibraryData> {
 
 const VALID_LIBRARY_STATUSES = new Set(['to-watch', 'watching', 'watched', 'abandoned']);
 const VALID_MEDIA_TYPES = new Set(['movie', 'tv']);
+const VALID_SANCTUARY_INTENTS = new Set(['keep_memory', 'revisit_this_month', 'wishlist']);
 
-function isValidLibraryItem(l: unknown): l is LibraryItem {
+export function normalizeLibraryItem(item: LibraryItem): LibraryItem {
+  if (!item.sanctuaryIntent) {
+    if (item.status === 'watched') {
+      item.sanctuaryIntent = 'keep_memory';
+    } else if (item.status === 'watching') {
+      item.sanctuaryIntent = 'revisit_this_month';
+    } else {
+      item.sanctuaryIntent = 'wishlist';
+    }
+  }
+  return item;
+}
+
+export function isValidLibraryItem(l: unknown): l is LibraryItem {
   if (!l || typeof l !== 'object') return false;
   const item = l as Record<string, unknown>;
   // Required string fields
@@ -250,6 +268,9 @@ function isValidLibraryItem(l: unknown): l is LibraryItem {
   // Optional userRating must be a number in range 1–10
   if (item.userRating !== undefined) {
     if (typeof item.userRating !== 'number' || item.userRating < 1 || item.userRating > 10) return false;
+  }
+  if (item.sanctuaryIntent !== undefined) {
+    if (!VALID_SANCTUARY_INTENTS.has(item.sanctuaryIntent as string)) return false;
   }
   return true;
 }
@@ -334,7 +355,7 @@ export async function importLibraryData(data: ImportLibraryData) {
     if (Array.isArray(data.library)) {
       for (const l of data.library) {
         if (isValidLibraryItem(l)) {
-          await tx.objectStore('library').put(l);
+          await tx.objectStore('library').put(normalizeLibraryItem(l));
         } else {
           console.warn('[Subsume] Import skipped invalid library item:', l);
         }
@@ -402,7 +423,7 @@ export async function getLibraryPage(
       if (skipped < offset) {
         skipped++;
       } else {
-        results.push(libItem);
+        results.push(normalizeLibraryItem(libItem));
         if (results.length >= limit) {
           break;
         }

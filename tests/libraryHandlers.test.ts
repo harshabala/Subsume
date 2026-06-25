@@ -216,6 +216,21 @@ describe('ADD_TO_LIST', () => {
       expect.objectContaining({ status: 'to-watch' })
     );
   });
+
+  it('sets default sanctuaryIntent to wishlist for new library entries', async () => {
+    vi.mocked(getLibraryItem).mockResolvedValue(undefined);
+
+    const handler = handlers[MessageType.ADD_TO_LIST]!;
+    const result = await handler(
+      { mediaItem: sampleMedia, type: 'movie' },
+      sender
+    );
+
+    expect(result.sanctuaryIntent).toBe('wishlist');
+    expect(putLibraryItem).toHaveBeenCalledWith(
+      expect.objectContaining({ sanctuaryIntent: 'wishlist' })
+    );
+  });
 });
 
 describe('SET_USER_NOTES and SET_USER_TAGS', () => {

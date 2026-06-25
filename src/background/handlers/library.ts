@@ -43,6 +43,7 @@ export const libraryHandlers: MessageHandlerMap = {
       : {
           mediaId: req.mediaItem.id,
           status: 'to-watch',
+          sanctuaryIntent: 'wishlist',
           addedAt: Date.now(),
           updatedAt: Date.now(),
         };
