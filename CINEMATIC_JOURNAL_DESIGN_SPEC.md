@@ -1,122 +1,150 @@
-# 🎬 Subsume: Personal Cinematic Journal & Auteur Script Notebook
-## Master Architectural & UX Design Specification (v2.0 Pivot)
+# 🎬 Subsume v2.1: Private Cinematic Sanctuary & Poetic Theatre Architecture
+## Master Architectural, Aesthetic & UX Design Specification
 
-> **Document Status:** Formal Design Specification & Multi-Agent Brainstorming Lock  
+> **Document Status:** Formal Design Specification & Master Product Lock (v2.1 Philosophy Upgrade)  
 > **Target Audience:** Autonomous AI Coding Agents (Claude, Codex, Gemini), Lead Architects, and UI/UX Engineers  
-> **Repository Finder Path:** `/Users/harshabalakrishnan/Documents/Projects/Subsume/CINEMATIC_JOURNAL_DESIGN_SPEC.md`
+> **Repository Finder Path:** `/Users/harshabalakrishnan/Documents/Projects/Subsume/CINEMATIC_JOURNAL_DESIGN_SPEC.md`  
+> **Superseding Clause:** *This specification supersedes all utilitarian or decorative SaaS implementation details wherever there is conflict. Every engineering and UI decision must justify its existence by making contemplation and reflection more meaningful.*
 
 ---
 
-## 1. 🌟 Executive Summary & Pivot Rationale
+## 1. 🌟 Core Philosophy: The Private Cinematic Sanctuary
 
-### 1.1 The Problem
-Subsume v1.0 successfully solved auteur filmography tracking and in-page rating overlay injection. However, its user interface and experience suffered from utilitarian "spreadsheet syndrome"—presenting plain data tables, rigid status tags (`completed`, `backlog`), and uninspired DOM badges. It felt like an accounting tracker rather than an emotional companion for art.
+Subsume is **not** a movie tracker.  
+Subsume is **not** a note-taking application.  
+Subsume is **not** a productivity tool.  
 
-### 1.2 The v2.0 Identity Pivot
-Subsume v2.0 pivots the application into a **Breathtaking Personal Cinematic Journal & Living Wishlist**. When a cinephile browses any third-party webpage (Netflix, Prime Video, Letterboxd, Wikipedia, film blogs), the extension acts as a magical, living canvas:
-1. **Understand Humanity's Baseline:** Instantly perceive what consensus humanity has rated a visual work (TMDb / IMDb numerical baseline).
-2. **Capture Personal Extrapolations:** Record profound qualitative extrapolations—how the work felt, philosophical reflections, dialogue echoes, and cross-script parallels.
-3. **Living Intent Buckets:** Replace lifeless status dropdowns with living intent buckets: **🔥 Watching This Month**, **✨ Wishlist**, and **📖 Auteur Journal (Watched)**.
-4. **Auteur Screenplay Notebook:** A configurable floating web dock designed for voracious cinephiles to capture original screenplay concepts and story arcs sparked by the visual media visible on screen.
+**Subsume is a private cinematic sanctuary.**
+
+The application evokes the timeless emotional cadence of entering a historic theatre: **anticipation, immersion, reflection, and memory**. The objective is never to maximize feature counts, administrative data entry, or percentage of metadata captured. The sole objective is to maximize **quality of reflection**. If a viewer leaves with a more profound emotional connection to the art they experienced, the product has succeeded.
+
+> **Primary Product Goal:** *Become the most beautiful, sacred place on a user's computer to think about cinema.*  
+> **The Litmus Test:** *Does this design decision make the user want to spend more time reflecting?*
 
 ---
 
-## 2. 🎨 Visual Design System & "Delight" Aesthetics
+## 2. 🎭 The Three Acts: Theatre Interaction Architecture
 
-To achieve visual excellence that wows users at first glance, v2.0 enforces a strict **Sleek Dark Glassmorphism** aesthetic token system.
+The interface behaves like a grand theatre, guiding the cinephile through three distinct emotional phases of engagement.
 
-### 2.1 Color Palette & Design Tokens (HSL Tailored)
+```text
+       ACT I: DISCOVERY                 ACT II: IMMERSION                 ACT III: MEMORY
+ ┌──────────────────────────┐     ┌──────────────────────────┐     ┌──────────────────────────┐
+ │   The Theatre Lobby      │     │  The Darkened Auditorium │     │    The Hardcover Archive │
+ │ Premium · Quiet Luxury   │ ──> │ UI Disappears            │ ──> │ Resurfacing Timeless     │
+ │ One Hero Visual Moment   │     │ Typography & Whitespace  │     │ Thoughts & Taste Arcs    │
+ └──────────────────────────┘     └──────────────────────────┘     └──────────────────────────┘
+```
+
+### 🔹 Act I — Discovery (The Theatre Lobby)
+While browsing third-party discovery and streaming hubs (Letterboxd, MUBI, Criterion, Netflix, Wikipedia, personal blogs), Subsume overlays feel premium, luxurious, and quiet. Rather than noisy decorative SaaS badges, action triggers resemble fine museum catalogue plaques.
+
+### 🔹 Act II — Immersion (The Darkened Auditorium)
+Once the viewer initiates capture and begins writing, **the interface disappears**. Unnecessary decoration fades out. Visual competition is eliminated. Generous whitespace and editorial serif typography dominate the viewport. The user's own reflection becomes the protagonist.
+
+### 🔹 Act III — Memory (The Hardcover Archive)
+When returning months or years later, the library dashboard feels like opening an treasured hardcover notebook. The interface exists purely to allow personal thoughts, emotional recall, and evolving auteur affinities to resurface—never to showcase UI controls.
+
+---
+
+## 3. 🎨 Visual Design System: Luxury Through Restraint
+
+Premium products achieve true luxury through **restraint and contrast**, not by stacking visual noise.
+
+### 3.1 The "One Hero Moment" Rule
+**Avoid stacking:** glass + blur + glow + gradients + shadows + floating animations simultaneously.  
+Instead, every single screen is permitted **exactly one hero visual moment** (e.g., one dramatic focus pull, one gentle curtain fade, or one pristine velvet blur). Everything else remains quiet.
+
+### 3.2 Editorial Typography & Hierarchy
+Inspired by the **Criterion Collection, MUBI, literary journals, and screenplay formatting**. Typography carries hierarchy over container decoration.
 
 ```css
 :root {
-  /* Core Canvas & Backgrounds */
-  --bg-canvas: hsl(230, 20%, 7%);
-  --bg-glass: hsla(230, 25%, 14%, 0.75);
-  --bg-glass-hover: hsla(230, 25%, 20%, 0.85);
-  --border-glass: hsla(230, 30%, 35%, 0.25);
-  --border-active: hsla(280, 85%, 65%, 0.6);
+  /* Sanctuary Palette — Deep Velvet & Warm Parchment Accents */
+  --bg-sanctuary: hsl(240, 18%, 5%); /* Deep Obsidian Auditorium */
+  --bg-plaque: hsla(240, 15%, 11%, 0.85); /* Museum Plaque Glass */
+  --border-restraint: hsla(0, 0%, 100%, 0.08); /* Whisper Border */
+  
+  /* Editorial Typography */
+  --font-editorial: 'Newsreader', 'Cormorant Garamond', Georgia, serif;
+  --font-ui: 'Outfit', 'Inter', -apple-system, sans-serif;
+  
+  /* Literary Text Hierarchy */
+  --text-reflection: hsl(0, 0%, 96%); /* High-contrast Hero Reflection */
+  --text-artwork: hsl(0, 0%, 82%);
+  --text-title: hsl(240, 10%, 70%);
+  --text-meta: hsl(240, 10%, 50%);
+  --text-control: hsl(240, 10%, 32%); /* Quiet UI Controls */
 
-  /* Typography */
-  --font-primary: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-editorial: 'Newsreader', 'Playfair Display', Georgia, serif;
-  --text-main: hsl(0, 0%, 98%);
-  --text-muted: hsl(230, 15%, 65%);
-  --text-dim: hsl(230, 15%, 45%);
-
-  /* Living Intent Bucket Gradients */
-  --intent-month-grad: linear-gradient(135deg, hsl(15, 90%, 60%), hsl(45, 95%, 55%)); /* Fiery Ember */
-  --intent-wish-grad: linear-gradient(135deg, hsl(260, 85%, 65%), hsl(310, 85%, 60%)); /* Mystic Violet */
-  --intent-journal-grad: linear-gradient(135deg, hsl(180, 85%, 45%), hsl(210, 90%, 55%)); /* Deep Cyan */
-
-  /* Glass Effects */
-  --blur-strong: blur(20px);
-  --shadow-float: 0 16px 40px -12px hsla(0, 0%, 0%, 0.65);
+  /* Cinematic Motion Easing (Slow Dolly & Focus Pulls) */
+  --ease-focus-pull: cubic-bezier(0.25, 1, 0.5, 1);
+  --duration-curtain: 450ms;
 }
 ```
 
-### 2.2 Micro-Animations & Interaction Rhythm
-*   **Pill Hover Expansion:** In-page action pills transition smoothly from compact rating dots into glowing `+ Journal` pills using `cubic-bezier(0.16, 1, 0.3, 1)` (spring physics).
-*   **Modal Backdrop Reveal:** Quick-capture overlay modals animate in via a 200ms silky opacity fade combined with a `translateY(8px) -> translateY(0)` float.
-*   **Card Intent Glow:** Magazine cards in the dashboard emit a subtle 3px glowing HSL border pulse when assigned to **Watching This Month**.
+### 3.3 Visual Priority Order
+1. **User Reflections** *(Highest Priority — Editorial Serif, Comfortable Line-Height)*
+2. **Cinematic Artwork** *(Unobstructed Poster Framing)*
+3. **Film Title & Auteur Attribution**
+4. **Supporting Metadata** *(TMDb Baseline Consensus)*
+5. **Interface Controls** *(Lowest Priority — Muted & Receded)*
 
 ---
 
-## 3. 🖥️ Component Layout Blueprints
+## 4. ✍️ Conversational Capture & Emotion Flow
 
-### 3.1 In-Page Action Pill (`src/content/overlay.ts`)
-*   **Placement:** Top-left corner of detected movie/series posters on host webpages (Letterboxd, Netflix browse grids, Google Search).
-*   **Visual State:**
-    *   *Idle:* Sleek Glassmorphic capsule showing `★ 8.4` (TMDb score).
-    *   *Hover:* Expands smoothly to show `★ 8.4 │ + Journal`.
-*   **Encapsulation:** Injected into an open `attachShadow({ mode: 'open' })` root with reset stylesheets to eliminate host CSS leaking.
+To eliminate administrative cognitive friction, capture flows abandon rigid form fields in favor of intimate conversational prompts and progressive disclosure.
 
-### 3.2 In-Page Quick-Capture Modal (`src/ui/components/QuickCaptureModal.tsx`)
-*   **Trigger:** Clicking the `+ Journal` action pill or pressing a configurable keyboard shortcut (`Alt + J`).
-*   **Layout Structure:**
-    ```text
-    ┌─────────────────────────────────────────────────────────┐
-    │  [Poster]   DUNE: PART TWO (2024)                 [✕]   │
-    │             Denis Villeneuve • Sci-Fi                   │
-    ├─────────────────────────────────────────────────────────┤
-    │  🌐 Humanity's Rating:  ★ 8.5 TMDb  │  ★ 8.8 IMDb       │
-    ├─────────────────────────────────────────────────────────┤
-    │  🎯 Select Intent Bucket:                               │
-    │  (•) 🔥 Watching This Month  ( ) ✨ Wishlist  ( ) 📖 Watched │
-    ├─────────────────────────────────────────────────────────┤
-    │  ✍️ Your Extrapolation & Notes (Out of 10):             │
-    │  [ ★★★★★★★★★☆ 9.2 ]                                     │
-    │  ┌───────────────────────────────────────────────────┐  │
-    │  │ Masterpiece of scale. The sound design echoes...  │  │
-    │  └───────────────────────────────────────────────────┘  │
-    │                                     [ Save to Journal ] │
-    └─────────────────────────────────────────────────────────┘
-    ```
+### 4.1 The Emotion Before Metadata Cadence
+**Utilitarian Flow *(Banished)*:** `Movie -> Rating (1-10) -> Status Dropdown -> Notes -> Save`  
+**Sanctuary Cadence *(Enforced)*:** `Movie -> Feeling -> Reflection -> Memory -> Metadata`
 
-### 3.3 Configurable Floating Auteur Dock (`src/content/dock.ts`)
-*   **Purpose:** A dedicated reflection dock for voracious cinephiles who have seen almost everything and want to analyze parallel script arcs or draft screenplay concepts.
-*   **Configurability:** Disabled by default. Toggled via Options Dashboard -> Settings -> **Enable Auteur Reflection Dock**.
-*   **Position:** Fixed floating orb in the bottom-right viewport corner (`bottom: 24px; right: 24px; z-index: 999999`).
-*   **Dock Expanded Surface:**
-    *   Displays titles currently visible on the host webpage viewport.
-    *   Provides dedicated inputs: **Script Parallels (Dialogue/Arc Echoes)** and **Original Screenplay Sparks**.
+### 4.2 Act II Capture Blueprint (`src/ui/components/PoeticCaptureCanvas.tsx`)
 
-### 3.4 Living Magazine Card Library (`src/ui/pages/Library.tsx`)
-*   **Layout:** Responsive 4-column CSS Grid (`grid-template-columns: repeat(auto-fill, minmax(260px, 1fr))`).
-*   **Card Anatomy:** Full-bleed movie poster with a bottom Glassmorphic gradient overlay containing title, release year, director badge, personal score pill, and qualitative excerpt.
+```text
+┌─────────────────────────────────────────────────────────┐
+│                                                         │
+│     STALKER (1979)                                      │
+│     Directed by Andrei Tarkovsky                        │
+│                                                         │
+│     "What stayed with you?"                             │
+│                                                         │
+│     [ The water dripping in the Zone. The feeling       │
+│       that faith is an architectural space rather       │
+│       than a belief. When Writer sits in the grass... ] │
+│                                                         │
+│                                                         │
+│     ─── Continue writing or rest ───                    │
+│                                                         │
+│     (•) Keep this memory   ( ) Revisit this month       │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+*   **Progressive Disclosure:** Numerical ratings out of 10, living intent buckets (`watched`, `revisit_this_month`, `wishlist`), and screenplay cross-references (`scriptParallels`) appear gently **only after** the user has expressed their initial qualitative memory.
 
 ---
 
-## 4. 🗄️ Data Schema Upgrades (IndexedDB `idb`)
+## 5. 🎞️ Cinematic Motion Philosophy
 
-To cleanly support intent buckets and screenplay reflections without breaking existing v1.0 user libraries, `src/background/storage.ts` will introduce schema migration `v2`.
+Animation communicates emotional weight. Constant pulsing, continuous glowing, and bouncy spring physics are strictly prohibited.
+*   **The Slow Dolly:** Viewport modal arrivals transition via a 450ms slow opacity rise accompanied by a subtle 4px upward drift.
+*   **The Focus Pull:** When typing begins in the reflection textarea, surrounding poster artwork and title metadata blur smoothly (`filter: blur(8px); opacity: 0.4`), placing 100% visual focus on the written prose.
+*   **The Curtain Close:** Dismissing overlays fades out quietly over 300ms without abrupt snapping.
 
-### 4.1 Updated `LibraryItem` Interface (`src/shared/types.ts`)
+---
+
+## 6. 🗄️ Data Storage & SOLID Engineering Architecture
+
+Client-first **IndexedDB (`idb`)** persistence guarantees zero-latency $O(1)$ hover checks on host pages while safeguarding total offline contemplation privacy.
+
+### 6.1 Upgraded `LibraryItem` Sanctuary Schema (`src/shared/types.ts`)
 
 ```typescript
-export type IntentBucket = 'watching_this_month' | 'wishlist' | 'watched';
+export type SanctuaryIntent = 'keep_memory' | 'revisit_this_month' | 'wishlist';
 
 export interface LibraryItem {
-  id: string; // TMDb ID (e.g., 'movie:693134')
+  id: string; // e.g. 'movie:27205' (Inception)
   tmdbId: number;
   mediaType: 'movie' | 'tv';
   title: string;
@@ -124,54 +152,48 @@ export interface LibraryItem {
   releaseYear: number;
   directorNames: string[];
   
-  // v2.0 Intent & Rating Core
-  intentBucket: IntentBucket;
-  userRating?: number; // 1.0 to 10.0
-  qualitativeNotes?: string; // Journal reflections
+  // Poetic Reflection Core
+  sanctuaryIntent: SanctuaryIntent;
+  emotionalRecall?: string; // "What stayed with you?" hero text
+  qualitativeNotes?: string; // Extended contemplative prose
+  userRating?: number; // Optional 1.0 - 10.0 numerical extrapolation
   
-  // v2.0 Auteur Screenplay Notebook Extensions
-  scriptParallels?: string[]; // e.g. ["Echoes dialogue from Stalker (1979)"]
-  originalScreenplaySparks?: string; // Inspired story ideas
+  // Auteur Screenplay Archive
+  scriptParallels?: string[]; // Screenplay dialogue/arc echoes
+  originalScreenplaySparks?: string; // Creative ideas sparked by the film
   
   addedAt: number;
   updatedAt: number;
-  watchedAt?: number;
+  contemplatedAt?: number;
 }
 ```
 
----
-
-## 5. 🏗️ SOLID Architectural Mapping & IPC Flows
-
-```text
-  [Host Webpage] --(Click '+ Journal')--> [In-Page Shadow DOM Modal]
-                                                 │
-                                    chrome.runtime.sendMessage()
-                                                 ▼
-  [IndexedDB Store] <--(StorageAdapter)-- [Background Message Router]
-```
-
-### 5.1 SOLID Principles Enforced
-*   **Single Responsibility Principle (SRP):** `src/content/dock.ts` manages exclusively viewport dock tracking. `src/content/overlay.ts` manages exclusively poster image pill injection.
-*   **Open/Closed Principle (OCP):** Storage adapters implement an abstract `MediaRepository` interface. Adding future remote cloud sync requires zero edits to UI components.
+### 6.2 SOLID & Service Worker Partitioning
+*   **Single Responsibility Principle (SRP):** Content injection scripts (`src/content/`) are strictly partitioned from domain storage message routers (`src/background/handlers/*`).
+*   **Open/Closed Principle (OCP):** AI provider adapters (`src/background/llm.ts`) execute polymorphically, allowing future LLM engines to enrich reflective prompts without altering UI canvases.
 
 ---
 
-## 6. 📋 Multi-Agent Brainstorming Decision Log
+## 7. 📋 Philosophy Verification Litmus Gate
 
-| Decision ID | Architectural Area | Evaluated Alternatives | Selected Option | Rationale & Trade-Offs |
-| :--- | :--- | :--- | :--- | :--- |
-| **DEC-01** | Visual Design UI System | 1. Editorial Notebook<br>2. Cyber Neon Grid<br>3. Sleek Glassmorphism | **Sleek Dark Glassmorphism** | Delivers maximum modern visual WOW factor. Harmonious dark backgrounds let movie poster art pop. |
-| **DEC-02** | Webpage Capture Trigger | 1. Toolbar Drawer Only<br>2. Encapsulated IFrames<br>3. Native Action Pills + Dock | **Native Action Pills + Configurable Dock** | Zero-friction capture directly on Letterboxd/Netflix. Floating Dock satisfies advanced auteur script ideation. |
-| **DEC-03** | Client Data Persistence | 1. Cloud-First REST Engine<br>2. `chrome.storage.local`<br>3. High-Speed IndexedDB | **High-Speed Client IndexedDB (`idb`)** | Guarantees synchronous $O(1)$ hover checks without network lag. Total offline privacy for personal journal notes. |
+Before committing any future code slice, autonomous coding agents must verify all five criteria:
+- [x] **Does this interface disappear when the user begins writing?**
+- [x] **Is there no more than ONE hero visual effect on this screen?**
+- [x] **Does typography carry hierarchy over visual decoration?**
+- [x] **Is the user asked for feeling/recall BEFORE numerical ratings or status?**
+- [x] **Does this feature deepen personal reflection rather than mere productivity?**
 
 ---
 
-## 7. 🔒 Multi-Agent Brainstorming Final Disposition
+## 8. ✍️ Developer Signature & Architectural Direction
 
-Following the strict exit criteria of the `/multi-agent-brainstorming` skill:
-*   **Understanding Lock:** Confirmed by Lead User.
-*   **Reviewer Objections:** Evaluated (Skeptic RAM concerns addressed via debounced MutationObservers; User Advocate friction concerns addressed via configurable Dock toggles).
-*   **Final Disposition:** **`APPROVED`**
+**Subsume v2.1** was conceived, architected, and directed by **Harsha Balakrishnan**.
 
-> *This markdown specification represents 100% of the architectural, aesthetic, and functional blueprints required for implementation.*
+> *“Built through rigorous AI-assisted pair programming and advanced orchestration across cutting-edge autonomous coding agents. Every architectural pattern, SOLID abstraction, defensive exception boundary, and Poetic Theatre UI interaction was meticulously evaluated, refined, and directed to demonstrate what a single developer equipped with agentic superpowers can architect and ship.”*
+
+*   **GitHub Profile:** [@harshabala](https://github.com/harshabala)
+*   **Project Repository:** [github.com/harshabala/subsume](https://github.com/harshabala)
+*   **Email Contact:** [harsha16balakrishnan@proton.me](mailto:harsha16balakrishnan@proton.me)
+
+---
+*Cinema is a sacred sanctuary. Protect your contemplation.*
