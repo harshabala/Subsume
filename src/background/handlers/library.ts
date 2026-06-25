@@ -114,6 +114,7 @@ export const libraryHandlers: MessageHandlerMap = {
     existing.userTags = req.tags;
     existing.updatedAt = Date.now();
     await putLibraryItem(existing);
+    invalidateProfileCache();
     await broadcastMessage({
       type: 'LIBRARY_UPDATED',
       action: 'update',

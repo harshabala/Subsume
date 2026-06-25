@@ -27,14 +27,18 @@ export { handlers };
 
 createMessageRouter(handlers);
 
-getPreferences().then((prefs) => {
-  if (prefs.tmdbApiKey) {
-    setTmdbApiKey(prefs.tmdbApiKey);
-  }
-  if (prefs.omdbApiKey) {
-    setOmdbApiKey(prefs.omdbApiKey);
-  }
-});
+getPreferences()
+  .then((prefs) => {
+    if (prefs.tmdbApiKey) {
+      setTmdbApiKey(prefs.tmdbApiKey);
+    }
+    if (prefs.omdbApiKey) {
+      setOmdbApiKey(prefs.omdbApiKey);
+    }
+  })
+  .catch((err) => {
+    logger.error('[Subsume] Failed to initialize background API preferences:', err);
+  });
 
 setupLifecycleAndAlarms();
 
