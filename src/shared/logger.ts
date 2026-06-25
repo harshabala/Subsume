@@ -84,6 +84,12 @@ export const logger = {
       console.log(...args);
     }
   },
+  info: (...args: any[]) => {
+    if (DEBUG) {
+      console.info(...args);
+    }
+    pushLog('info', args);
+  },
   warn: (...args: any[]) => {
     if (DEBUG) {
       console.warn(...args);

@@ -8,6 +8,7 @@
 import { render, h } from 'preact';
 import { sendMessage } from '@/shared/messages';
 import { MessageType, MediaItem, MediaRating, PosterMatch, LibraryItem } from '@/shared/types';
+import { logger } from '@/shared/logger';
 
 const BADGE_ATTR = 'data-subsume-badge';
 const WRAP_CLASS = 'subsume-poster-wrap';
@@ -16,12 +17,13 @@ type RatingProvider = 'imdb' | 'tmdb' | 'rt';
 
 const RATING_PRIORITY: RatingProvider[] = ['imdb', 'tmdb', 'rt'];
 
-function pickDisplayRating(ratings: MediaRating[]): { provider: RatingProvider; score: number } | null {
+export function pickDisplayRating(ratings: MediaRating[]): { provider: RatingProvider; score: number } | null {
   if (!ratings || !Array.isArray(ratings)) return null;
   for (const provider of RATING_PRIORITY) {
     const rating = ratings.find((r) => r.provider === provider);
-    if (rating && rating.score > 0) {
-      return { provider, score: rating.score };
+    if (rating && typeof rating.score === 'number' && rating.score > 0) {
+      const score = rating.score > 10 ? rating.score / 10 : rating.score;
+      return { provider, score };
     }
   }
   return null;
@@ -51,8 +53,7 @@ function MuseumPlaqueOverlay({ match, onReflect }: PlaqueProps) {
   const displayRating = pickDisplayRating(match.ratings);
   let baselineScore = '8.4';
   if (displayRating && displayRating.score > 0) {
-    const s = displayRating.score > 10 ? displayRating.score / 10 : displayRating.score;
-    baselineScore = s.toFixed(1);
+    baselineScore = displayRating.score.toFixed(1);
   }
 
   return h(
@@ -189,6 +190,7 @@ interface BadgeState {
 export class MuseumPlaqueManager {
   private badges = new Map<HTMLImageElement, BadgeState>();
   private libraryIds = new Set<string>();
+  private syncListener: ((message: unknown, sender: chrome.runtime.MessageSender) => void) | null = null;
 
   constructor() {
     this.setupSyncListener();
@@ -196,26 +198,44 @@ export class MuseumPlaqueManager {
 
   private setupSyncListener(): void {
     if (typeof chrome === 'undefined' || !chrome.runtime?.onMessage) return;
-    chrome.runtime.onMessage.addListener((message, sender) => {
+    this.syncListener = (message: unknown, sender: chrome.runtime.MessageSender) => {
       if (sender.id !== chrome.runtime.id) return;
-      if (message?.type !== 'LIBRARY_UPDATED') return;
+      if (!message || typeof message !== 'object') return;
+      if (!('type' in message) || (message as Record<string, unknown>).type !== 'LIBRARY_UPDATED') return;
 
-      const mediaId = message.mediaId || message.libraryItem?.mediaId;
-      if (!mediaId) return;
+      const msg = message as Record<string, any>;
+      const mediaId = typeof msg.mediaId === 'string' ? msg.mediaId : msg.libraryItem?.mediaId;
+      if (!mediaId || typeof mediaId !== 'string') return;
 
-      if (message.action === 'add' || message.action === 'update') {
+      if (msg.action === 'add' || msg.action === 'update') {
         this.libraryIds.add(mediaId);
-      } else if (message.action === 'remove') {
+      } else if (msg.action === 'remove') {
         this.libraryIds.delete(mediaId);
       }
 
       for (const state of this.badges.values()) {
         if (state.mediaId === mediaId) {
-          state.inLibrary = message.action !== 'remove';
+          state.inLibrary = msg.action !== 'remove';
           this.renderBadge(state);
         }
       }
-    });
+    };
+    chrome.runtime.onMessage.addListener(this.syncListener);
+  }
+
+  public destroy(): void {
+    if (this.syncListener && typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
+      chrome.runtime.onMessage.removeListener(this.syncListener);
+      this.syncListener = null;
+    }
+
+    for (const [img, state] of this.badges.entries()) {
+      render(null, state.mount);
+      state.host.remove();
+      img.removeAttribute(BADGE_ATTR);
+    }
+    this.badges.clear();
+    this.libraryIds.clear();
   }
 
   async initLibraryCache(): Promise<void> {
@@ -232,7 +252,7 @@ export class MuseumPlaqueManager {
         }
       }
     } catch (err) {
-      console.debug('[Subsume] Failed to load library cache for museum plaques:', err);
+      logger.warn('[Subsume] Failed to load library cache for museum plaques:', err);
     }
   }
 
@@ -293,7 +313,7 @@ export class MuseumPlaqueManager {
       mediaId: state.mediaId,
       match: state.match,
     }).catch((err) => {
-      console.debug('[Subsume] OPEN_CAPTURE_CANVAS message dispatch:', err);
+      logger.warn('[Subsume] OPEN_CAPTURE_CANVAS message dispatch:', err);
     });
   }
 }
