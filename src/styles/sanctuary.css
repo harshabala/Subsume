@@ -1,0 +1,24 @@
+:root {
+  /* Sanctuary Palette — Deep Velvet & Warm Parchment Accents */
+  --bg-sanctuary: hsl(240, 18%, 5%); /* Deep Obsidian Auditorium */
+  --bg-plaque: hsla(240, 15%, 11%, 0.85); /* Museum Plaque Glass */
+  --bg-plaque-hover: hsla(240, 15%, 16%, 0.95);
+  --border-restraint: hsla(0, 0%, 100%, 0.08); /* Whisper Border */
+  --border-hero: hsla(45, 90%, 65%, 0.4); /* Gold Velvet Accent */
+  
+  /* Editorial Typography */
+  --font-editorial: 'Newsreader', 'Cormorant Garamond', Georgia, serif;
+  --font-ui: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  /* Literary Text Hierarchy */
+  --text-reflection: hsl(0, 0%, 96%); /* High-contrast Hero Reflection */
+  --text-artwork: hsl(0, 0%, 82%);
+  --text-title: hsl(240, 10%, 70%);
+  --text-meta: hsl(240, 10%, 50%);
+  --text-control: hsl(240, 10%, 32%); /* Quiet UI Controls */
+
+  /* Cinematic Motion Easing (Slow Dolly & Focus Pulls) */
+  --ease-focus-pull: cubic-bezier(0.25, 1, 0.5, 1);
+  --duration-curtain: 450ms;
+  --blur-hero: blur(16px);
+}
