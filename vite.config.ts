@@ -14,11 +14,10 @@ export default defineConfig(({ command }) => ({
     viteStaticCopy({
       targets: [
         { src: 'manifest.json', dest: '.' },
-        { src: 'src/assets/icons/*', dest: 'icons' },
       ],
     }),
     {
-      name: 'move-index-html',
+      name: 'post-build-fix',
       closeBundle() {
         const srcHtml = resolve(__dirname, 'dist/src/ui/index.html');
         const destDir = resolve(__dirname, 'dist/ui');
@@ -27,6 +26,11 @@ export default defineConfig(({ command }) => ({
           if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
           fs.renameSync(srcHtml, destHtml);
           fs.rmSync(resolve(__dirname, 'dist/src'), { recursive: true, force: true });
+        }
+        const srcIcons = resolve(__dirname, 'src/assets/icons');
+        const destIcons = resolve(__dirname, 'dist/icons');
+        if (fs.existsSync(srcIcons)) {
+          fs.cpSync(srcIcons, destIcons, { recursive: true, force: true });
         }
       },
     },
