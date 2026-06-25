@@ -3,6 +3,8 @@ import { SystemLog } from './types';
 
 const DEBUG = import.meta.env.DEV;
 
+let storageQueue = Promise.resolve();
+
 function pushLog(level: 'info' | 'warn' | 'error', args: any[]) {
   if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.local) return;
   
@@ -19,13 +21,60 @@ function pushLog(level: 'info' | 'warn' | 'error', args: any[]) {
     details: args.length > 1 ? args.slice(1) : undefined
   };
 
-  chrome.storage.local.get('system_logs', (result) => {
-    let logs: SystemLog[] = result.system_logs || [];
-    logs.push(logEntry);
-    if (logs.length > 100) {
-      logs = logs.slice(logs.length - 100);
+  storageQueue = storageQueue.then(async () => {
+    try {
+      const result = await new Promise<any>((resolve, reject) => {
+        try {
+          const maybePromise = chrome.storage.local.get('system_logs', (res) => {
+            if (chrome.runtime?.lastError) {
+              reject(new Error(chrome.runtime.lastError.message));
+            } else {
+              resolve(res || {});
+            }
+          }) as any;
+          if (maybePromise && typeof maybePromise.then === 'function') {
+            maybePromise.then(resolve).catch(reject);
+          }
+        } catch (err) {
+          reject(err);
+        }
+      });
+
+      let logs: SystemLog[] = result.system_logs || [];
+      logs.push(logEntry);
+      if (logs.length > 100) {
+        logs = logs.slice(logs.length - 100);
+      }
+
+      await new Promise<void>((resolve, reject) => {
+        try {
+          const maybePromise = chrome.storage.local.set({ system_logs: logs }, () => {
+            if (chrome.runtime?.lastError) {
+              reject(new Error(chrome.runtime.lastError.message));
+            } else {
+              resolve();
+            }
+          }) as any;
+          if (maybePromise && typeof maybePromise.then === 'function') {
+            maybePromise.then(resolve).catch(reject);
+          }
+        } catch (err) {
+          reject(err);
+        }
+      });
+    } catch (err) {
+      if (err instanceof Error && (err.name === 'QuotaExceededError' || err.message.includes('QuotaExceededError'))) {
+        if (DEBUG) {
+          console.warn('[Subsume Logger] QuotaExceededError while saving log:', err.message);
+        }
+        return;
+      }
+      if (DEBUG) {
+        console.error('[Subsume Logger] Failed to save log:', err);
+      }
     }
-    chrome.storage.local.set({ system_logs: logs });
+  }).catch(() => {
+    // Ensure queue keeps flowing even if something unexpectedly rejects
   });
 }
 
@@ -46,5 +95,6 @@ export const logger = {
       console.error(...args);
     }
     pushLog('error', args);
-  }
+  },
+  _flushQueue: () => storageQueue
 };

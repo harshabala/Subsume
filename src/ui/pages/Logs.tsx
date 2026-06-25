@@ -76,8 +76,8 @@ export function Logs() {
                       <span style={{ 
                         padding: '2px 6px', 
                         borderRadius: '4px', 
-                        background: log.level === 'error' ? 'rgba(255,0,0,0.1)' : 'rgba(255,165,0,0.1)',
-                        color: log.level === 'error' ? '#ff4444' : '#ff9900',
+                        background: log.level === 'error' ? 'rgba(255,0,0,0.1)' : log.level === 'warn' ? 'rgba(255,165,0,0.1)' : 'rgba(100,149,237,0.1)',
+                        color: log.level === 'error' ? '#ff4444' : log.level === 'warn' ? '#ff9900' : '#4a90e2',
                         fontSize: '12px',
                         fontWeight: 'bold'
                       }}>{log.level.toUpperCase()}</span>
