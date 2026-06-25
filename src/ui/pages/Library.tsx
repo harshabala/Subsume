@@ -1,24 +1,19 @@
 import { h, Fragment } from 'preact';
-import { useState, useEffect, useMemo } from 'preact/hooks';
+import { useState, useEffect, useMemo, useRef } from 'preact/hooks';
 import { sendMessage } from '@/shared/messages';
-import { MessageType, LibraryItem, MediaItem, LibraryStatus, GetLibraryPageRequest, SanctuaryIntent } from '@/shared/types';
+import { MessageType, LibraryItem, LibraryStatus, GetLibraryPageRequest } from '@/shared/types';
 import { DetailModal } from '../components/DetailModal';
 import { logger } from '@/shared/logger';
-
-interface JoinedItem {
-  library: LibraryItem;
-  media: MediaItem;
-}
-
-const STATUS_OPTIONS: { value: LibraryStatus; label: string }[] = [
-  { value: 'to-watch', label: 'Want to Watch' },
-  { value: 'watching', label: 'Watching' },
-  { value: 'watched', label: 'Watched' },
-  { value: 'abandoned', label: 'Abandoned' },
-];
-
-type SortOption = 'added' | 'rating' | 'title' | 'year';
-type IntentFilterOption = 'all' | SanctuaryIntent;
+import {
+  JoinedItem,
+  SortOption,
+  IntentFilterOption,
+  ArchiveHeader,
+  IntentNavigation,
+  ArchiveControls,
+  TagFilterBar,
+  HardcoverSpineCard,
+} from '../components/archive';
 
 export function Library() {
   const [activeTab, setActiveTab] = useState<'movies' | 'tv'>('movies');
@@ -34,7 +29,16 @@ export function Library() {
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [hasMore, setHasMore] = useState<boolean>(true);
 
-  async function fetchLibrary(page: number, append: boolean = false) {
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  async function fetchLibrary(page: number, append: boolean = false, isCancelled?: () => boolean) {
     if (page === 0 && !append) {
       setLoading(true);
     }
@@ -46,6 +50,9 @@ export function Library() {
         offset,
         type: activeTab === 'movies' ? 'movie' : 'tv',
       });
+      if (!isMountedRef.current || (isCancelled && isCancelled())) {
+        return;
+      }
       if (res.success && res.data) {
         if (append) {
           setItems((prev) => [...prev, ...res.data!]);
@@ -62,14 +69,20 @@ export function Library() {
     } catch (err: unknown) {
       logger.error('Failed to load library page', err);
     } finally {
-      setLoading(false);
+      if (isMountedRef.current && (!isCancelled || !isCancelled())) {
+        setLoading(false);
+      }
     }
   }
 
   useEffect(() => {
+    let cancelled = false;
     setCurrentPage(0);
     setHasMore(true);
-    fetchLibrary(0, false);
+    fetchLibrary(0, false, () => cancelled);
+    return () => {
+      cancelled = true;
+    };
   }, [activeTab]);
 
   const loadNextPage = () => {
@@ -78,85 +91,52 @@ export function Library() {
     fetchLibrary(nextPage, true);
   };
 
+  function updateLibraryItem(mediaId: string, patch: Partial<LibraryItem>) {
+    setItems((prev) =>
+      prev.map((item) => {
+        if (item.library.mediaId !== mediaId) return item;
+        const hasDiff = Object.entries(patch).some(([k, v]) => (item.library as unknown as Record<string, unknown>)[k] !== v);
+        return hasDiff ? { ...item, library: { ...item.library, ...patch } } : item;
+      })
+    );
+    setSelectedItem((prev) => {
+      if (!prev || prev.library.mediaId !== mediaId) return prev;
+      const hasDiff = Object.entries(patch).some(([k, v]) => (prev.library as unknown as Record<string, unknown>)[k] !== v);
+      return hasDiff ? { ...prev, library: { ...prev.library, ...patch } } : prev;
+    });
+  }
+
   async function updateStatus(mediaId: string, status: LibraryStatus) {
     const res = await sendMessage(MessageType.UPDATE_STATUS, { mediaId, status });
-    if (res.success) {
-      setItems((prev) =>
-        prev.map((item) =>
-          item.library.mediaId === mediaId
-            ? { ...item, library: { ...item.library, status } }
-            : item
-        )
-      );
-      setSelectedItem((prev) => {
-        if (prev && prev.library.mediaId === mediaId) {
-          return { ...prev, library: { ...prev.library, status } };
-        }
-        return prev;
-      });
+    if (res.success && isMountedRef.current) {
+      updateLibraryItem(mediaId, { status });
     }
   }
 
   async function updateRating(mediaId: string, rating: number) {
     const res = await sendMessage(MessageType.SET_USER_RATING, { mediaId, rating });
-    if (res.success) {
-      setItems((prev) =>
-        prev.map((item) =>
-          item.library.mediaId === mediaId
-            ? { ...item, library: { ...item.library, userRating: rating } }
-            : item
-        )
-      );
-      setSelectedItem((prev) => {
-        if (prev && prev.library.mediaId === mediaId) {
-          return { ...prev, library: { ...prev.library, userRating: rating } };
-        }
-        return prev;
-      });
+    if (res.success && isMountedRef.current) {
+      updateLibraryItem(mediaId, { userRating: rating });
     }
   }
 
   async function updateNotes(mediaId: string, notes: string) {
     const res = await sendMessage(MessageType.SET_USER_NOTES, { mediaId, notes });
-    if (res.success) {
-      setItems((prev) =>
-        prev.map((item) =>
-          item.library.mediaId === mediaId
-            ? { ...item, library: { ...item.library, notes: notes.trim() || undefined } }
-            : item
-        )
-      );
-      setSelectedItem((prev) => {
-        if (prev && prev.library.mediaId === mediaId) {
-          return { ...prev, library: { ...prev.library, notes: notes.trim() || undefined } };
-        }
-        return prev;
-      });
+    if (res.success && isMountedRef.current) {
+      updateLibraryItem(mediaId, { notes: notes.trim() || undefined });
     }
   }
 
   async function updateTags(mediaId: string, tags: string[]) {
     const res = await sendMessage(MessageType.SET_USER_TAGS, { mediaId, tags });
-    if (res.success) {
-      setItems((prev) =>
-        prev.map((item) =>
-          item.library.mediaId === mediaId
-            ? { ...item, library: { ...item.library, userTags: tags } }
-            : item
-        )
-      );
-      setSelectedItem((prev) => {
-        if (prev && prev.library.mediaId === mediaId) {
-          return { ...prev, library: { ...prev.library, userTags: tags } };
-        }
-        return prev;
-      });
+    if (res.success && isMountedRef.current) {
+      updateLibraryItem(mediaId, { userTags: tags });
     }
   }
 
   async function removeItem(mediaId: string) {
     const res = await sendMessage(MessageType.REMOVE_FROM_LIBRARY, { mediaId });
-    if (res.success) {
+    if (res.success && isMountedRef.current) {
       setItems((prev) => prev.filter((item) => item.library.mediaId !== mediaId));
       setRemoveConfirmId(null);
     }
@@ -193,165 +173,32 @@ export function Library() {
       });
   }, [items, statusFilter, activeTagFilter, searchQuery, sortBy, intentFilter]);
 
-  const INTENT_TABS: { id: IntentFilterOption; label: string }[] = [
-    { id: 'all', label: 'All Sanctuary' },
-    { id: 'keep_memory', label: 'Keep This Memory' },
-    { id: 'revisit_this_month', label: 'Revisit This Month' },
-    { id: 'wishlist', label: 'Wishlist' },
-  ];
-
   return (
     <div className="page-container">
-      <header className="page-header">
-        <h2 className="page-title" style={{ fontFamily: 'var(--font-serif, "Newsreader", Georgia, serif)' }}>Your Poetic Sanctuary</h2>
-        <p className="page-subtitle">An editorial hardcover archive of living memories and desires.</p>
-      </header>
+      <ArchiveHeader />
 
-      <div className="tab-bar">
-        <button
-          className={`tab-item ${activeTab === 'movies' ? 'active' : ''}`}
-          onClick={() => setActiveTab('movies')}
-        >
-          Movies
-        </button>
-        <button
-          className={`tab-item ${activeTab === 'tv' ? 'active' : ''}`}
-          onClick={() => setActiveTab('tv')}
-        >
-          TV Shows
-        </button>
-      </div>
+      <IntentNavigation
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        intentFilter={intentFilter}
+        setIntentFilter={setIntentFilter}
+      />
 
-      <div
-        className="intent-filter-bar"
-        style={{
-          display: 'flex',
-          gap: 20,
-          marginBottom: 24,
-          padding: '0 32px',
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
-          paddingBottom: 12,
-          flexWrap: 'wrap',
-        }}
-      >
-        {INTENT_TABS.map((tab) => (
-          <button
-            key={tab.id}
-            data-intent={tab.id}
-            onClick={() => setIntentFilter(tab.id)}
-            style={{
-              background: 'none',
-              border: 'none',
-              padding: '6px 4px',
-              fontFamily: 'var(--font-serif, "Newsreader", Georgia, serif)',
-              fontSize: 16,
-              color: intentFilter === tab.id ? 'var(--primary)' : 'var(--color-text-secondary)',
-              borderBottom: intentFilter === tab.id ? '2px solid var(--primary)' : '2px solid transparent',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      <div style={{ display: 'flex', gap: 12, marginBottom: 24, padding: '0 32px', flexWrap: 'wrap', alignItems: 'center' }}>
-        <input
-          type="text"
-          placeholder="Search your sanctuary..."
-          value={searchQuery}
-          onInput={(e) => setSearchQuery(e.currentTarget.value)}
-          style={{
-            flex: 1,
-            minWidth: 200,
-            padding: '8px 12px',
-            background: 'var(--color-surface-hover)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            color: 'white',
-            borderRadius: 8,
-            fontSize: 14,
-          }}
-        />
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter((e.target as HTMLSelectElement).value as LibraryStatus | '')}
-          style={{
-            padding: '8px 12px',
-            background: 'var(--color-surface-hover)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            color: 'white',
-            borderRadius: 8,
-            fontSize: 14,
-            cursor: 'pointer',
-          }}
-        >
-          <option value="">All Statuses</option>
-          {STATUS_OPTIONS.map((opt) => (
-            <option value={opt.value} key={opt.value}>{opt.label}</option>
-          ))}
-        </select>
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy((e.target as HTMLSelectElement).value as SortOption)}
-          style={{
-            padding: '8px 12px',
-            background: 'var(--color-surface-hover)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            color: 'white',
-            borderRadius: 8,
-            fontSize: 14,
-            cursor: 'pointer',
-          }}
-        >
-          <option value="added">Date Added</option>
-          <option value="rating">Your Rating</option>
-          <option value="title">Title</option>
-          <option value="year">Year</option>
-        </select>
-      </div>
+      <ArchiveControls
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+      />
 
       <div className="library-content" style={{ padding: '0 32px' }}>
-        {allTags.length > 0 && (
-          <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '16px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)', alignSelf: 'center', marginRight: '4px' }}>Filter:</span>
-            <span
-              onClick={() => setActiveTagFilter('')}
-              style={{
-                fontSize: '12px',
-                padding: '4px 10px',
-                background: activeTagFilter === '' ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
-                border: activeTagFilter === '' ? '1px solid var(--primary)' : '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '12px',
-                cursor: 'pointer',
-                color: activeTagFilter === '' ? 'var(--color-surface)' : 'var(--color-text-secondary)',
-                whiteSpace: 'nowrap',
-                userSelect: 'none'
-              }}
-            >
-              All
-            </span>
-            {allTags.map((tag) => (
-              <span
-                key={tag}
-                onClick={() => setActiveTagFilter(activeTagFilter === tag ? '' : tag)}
-                style={{
-                  fontSize: '12px',
-                  padding: '4px 10px',
-                  background: activeTagFilter === tag ? 'var(--primary)' : 'rgba(201, 168, 76, 0.05)',
-                  border: activeTagFilter === tag ? '1px solid var(--primary)' : '1px solid rgba(201, 168, 76, 0.2)',
-                  borderRadius: '12px',
-                  cursor: 'pointer',
-                  color: activeTagFilter === tag ? 'var(--color-surface)' : 'var(--primary)',
-                  whiteSpace: 'nowrap',
-                  userSelect: 'none'
-                }}
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
+        <TagFilterBar
+          allTags={allTags}
+          activeTagFilter={activeTagFilter}
+          setActiveTagFilter={setActiveTagFilter}
+        />
 
         {loading ? (
           <div className="empty-state" style={{ padding: 0 }}>
@@ -373,113 +220,17 @@ export function Library() {
           <Fragment>
             <div className="card-grid">
               {filteredAndSortedItems.map(({ library, media }) => (
-                <div key={library.mediaId} className="media-card" onClick={() => setSelectedItem({ library, media })} style={{ cursor: 'pointer' }}>
-                  <div className="media-card-poster">
-                    {media?.posterUrl ? (
-                      <img
-                        src={media.posterUrl}
-                        alt={media.canonicalTitle}
-                        loading="lazy"
-                        style={{ borderRadius: '4px', boxShadow: '0 12px 32px rgba(0, 0, 0, 0.4)' }}
-                      />
-                    ) : (
-                      <div className="empty-poster text-center p-4" style={{ borderRadius: '4px', boxShadow: '0 12px 32px rgba(0, 0, 0, 0.4)' }}>No Image</div>
-                    )}
-                  </div>
-                  <div className="media-card-body">
-                    <h4
-                      className="media-card-title"
-                      style={{ fontFamily: 'var(--font-serif, "Newsreader", Georgia, serif)', fontSize: '16px', fontWeight: 500 }}
-                    >
-                      {media?.canonicalTitle || 'Unknown Title'}
-                    </h4>
-                    <div className="media-card-meta" style={{ fontFamily: 'var(--font-serif, "Newsreader", Georgia, serif)' }}>
-                      <span>{media?.year}</span>
-                      {media?.ratings?.find((r) => r.provider === 'tmdb') && (
-                        <span className="media-card-rating">
-                          ⭐ {media.ratings.find((r) => r.provider === 'tmdb')!.score.toFixed(1)}
-                        </span>
-                      )}
-                    </div>
-
-                    {library.emotionalRecall && (
-                      <p
-                        className="hardcover-snippet"
-                        style={{ fontStyle: 'italic', color: 'var(--color-text-secondary)', fontSize: '13px', margin: '8px 0', lineHeight: 1.4 }}
-                      >
-                        "{library.emotionalRecall}"
-                      </p>
-                    )}
-
-                    <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <select
-                        value={library.status}
-                        onChange={(e) => updateStatus(library.mediaId, (e.target as HTMLSelectElement).value as LibraryStatus)}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          background: 'var(--color-surface-elevated)',
-                          color: 'var(--color-text)',
-                          border: '1px solid var(--color-border)',
-                          borderRadius: 6,
-                          padding: '6px 8px',
-                          fontSize: 12,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        {STATUS_OPTIONS.map((opt) => (
-                          <option value={opt.value} key={opt.value}>{opt.label}</option>
-                        ))}
-                      </select>
-
-                      {library.status === 'watched' && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Your rating:</span>
-                          <input
-                            type="range"
-                            min={1}
-                            max={10}
-                            step={1}
-                            value={library.userRating || 5}
-                            onChange={(e) => updateRating(library.mediaId, parseInt((e.target as HTMLInputElement).value, 10))}
-                            onClick={(e) => e.stopPropagation()}
-                            style={{ flex: 1, cursor: 'pointer' }}
-                          />
-                          <span style={{ fontSize: 12, fontWeight: 600, minWidth: 20, textAlign: 'center' }}>
-                            {library.userRating || 5}
-                          </span>
-                        </div>
-                      )}
-
-                      {removeConfirmId === library.mediaId ? (
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                          <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Remove?</span>
-                          <button
-                            className="btn btn-primary"
-                            style={{ padding: '4px 10px', fontSize: 12 }}
-                            onClick={(e) => { e.stopPropagation(); removeItem(library.mediaId); }}
-                          >
-                            Yes
-                          </button>
-                          <button
-                            className="btn btn-secondary"
-                            style={{ padding: '4px 10px', fontSize: 12 }}
-                            onClick={(e) => { e.stopPropagation(); setRemoveConfirmId(null); }}
-                          >
-                            No
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          className="btn btn-secondary"
-                          style={{ padding: '4px 10px', fontSize: 12, alignSelf: 'flex-start' }}
-                          onClick={(e) => { e.stopPropagation(); setRemoveConfirmId(library.mediaId); }}
-                        >
-                          🗑️ Remove
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                <HardcoverSpineCard
+                  key={library.mediaId}
+                  library={library}
+                  media={media}
+                  onSelect={() => setSelectedItem({ library, media })}
+                  onUpdateStatus={updateStatus}
+                  onUpdateRating={updateRating}
+                  onRemoveItem={removeItem}
+                  removeConfirmId={removeConfirmId}
+                  setRemoveConfirmId={setRemoveConfirmId}
+                />
               ))}
             </div>
 
