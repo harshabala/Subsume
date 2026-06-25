@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import preact from '@preact/preset-vite';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
+import fs from 'fs';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -16,6 +17,19 @@ export default defineConfig(({ command }) => ({
         { src: 'src/assets/icons/*', dest: 'icons' },
       ],
     }),
+    {
+      name: 'move-index-html',
+      closeBundle() {
+        const srcHtml = resolve(__dirname, 'dist/src/ui/index.html');
+        const destDir = resolve(__dirname, 'dist/ui');
+        const destHtml = resolve(__dirname, 'dist/ui/index.html');
+        if (fs.existsSync(srcHtml)) {
+          if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
+          fs.renameSync(srcHtml, destHtml);
+          fs.rmSync(resolve(__dirname, 'dist/src'), { recursive: true, force: true });
+        }
+      },
+    },
   ],
   resolve: {
     alias: {
