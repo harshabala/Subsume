@@ -46,8 +46,8 @@ export function RecommendationAiCard({ rec, showSeedPill, isAdded, onCardClick, 
           </div>
         )}
         {tmdbRating && (
-          <div className="recommendation-ai-card-rating">
-            ★ {tmdbRating.score.toFixed(1)}
+          <div className="recommendation-ai-card-rating" style={{ fontFamily: 'var(--font-ui)', fontSize: '9px', letterSpacing: '0.08em', background: 'var(--bg-plaque)', border: '1px solid var(--border-restraint)' }}>
+            SCORE {tmdbRating.score.toFixed(1)}
           </div>
         )}
       </div>
@@ -63,17 +63,18 @@ export function RecommendationAiCard({ rec, showSeedPill, isAdded, onCardClick, 
           {rec.reason}
         </div>
         {showSeedPill && rec.seedTitle && (
-          <div className="recommendation-ai-card-seed-pill">
-            Because you liked {rec.seedTitle}
+          <div className="recommendation-ai-card-seed-pill" style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', letterSpacing: '0.05em', color: 'var(--text-meta)', background: 'var(--bg-sanctuary)', border: '1px solid var(--border-restraint)' }}>
+            REF. {rec.seedTitle}
           </div>
         )}
         {rec.tmdbId && (
           <button
             disabled={isAdded}
             onClick={e => { e.stopPropagation(); onAddClick(rec); }}
-            className={`recommendation-ai-card-add-button ${isAdded ? 'recommendation-ai-card-add-button-added' : 'recommendation-ai-card-add-button-unadded'}`}
+            className={`sanctuary-acquire-btn ${isAdded ? 'recommendation-ai-card-add-button-added' : 'recommendation-ai-card-add-button-unadded'}`}
+            style={{ marginTop: '8px', padding: '6px 12px' }}
           >
-            {isAdded ? '✓ Added' : '+ Add'}
+            {isAdded ? 'Archived' : '+ Acquire'}
           </button>
         )}
       </div>

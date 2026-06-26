@@ -24,8 +24,8 @@ export function RecommendationMediaCard({ media, explanation, onClick }: Recomme
            <div className="media-card-meta">
              <span>{media.year}</span>
              {media.ratings?.find(r => r.provider === 'tmdb') && (
-                <span className="media-card-rating">
-                  ⭐ {media.ratings.find(r => r.provider === 'tmdb')!.score.toFixed(1)}
+                <span className="media-card-rating" style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', letterSpacing: '0.05em', color: 'var(--text-artwork)' }}>
+                  SCORE {media.ratings.find(r => r.provider === 'tmdb')!.score.toFixed(1)}
                 </span>
              )}
            </div>
@@ -38,9 +38,9 @@ export function RecommendationMediaCard({ media, explanation, onClick }: Recomme
        </div>
 
        <div className="recommendation-media-card-explanation">
-          <div className="recommendation-media-card-explanation-content">
-            <span className="recommendation-media-card-explanation-icon">💡</span>
-            <span className="recommendation-media-card-explanation-text">
+          <div className="recommendation-media-card-explanation-content" style={{ flexDirection: 'column', gap: '4px' }}>
+            <span className="sanctuary-subtitle" style={{ fontSize: '9px', letterSpacing: '0.2em' }}>CURATOR'S NOTE</span>
+            <span className="recommendation-media-card-explanation-text" style={{ fontFamily: 'var(--font-editorial)', fontStyle: 'italic', fontSize: '14px', color: 'var(--text-artwork)' }}>
               {explanation}
             </span>
           </div>

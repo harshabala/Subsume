@@ -5,9 +5,9 @@ import { MessageType, MediaItem, MediaType } from '@/shared/types';
 import { DetailModal } from '../components/DetailModal';
 
 const TYPE_OPTIONS: { value: MediaType | ''; label: string }[] = [
-  { value: '', label: 'All' },
-  { value: 'movie', label: 'Movies' },
-  { value: 'tv', label: 'TV Shows' },
+  { value: '', label: 'Complete Archive' },
+  { value: 'movie', label: 'Feature Films' },
+  { value: 'tv', label: 'Series / Television' },
 ];
 
 export function Search() {
@@ -65,45 +65,48 @@ export function Search() {
 
   return (
     <div className="page-container">
-      <header className="page-header">
-        <h2 className="page-title">Search</h2>
-        <p className="page-subtitle">Find movies and TV shows on TMDb.</p>
+      <header className="sanctuary-header">
+        <div className="sanctuary-header-meta">
+          <span className="sanctuary-subtitle">Catalogue No. 02 — Precision Archival Query</span>
+        </div>
+        <h1 className="sanctuary-title">Search Archive</h1>
+        <p className="sanctuary-description">
+          Query the global cinematic repository with archival precision and museum filters.
+        </p>
       </header>
 
-      <div style={{ maxWidth: 640, margin: '24px 32px' }}>
-        <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+      <div className="optical-search-container">
+        <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
           <input
             type="text"
-            placeholder="Search for a title..."
+            placeholder="ENTER TITLE OR CATALOGUE QUERY..."
             value={query}
             onInput={(e) => setQuery(e.currentTarget.value)}
             onKeyDown={handleKeyDown}
-            style={{
-              flex: 1,
-              padding: '10px 14px',
-              background: 'var(--color-surface-hover)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              color: 'white',
-              borderRadius: 8,
-              fontSize: 15,
-            }}
+            className="optical-input"
           />
           <button
-            className="btn btn-primary"
+            className="optical-button"
             onClick={handleSearch}
             disabled={loading || !query.trim()}
           >
-            {loading ? 'Searching...' : 'Search'}
+            {loading ? 'INSPECTING...' : 'QUERY'}
           </button>
         </div>
 
-        <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {TYPE_OPTIONS.map((opt) => (
             <button
               key={opt.value}
-              className={`btn ${typeFilter === opt.value ? 'btn-primary' : 'btn-secondary'}`}
               onClick={() => setTypeFilter(opt.value)}
-              style={{ padding: '6px 14px', fontSize: 13 }}
+              className="optical-button"
+              style={{
+                padding: '8px 16px',
+                fontSize: '11px',
+                borderColor: typeFilter === opt.value ? 'var(--border-hero)' : 'var(--border-restraint)',
+                color: typeFilter === opt.value ? 'var(--text-reflection)' : 'var(--text-meta)',
+                background: typeFilter === opt.value ? 'hsla(45, 90%, 65%, 0.08)' : 'var(--bg-plaque)'
+              }}
             >
               {opt.label}
             </button>
@@ -112,55 +115,57 @@ export function Search() {
       </div>
 
       {searched && !loading && results.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '48px 32px', color: 'var(--color-text-secondary)' }}>
-          <p style={{ fontSize: 16, marginBottom: 8, fontWeight: 600, color: 'var(--color-text)' }}>No results found</p>
-          <p style={{ fontSize: 14 }}>Search for something else or verify your TMDb API key is set up in Settings.</p>
+        <div className="sanctuary-empty-plaque" style={{ maxWidth: 500, margin: '48px auto' }}>
+          <span className="sanctuary-plaque-index">REF. NULL-RESULT</span>
+          <h3 className="sanctuary-plaque-title">No Archival Matches Found</h3>
+          <p className="sanctuary-plaque-text">
+            The global repository yielded no works corresponding to your optical query. Refine search parameters or verify provider configuration.
+          </p>
         </div>
       )}
 
       {results.length > 0 && (
-        <div className="media-grid" style={{ padding: '0 32px' }}>
+        <div className="card-grid" style={{ padding: '0 32px', maxWidth: 1200, margin: '0 auto 48px' }}>
           {results.map((item) => (
-            <div key={item.id} className="media-card" onClick={() => setSelectedMedia(item)} style={{ cursor: 'pointer' }}>
-              <div className="media-poster">
+            <div key={item.id} className="sanctuary-media-card" onClick={() => setSelectedMedia(item)} style={{ cursor: 'pointer' }}>
+              <div className="sanctuary-card-poster">
                 {item.posterUrl ? (
-                  <img src={item.posterUrl} alt={item.canonicalTitle} loading="lazy" />
+                  <img src={item.posterUrl} alt={item.canonicalTitle} loading="lazy" className="sanctuary-poster-img" />
                 ) : (
-                  <div className="media-poster-placeholder">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                      <rect x="2" y="3" width="20" height="18" rx="2" />
-                      <path d="M7 3v18M17 3v18M2 9h5M17 9h5M2 15h5M17 15h5" />
-                    </svg>
+                  <div className="sanctuary-poster-placeholder">
+                    <span className="sanctuary-placeholder-title">{item.canonicalTitle}</span>
                   </div>
                 )}
               </div>
-              <div className="media-info">
-                <h3 className="media-title">{item.canonicalTitle}</h3>
-                <div className="media-meta">
-                  <span>{item.year || '—'}</span>
-                  <span className="media-type-badge">
-                    {item.type === 'tv' ? 'TV' : 'Movie'}
+              <div className="sanctuary-card-content">
+                <h3 className="sanctuary-card-title">{item.canonicalTitle}</h3>
+                <div className="sanctuary-card-meta">
+                  <span>{item.year || 'ARCHIVAL'}</span>
+                  <span className="sanctuary-card-badge">
+                    {item.type === 'tv' ? 'Series' : 'Film'}
                   </span>
                   {item.ratings[0] && (
-                    <span>⭐ {item.ratings[0].score.toFixed(1)}</span>
+                    <span style={{ color: 'var(--text-artwork)' }}>
+                      SCORE {item.ratings[0].score.toFixed(1)}
+                    </span>
                   )}
                 </div>
                 {item.overview && (
-                  <p className="media-overview">{item.overview}</p>
+                  <p className="sanctuary-card-synopsis">{item.overview}</p>
                 )}
-                <div style={{ marginTop: 12 }}>
+                <div style={{ marginTop: 'auto', paddingTop: 12 }}>
                   {addedIds.has(item.id) ? (
-                    <span style={{ color: '#34d399', fontSize: 13, fontWeight: 600 }}>
-                      ✓ Added to Library
+                    <span style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', letterSpacing: '0.05em', color: 'var(--text-meta)' }}>
+                      Archived in Sanctuary
                     </span>
                   ) : (
                     <button
-                      className="btn btn-primary"
+                      className="sanctuary-acquire-btn"
                       onClick={(e) => { e.stopPropagation(); handleAdd(item); }}
                       disabled={addingId === item.id}
-                      style={{ padding: '6px 12px', fontSize: 12 }}
+                      style={{ width: '100%', padding: '8px', fontSize: '11px' }}
                     >
-                      {addingId === item.id ? 'Adding...' : 'Add to Library'}
+                      {addingId === item.id ? 'Acquiring...' : '+ Acquire'}
                     </button>
                   )}
                 </div>

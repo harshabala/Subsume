@@ -42,74 +42,85 @@ export function NewReleases() {
 
   return (
     <div className="page-container">
-      <header className="page-header">
-        <h2 className="page-title">What's Trending</h2>
-        <p className="page-subtitle">Discover the most popular new releases today.</p>
+      <header className="sanctuary-header">
+        <div className="sanctuary-header-meta">
+          <span className="sanctuary-subtitle">Catalogue No. 03 — Historic Theatre Programme</span>
+        </div>
+        <h1 className="sanctuary-title">Cinematic Programme</h1>
+        <p className="sanctuary-description">
+          Archival calendar of trending acquisitions and contemporary releases across global auditoriums.
+        </p>
       </header>
 
-      <div className="tab-bar">
+      <div className="recommendations-view-mode-toggle" style={{ margin: '0 auto 32px', maxWidth: 360 }}>
         <button
-          className={`tab-item ${activeTab === 'movie' ? 'active' : ''}`}
+          className={`recommendations-view-mode-btn ${activeTab === 'movie' ? 'recommendations-view-mode-btn-active' : 'recommendations-view-mode-btn-inactive'}`}
           onClick={() => setActiveTab('movie')}
+          style={{ flex: 1, padding: '8px 16px' }}
         >
-          Movies
+          Feature Films
         </button>
         <button
-          className={`tab-item ${activeTab === 'tv' ? 'active' : ''}`}
+          className={`recommendations-view-mode-btn ${activeTab === 'tv' ? 'recommendations-view-mode-btn-active' : 'recommendations-view-mode-btn-inactive'}`}
           onClick={() => setActiveTab('tv')}
+          style={{ flex: 1, padding: '8px 16px' }}
         >
-          TV Shows
+          Series & Repertoires
         </button>
       </div>
 
-      <div className="library-content">
+      <div className="programme-container">
         {loading ? (
-          <div className="empty-state">
-            <div className="subsume-spinner" />
-            <p style={{ marginTop: 16, color: 'var(--color-text-secondary)' }}>Consulting the pop-culture oracle...</p>
+          <div className="sanctuary-empty-plaque">
+            <div className="subsume-spinner" style={{ margin: '0 auto 16px' }} />
+            <p className="sanctuary-plaque-text">Inspecting auditorium programme...</p>
           </div>
         ) : items.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-state-icon">🎟️</div>
-            <h3 className="empty-state-title">TMDb went dark</h3>
-            <p className="empty-state-description">
-              We couldn't fetch today's trending releases. TMDb might be taking a coffee break, or your internet is acting up. Check your API key or connection and try again.
+          <div className="sanctuary-empty-plaque">
+            <span className="sanctuary-plaque-index">REF. 503-PROG</span>
+            <h3 className="sanctuary-plaque-title">Programme Currently Unavailable</h3>
+            <p className="sanctuary-plaque-text">
+              We could not retrieve today's programme registry. Verify provider configuration or internet connectivity.
             </p>
           </div>
         ) : (
-           <div className="card-grid">
-             {items.map((media) => (
-                <div key={media.id} className="media-card" style={{ position: 'relative', cursor: 'pointer' }} onClick={() => setSelectedMedia(media)}>
-                 <div className="media-card-poster">
-                   {media.posterUrl ? (
-                     <img src={media.posterUrl} alt={media.canonicalTitle} loading="lazy" />
-                   ) : (
-                     <div className="empty-poster text-center p-4">No Image</div>
-                   )}
-                 </div>
-                 <div className="media-card-body">
-                   <h4 className="media-card-title" style={{ WebkitLineClamp: 1, overflow: 'hidden', display: '-webkit-box', WebkitBoxOrient: 'vertical' }}>
-                     {media.canonicalTitle}
-                   </h4>
-                   <PlatformChips availability={media.streamingAvailability} max={2} compact />
-                   <div className="media-card-meta">
-                     <span>{media.year}</span>
-                     {media.ratings?.find(r => r.provider === 'tmdb') && (
-                        <span className="media-card-rating">
-                          ⭐ {media.ratings.find(r => r.provider === 'tmdb')!.score.toFixed(1)}
-                        </span>
-                     )}
-                   </div>
-                     <button 
-                       className="btn btn-secondary" 
-                       style={{ width: '100%', marginTop: 8, padding: '6px 0', fontSize: 13 }}
-                       onClick={(e) => { e.stopPropagation(); handleAddToLibrary(media); }}
-                       disabled={addedIds.has(media.id)}
-                     >
-                       {addedIds.has(media.id) ? '✓ Added' : '+ Add to Library'}
-                     </button>
-                 </div>
-               </div>
+          <div>
+            {items.map((media) => (
+              <div key={media.id} className="programme-item">
+                <div className="programme-date">
+                  {media.year || 'ACT I'}
+                </div>
+                <div>
+                  <div
+                    className="programme-title"
+                    style={{ cursor: 'pointer', transition: 'color 0.2s ease' }}
+                    onClick={() => setSelectedMedia(media)}
+                  >
+                    {media.canonicalTitle}
+                  </div>
+                  <div style={{ marginTop: 8 }}>
+                    <PlatformChips availability={media.streamingAvailability} max={3} compact />
+                  </div>
+                </div>
+                <div className="programme-meta">
+                  {media.ratings?.find(r => r.provider === 'tmdb') && (
+                    <div style={{ color: 'var(--text-artwork)', marginBottom: 8 }}>
+                      SCORE {media.ratings.find(r => r.provider === 'tmdb')!.score.toFixed(1)}
+                    </div>
+                  )}
+                  {addedIds.has(media.id) ? (
+                    <span style={{ color: 'var(--text-meta)', fontSize: '10px' }}>Archived</span>
+                  ) : (
+                    <button
+                      className="optical-button"
+                      style={{ padding: '6px 12px', fontSize: '9px' }}
+                      onClick={() => handleAddToLibrary(media)}
+                    >
+                      + Acquire
+                    </button>
+                  )}
+                </div>
+              </div>
             ))}
           </div>
         )}

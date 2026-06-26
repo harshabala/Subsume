@@ -198,26 +198,28 @@ export function Recommendations() {
 
   return (
     <div className="page-container">
-      <header className="page-header">
-        <div className="recommendations-header-badge">
-          <h2 className="page-title">Recommendations</h2>
-          <span className="status-badge to-watch">Algorithm</span>
+      <header className="sanctuary-header">
+        <div className="sanctuary-header-meta">
+          <span className="sanctuary-subtitle">Catalogue No. 01 — Curated Discovery</span>
         </div>
-        <p className="page-subtitle">Smart suggestions based on your library and preferences.</p>
+        <h1 className="sanctuary-title">Recommendations</h1>
+        <p className="sanctuary-description">
+          Archival suggestions curated from your personal viewing history and cinematic preferences.
+        </p>
       </header>
 
       {/* ── Existing rule-based section (unchanged) ── */}
       {loading ? (
-        <div className="empty-state">
-           <div className="subsume-spinner" />
-           <p className="recommendations-loading-spinner-container">Analyzing library...</p>
+        <div className="sanctuary-empty-plaque">
+           <div className="subsume-spinner" style={{ margin: '0 auto 16px' }} />
+           <p className="sanctuary-plaque-text">Inspecting archival library...</p>
         </div>
       ) : hasNoRecs ? (
-        <div className="empty-state">
-          <div className="empty-state-icon">🤖</div>
-          <h3 className="empty-state-title">Not enough data</h3>
-          <p className="empty-state-description">
-            Add a few more "to-watch" items to your library. Marking titles as "watched" will significantly improve your recommendations!
+        <div className="sanctuary-empty-plaque">
+          <span className="sanctuary-plaque-index">REF. 404-REC</span>
+          <h3 className="sanctuary-plaque-title">Insufficient Archival Data</h3>
+          <p className="sanctuary-plaque-text">
+            Catalogue curation requires a broader foundation. Add further works to your sanctuary or mark existing acquisitions as watched.
           </p>
         </div>
       ) : isGrouped ? (
@@ -231,9 +233,9 @@ export function Recommendations() {
                   onClick={() => toggleGroup(seedTitle)}
                   style={{ marginBottom: isCollapsed ? '0px' : '16px' }}
                 >
-                  <span className={`recommendations-rule-group-icon ${isCollapsed ? 'recommendations-rule-group-icon-collapsed' : ''}`}>▼</span>
+                  <span className="sanctuary-subtitle" style={{ marginRight: '4px' }}>[ {isCollapsed ? '+' : '–'} ]</span>
                   <h3 className="recommendations-rule-group-title">
-                    Because you watched <span className="recommendations-rule-group-title-highlight">{seedTitle}</span>
+                    Because you experienced <span className="recommendations-rule-group-title-highlight">{seedTitle}</span>
                   </h3>
                 </div>
                 {!isCollapsed && (
@@ -269,18 +271,20 @@ export function Recommendations() {
       <div className="recommendations-ai-section">
 
         {/* Profile context strip */}
+        {/* Profile context strip */}
         {watchProfile && (
-          <p className="recommendations-page-subtitle">
-            Based on {watchProfile.totalWatched} film{watchProfile.totalWatched === 1 ? '' : 's'} watched
-            {topGenres.length > 0 && ` · Top genres: ${topGenres.join(', ')}`}
+          <p className="sanctuary-subtitle" style={{ textAlign: 'center', marginBottom: '24px' }}>
+            Curated from {watchProfile.totalWatched} archival film{watchProfile.totalWatched === 1 ? '' : 's'}
+            {topGenres.length > 0 && ` · Top Sensibilities: ${topGenres.join(', ')}`}
           </p>
         )}
 
         {/* EMPTY STATE */}
         {!hasEnoughHistory && !recsLoading && personalizedRecs.length === 0 && (
-          <div className="recommendations-empty-container">
-            <p className="recommendations-empty-title">Start watching to unlock personalized picks.</p>
-            <p className="recommendations-empty-subtitle">Rate at least 3 films to help Subsume understand your taste.</p>
+          <div className="sanctuary-empty-plaque">
+            <span className="sanctuary-plaque-index">AI EXHIBITION LOCKED</span>
+            <h3 className="sanctuary-plaque-title">Personalized Exhibition Portfolio</h3>
+            <p className="sanctuary-plaque-text">Rate at least 3 cinematic works to help Subsume map your aesthetic sensibility.</p>
           </div>
         )}
 
@@ -289,41 +293,45 @@ export function Recommendations() {
           <div className="recommendations-action-container">
             <button
               onClick={generatePersonalized}
-              className="recommendations-generate-button"
+              className="sanctuary-action-button"
             >
-              ✨ Get Personalized Recommendations
+              Request AI Curated Exhibition
             </button>
           </div>
         )}
 
         {/* NO KEY STATE */}
         {recsError === 'no_key' && (
-          <div className="recommendations-error-container">
-            <p className="recommendations-error-title">No LLM provider configured.</p>
-            <p className="recommendations-error-subtitle">
-              Add an API key in Settings to enable AI recommendations.
+          <div className="sanctuary-empty-plaque">
+            <span className="sanctuary-plaque-index">CONFIGURATION REQUIRED</span>
+            <h3 className="sanctuary-plaque-title">No Intelligence Provider Configured</h3>
+            <p className="sanctuary-plaque-text" style={{ marginBottom: '16px' }}>
+              Configure an API key within Settings to enable personalized AI curation.
             </p>
             <button
               onClick={generatePersonalized}
-              className="recommendations-error-retry-text"
+              className="optical-button"
+              style={{ padding: '8px 20px' }}
             >
-              ↺ Retry
+              RETRY CURATION
             </button>
           </div>
         )}
 
         {/* FAILED STATE */}
         {recsError === 'failed' && (
-          <div className="recommendations-error-container">
-            <p className="recommendations-error-title">Something went wrong with the AI provider.</p>
-            <p className="recommendations-error-subtitle">
-              Check your API key in Settings and try again.
+          <div className="sanctuary-empty-plaque">
+            <span className="sanctuary-plaque-index">SYSTEM ERROR</span>
+            <h3 className="sanctuary-plaque-title">Curation Interrupted</h3>
+            <p className="sanctuary-plaque-text" style={{ marginBottom: '16px' }}>
+              The intelligence provider encountered an unexpected failure. Inspect your credentials or network connection.
             </p>
             <button
               onClick={generatePersonalized}
-              className="recommendations-error-retry-btn"
+              className="optical-button"
+              style={{ padding: '8px 20px' }}
             >
-              ↺ Retry
+              RETRY CURATION
             </button>
           </div>
         )}
@@ -336,8 +344,8 @@ export function Recommendations() {
                 <div key={i} className="recommendations-loading-card" style={{ animationDelay: `${i * 0.04}s` }} />
               ))}
             </div>
-            <p className="recommendations-loading-text">
-              Curating picks based on your taste...
+            <p className="recommendations-loading-text" style={{ fontFamily: 'var(--font-editorial)', fontStyle: 'italic' }}>
+              Curating exhibition from your aesthetic sensibilities...
             </p>
           </div>
         )}
@@ -347,7 +355,7 @@ export function Recommendations() {
           <div>
             {/* Header row */}
             <div className="recommendations-results-header">
-              <span className="recommendations-results-title">AI Picks for You</span>
+              <span className="sanctuary-plaque-title" style={{ margin: 0, fontSize: '20px' }}>Curated Exhibition</span>
               <div className="recommendations-results-actions">
                 {recGroups !== null && (
                   <div className="recommendations-view-mode-toggle">
@@ -357,16 +365,17 @@ export function Recommendations() {
                         onClick={() => setViewMode(mode)}
                         className={`recommendations-view-mode-btn ${viewMode === mode ? 'recommendations-view-mode-btn-active' : 'recommendations-view-mode-btn-inactive'}`}
                       >
-                        {mode === 'grouped' ? 'By Theme' : 'All Titles'}
+                        {mode === 'grouped' ? 'By Theme' : 'Complete Catalogue'}
                       </button>
                     ))}
                   </div>
                 )}
                 <button
                   onClick={generatePersonalized}
-                  className="recommendations-regenerate-btn"
+                  className="optical-button"
+                  style={{ padding: '6px 14px', fontSize: '10px' }}
                 >
-                  ↺ Regenerate
+                  REGENERATE
                 </button>
               </div>
             </div>
@@ -395,7 +404,7 @@ export function Recommendations() {
                     <div className="recommendations-grouped-section-header">
                       <span className="recommendations-grouped-section-bar" />
                       <span className="recommendations-grouped-section-title">
-                        Because you loved {group.seedTitle}
+                        Curated around <span style={{ fontFamily: 'var(--font-editorial)', fontStyle: 'italic', color: 'var(--text-reflection)' }}>{group.seedTitle}</span>
                       </span>
                     </div>
                     <div className="recommendations-grouped-section-scroll">
@@ -414,7 +423,7 @@ export function Recommendations() {
                 ))}
                 {ungroupedRecs.length > 0 && (
                   <div>
-                    <div className="recommendations-grouped-more-title">More Picks</div>
+                    <div className="sanctuary-plaque-title" style={{ fontSize: '18px', marginTop: '24px' }}>Further Acquisitions</div>
                     <div className="recommendations-flat-grid">
                       {ungroupedRecs.map(rec => (
                         <RecommendationAiCard

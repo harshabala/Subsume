@@ -22,3 +22,264 @@
   --duration-curtain: 450ms;
   --blur-hero: blur(16px);
 }
+
+/* ── Velvet Obscura Sanctuary Shared Components ── */
+
+.sanctuary-header {
+  margin-bottom: 36px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border-restraint);
+}
+
+.sanctuary-header-meta {
+  margin-bottom: 8px;
+}
+
+.sanctuary-subtitle {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--text-meta);
+}
+
+.sanctuary-title {
+  font-family: var(--font-editorial);
+  font-size: 34px;
+  font-weight: 400;
+  color: var(--text-reflection);
+  margin: 0 0 10px 0;
+  letter-spacing: -0.02em;
+}
+
+.sanctuary-description {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-artwork);
+  max-width: 640px;
+  margin: 0;
+}
+
+.sanctuary-empty-plaque {
+  background: var(--bg-plaque);
+  border: 1px solid var(--border-restraint);
+  border-radius: 4px;
+  padding: 48px 32px;
+  text-align: center;
+  max-width: 520px;
+  margin: 40px auto;
+  backdrop-filter: blur(16px);
+}
+
+.sanctuary-plaque-index {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--text-control);
+  display: block;
+  margin-bottom: 12px;
+}
+
+.sanctuary-plaque-title {
+  font-family: var(--font-editorial);
+  font-size: 22px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--text-reflection);
+  margin: 0 0 12px 0;
+}
+
+.sanctuary-plaque-text {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-meta);
+  margin: 0;
+}
+
+.sanctuary-action-button {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  background: var(--bg-plaque);
+  color: var(--text-reflection);
+  border: 1px solid var(--border-hero);
+  border-radius: 4px;
+  padding: 12px 28px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(16px);
+}
+
+.sanctuary-action-button:hover {
+  background: hsla(240, 15%, 16%, 0.95);
+  border-color: hsla(45, 90%, 75%, 0.7);
+}
+
+.sanctuary-acquire-btn {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  background: var(--bg-plaque);
+  color: var(--text-artwork);
+  border: 1px solid var(--border-restraint);
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  width: 100%;
+}
+
+.sanctuary-acquire-btn:hover:not(:disabled) {
+  border-color: var(--border-hero);
+  color: var(--text-reflection);
+  background: hsla(240, 15%, 15%, 0.9);
+}
+
+.sanctuary-acquire-btn:disabled {
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-meta);
+  cursor: default;
+}
+
+/* ── Optical Instrument Search Input ── */
+.optical-search-container {
+  max-width: 640px;
+  margin: 28px 0;
+}
+
+.optical-input-wrapper {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.optical-input {
+  flex: 1;
+  padding: 12px 16px;
+  background: var(--bg-plaque);
+  border: 1px solid var(--border-restraint);
+  color: var(--text-reflection);
+  border-radius: 4px;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  outline: none;
+  transition: border-color 0.4s var(--ease-focus-pull), background 0.4s ease;
+  backdrop-filter: blur(16px);
+}
+
+.optical-input::placeholder {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  color: var(--text-meta);
+}
+
+.optical-input:focus {
+  border-color: var(--border-hero);
+  background: hsla(240, 15%, 14%, 0.9);
+}
+
+.optical-button {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  background: var(--bg-plaque);
+  color: var(--text-artwork);
+  border: 1px solid var(--border-restraint);
+  border-radius: 4px;
+  padding: 0 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.optical-button:hover:not(:disabled) {
+  border-color: var(--border-hero);
+  color: var(--text-reflection);
+}
+
+.optical-button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.optical-filter-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 32px;
+}
+
+.optical-filter-tab {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid var(--border-restraint);
+  color: var(--text-meta);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.optical-filter-tab.active {
+  background: var(--bg-plaque);
+  border-color: var(--border-hero);
+  color: var(--text-reflection);
+}
+
+.optical-filter-tab:hover:not(.active) {
+  color: var(--text-artwork);
+  border-color: hsla(0, 0%, 100%, 0.18);
+}
+
+/* ── Historic Theatre Programme (New Releases) ── */
+.programme-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-restraint);
+  margin-bottom: 32px;
+  gap: 36px;
+}
+
+.programme-tab {
+  font-family: var(--font-editorial);
+  font-size: 18px;
+  font-style: italic;
+  color: var(--text-meta);
+  background: transparent;
+  border: none;
+  padding: 10px 0;
+  position: relative;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.programme-tab.active {
+  color: var(--text-reflection);
+}
+
+.programme-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--border-hero);
+}
+
+.programme-tab:hover:not(.active) {
+  color: var(--text-artwork);
+}
+
