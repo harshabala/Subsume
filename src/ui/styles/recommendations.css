@@ -49,24 +49,34 @@
 
 .recommendation-media-card-explanation-content {
   display: flex;
-  gap: 6px;
+  flex-direction: column;
+  gap: 4px;
   align-items: flex-start;
 }
 
-.recommendation-media-card-explanation-icon {
-  font-size: 14px;
-}
-
 .recommendation-media-card-explanation-text {
-  font-size: 13px;
+  font-family: var(--font-editorial);
+  font-size: 14px;
   font-style: italic;
-  color: var(--fg-subtle);
+  color: var(--text-artwork);
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.media-card-rating {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--text-artwork);
+}
+
+.curator-note-title {
+  font-size: 9px;
+  letter-spacing: 0.2em;
 }
 
 .recommendation-ai-card {
@@ -118,12 +128,14 @@
   position: absolute;
   top: 6px;
   right: 6px;
-  background: rgba(0, 0, 0, 0.75);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
+  font-family: var(--font-ui);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  background: var(--bg-plaque);
+  border: 1px solid var(--border-restraint);
+  color: var(--text-artwork);
   padding: 2px 5px;
-  border-radius: 4px;
+  border-radius: 2px;
 }
 
 .recommendation-ai-card-body {
@@ -199,6 +211,16 @@
   color: var(--text-artwork);
   border: 1px solid var(--border-restraint);
   cursor: pointer;
+}
+
+.recommendation-ai-card-acquire-btn {
+  margin-top: 8px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 2px;
+  align-self: flex-start;
+  transition: background 0.15s;
 }
 
 .recommendations-header-badge {
@@ -471,3 +493,54 @@
   margin-top: 16px;
   color: var(--color-text-secondary);
 }
+
+.recommendation-ai-card-seed-pill {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: var(--text-meta);
+  background: var(--bg-sanctuary);
+  border: 1px solid var(--border-restraint);
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-top: 6px;
+}
+
+.recommendations-profile-summary {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.recommendations-loading-spinner {
+  margin: 0 auto 16px;
+}
+
+.recommendations-plaque-text {
+  margin-bottom: 16px;
+}
+
+.recommendations-retry-btn {
+  padding: 8px 20px;
+}
+
+.recommendations-exhibition-title {
+  margin: 0;
+  font-size: 20px;
+}
+
+.recommendations-regen-btn {
+  padding: 6px 14px;
+  font-size: 10px;
+}
+
+.recommendations-grouped-seed-title {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  color: var(--text-reflection);
+}
+
+.recommendations-further-title {
+  font-size: 18px;
+  margin-top: 24px;
+}
+

@@ -9,6 +9,8 @@ interface RecommendationMediaCardProps {
 }
 
 export function RecommendationMediaCard({ media, explanation, onClick }: RecommendationMediaCardProps) {
+  const tmdbRating = media.ratings?.find(r => r.provider === 'tmdb');
+
   return (
     <div className="media-card recommendation-media-card" onClick={onClick}>
        <div className="recommendation-media-card-content">
@@ -23,9 +25,9 @@ export function RecommendationMediaCard({ media, explanation, onClick }: Recomme
            <h4 className="media-card-title">{media.canonicalTitle}</h4>
            <div className="media-card-meta">
              <span>{media.year}</span>
-             {media.ratings?.find(r => r.provider === 'tmdb') && (
-                <span className="media-card-rating" style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', letterSpacing: '0.05em', color: 'var(--text-artwork)' }}>
-                  SCORE {media.ratings.find(r => r.provider === 'tmdb')!.score.toFixed(1)}
+             {tmdbRating && (
+                <span className="media-card-rating">
+                  SCORE {tmdbRating.score.toFixed(1)}
                 </span>
              )}
            </div>
@@ -38,9 +40,9 @@ export function RecommendationMediaCard({ media, explanation, onClick }: Recomme
        </div>
 
        <div className="recommendation-media-card-explanation">
-          <div className="recommendation-media-card-explanation-content" style={{ flexDirection: 'column', gap: '4px' }}>
-            <span className="sanctuary-subtitle" style={{ fontSize: '9px', letterSpacing: '0.2em' }}>CURATOR'S NOTE</span>
-            <span className="recommendation-media-card-explanation-text" style={{ fontFamily: 'var(--font-editorial)', fontStyle: 'italic', fontSize: '14px', color: 'var(--text-artwork)' }}>
+          <div className="recommendation-media-card-explanation-content">
+            <span className="sanctuary-subtitle curator-note-title">CURATOR'S NOTE</span>
+            <span className="recommendation-media-card-explanation-text">
               {explanation}
             </span>
           </div>

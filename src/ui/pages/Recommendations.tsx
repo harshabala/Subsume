@@ -122,6 +122,7 @@ export function Recommendations() {
     try {
       await sendMessage(MessageType.ADD_TO_LIST, { mediaItem: media, type: media.type });
       setAddedIds((prev) => new Set(prev).add(media.id));
+      setAiAddedIds((prev) => new Set(prev).add(media.id));
     } catch (err) {
       console.error('Failed to add to library', err);
     }
@@ -270,7 +271,6 @@ export function Recommendations() {
       {/* ── Phase 4: AI Personalized Section ── */}
       <div className="recommendations-ai-section">
 
-        {/* Profile context strip */}
         {/* Profile context strip */}
         {watchProfile && (
           <p className="sanctuary-subtitle" style={{ textAlign: 'center', marginBottom: '24px' }}>
