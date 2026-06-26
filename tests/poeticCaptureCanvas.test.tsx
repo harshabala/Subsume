@@ -63,20 +63,19 @@ describe('PoeticCaptureCanvas', () => {
     expect(textarea).toBeTruthy();
     expect(poster).toBeTruthy();
 
-    expect(poster.style.filter).not.toContain('blur(10px)');
+    expect(poster.classList.contains('writing')).toBe(false);
 
     await act(async () => {
       textarea?.dispatchEvent(new Event('focus'));
     });
 
-    expect(poster.style.filter).toContain('blur(10px)');
-    expect(poster.style.transform).toContain('scale(1.03)');
+    expect(poster.classList.contains('writing')).toBe(true);
 
     await act(async () => {
       textarea?.dispatchEvent(new Event('blur'));
     });
 
-    expect(poster.style.filter).toBe('none');
+    expect(poster.classList.contains('writing')).toBe(false);
   });
 
   it('verifies progressive disclosure on input', async () => {

@@ -161,7 +161,7 @@ export function Home({ onNavigate }: HomeProps) {
   const digestBadge = weeklyDigest?.llmGenerated ? 'AI Curated' : 'Algorithm';
 
   return (
-    <div className="page-container" style={{ background: 'var(--bg-sanctuary)', minHeight: '100vh', color: 'var(--text-artwork)' }}>
+    <div className="page-container sanctuary-page">
       <header className="sanctuary-header">
         <div className="sanctuary-header-meta">
           <span className="sanctuary-subtitle">Auditorium Sanctuary</span>
@@ -173,21 +173,21 @@ export function Home({ onNavigate }: HomeProps) {
       </header>
 
       {loading ? (
-        <div style={{ padding: '0 32px 32px', display: 'flex', flexDirection: 'column', gap: 32 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
+        <div className="home-main-content">
+          <div className="home-stat-grid">
             {[0, 1, 2].map((i) => (
               <div key={i} className="skeleton skeleton-stat" style={{ animationDelay: `${i * 40}ms` }} />
             ))}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
+          <div className="home-skeleton-card-grid">
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="skeleton skeleton-card" style={{ animationDelay: `${i * 40}ms` }} />
             ))}
           </div>
         </div>
       ) : (
-        <div style={{ padding: '0 32px 32px', display: 'flex', flexDirection: 'column', gap: 32 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
+        <div className="home-main-content">
+          <div className="home-stat-grid">
             {[
               { label: 'In Sanctuary', value: libraryCount, action: () => onNavigate('library') },
               { label: 'Anticipated', value: toWatchCount, action: () => onNavigate('library') },
@@ -196,78 +196,38 @@ export function Home({ onNavigate }: HomeProps) {
               <button
                 key={stat.label}
                 onClick={stat.action}
-                style={{
-                  background: 'var(--bg-plaque)',
-                  border: '1px solid var(--border-restraint)',
-                  borderRadius: 4,
-                  padding: '24px 28px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  color: 'inherit',
-                  backdropFilter: 'var(--blur-hero)',
-                  transition: 'border-color 250ms ease, background 250ms ease',
-                }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border-hero)';
-                  (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-plaque-hover)';
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border-restraint)';
-                  (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-plaque)';
-                }}
+                className="home-stat-btn"
               >
-                <div className="stat-value" style={{
-                  fontFamily: 'var(--font-editorial)',
-                  fontSize: 38,
-                  fontWeight: 400,
-                  fontStyle: 'italic',
-                  color: 'var(--text-reflection)',
-                  lineHeight: 1,
-                  marginBottom: 8,
-                }}>{stat.value}</div>
-                <div style={{
-                  fontFamily: 'var(--font-ui)',
-                  fontSize: 11,
-                  color: 'var(--text-meta)',
-                  letterSpacing: '0.15em',
-                  textTransform: 'uppercase',
-                  fontWeight: 500,
-                }}>{stat.label}</div>
+                <div className="home-stat-val">{stat.value}</div>
+                <div className="home-stat-lbl">{stat.label}</div>
               </button>
             ))}
           </div>
 
           <section>
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid var(--border-restraint)' }}>
+            <div className="home-section-header">
               <div>
-                <h3 style={{
-                  fontFamily: 'var(--font-editorial)',
-                  fontSize: 24,
-                  fontWeight: 400,
-                  fontStyle: 'italic',
-                  color: 'var(--text-reflection)',
-                  margin: '0 0 6px',
-                }}>Picked For You</h3>
-                <p style={{ fontFamily: 'var(--font-ui)', margin: 0, fontSize: 13, color: 'var(--text-meta)' }}>
+                <h3 className="home-section-title">Picked For You</h3>
+                <p className="home-section-desc">
                   {watchedCount >= 3 ? 'Curated from your sanctuary reflections' : 'Reflect on 3+ watched titles to unlock AI picks'}
                 </p>
               </div>
-              <button className="optical-button" style={{ padding: '8px 16px' }} onClick={() => onNavigate('recommendations')}>
+              <button className="optical-button sm" onClick={() => onNavigate('recommendations')}>
                 Explore All
               </button>
             </div>
 
             {picks.length === 0 ? (
-              <div className="sanctuary-empty-plaque" style={{ margin: '24px 0' }}>
+              <div className="sanctuary-empty-plaque home-empty-notice">
                 <span className="sanctuary-plaque-index">Sanctuary Notice</span>
                 <p className="sanctuary-plaque-text">Add a few titles and mark some as watched to unlock personalized reflections.</p>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 16 }}>
+              <div className="home-picks-grid">
                 {picks.map(({ media, explanation }) => (
                   <div
                     key={media.id}
-                    className="sanctuary-media-card"
+                    className="sanctuary-media-card clickable"
                     onClick={() => setSelectedMedia(media)}
                   >
                     <div className="sanctuary-card-poster">
@@ -281,7 +241,7 @@ export function Home({ onNavigate }: HomeProps) {
                     </div>
                     <div className="sanctuary-card-content">
                       <h4 className="sanctuary-card-title">{media.canonicalTitle}</h4>
-                      <p className="sanctuary-card-synopsis" style={{ margin: 0 }}>{explanation}</p>
+                      <p className="sanctuary-card-synopsis">{explanation}</p>
                     </div>
                   </div>
                 ))}
@@ -290,60 +250,41 @@ export function Home({ onNavigate }: HomeProps) {
           </section>
 
           <section>
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid var(--border-restraint)', gap: 12, flexWrap: 'wrap' }}>
+            <div className="home-section-header wrap">
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 6 }}>
-                  <h3 style={{
-                    fontFamily: 'var(--font-editorial)',
-                    fontSize: 24,
-                    fontWeight: 400,
-                    fontStyle: 'italic',
-                    color: 'var(--text-reflection)',
-                    margin: 0,
-                  }}>This Week</h3>
+                <div className="home-section-title-row">
+                  <h3 className="home-section-title">This Week</h3>
                   {weeklyDigest && (
-                    <span style={{
-                      fontFamily: 'var(--font-ui)',
-                      fontSize: 10,
-                      fontWeight: 500,
-                      padding: '4px 10px',
-                      borderRadius: 2,
-                      background: weeklyDigest.llmGenerated ? 'hsla(45, 90%, 65%, 0.12)' : 'var(--bg-plaque)',
-                      color: weeklyDigest.llmGenerated ? 'hsl(45, 90%, 75%)' : 'var(--text-meta)',
-                      border: `1px solid ${weeklyDigest.llmGenerated ? 'var(--border-hero)' : 'var(--border-restraint)'}`,
-                      letterSpacing: '0.1em',
-                      textTransform: 'uppercase',
-                    }}>
+                    <span className={`home-digest-badge ${weeklyDigest.llmGenerated ? 'ai' : 'algo'}`}>
                       {digestBadge}
                     </span>
                   )}
                 </div>
-                <p style={{ fontFamily: 'var(--font-ui)', margin: 0, fontSize: 13, color: 'var(--text-meta)' }}>
+                <p className="home-section-desc">
                   {platformNames ? `Programme arrivals on ${platformNames}` : 'Curated programme releases'}
                 </p>
               </div>
-              <div style={{ display: 'flex', gap: 10 }}>
+              <div className="home-btn-group">
                 <button
-                  className="optical-button"
-                  style={{ padding: '8px 16px' }}
+                  className="optical-button sm"
                   disabled={refreshingDigest}
                   onClick={handleRefreshDigest}
                 >
                   {refreshingDigest ? 'Refreshing…' : 'Refresh Programme'}
                 </button>
-                <button className="optical-button" style={{ padding: '8px 16px' }} onClick={() => onNavigate('new-releases')}>
+                <button className="optical-button sm" onClick={() => onNavigate('new-releases')}>
                   Full Programme
                 </button>
               </div>
             </div>
 
             {weeklyPicks.length === 0 ? (
-              <div className="sanctuary-empty-plaque" style={{ margin: '24px 0' }}>
+              <div className="sanctuary-empty-plaque home-empty-notice">
                 <span className="sanctuary-plaque-index">Programme Notice</span>
                 <p className="sanctuary-plaque-text">No weekly programme yet. Check your TMDb API key in Settings or refresh programme.</p>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
+              <div className="home-weekly-grid">
                 {weeklyPicks.map((pick) => {
                   const media = pick.media;
                   const rating = media ? pickRating(media) : null;
@@ -352,8 +293,7 @@ export function Home({ onNavigate }: HomeProps) {
                   return (
                     <div
                       key={pick.mediaId}
-                      className="sanctuary-media-card"
-                      style={{ cursor: media ? 'pointer' : 'default' }}
+                      className={`sanctuary-media-card ${media ? 'clickable' : 'default-cursor'}`}
                       onClick={() => media && setSelectedMedia(media)}
                     >
                       <div className="sanctuary-card-poster">
@@ -367,10 +307,10 @@ export function Home({ onNavigate }: HomeProps) {
                       </div>
                       <div className="sanctuary-card-content">
                         <h4 className="sanctuary-card-title">{pick.title}</h4>
-                        <p className="sanctuary-card-synopsis" style={{ margin: 0 }}>
+                        <p className="sanctuary-card-synopsis">
                           {pick.reason}
                         </p>
-                        <div style={{ margin: '4px 0' }}>
+                        <div className="home-chips-wrap">
                           <PlatformChips availability={availability} max={3} compact />
                         </div>
                         <div className="sanctuary-card-meta">

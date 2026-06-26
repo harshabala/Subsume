@@ -38,34 +38,13 @@ export function IntentNavigation({
         </button>
       </div>
 
-      <div
-        className="intent-filter-bar"
-        style={{
-          display: 'flex',
-          gap: 20,
-          marginBottom: 24,
-          padding: '0 32px',
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
-          paddingBottom: 12,
-          flexWrap: 'wrap',
-        }}
-      >
+      <div className="intent-filter-bar">
         {INTENT_TABS.map((tab) => (
           <button
             key={tab.id}
             data-intent={tab.id}
             onClick={() => setIntentFilter(tab.id)}
-            style={{
-              background: 'none',
-              border: 'none',
-              padding: '6px 4px',
-              fontFamily: 'var(--font-serif, "Newsreader", Georgia, serif)',
-              fontSize: 16,
-              color: intentFilter === tab.id ? 'var(--primary)' : 'var(--color-text-secondary)',
-              borderBottom: intentFilter === tab.id ? '2px solid var(--primary)' : '2px solid transparent',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-            }}
+            className={`intent-tab-btn ${intentFilter === tab.id ? 'active' : ''}`}
           >
             {tab.label}
           </button>

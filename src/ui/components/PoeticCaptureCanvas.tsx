@@ -83,12 +83,6 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
     }
   };
 
-  const posterStyle = {
-    filter: isWriting ? 'blur(10px) brightness(0.5)' : 'none',
-    transform: isWriting ? 'scale(1.03)' : 'none',
-    transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
-  };
-
   return (
     <div class="poetic-sanctuary-modal">
       <div class="poetic-backdrop">
@@ -96,8 +90,7 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
           <img
             src={media.posterUrl}
             alt={media.canonicalTitle}
-            class="poetic-poster"
-            style={posterStyle}
+            class={`poetic-poster ${isWriting ? 'writing' : ''}`}
           />
         )}
       </div>

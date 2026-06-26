@@ -96,7 +96,7 @@ function getInitialPage(): Page {
 
 function NavIcon({ item }: { item: NavItem }) {
   return (
-    <span style={{ fontFamily: 'var(--font-editorial)', fontStyle: 'italic', fontSize: '14px', fontWeight: 500 }}>
+    <span className="sidebar-nav-roman">
       {item.icon}
     </span>
   );
@@ -162,8 +162,12 @@ export function App() {
   const completeOnboarding = async () => {
     if (!prefs) return;
     const newPrefs = { ...prefs, onboardingComplete: true };
-    await sendMessage(MessageType.SET_PREFERENCES, newPrefs);
-    setPrefs(newPrefs);
+    try {
+      await sendMessage(MessageType.SET_PREFERENCES, newPrefs);
+      setPrefs(newPrefs);
+    } catch (err) {
+      console.error('[Subsume] Failed to save onboarding completion:', err);
+    }
   };
 
   if (!prefs) {
@@ -184,8 +188,8 @@ export function App() {
         </aside>
         <main className="main-content">
           <div className="page-container">
-            <div className="skeleton" style={{ height: 32, width: 200, marginBottom: 16 }} />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, padding: '0 32px' }}>
+            <div className="skeleton app-skeleton-header" />
+            <div className="app-skeleton-stats-grid">
               {[0, 1, 2].map((i) => (
                 <div key={i} className="skeleton skeleton-stat" style={{ animationDelay: `${i * 40}ms` }} />
               ))}
@@ -247,33 +251,14 @@ export function App() {
                   onClick={() => setCurrentPage(item.key)}
                   onMouseEnter={() => prefetchPage(item.key)}
                   onFocus={() => prefetchPage(item.key)}
-                  style={{ display: 'flex', alignItems: 'center', width: '100%', textAlign: 'left' }}
                 >
-                  <span
-                    className="sidebar-nav-icon"
-                    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 20 }}
-                  >
+                  <span className="sidebar-nav-icon">
                     <NavIcon item={item} />
                   </span>
-                  <span
-                    className="sidebar-nav-label"
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}
-                  >
+                  <span className="sidebar-nav-label">
                     <span>{item.label}</span>
                     {item.key === 'people' && peopleCount > 0 && (
-                      <span
-                        className="sidebar-nav-badge stat-value"
-                        style={{
-                          background: 'var(--primary)',
-                          color: '#121212',
-                          borderRadius: 10,
-                          padding: '1px 6px',
-                          fontSize: 10,
-                          fontWeight: 'bold',
-                          marginLeft: 8,
-                          lineHeight: '1.2',
-                        }}
-                      >
+                      <span className="sidebar-nav-badge stat-value">
                         {peopleCount}
                       </span>
                     )}

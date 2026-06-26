@@ -8,6 +8,7 @@ import {
 } from '@/shared/types';
 import { AVAILABLE_GENRES } from '@/shared/genres';
 import { AVAILABLE_PLATFORMS } from '@/shared/platforms';
+import '../styles/settings.css';
 
 const EMPTY_FORM: CreateWatchAlertRequest = {
   name: '',
@@ -134,50 +135,8 @@ export function Alerts() {
     }
   };
 
-  const inputStyle = {
-    width: '100%',
-    padding: '10px 14px',
-    background: 'hsla(0, 0%, 100%, 0.03)',
-    border: '1px solid var(--border-restraint)',
-    color: 'var(--text-sanctuary)',
-    borderRadius: 2,
-    fontFamily: 'var(--font-ui)',
-    fontSize: 13,
-    outline: 'none',
-    boxSizing: 'border-box' as const
-  };
-
-  const btnGoldStyle = {
-    background: 'var(--border-hero)',
-    border: 'none',
-    color: 'hsl(240, 18%, 5%)',
-    padding: '10px 24px',
-    borderRadius: 2,
-    fontFamily: 'var(--font-ui)',
-    fontSize: 11,
-    fontWeight: 600,
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.15em',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease'
-  };
-
-  const btnRestraintStyle = {
-    background: 'transparent',
-    border: '1px solid var(--border-restraint)',
-    color: 'var(--text-reflection)',
-    padding: '10px 24px',
-    borderRadius: 2,
-    fontFamily: 'var(--font-ui)',
-    fontSize: 11,
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.15em',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease'
-  };
-
   return (
-    <div className="page-container" style={{ background: 'var(--bg-sanctuary)', minHeight: '100vh', color: 'var(--text-artwork)', paddingBottom: 64 }}>
+    <div className="page-container alerts-page">
       <header className="sanctuary-header">
         <div className="sanctuary-header-meta">
           <span className="sanctuary-subtitle">Archival Dispatch</span>
@@ -186,33 +145,25 @@ export function Alerts() {
         <p className="sanctuary-description">Configure telegraphic surveillance criteria for forthcoming sanctuary releases.</p>
       </header>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+      <div className="alerts-content">
         <div>
           <button
             onClick={() => setShowForm((value) => !value)}
-            style={showForm ? btnRestraintStyle : btnGoldStyle}
+            className={showForm ? 'btn-sanctuary-restraint sm' : 'btn-sanctuary-gold sm'}
           >
             {showForm ? 'Cancel Dispatch' : 'Assemble Surveillance Alert'}
           </button>
         </div>
 
         {showForm && (
-          <div
-            style={{
-              background: 'var(--bg-plaque)',
-              border: '1px solid var(--border-hero)',
-              borderRadius: 4,
-              padding: 28,
-              backdropFilter: 'var(--blur-hero)'
-            }}
-          >
-            <h3 style={{ fontFamily: 'var(--font-editorial)', fontStyle: 'italic', fontSize: 20, color: 'var(--text-reflection)', margin: '0 0 20px 0', borderBottom: '1px solid var(--border-restraint)', paddingBottom: 12 }}>
+          <div className="alerts-form-panel">
+            <h3 className="alerts-form-heading">
               Telegraphic Dispatch Specification
             </h3>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div className="alerts-form-fields">
               <div>
-                <label style={{ display: 'block', marginBottom: 8, fontFamily: 'var(--font-ui)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-meta)' }}>
+                <label className="alerts-field-label">
                   Surveillance Title / Designation
                 </label>
                 <input
@@ -222,12 +173,12 @@ export function Alerts() {
                   onInput={(e) =>
                     setForm({ ...form, name: (e.target as HTMLInputElement).value })
                   }
-                  style={inputStyle}
+                  className="settings-input"
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', marginBottom: 8, fontFamily: 'var(--font-ui)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-meta)' }}>
+                <label className="alerts-field-label">
                   Format Scope
                 </label>
                 <select
@@ -238,45 +189,33 @@ export function Alerts() {
                       type: (e.target as HTMLSelectElement).value as 'movie' | 'tv' | 'both',
                     })
                   }
-                  style={inputStyle}
+                  className="settings-input"
                 >
-                  <option value="both" style={{ background: 'hsl(240, 18%, 8%)' }}>Cinema & Series</option>
-                  <option value="movie" style={{ background: 'hsl(240, 18%, 8%)' }}>Cinema Only</option>
-                  <option value="tv" style={{ background: 'hsl(240, 18%, 8%)' }}>Series Only</option>
+                  <option value="both" className="sanctuary-select-option">Cinema &amp; Series</option>
+                  <option value="movie" className="sanctuary-select-option">Cinema Only</option>
+                  <option value="tv" className="sanctuary-select-option">Series Only</option>
                 </select>
               </div>
 
               <div>
-                <label style={{ display: 'block', marginBottom: 8, fontFamily: 'var(--font-ui)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-meta)' }}>
+                <label className="alerts-field-label">
                   Target Genres
                 </label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <div className="alerts-chip-grid">
                   {AVAILABLE_GENRES.map((genre) => {
                     const active = (form.genres || []).includes(genre.id);
                     return (
                       <label
                         key={genre.id}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 6,
-                          background: active ? 'hsla(43, 74%, 49%, 0.1)' : 'transparent',
-                          border: `1px solid ${active ? 'var(--border-hero)' : 'var(--border-restraint)'}`,
-                          color: active ? 'var(--border-hero)' : 'var(--text-artwork)',
-                          padding: '6px 12px',
-                          borderRadius: 2,
-                          cursor: 'pointer',
-                          fontFamily: 'var(--font-ui)',
-                          fontSize: 12
-                        }}
+                        className={`alerts-chip ${active ? 'active' : 'inactive'}`}
                       >
                         <input
                           type="checkbox"
                           checked={active}
                           onChange={() => toggleFormArrayItem('genres', genre.id)}
-                          style={{ display: 'none' }}
+                          className="alerts-chip-hidden-input"
                         />
-                        <span style={{ width: 4, height: 4, borderRadius: '50%', background: active ? 'var(--border-hero)' : 'hsla(0,0%,100%,0.2)' }} />
+                        <span className={`alerts-chip-dot ${active ? 'active' : 'inactive'}`} />
                         {genre.name}
                       </label>
                     );
@@ -285,36 +224,24 @@ export function Alerts() {
               </div>
 
               <div>
-                <label style={{ display: 'block', marginBottom: 8, fontFamily: 'var(--font-ui)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-meta)' }}>
+                <label className="alerts-field-label">
                   Monitored Platforms
                 </label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <div className="alerts-chip-grid">
                   {AVAILABLE_PLATFORMS.map((platform) => {
                     const active = (form.platforms || []).includes(platform.id);
                     return (
                       <label
                         key={platform.id}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 6,
-                          background: active ? 'hsla(43, 74%, 49%, 0.1)' : 'transparent',
-                          border: `1px solid ${active ? 'var(--border-hero)' : 'var(--border-restraint)'}`,
-                          color: active ? 'var(--border-hero)' : 'var(--text-artwork)',
-                          padding: '6px 12px',
-                          borderRadius: 2,
-                          cursor: 'pointer',
-                          fontFamily: 'var(--font-ui)',
-                          fontSize: 12
-                        }}
+                        className={`alerts-chip ${active ? 'active' : 'inactive'}`}
                       >
                         <input
                           type="checkbox"
                           checked={active}
                           onChange={() => toggleFormArrayItem('platforms', platform.id)}
-                          style={{ display: 'none' }}
+                          className="alerts-chip-hidden-input"
                         />
-                        <span style={{ width: 4, height: 4, borderRadius: '50%', background: active ? 'var(--border-hero)' : 'hsla(0,0%,100%,0.2)' }} />
+                        <span className={`alerts-chip-dot ${active ? 'active' : 'inactive'}`} />
                         {platform.name}
                       </label>
                     );
@@ -323,7 +250,7 @@ export function Alerts() {
               </div>
 
               <div>
-                <label style={{ display: 'block', marginBottom: 8, fontFamily: 'var(--font-ui)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-meta)' }}>
+                <label className="alerts-field-label">
                   Inscription Keyword Filter (Optional)
                 </label>
                 <input
@@ -333,15 +260,15 @@ export function Alerts() {
                   onInput={(e) =>
                     setForm({ ...form, keyword: (e.target as HTMLInputElement).value })
                   }
-                  style={inputStyle}
+                  className="settings-input"
                 />
               </div>
 
-              <div style={{ marginTop: 8 }}>
+              <div>
                 <button
                   onClick={handleCreate}
                   disabled={saving}
-                  style={btnGoldStyle}
+                  className="btn-sanctuary-gold sm"
                 >
                   {saving ? 'Engraving...' : 'Enroll Surveillance Alert'}
                 </button>
@@ -351,7 +278,7 @@ export function Alerts() {
         )}
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 48, fontFamily: 'var(--font-editorial)', fontStyle: 'italic', fontSize: 18, color: 'var(--text-meta)' }}>
+          <div className="alerts-loading">
             Inspecting dispatch logs...
           </div>
         ) : alerts.length === 0 ? (
@@ -363,44 +290,19 @@ export function Alerts() {
             </p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="alerts-list">
             {alerts.map((alert) => (
               <div
                 key={alert.id}
-                style={{
-                  background: 'var(--bg-plaque)',
-                  border: '1px solid var(--border-restraint)',
-                  borderRadius: 4,
-                  padding: 24,
-                  opacity: alert.enabled ? 1 : 0.5,
-                  backdropFilter: 'var(--blur-hero)',
-                  transition: 'opacity 0.2s ease'
-                }}
+                className={`alerts-card ${alert.enabled ? '' : 'disabled'}`}
               >
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    flexWrap: 'wrap',
-                    gap: 16,
-                  }}
-                >
+                <div className="alerts-card-inner">
                   <div>
-                    <h3 style={{ fontFamily: 'var(--font-editorial)', fontStyle: 'italic', fontSize: 20, fontWeight: 400, color: 'var(--text-reflection)', margin: '0 0 8px 0' }}>{alert.name}</h3>
-                    <p style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: 'var(--border-hero)', margin: '0 0 12px 0', letterSpacing: '0.02em' }}>
+                    <h3 className="alerts-card-title">{alert.name}</h3>
+                    <p className="alerts-card-criteria">
                       {formatAlertCriteria(alert)}
                     </p>
-                    <p
-                      style={{
-                        fontFamily: 'var(--font-ui)',
-                        color: 'var(--text-meta)',
-                        fontSize: 11,
-                        margin: 0,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.1em'
-                      }}
-                    >
+                    <p className="alerts-card-meta">
                       Last Enquiry: {formatTimestamp(alert.lastCheckedAt)}
                       {alert.lastMatchAt
                         ? ` · Last Resonance: ${formatTimestamp(alert.lastMatchAt)}`
@@ -408,42 +310,19 @@ export function Alerts() {
                     </p>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <label
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        fontFamily: 'var(--font-ui)',
-                        fontSize: 11,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.15em',
-                        color: alert.enabled ? 'var(--text-artwork)' : 'var(--text-meta)',
-                        cursor: 'pointer'
-                      }}
-                    >
+                  <div className="alerts-card-actions">
+                    <label className={`alerts-toggle-label ${alert.enabled ? 'enabled' : 'disabled'}`}>
                       <input
                         type="checkbox"
                         checked={alert.enabled}
                         onChange={() => handleToggleEnabled(alert)}
-                        style={{ accentColor: 'var(--border-hero)', width: 14, height: 14 }}
+                        className="alerts-toggle-checkbox"
                       />
                       Enrolled
                     </label>
                     <button
                       onClick={() => handleDelete(alert.id)}
-                      style={{
-                        background: 'transparent',
-                        border: '1px solid var(--border-restraint)',
-                        color: 'hsl(0, 60%, 65%)',
-                        borderRadius: 2,
-                        padding: '6px 14px',
-                        cursor: 'pointer',
-                        fontFamily: 'var(--font-ui)',
-                        fontSize: 11,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.15em'
-                      }}
+                      className="btn-sanctuary-danger"
                     >
                       Purge
                     </button>
