@@ -64,68 +64,71 @@ export function Stats() {
   const tvPercent = totalWatchedType > 0 ? Math.round((tvCount / totalWatchedType) * 100) : 50;
 
   return (
-    <div className="page-container">
-      <header className="page-header">
-        <h2 className="page-title">Personal Statistics</h2>
-        <p className="page-subtitle">A comprehensive breakdown of your taste and watching history.</p>
+    <div className="page-container" style={{ background: 'var(--bg-sanctuary)', minHeight: '100vh', color: 'var(--text-artwork)' }}>
+      <header className="sanctuary-header">
+        <div className="sanctuary-header-meta">
+          <span className="sanctuary-subtitle">Archival Colophon</span>
+        </div>
+        <h2 className="sanctuary-title">Personal Statistics</h2>
+        <p className="sanctuary-description">An archival breakdown of your sanctuary reflections and auteur engagement.</p>
       </header>
 
       {loading ? (
-        <div className="empty-state">
-           <div className="subsume-spinner" />
-           <p style={{ marginTop: 16, color: 'var(--color-text-secondary)' }}>Calculating metrics...</p>
+        <div className="sanctuary-empty-plaque">
+           <div className="subsume-spinner" style={{ margin: '0 auto' }} />
+           <p className="sanctuary-plaque-text" style={{ marginTop: 16 }}>Compiling archival plates...</p>
         </div>
       ) : totalWatched === 0 ? (
-        <div className="empty-state">
-          <div className="empty-state-icon">📊</div>
-          <h3 className="empty-state-title">No stats yet</h3>
-          <p className="empty-state-description">
-            Mark a few titles in your library as "Watched" and give them a rating to unlock your personal metrics dashboard!
+        <div className="sanctuary-empty-plaque">
+          <span className="sanctuary-plaque-index">Plate Index 00</span>
+          <h3 className="sanctuary-plaque-title">No reflections recorded</h3>
+          <p className="sanctuary-plaque-text">
+            Mark titles in your sanctuary as "Watched" and provide reflections to assemble your archival scientific museum plates.
           </p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
           {/* Key Stat Cards Grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
             {/* Stat Card 1 */}
-            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 24, textAlign: 'center' }}>
-              <span style={{ fontSize: 24, display: 'block', marginBottom: 8 }}>🎬</span>
-              <span className="stat-value" style={{ fontSize: 32, fontWeight: 700, color: 'var(--primary)', display: 'block' }}>{totalWatched}</span>
-              <span style={{ fontSize: 13, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Watched Titles</span>
+            <div style={{ background: 'var(--bg-plaque)', border: '1px solid var(--border-restraint)', borderRadius: 4, padding: '28px 24px', textAlign: 'center', backdropFilter: 'var(--blur-hero)' }}>
+              <span className="sanctuary-plaque-index" style={{ marginBottom: 16 }}>Plate I</span>
+              <span className="stat-value" style={{ fontFamily: 'var(--font-editorial)', fontStyle: 'italic', fontSize: 42, fontWeight: 400, color: 'var(--text-reflection)', display: 'block', lineHeight: 1, marginBottom: 8 }}>{totalWatched}</span>
+              <span style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: 'var(--text-meta)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Reflected Titles</span>
             </div>
             
             {/* Stat Card 2 */}
-            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 24, textAlign: 'center' }}>
-              <span style={{ fontSize: 24, display: 'block', marginBottom: 8 }}>⏳</span>
-              <span className="stat-value" style={{ fontSize: 32, fontWeight: 700, color: 'var(--primary)', display: 'block' }}>{totalHours}</span>
-              <span style={{ fontSize: 13, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Hours Logged</span>
+            <div style={{ background: 'var(--bg-plaque)', border: '1px solid var(--border-restraint)', borderRadius: 4, padding: '28px 24px', textAlign: 'center', backdropFilter: 'var(--blur-hero)' }}>
+              <span className="sanctuary-plaque-index" style={{ marginBottom: 16 }}>Plate II</span>
+              <span className="stat-value" style={{ fontFamily: 'var(--font-editorial)', fontStyle: 'italic', fontSize: 42, fontWeight: 400, color: 'var(--text-reflection)', display: 'block', lineHeight: 1, marginBottom: 8 }}>{totalHours}</span>
+              <span style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: 'var(--text-meta)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Hours Sanctuary</span>
             </div>
 
             {/* Stat Card 3 */}
-            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 24, textAlign: 'center' }}>
-              <span style={{ fontSize: 24, display: 'block', marginBottom: 8 }}>⭐</span>
-              <span className="stat-value" style={{ fontSize: 32, fontWeight: 700, color: 'var(--primary)', display: 'block' }}>{avgRating}</span>
-              <span style={{ fontSize: 13, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Average Rating</span>
+            <div style={{ background: 'var(--bg-plaque)', border: '1px solid var(--border-restraint)', borderRadius: 4, padding: '28px 24px', textAlign: 'center', backdropFilter: 'var(--blur-hero)' }}>
+              <span className="sanctuary-plaque-index" style={{ marginBottom: 16 }}>Plate III</span>
+              <span className="stat-value" style={{ fontFamily: 'var(--font-editorial)', fontStyle: 'italic', fontSize: 42, fontWeight: 400, color: 'var(--border-hero)', display: 'block', lineHeight: 1, marginBottom: 8 }}>{avgRating}</span>
+              <span style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: 'var(--text-meta)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Mean Resonance</span>
             </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
             {/* Genre Distribution Chart */}
-            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 24 }}>
-              <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text)', margin: '0 0 20px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 10 }}>
-                Top Genres
+            <div style={{ background: 'var(--bg-plaque)', border: '1px solid var(--border-restraint)', borderRadius: 4, padding: 28, backdropFilter: 'var(--blur-hero)' }}>
+              <h3 style={{ fontFamily: 'var(--font-editorial)', fontSize: 20, fontStyle: 'italic', fontWeight: 400, color: 'var(--text-reflection)', margin: '0 0 24px 0', borderBottom: '1px solid var(--border-restraint)', paddingBottom: 12 }}>
+                Auteur & Taxonomy Distribution
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                 {sortedGenres.map(([genre, count]) => {
                   const widthPercent = Math.round((count / maxGenreCount) * 100);
                   return (
-                    <div key={genre} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                        <span style={{ color: 'var(--color-text)', fontWeight: 500 }}>{genre}</span>
-                        <span style={{ color: 'var(--color-text-secondary)' }}>{count} {count === 1 ? 'title' : 'titles'}</span>
+                    <div key={genre} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-ui)', fontSize: 13 }}>
+                        <span style={{ color: 'var(--text-reflection)', fontWeight: 400, letterSpacing: '0.02em' }}>{genre}</span>
+                        <span style={{ color: 'var(--text-meta)', fontStyle: 'italic', fontFamily: 'var(--font-editorial)' }}>{count} {count === 1 ? 'record' : 'records'}</span>
                       </div>
-                      <div style={{ width: '100%', height: 8, background: 'rgba(255,255,255,0.05)', borderRadius: 4, overflow: 'hidden' }}>
-                        <div style={{ width: `${widthPercent}%`, height: '100%', background: 'linear-gradient(90deg, var(--primary-soft), var(--primary))', borderRadius: 4 }} />
+                      <div style={{ width: '100%', height: 6, background: 'hsla(0, 0%, 100%, 0.04)', borderRadius: 2, overflow: 'hidden' }}>
+                        <div style={{ width: `${widthPercent}%`, height: '100%', background: 'var(--border-hero)', borderRadius: 2 }} />
                       </div>
                     </div>
                   );
@@ -134,26 +137,28 @@ export function Stats() {
             </div>
 
             {/* Media Mix */}
-            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 24, display: 'flex', flexDirection: 'column' }}>
-              <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text)', margin: '0 0 20px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 10 }}>
-                Media Format Mix
+            <div style={{ background: 'var(--bg-plaque)', border: '1px solid var(--border-restraint)', borderRadius: 4, padding: 28, display: 'flex', flexDirection: 'column', backdropFilter: 'var(--blur-hero)' }}>
+              <h3 style={{ fontFamily: 'var(--font-editorial)', fontSize: 20, fontStyle: 'italic', fontWeight: 400, color: 'var(--text-reflection)', margin: '0 0 24px 0', borderBottom: '1px solid var(--border-restraint)', paddingBottom: 12 }}>
+                Sanctuary Format Balance
               </h3>
               
-              <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 24 }}>
+              <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 28 }}>
                 {/* Visual Progress Mix Bar */}
-                <div style={{ width: '100%', height: 24, background: 'rgba(255,255,255,0.05)', borderRadius: 12, overflow: 'hidden', display: 'flex' }}>
+                <div style={{ width: '100%', height: 18, background: 'hsla(0, 0%, 100%, 0.04)', borderRadius: 2, overflow: 'hidden', display: 'flex', border: '1px solid var(--border-restraint)' }}>
                   {moviesCount > 0 && (
                     <div 
                       style={{ 
                         width: `${moviePercent}%`, 
                         height: '100%', 
-                        background: 'var(--primary)', 
+                        background: 'var(--border-hero)', 
                         display: 'flex', 
                         alignItems: 'center', 
                         justifyContent: 'center', 
-                        fontSize: 11, 
-                        fontWeight: 'bold',
-                        color: 'var(--color-surface)'
+                        fontFamily: 'var(--font-ui)',
+                        fontSize: 10, 
+                        fontWeight: 500,
+                        letterSpacing: '0.05em',
+                        color: 'hsl(240, 18%, 5%)'
                       }}
                     >
                       {moviePercent}%
@@ -164,13 +169,15 @@ export function Stats() {
                       style={{ 
                         width: `${tvPercent}%`, 
                         height: '100%', 
-                        background: 'rgba(255,255,255,0.1)', 
+                        background: 'hsla(0, 0%, 100%, 0.12)', 
                         display: 'flex', 
                         alignItems: 'center', 
                         justifyContent: 'center', 
-                        fontSize: 11, 
-                        fontWeight: 'bold',
-                        color: 'var(--color-text)'
+                        fontFamily: 'var(--font-ui)',
+                        fontSize: 10, 
+                        fontWeight: 500,
+                        letterSpacing: '0.05em',
+                        color: 'var(--text-reflection)'
                       }}
                     >
                       {tvPercent}%
@@ -178,14 +185,14 @@ export function Stats() {
                   )}
                 </div>
 
-                <div style={{ display: 'flex', gap: 32, justifyContent: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 12, height: 12, borderRadius: 3, background: 'var(--primary)' }} />
-                    <span style={{ fontSize: 13, color: 'var(--color-text)' }}>Movies ({moviesCount})</span>
+                <div style={{ display: 'flex', gap: 36, justifyContent: 'center', fontFamily: 'var(--font-ui)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: 2, background: 'var(--border-hero)' }} />
+                    <span style={{ fontSize: 12, color: 'var(--text-artwork)', letterSpacing: '0.04em' }}>Cinema ({moviesCount})</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 12, height: 12, borderRadius: 3, background: 'rgba(255,255,255,0.1)' }} />
-                    <span style={{ fontSize: 13, color: 'var(--color-text)' }}>TV Shows ({tvCount})</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: 2, background: 'hsla(0, 0%, 100%, 0.12)' }} />
+                    <span style={{ fontSize: 12, color: 'var(--text-artwork)', letterSpacing: '0.04em' }}>Series ({tvCount})</span>
                   </div>
                 </div>
               </div>

@@ -90,7 +90,7 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
   };
 
   return (
-    <div class="poetic-sanctuary-modal">
+    <div class="poetic-sanctuary-modal" style={{ background: 'var(--bg-sanctuary)', color: 'var(--text-sanctuary)' }}>
       <div class="poetic-backdrop">
         {media?.posterUrl && (
           <img
@@ -102,11 +102,12 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
         )}
       </div>
 
-      <div class="poetic-content">
-        <h1 class="poetic-heading">What stayed with you?</h1>
+      <div class="poetic-content" style={{ background: 'var(--bg-plaque)', border: '1px solid var(--border-restraint)', borderRadius: 4, padding: '40px 32px', boxShadow: '0 20px 60px rgba(0,0,0,0.8)', backdropFilter: 'blur(20px)', boxSizing: 'border-box' }}>
+        <h1 class="poetic-heading" style={{ fontFamily: 'var(--font-editorial)', fontStyle: 'italic', fontSize: 32, fontWeight: 400, color: 'var(--text-sanctuary)', margin: 0, textAlign: 'center' }}>What stayed with you?</h1>
 
         <textarea
           class="poetic-textarea"
+          style={{ background: 'rgba(5, 5, 8, 0.4)', border: '1px solid var(--border-restraint)', color: 'var(--text-sanctuary)', fontFamily: 'var(--font-editorial)', fontSize: 18, lineHeight: 1.6, padding: 20, borderRadius: 2, outline: 'none', width: '100%', boxSizing: 'border-box' }}
           placeholder="Reflect on the silence after..."
           value={emotionalRecall}
           onInput={(e) => setEmotionalRecall((e.currentTarget as HTMLTextAreaElement).value)}
@@ -152,7 +153,7 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
                   class={rating === num ? 'active' : ''}
                   onClick={() => setRating(num)}
                 >
-                  {num}
+                  {['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][num - 1]}
                 </button>
               ))}
             </div>

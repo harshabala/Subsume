@@ -29,9 +29,9 @@ interface HomeProps {
 
 function pickRating(media: MediaItem): string | null {
   const imdb = media.ratings.find((r) => r.provider === 'imdb');
-  if (imdb) return `⭐ ${imdb.score}/10`;
+  if (imdb) return `IMDb ${imdb.score}/10`;
   const tmdb = media.ratings.find((r) => r.provider === 'tmdb');
-  if (tmdb) return `★ ${tmdb.score.toFixed(1)}`;
+  if (tmdb) return `TMDb ${tmdb.score.toFixed(1)}`;
   return null;
 }
 
@@ -161,11 +161,14 @@ export function Home({ onNavigate }: HomeProps) {
   const digestBadge = weeklyDigest?.llmGenerated ? 'AI Curated' : 'Algorithm';
 
   return (
-    <div className="page-container">
-      <header className="page-header">
-        <h2 className="page-title">Home</h2>
-        <p className="page-subtitle">
-          Your taste-aware dashboard — what to watch next and what just dropped.
+    <div className="page-container" style={{ background: 'var(--bg-sanctuary)', minHeight: '100vh', color: 'var(--text-artwork)' }}>
+      <header className="sanctuary-header">
+        <div className="sanctuary-header-meta">
+          <span className="sanctuary-subtitle">Auditorium Sanctuary</span>
+        </div>
+        <h2 className="sanctuary-title">Home</h2>
+        <p className="sanctuary-description">
+          Your taste-aware sanctuary — what to reflect on next and programme arrivals.
         </p>
       </header>
 
@@ -186,90 +189,99 @@ export function Home({ onNavigate }: HomeProps) {
         <div style={{ padding: '0 32px 32px', display: 'flex', flexDirection: 'column', gap: 32 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
             {[
-              { label: 'In Library', value: libraryCount, action: () => onNavigate('library') },
-              { label: 'Want to Watch', value: toWatchCount, action: () => onNavigate('library') },
-              { label: 'Watched', value: watchedCount, action: () => onNavigate('library') },
+              { label: 'In Sanctuary', value: libraryCount, action: () => onNavigate('library') },
+              { label: 'Anticipated', value: toWatchCount, action: () => onNavigate('library') },
+              { label: 'Reflected', value: watchedCount, action: () => onNavigate('library') },
             ].map((stat) => (
               <button
                 key={stat.label}
                 onClick={stat.action}
                 style={{
-                  background: 'hsla(240, 16%, 8%, 0.8)',
-                  border: '1px solid hsla(0, 0%, 100%, 0.06)',
-                  borderRadius: 8,
-                  padding: '20px 24px',
+                  background: 'var(--bg-plaque)',
+                  border: '1px solid var(--border-restraint)',
+                  borderRadius: 4,
+                  padding: '24px 28px',
                   textAlign: 'left',
                   cursor: 'pointer',
                   color: 'inherit',
-                  transition: 'border-color 160ms ease',
+                  backdropFilter: 'var(--blur-hero)',
+                  transition: 'border-color 250ms ease, background 250ms ease',
                 }}
-                onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.borderColor = 'hsla(45, 70%, 58%, 0.25)'}
-                onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.borderColor = 'hsla(0, 0%, 100%, 0.06)'}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border-hero)';
+                  (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-plaque-hover)';
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border-restraint)';
+                  (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-plaque)';
+                }}
               >
                 <div className="stat-value" style={{
-                  fontFamily: "'Newsreader', Georgia, serif",
-                  fontSize: 36,
-                  fontWeight: 300,
-                  color: 'hsl(0, 0%, 90%)',
+                  fontFamily: 'var(--font-editorial)',
+                  fontSize: 38,
+                  fontWeight: 400,
+                  fontStyle: 'italic',
+                  color: 'var(--text-reflection)',
                   lineHeight: 1,
-                  marginBottom: 6,
+                  marginBottom: 8,
                 }}>{stat.value}</div>
                 <div style={{
-                  fontFamily: "'Outfit', sans-serif",
+                  fontFamily: 'var(--font-ui)',
                   fontSize: 11,
-                  color: 'hsl(240, 8%, 40%)',
-                  letterSpacing: '0.1em',
+                  color: 'var(--text-meta)',
+                  letterSpacing: '0.15em',
                   textTransform: 'uppercase',
-                  fontWeight: 400,
+                  fontWeight: 500,
                 }}>{stat.label}</div>
               </button>
             ))}
           </div>
 
           <section>
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid hsla(0,0%,100%,0.05)' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid var(--border-restraint)' }}>
               <div>
                 <h3 style={{
-                  fontFamily: "'Newsreader', Georgia, serif",
-                  fontSize: 22,
+                  fontFamily: 'var(--font-editorial)',
+                  fontSize: 24,
                   fontWeight: 400,
                   fontStyle: 'italic',
-                  color: 'hsl(0, 0%, 88%)',
-                  margin: '0 0 4px',
-                  letterSpacing: '-0.01em',
+                  color: 'var(--text-reflection)',
+                  margin: '0 0 6px',
                 }}>Picked For You</h3>
-                <p style={{ fontFamily: "'Outfit', sans-serif", margin: 0, fontSize: 12, color: 'hsl(240, 8%, 40%)', letterSpacing: '0.04em' }}>
-                  {watchedCount >= 3 ? 'Curated from your taste profile' : 'Rate 3+ watched titles to unlock AI picks'}
+                <p style={{ fontFamily: 'var(--font-ui)', margin: 0, fontSize: 13, color: 'var(--text-meta)' }}>
+                  {watchedCount >= 3 ? 'Curated from your sanctuary reflections' : 'Reflect on 3+ watched titles to unlock AI picks'}
                 </p>
               </div>
-              <button className="btn btn-secondary" style={{ fontSize: 11, padding: '5px 12px', letterSpacing: '0.06em', textTransform: 'uppercase' }} onClick={() => onNavigate('recommendations')}>
-                See all
+              <button className="optical-button" style={{ padding: '8px 16px' }} onClick={() => onNavigate('recommendations')}>
+                Explore All
               </button>
             </div>
 
             {picks.length === 0 ? (
-              <div style={{ padding: 24, borderRadius: 12, border: '1px dashed var(--border)', color: 'var(--fg-subtle)', fontSize: 14 }}>
-                Add a few titles and mark some as watched to unlock recommendations.
+              <div className="sanctuary-empty-plaque" style={{ margin: '24px 0' }}>
+                <span className="sanctuary-plaque-index">Sanctuary Notice</span>
+                <p className="sanctuary-plaque-text">Add a few titles and mark some as watched to unlock personalized reflections.</p>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 16 }}>
                 {picks.map(({ media, explanation }) => (
                   <div
                     key={media.id}
-                    className="media-card"
-                    style={{ cursor: 'pointer' }}
+                    className="sanctuary-media-card"
                     onClick={() => setSelectedMedia(media)}
                   >
-                    <div className="media-card-poster">
+                    <div className="sanctuary-card-poster">
                       {media.posterUrl ? (
-                        <img src={media.posterUrl} alt={media.canonicalTitle} loading="lazy" />
+                        <img src={media.posterUrl} alt={media.canonicalTitle} className="sanctuary-poster-img" loading="lazy" />
                       ) : (
-                        <div className="empty-poster text-center p-4">No Image</div>
+                        <div className="sanctuary-poster-placeholder">
+                          <span className="sanctuary-placeholder-title">No Image</span>
+                        </div>
                       )}
                     </div>
-                    <div className="media-card-body">
-                      <h4 className="media-card-title">{media.canonicalTitle}</h4>
-                      <p style={{ fontSize: 12, color: 'var(--fg-subtle)', margin: '6px 0 0', lineHeight: 1.4 }}>{explanation}</p>
+                    <div className="sanctuary-card-content">
+                      <h4 className="sanctuary-card-title">{media.canonicalTitle}</h4>
+                      <p className="sanctuary-card-synopsis" style={{ margin: 0 }}>{explanation}</p>
                     </div>
                   </div>
                 ))}
@@ -278,60 +290,60 @@ export function Home({ onNavigate }: HomeProps) {
           </section>
 
           <section>
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid hsla(0,0%,100%,0.05)', gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid var(--border-restraint)', gap: 12, flexWrap: 'wrap' }}>
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 6 }}>
                   <h3 style={{
-                    fontFamily: "'Newsreader', Georgia, serif",
-                    fontSize: 22,
+                    fontFamily: 'var(--font-editorial)',
+                    fontSize: 24,
                     fontWeight: 400,
                     fontStyle: 'italic',
-                    color: 'hsl(0, 0%, 88%)',
+                    color: 'var(--text-reflection)',
                     margin: 0,
-                    letterSpacing: '-0.01em',
                   }}>This Week</h3>
                   {weeklyDigest && (
                     <span style={{
-                      fontFamily: "'Outfit', sans-serif",
+                      fontFamily: 'var(--font-ui)',
                       fontSize: 10,
-                      fontWeight: 400,
-                      padding: '2px 8px',
+                      fontWeight: 500,
+                      padding: '4px 10px',
                       borderRadius: 2,
-                      background: weeklyDigest.llmGenerated ? 'hsla(45, 70%, 58%, 0.08)' : 'hsla(0,0%,100%,0.04)',
-                      color: weeklyDigest.llmGenerated ? 'hsl(45, 70%, 58%)' : 'hsl(240, 8%, 40%)',
-                      border: `1px solid ${weeklyDigest.llmGenerated ? 'hsla(45, 70%, 58%, 0.2)' : 'hsla(0,0%,100%,0.06)'}`,
-                      letterSpacing: '0.06em',
-                      textTransform: 'uppercase' as const,
+                      background: weeklyDigest.llmGenerated ? 'hsla(45, 90%, 65%, 0.12)' : 'var(--bg-plaque)',
+                      color: weeklyDigest.llmGenerated ? 'hsl(45, 90%, 75%)' : 'var(--text-meta)',
+                      border: `1px solid ${weeklyDigest.llmGenerated ? 'var(--border-hero)' : 'var(--border-restraint)'}`,
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
                     }}>
                       {digestBadge}
                     </span>
                   )}
                 </div>
-                <p style={{ fontFamily: "'Outfit', sans-serif", margin: 0, fontSize: 12, color: 'hsl(240, 8%, 40%)', letterSpacing: '0.04em' }}>
-                  {platformNames ? `New on ${platformNames}` : 'Personalized new releases'}
+                <p style={{ fontFamily: 'var(--font-ui)', margin: 0, fontSize: 13, color: 'var(--text-meta)' }}>
+                  {platformNames ? `Programme arrivals on ${platformNames}` : 'Curated programme releases'}
                 </p>
               </div>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 10 }}>
                 <button
-                  className="btn btn-secondary"
-                  style={{ fontSize: 12, padding: '6px 12px' }}
+                  className="optical-button"
+                  style={{ padding: '8px 16px' }}
                   disabled={refreshingDigest}
                   onClick={handleRefreshDigest}
                 >
-                  {refreshingDigest ? 'Refreshing…' : 'Refresh picks'}
+                  {refreshingDigest ? 'Refreshing…' : 'Refresh Programme'}
                 </button>
-                <button className="btn btn-secondary" style={{ fontSize: 12, padding: '6px 12px' }} onClick={() => onNavigate('new-releases')}>
-                  See all →
+                <button className="optical-button" style={{ padding: '8px 16px' }} onClick={() => onNavigate('new-releases')}>
+                  Full Programme
                 </button>
               </div>
             </div>
 
             {weeklyPicks.length === 0 ? (
-              <div style={{ padding: 24, borderRadius: 12, border: '1px dashed var(--border)', color: 'var(--fg-subtle)', fontSize: 14 }}>
-                No weekly picks yet. Check your TMDb API key in Settings or refresh picks.
+              <div className="sanctuary-empty-plaque" style={{ margin: '24px 0' }}>
+                <span className="sanctuary-plaque-index">Programme Notice</span>
+                <p className="sanctuary-plaque-text">No weekly programme yet. Check your TMDb API key in Settings or refresh programme.</p>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
                 {weeklyPicks.map((pick) => {
                   const media = pick.media;
                   const rating = media ? pickRating(media) : null;
@@ -340,36 +352,41 @@ export function Home({ onNavigate }: HomeProps) {
                   return (
                     <div
                       key={pick.mediaId}
-                      className="media-card"
+                      className="sanctuary-media-card"
                       style={{ cursor: media ? 'pointer' : 'default' }}
                       onClick={() => media && setSelectedMedia(media)}
                     >
-                      <div className="media-card-poster">
+                      <div className="sanctuary-card-poster">
                         {media?.posterUrl ? (
-                          <img src={media.posterUrl} alt={pick.title} loading="lazy" />
+                          <img src={media.posterUrl} alt={pick.title} className="sanctuary-poster-img" loading="lazy" />
                         ) : (
-                          <div className="empty-poster text-center p-4">No Image</div>
+                          <div className="sanctuary-poster-placeholder">
+                            <span className="sanctuary-placeholder-title">No Image</span>
+                          </div>
                         )}
                       </div>
-                      <div className="media-card-body">
-                        <h4 className="media-card-title">{pick.title}</h4>
-                        <p style={{ fontSize: 12, color: 'var(--fg-subtle)', margin: '6px 0 0', lineHeight: 1.4 }}>
+                      <div className="sanctuary-card-content">
+                        <h4 className="sanctuary-card-title">{pick.title}</h4>
+                        <p className="sanctuary-card-synopsis" style={{ margin: 0 }}>
                           {pick.reason}
                         </p>
-                        <PlatformChips availability={availability} max={3} compact />
-                        <div className="media-card-meta">
+                        <div style={{ margin: '4px 0' }}>
+                          <PlatformChips availability={availability} max={3} compact />
+                        </div>
+                        <div className="sanctuary-card-meta">
                           <span>{pick.year}</span>
-                          {rating && <span className="media-card-rating">{rating}</span>}
+                          {rating && <span>{rating}</span>}
                         </div>
                         {media && (
-                          <button
-                            className="btn btn-secondary"
-                            style={{ width: '100%', marginTop: 8, padding: '6px 0', fontSize: 12 }}
-                            disabled={addedIds.has(media.id)}
-                            onClick={(e) => { e.stopPropagation(); handleAdd(media); }}
-                          >
-                            {addedIds.has(media.id) ? '✓ Added' : '+ Add'}
-                          </button>
+                          <div className="sanctuary-card-actions">
+                            <button
+                              className="sanctuary-acquire-btn"
+                              disabled={addedIds.has(media.id)}
+                              onClick={(e) => { e.stopPropagation(); handleAdd(media); }}
+                            >
+                              {addedIds.has(media.id) ? 'Acquired' : '+ Acquire'}
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>

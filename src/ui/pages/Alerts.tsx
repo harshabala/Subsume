@@ -134,205 +134,247 @@ export function Alerts() {
     }
   };
 
+  const inputStyle = {
+    width: '100%',
+    padding: '10px 14px',
+    background: 'hsla(0, 0%, 100%, 0.03)',
+    border: '1px solid var(--border-restraint)',
+    color: 'var(--text-sanctuary)',
+    borderRadius: 2,
+    fontFamily: 'var(--font-ui)',
+    fontSize: 13,
+    outline: 'none',
+    boxSizing: 'border-box' as const
+  };
+
+  const btnGoldStyle = {
+    background: 'var(--border-hero)',
+    border: 'none',
+    color: 'hsl(240, 18%, 5%)',
+    padding: '10px 24px',
+    borderRadius: 2,
+    fontFamily: 'var(--font-ui)',
+    fontSize: 11,
+    fontWeight: 600,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.15em',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease'
+  };
+
+  const btnRestraintStyle = {
+    background: 'transparent',
+    border: '1px solid var(--border-restraint)',
+    color: 'var(--text-reflection)',
+    padding: '10px 24px',
+    borderRadius: 2,
+    fontFamily: 'var(--font-ui)',
+    fontSize: 11,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.15em',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease'
+  };
+
   return (
-    <div className="page-container">
-      <header className="page-header">
-        <h2 className="page-title">Watch Alerts</h2>
-        <p className="page-subtitle">
-          Get notified when new releases match your criteria.
-        </p>
+    <div className="page-container" style={{ background: 'var(--bg-sanctuary)', minHeight: '100vh', color: 'var(--text-artwork)', paddingBottom: 64 }}>
+      <header className="sanctuary-header">
+        <div className="sanctuary-header-meta">
+          <span className="sanctuary-subtitle">Archival Dispatch</span>
+        </div>
+        <h2 className="sanctuary-title">Watch Alerts</h2>
+        <p className="sanctuary-description">Configure telegraphic surveillance criteria for forthcoming sanctuary releases.</p>
       </header>
 
-      <div style={{ margin: '0 32px 24px', maxWidth: 720 }}>
-        <button
-          className="btn-primary"
-          onClick={() => setShowForm((value) => !value)}
-          style={{ marginBottom: 20 }}
-        >
-          {showForm ? 'Cancel' : 'Create Alert'}
-        </button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+        <div>
+          <button
+            onClick={() => setShowForm((value) => !value)}
+            style={showForm ? btnRestraintStyle : btnGoldStyle}
+          >
+            {showForm ? 'Cancel Dispatch' : 'Assemble Surveillance Alert'}
+          </button>
+        </div>
 
         {showForm && (
           <div
-            className="settings-section"
             style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 12,
-              padding: 20,
-              marginBottom: 24,
+              background: 'var(--bg-plaque)',
+              border: '1px solid var(--border-hero)',
+              borderRadius: 4,
+              padding: 28,
+              backdropFilter: 'var(--blur-hero)'
             }}
           >
-            <h3 style={{ fontSize: 16, marginBottom: 16 }}>New Alert</h3>
+            <h3 style={{ fontFamily: 'var(--font-editorial)', fontStyle: 'italic', fontSize: 20, color: 'var(--text-reflection)', margin: '0 0 20px 0', borderBottom: '1px solid var(--border-restraint)', paddingBottom: 12 }}>
+              Telegraphic Dispatch Specification
+            </h3>
 
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', marginBottom: 8, fontSize: 14 }}>
-                Alert Name
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Netflix Sci-Fi"
-                value={form.name}
-                onInput={(e) =>
-                  setForm({ ...form, name: (e.target as HTMLInputElement).value })
-                }
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  background: 'var(--color-surface-hover)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  color: 'white',
-                  borderRadius: 6,
-                }}
-              />
-            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: 8, fontFamily: 'var(--font-ui)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-meta)' }}>
+                  Surveillance Title / Designation
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. A24 Cinema Releases"
+                  value={form.name}
+                  onInput={(e) =>
+                    setForm({ ...form, name: (e.target as HTMLInputElement).value })
+                  }
+                  style={inputStyle}
+                />
+              </div>
 
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', marginBottom: 8, fontSize: 14 }}>
-                Type
-              </label>
-              <select
-                value={form.type || 'both'}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    type: (e.target as HTMLSelectElement).value as 'movie' | 'tv' | 'both',
-                  })
-                }
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  background: 'var(--color-surface-hover)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  color: 'white',
-                  borderRadius: 6,
-                }}
-              >
-                <option value="both">Movies & TV</option>
-                <option value="movie">Movies only</option>
-                <option value="tv">TV only</option>
-              </select>
-            </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: 8, fontFamily: 'var(--font-ui)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-meta)' }}>
+                  Format Scope
+                </label>
+                <select
+                  value={form.type || 'both'}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      type: (e.target as HTMLSelectElement).value as 'movie' | 'tv' | 'both',
+                    })
+                  }
+                  style={inputStyle}
+                >
+                  <option value="both" style={{ background: 'hsl(240, 18%, 8%)' }}>Cinema & Series</option>
+                  <option value="movie" style={{ background: 'hsl(240, 18%, 8%)' }}>Cinema Only</option>
+                  <option value="tv" style={{ background: 'hsl(240, 18%, 8%)' }}>Series Only</option>
+                </select>
+              </div>
 
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', marginBottom: 8, fontSize: 14 }}>
-                Genres
-              </label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {AVAILABLE_GENRES.map((genre) => (
-                  <label
-                    key={genre.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      background: 'rgba(255,255,255,0.05)',
-                      padding: '6px 12px',
-                      borderRadius: 16,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={(form.genres || []).includes(genre.id)}
-                      onChange={() => toggleFormArrayItem('genres', genre.id)}
-                      style={{ accentColor: 'var(--primary)' }}
-                    />
-                    <span style={{ fontSize: 13 }}>{genre.name}</span>
-                  </label>
-                ))}
+              <div>
+                <label style={{ display: 'block', marginBottom: 8, fontFamily: 'var(--font-ui)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-meta)' }}>
+                  Target Genres
+                </label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {AVAILABLE_GENRES.map((genre) => {
+                    const active = (form.genres || []).includes(genre.id);
+                    return (
+                      <label
+                        key={genre.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          background: active ? 'hsla(43, 74%, 49%, 0.1)' : 'transparent',
+                          border: `1px solid ${active ? 'var(--border-hero)' : 'var(--border-restraint)'}`,
+                          color: active ? 'var(--border-hero)' : 'var(--text-artwork)',
+                          padding: '6px 12px',
+                          borderRadius: 2,
+                          cursor: 'pointer',
+                          fontFamily: 'var(--font-ui)',
+                          fontSize: 12
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={active}
+                          onChange={() => toggleFormArrayItem('genres', genre.id)}
+                          style={{ display: 'none' }}
+                        />
+                        <span style={{ width: 4, height: 4, borderRadius: '50%', background: active ? 'var(--border-hero)' : 'hsla(0,0%,100%,0.2)' }} />
+                        {genre.name}
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: 8, fontFamily: 'var(--font-ui)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-meta)' }}>
+                  Monitored Platforms
+                </label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {AVAILABLE_PLATFORMS.map((platform) => {
+                    const active = (form.platforms || []).includes(platform.id);
+                    return (
+                      <label
+                        key={platform.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          background: active ? 'hsla(43, 74%, 49%, 0.1)' : 'transparent',
+                          border: `1px solid ${active ? 'var(--border-hero)' : 'var(--border-restraint)'}`,
+                          color: active ? 'var(--border-hero)' : 'var(--text-artwork)',
+                          padding: '6px 12px',
+                          borderRadius: 2,
+                          cursor: 'pointer',
+                          fontFamily: 'var(--font-ui)',
+                          fontSize: 12
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={active}
+                          onChange={() => toggleFormArrayItem('platforms', platform.id)}
+                          style={{ display: 'none' }}
+                        />
+                        <span style={{ width: 4, height: 4, borderRadius: '50%', background: active ? 'var(--border-hero)' : 'hsla(0,0%,100%,0.2)' }} />
+                        {platform.name}
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: 8, fontFamily: 'var(--font-ui)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-meta)' }}>
+                  Inscription Keyword Filter (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Title inscription must include..."
+                  value={form.keyword || ''}
+                  onInput={(e) =>
+                    setForm({ ...form, keyword: (e.target as HTMLInputElement).value })
+                  }
+                  style={inputStyle}
+                />
+              </div>
+
+              <div style={{ marginTop: 8 }}>
+                <button
+                  onClick={handleCreate}
+                  disabled={saving}
+                  style={btnGoldStyle}
+                >
+                  {saving ? 'Engraving...' : 'Enroll Surveillance Alert'}
+                </button>
               </div>
             </div>
-
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', marginBottom: 8, fontSize: 14 }}>
-                Platforms
-              </label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {AVAILABLE_PLATFORMS.map((platform) => (
-                  <label
-                    key={platform.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      background: 'rgba(255,255,255,0.05)',
-                      padding: '6px 12px',
-                      borderRadius: 16,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={(form.platforms || []).includes(platform.id)}
-                      onChange={() => toggleFormArrayItem('platforms', platform.id)}
-                      style={{ accentColor: 'var(--primary)' }}
-                    />
-                    <span style={{ fontSize: 13 }}>{platform.name}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', marginBottom: 8, fontSize: 14 }}>
-                Keyword (optional)
-              </label>
-              <input
-                type="text"
-                placeholder="Title must contain..."
-                value={form.keyword || ''}
-                onInput={(e) =>
-                  setForm({ ...form, keyword: (e.target as HTMLInputElement).value })
-                }
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  background: 'var(--color-surface-hover)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  color: 'white',
-                  borderRadius: 6,
-                }}
-              />
-            </div>
-
-            <button
-              className="btn-primary"
-              onClick={handleCreate}
-              disabled={saving}
-            >
-              {saving ? 'Saving...' : 'Save Alert'}
-            </button>
           </div>
         )}
 
         {loading ? (
-          <div className="empty-state">
-            <div className="subsume-spinner" />
-            <p style={{ marginTop: 16, color: 'var(--color-text-secondary)' }}>
-              Loading alerts...
-            </p>
+          <div style={{ textAlign: 'center', padding: 48, fontFamily: 'var(--font-editorial)', fontStyle: 'italic', fontSize: 18, color: 'var(--text-meta)' }}>
+            Inspecting dispatch logs...
           </div>
         ) : alerts.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-state-icon">🔔</div>
-            <h3 className="empty-state-title">No alerts yet</h3>
-            <p className="empty-state-description">
-              Create an alert to get notified when new movies or shows match your
-              genres, platforms, or keywords.
+          <div className="sanctuary-empty-plaque">
+            <span className="sanctuary-plaque-index">Dispatch Index 00</span>
+            <h3 className="sanctuary-plaque-title">No surveillance configured</h3>
+            <p className="sanctuary-plaque-text">
+              Assemble a surveillance alert to receive telegraphic dispatches when new releases match your exact specifications.
             </p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {alerts.map((alert) => (
               <div
                 key={alert.id}
                 style={{
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 12,
-                  padding: 16,
-                  opacity: alert.enabled ? 1 : 0.65,
+                  background: 'var(--bg-plaque)',
+                  border: '1px solid var(--border-restraint)',
+                  borderRadius: 4,
+                  padding: 24,
+                  opacity: alert.enabled ? 1 : 0.5,
+                  backdropFilter: 'var(--blur-hero)',
+                  transition: 'opacity 0.2s ease'
                 }}
               >
                 <div
@@ -340,59 +382,70 @@ export function Alerts() {
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'flex-start',
-                    gap: 12,
+                    flexWrap: 'wrap',
+                    gap: 16,
                   }}
                 >
                   <div>
-                    <h3 style={{ fontSize: 16, marginBottom: 6 }}>{alert.name}</h3>
-                    <p style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
+                    <h3 style={{ fontFamily: 'var(--font-editorial)', fontStyle: 'italic', fontSize: 20, fontWeight: 400, color: 'var(--text-reflection)', margin: '0 0 8px 0' }}>{alert.name}</h3>
+                    <p style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: 'var(--border-hero)', margin: '0 0 12px 0', letterSpacing: '0.02em' }}>
                       {formatAlertCriteria(alert)}
                     </p>
                     <p
                       style={{
-                        color: 'var(--color-text-secondary)',
-                        fontSize: 12,
-                        marginTop: 8,
+                        fontFamily: 'var(--font-ui)',
+                        color: 'var(--text-meta)',
+                        fontSize: 11,
+                        margin: 0,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.1em'
                       }}
                     >
-                      Last checked: {formatTimestamp(alert.lastCheckedAt)}
+                      Last Enquiry: {formatTimestamp(alert.lastCheckedAt)}
                       {alert.lastMatchAt
-                        ? ` · Last match: ${formatTimestamp(alert.lastMatchAt)}`
+                        ? ` · Last Resonance: ${formatTimestamp(alert.lastMatchAt)}`
                         : ''}
                     </p>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <label
                       style={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: 8,
-                        fontSize: 13,
-                        cursor: 'pointer',
+                        fontFamily: 'var(--font-ui)',
+                        fontSize: 11,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.15em',
+                        color: alert.enabled ? 'var(--text-artwork)' : 'var(--text-meta)',
+                        cursor: 'pointer'
                       }}
                     >
                       <input
                         type="checkbox"
                         checked={alert.enabled}
                         onChange={() => handleToggleEnabled(alert)}
-                        style={{ accentColor: 'var(--primary)' }}
+                        style={{ accentColor: 'var(--border-hero)', width: 14, height: 14 }}
                       />
-                      Enabled
+                      Enrolled
                     </label>
                     <button
                       onClick={() => handleDelete(alert.id)}
                       style={{
                         background: 'transparent',
-                        border: '1px solid rgba(255,255,255,0.15)',
-                        color: '#f87171',
-                        borderRadius: 6,
-                        padding: '6px 10px',
+                        border: '1px solid var(--border-restraint)',
+                        color: 'hsl(0, 60%, 65%)',
+                        borderRadius: 2,
+                        padding: '6px 14px',
                         cursor: 'pointer',
-                        fontSize: 12,
+                        fontFamily: 'var(--font-ui)',
+                        fontSize: 11,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.15em'
                       }}
                     >
-                      Delete
+                      Purge
                     </button>
                   </div>
                 </div>

@@ -79,62 +79,143 @@ export function DetailModal({
   const imdbRating = media.ratings.find((r) => r.provider === 'imdb');
   const rtRating = media.ratings.find((r) => r.provider === 'rt');
 
+  const inputStyle = {
+    width: '100%',
+    padding: '8px 12px',
+    background: 'hsla(0, 0%, 100%, 0.03)',
+    border: '1px solid var(--border-restraint)',
+    color: 'var(--text-sanctuary)',
+    borderRadius: 2,
+    fontFamily: 'var(--font-ui)',
+    fontSize: 13,
+    outline: 'none',
+    boxSizing: 'border-box' as const
+  };
+
+  const btnGoldStyle = {
+    background: 'var(--border-hero)',
+    border: 'none',
+    color: 'hsl(240, 18%, 5%)',
+    padding: '12px 28px',
+    borderRadius: 2,
+    fontFamily: 'var(--font-ui)',
+    fontSize: 11,
+    fontWeight: 600,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.15em',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    width: '100%'
+  };
+
   return (
     <div
       className="modal-backdrop"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(5, 5, 8, 0.88)',
+        backdropFilter: 'var(--blur-hero)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+        padding: 24
+      }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="modal-content">
-        <button className="modal-close" onClick={onClose}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <div
+        className="modal-content"
+        style={{
+          background: 'var(--bg-plaque)',
+          border: '1px solid var(--border-hero)',
+          boxShadow: 'var(--shadow-hero)',
+          borderRadius: 4,
+          maxHeight: '90vh',
+          width: '100%',
+          maxWidth: 720,
+          overflowY: 'auto',
+          position: 'relative',
+          color: 'var(--text-artwork)',
+          padding: 32,
+          boxSizing: 'border-box'
+        }}
+      >
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: 24,
+            right: 24,
+            background: 'transparent',
+            border: '1px solid var(--border-restraint)',
+            color: 'var(--text-meta)',
+            width: 32,
+            height: 32,
+            borderRadius: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            transition: 'color 0.2s ease'
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </button>
 
-        <div className="modal-header">
-          <div className="modal-poster">
+        <div style={{ display: 'flex', gap: 28, marginBottom: 32, flexWrap: 'wrap' }}>
+          <div style={{ width: 180, flexShrink: 0, borderRadius: 2, overflow: 'hidden', border: '1px solid var(--border-restraint)', background: 'hsl(240, 18%, 6%)' }}>
             {media.posterUrl ? (
-              <img src={media.posterUrl} alt={media.canonicalTitle} />
+              <img src={media.posterUrl} alt={media.canonicalTitle} style={{ width: '100%', display: 'block' }} />
             ) : (
-              <div className="modal-poster-placeholder">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <div style={{ width: '100%', height: 270, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-meta)' }}>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
                   <rect x="2" y="3" width="20" height="18" rx="2" />
                   <path d="M7 3v18M17 3v18M2 9h5M17 9h5M2 15h5M17 15h5" />
                 </svg>
               </div>
             )}
           </div>
-          <div className="modal-info">
-            <h2 className="modal-title">{media.canonicalTitle}</h2>
-            <div className="modal-meta">
-              <span className="modal-year">{media.year || '—'}</span>
-              <span className="modal-type-badge">
-                {media.type === 'tv' ? 'TV Show' : 'Movie'}
-              </span>
+
+          <div style={{ flex: 1, minWidth: 260 }}>
+            <div style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--border-hero)', marginBottom: 6 }}>
+              {media.type === 'tv' ? 'Series Sanctuary Inscription' : 'Cinematic Sanctuary Inscription'}
+            </div>
+            <h2 style={{ fontFamily: 'var(--font-editorial)', fontStyle: 'italic', fontSize: 32, fontWeight: 400, color: 'var(--text-sanctuary)', margin: '0 0 12px 0', lineHeight: 1.1 }}>
+              {media.canonicalTitle}
+            </h2>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, fontFamily: 'var(--font-ui)', fontSize: 11, color: 'var(--text-meta)', marginBottom: 16 }}>
+              <span style={{ color: 'var(--text-reflection)', fontWeight: 600 }}>{media.year || '—'}</span>
+              <span>·</span>
               {tmdbRating && (
-                <span className="modal-rating">
-                  ⭐ TMDb {tmdbRating.score.toFixed(1)}/10
-                  {tmdbRating.votes ? ` (${tmdbRating.votes.toLocaleString()} votes)` : ''}
+                <span style={{ background: 'hsla(0,0%,100%,0.04)', padding: '3px 8px', borderRadius: 2, border: '1px solid var(--border-restraint)' }}>
+                  TMDb <strong style={{ color: 'var(--border-hero)' }}>{tmdbRating.score.toFixed(1)}</strong>
                 </span>
               )}
               {imdbRating && (
-                <span className="modal-rating">
-                  ⭐ IMDb {imdbRating.score}/10
+                <span style={{ background: 'hsla(0,0%,100%,0.04)', padding: '3px 8px', borderRadius: 2, border: '1px solid var(--border-restraint)' }}>
+                  IMDb <strong style={{ color: 'var(--border-hero)' }}>{imdbRating.score}</strong>
                 </span>
               )}
               {rtRating && (
-                <span className="modal-rating">
-                  🍅 RT {rtRating.score}%
+                <span style={{ background: 'hsla(0,0%,100%,0.04)', padding: '3px 8px', borderRadius: 2, border: '1px solid var(--border-restraint)' }}>
+                  RT <strong style={{ color: 'var(--border-hero)' }}>{rtRating.score}%</strong>
                 </span>
               )}
             </div>
+
             {media.genres.length > 0 && (
-              <div className="modal-genres">
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {media.genres.map((g) => (
-                  <span key={g} className="modal-genre-tag">{g}</span>
+                  <span key={g} style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', padding: '4px 10px', background: 'transparent', border: '1px solid var(--border-restraint)', color: 'var(--text-reflection)', borderRadius: 2 }}>
+                    {g}
+                  </span>
                 ))}
               </div>
             )}
@@ -142,57 +223,57 @@ export function DetailModal({
         </div>
 
         {media.overview && (
-          <div className="modal-section">
-            <h3 className="modal-section-title">Overview</h3>
-            <p className="modal-overview">{media.overview}</p>
+          <div style={{ marginBottom: 28, borderTop: '1px solid var(--border-restraint)', paddingTop: 20 }}>
+            <h3 style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-meta)', margin: '0 0 10px 0' }}>Sanctuary Synopsis</h3>
+            <p style={{ fontFamily: 'var(--font-editorial)', fontSize: 16, lineHeight: 1.6, color: 'var(--text-reflection)', margin: 0 }}>{media.overview}</p>
           </div>
         )}
 
         {media.streamingAvailability && media.streamingAvailability.length > 0 && (
-          <div className="modal-section">
-            <h3 className="modal-section-title">Where to Watch</h3>
+          <div style={{ marginBottom: 28, borderTop: '1px solid var(--border-restraint)', paddingTop: 20 }}>
+            <h3 style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-meta)', margin: '0 0 12px 0' }}>Exhibition Availability</h3>
             <PlatformChips availability={media.streamingAvailability} />
           </div>
         )}
 
         {media.providers.length > 0 && (
-          <div className="modal-section">
-            <h3 className="modal-section-title">Links</h3>
-            <div className="modal-links">
+          <div style={{ marginBottom: 28, borderTop: '1px solid var(--border-restraint)', paddingTop: 20 }}>
+            <h3 style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-meta)', margin: '0 0 12px 0' }}>Archival Catalog Links</h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
               {media.providers.map((p) => (
                 <a
                   key={p.provider}
                   href={p.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="modal-link"
+                  style={{ fontFamily: 'var(--font-ui)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--border-hero)', textDecoration: 'none', padding: '6px 12px', border: '1px solid var(--border-restraint)', borderRadius: 2 }}
                 >
-                  View on {p.provider.toUpperCase()}
+                  {p.provider.toUpperCase()}
                 </a>
               ))}
             </div>
           </div>
         )}
 
-        <div className="modal-actions">
+        <div style={{ borderTop: '1px solid var(--border-restraint)', paddingTop: 28 }}>
           {libraryItem ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{ fontSize: 14, color: 'var(--color-text-secondary)' }}>Status:</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                <span style={{ fontFamily: 'var(--font-ui)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-meta)' }}>Sanctuary State:</span>
                 <select
                   value={libraryItem.status}
                   onChange={(e) => onUpdateStatus?.((e.target as HTMLSelectElement).value as LibraryStatus)}
-                  className="modal-select"
+                  style={{ ...inputStyle, width: 'auto', minWidth: 180 }}
                 >
                   {STATUS_OPTIONS.map((opt) => (
-                    <option value={opt.value} key={opt.value}>{opt.label}</option>
+                    <option value={opt.value} key={opt.value} style={{ background: 'hsl(240, 18%, 8%)' }}>{opt.label}</option>
                   ))}
                 </select>
               </div>
 
               {libraryItem.status === 'watched' && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span style={{ fontSize: 14, color: 'var(--color-text-secondary)' }}>Your rating:</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <span style={{ fontFamily: 'var(--font-ui)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-meta)' }}>Resonance Rating:</span>
                   <input
                     type="range"
                     min={1}
@@ -200,34 +281,33 @@ export function DetailModal({
                     step={1}
                     value={libraryItem.userRating || 5}
                     onChange={(e) => onUpdateRating?.(parseInt((e.target as HTMLInputElement).value, 10))}
-                    style={{ flex: 1, cursor: 'pointer' }}
+                    style={{ accentColor: 'var(--border-hero)', flex: 1, maxWidth: 200, cursor: 'pointer' }}
                   />
-                  <span style={{ fontSize: 14, fontWeight: 600, minWidth: 24, textAlign: 'center' }}>
-                    {libraryItem.userRating || 5}
+                  <span style={{ fontFamily: 'var(--font-editorial)', fontStyle: 'italic', fontSize: 18, color: 'var(--border-hero)', minWidth: 32 }}>
+                    {libraryItem.userRating || 5} <span style={{ fontSize: 12, fontStyle: 'normal', color: 'var(--text-meta)' }}>/ X</span>
                   </span>
                 </div>
               )}
 
-              {/* Tags Segment */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
-                <span style={{ fontSize: 14, color: 'var(--color-text-secondary)' }}>Tags:</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <span style={{ fontFamily: 'var(--font-ui)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-meta)' }}>Sanctuary Tags:</span>
                 
-                {/* Existing tags chips */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {(libraryItem.userTags || []).map((tag) => (
                     <span 
                       key={tag} 
-                      className="tag-chip" 
                       style={{ 
                         display: 'inline-flex', 
                         alignItems: 'center', 
-                        gap: 4, 
-                        fontSize: 12, 
-                        padding: '3px 8px', 
-                        background: 'rgba(201, 168, 76, 0.1)', 
-                        border: '1px solid rgba(201, 168, 76, 0.25)', 
-                        borderRadius: 12,
-                        color: 'var(--primary)'
+                        gap: 6, 
+                        fontFamily: 'var(--font-ui)',
+                        fontSize: 11, 
+                        letterSpacing: '0.1em',
+                        padding: '4px 10px', 
+                        background: 'hsla(43, 74%, 49%, 0.1)', 
+                        border: '1px solid var(--border-hero)', 
+                        borderRadius: 2,
+                        color: 'var(--border-hero)'
                       }}
                     >
                       {tag}
@@ -236,7 +316,7 @@ export function DetailModal({
                           const newTags = (libraryItem.userTags || []).filter(t => t !== tag);
                           onUpdateTags?.(newTags);
                         }} 
-                        style={{ cursor: 'pointer', fontWeight: 'bold', marginLeft: 2 }}
+                        style={{ cursor: 'pointer', fontWeight: 600 }}
                       >
                         ×
                       </span>
@@ -244,12 +324,10 @@ export function DetailModal({
                   ))}
                 </div>
 
-                {/* Add Tag Input */}
                 <input
                   type="text"
-                  placeholder="Press Enter to add tag..."
-                  className="modal-select"
-                  style={{ width: '100%', fontSize: 13, padding: '6px 12px' }}
+                  placeholder="Inscribe custom tag and press Enter..."
+                  style={inputStyle}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -266,9 +344,8 @@ export function DetailModal({
                   }}
                 />
 
-                {/* Suggestion tags */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
-                  <span style={{ fontSize: 11, color: 'var(--fg-subtle)', display: 'block', width: '100%' }}>Suggestions:</span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center', marginTop: 4 }}>
+                  <span style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-meta)', marginRight: 4 }}>Archival Suggestions:</span>
                   {SUGGESTED_TAGS.map((tag) => {
                     const isAdded = (libraryItem.userTags || []).includes(tag);
                     if (isAdded) return null;
@@ -280,13 +357,15 @@ export function DetailModal({
                           onUpdateTags?.([...currentTags, tag]);
                         }}
                         style={{ 
-                          fontSize: 11, 
-                          padding: '2px 8px', 
-                          background: 'rgba(255,255,255,0.05)', 
-                          border: '1px solid rgba(255,255,255,0.1)', 
-                          borderRadius: 8, 
+                          fontFamily: 'var(--font-ui)',
+                          fontSize: 10, 
+                          letterSpacing: '0.05em',
+                          padding: '3px 8px', 
+                          background: 'transparent', 
+                          border: '1px solid var(--border-restraint)', 
+                          borderRadius: 2, 
                           cursor: 'pointer',
-                          color: 'var(--color-text-secondary)',
+                          color: 'var(--text-artwork)',
                           userSelect: 'none'
                         }}
                       >
@@ -297,29 +376,28 @@ export function DetailModal({
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
-                <span style={{ fontSize: 14, color: 'var(--color-text-secondary)' }}>Notes:</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <span style={{ fontFamily: 'var(--font-ui)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-meta)' }}>Private Reflections & Notes:</span>
                 <textarea
                   value={notes}
-                  placeholder="What did you think? Directors to revisit, scenes you loved..."
+                  placeholder="Record private thoughts, directorial motifs, or memorable sequences..."
                   onChange={(e) => handleNotesChange(e.currentTarget.value)}
                   onBlur={flushNotes}
                   rows={4}
-                  className="modal-select"
                   style={{
-                    width: '100%',
-                    fontSize: 13,
-                    padding: '10px 12px',
+                    ...inputStyle,
                     resize: 'vertical',
-                    lineHeight: 1.5,
-                    minHeight: 88,
+                    fontFamily: 'var(--font-editorial)',
+                    fontSize: 14,
+                    lineHeight: 1.6,
+                    minHeight: 100
                   }}
                 />
               </div>
             </div>
           ) : (
-            <button className="btn btn-primary" onClick={onAddToLibrary}>
-              Add to Library
+            <button style={btnGoldStyle} onClick={onAddToLibrary}>
+              Inscribe into Sanctuary Library
             </button>
           )}
         </div>

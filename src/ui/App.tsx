@@ -38,26 +38,26 @@ const NAV_SECTIONS: NavSection[] = [
   {
     label: 'Main',
     items: [
-      { key: 'home', label: 'Home', icon: '🏠' },
-      { key: 'library', label: 'Library', icon: '📚' },
-      { key: 'search', label: 'Search', icon: '🔍' },
+      { key: 'home', label: 'Home', icon: 'I' },
+      { key: 'library', label: 'Library', icon: 'II' },
+      { key: 'search', label: 'Search', icon: 'III' },
     ],
   },
   {
     label: 'Discover',
     items: [
-      { key: 'recommendations', label: 'Recommendations', icon: '✨' },
-      { key: 'new-releases', label: "What's New", icon: '🆕' },
-      { key: 'people', label: 'Filmmakers', icon: '👤' },
-      { key: 'stats', label: 'Stats', icon: '📊' },
-      { key: 'alerts', label: 'Alerts', icon: '🔔' },
+      { key: 'recommendations', label: 'Recommendations', icon: 'IV' },
+      { key: 'new-releases', label: "What's New", icon: 'V' },
+      { key: 'people', label: 'Filmmakers', icon: 'VI' },
+      { key: 'stats', label: 'Stats', icon: 'VII' },
+      { key: 'alerts', label: 'Alerts', icon: 'VIII' },
     ],
   },
   {
     label: 'App',
     items: [
-      { key: 'settings', label: 'Settings', icon: '⚙️' },
-      { key: 'logs', label: 'Logs', icon: '📝' }
+      { key: 'settings', label: 'Settings', icon: 'IX' },
+      { key: 'logs', label: 'Logs', icon: 'X' }
     ],
   },
 ];
@@ -95,15 +95,11 @@ function getInitialPage(): Page {
 }
 
 function NavIcon({ item }: { item: NavItem }) {
-  if (item.key === 'people') {
-    return (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ display: 'block' }}>
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
-      </svg>
-    );
-  }
-  return <>{item.icon}</>;
+  return (
+    <span style={{ fontFamily: 'var(--font-editorial)', fontStyle: 'italic', fontSize: '14px', fontWeight: 500 }}>
+      {item.icon}
+    </span>
+  );
 }
 
 export function App() {

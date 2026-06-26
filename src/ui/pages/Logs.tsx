@@ -37,60 +37,116 @@ export function Logs() {
     }
   };
 
+  const btnGoldStyle = {
+    background: 'var(--border-hero)',
+    border: 'none',
+    color: 'hsl(240, 18%, 5%)',
+    padding: '10px 24px',
+    borderRadius: 2,
+    fontFamily: 'var(--font-ui)',
+    fontSize: 11,
+    fontWeight: 600,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.15em',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease'
+  };
+
+  const btnRestraintStyle = {
+    background: 'transparent',
+    border: '1px solid var(--border-restraint)',
+    color: 'var(--text-reflection)',
+    padding: '10px 24px',
+    borderRadius: 2,
+    fontFamily: 'var(--font-ui)',
+    fontSize: 11,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.15em',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease'
+  };
+
   return (
-    <div className="page-container">
-      <header className="page-header">
-        <h2 className="page-title">System Logs</h2>
-        <p className="page-subtitle">View recent warnings and errors (max 100).</p>
+    <div className="page-container" style={{ background: 'var(--bg-sanctuary)', minHeight: '100vh', color: 'var(--text-artwork)', paddingBottom: 64 }}>
+      <header className="sanctuary-header">
+        <div className="sanctuary-header-meta">
+          <span className="sanctuary-subtitle">Archival Colophon</span>
+        </div>
+        <h2 className="sanctuary-title">System Inscriptions</h2>
+        <p className="sanctuary-description">Telegraphic colophon recording internal projection warnings and mechanism anomalies.</p>
       </header>
 
-      <div className="settings-section settings-content" style={{ maxWidth: '100%' }}>
-        <div className="settings-button-group" style={{ marginBottom: 16 }}>
-          <button className="btn btn-primary settings-action-btn" onClick={copyToClipboard}>
-            Copy All to Clipboard
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+        <div style={{ display: 'flex', gap: 16 }}>
+          <button style={btnGoldStyle} onClick={copyToClipboard}>
+            Transcribe Colophon (Copy)
           </button>
-          <button className="btn btn-secondary settings-action-btn" onClick={clearLogs}>
-            Clear Logs
+          <button style={btnRestraintStyle} onClick={clearLogs}>
+            Expunge Ledger
           </button>
         </div>
 
-        {logs.length === 0 ? (
-          <p className="settings-help-text">No logs recorded.</p>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', fontSize: '14px' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                  <th style={{ padding: '8px' }}>Time</th>
-                  <th style={{ padding: '8px' }}>Level</th>
-                  <th style={{ padding: '8px' }}>Message</th>
-                </tr>
-              </thead>
-              <tbody>
-                {logs.slice().reverse().map((log, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid var(--border)', color: log.level === 'error' ? 'var(--error)' : 'inherit' }}>
-                    <td style={{ padding: '8px', whiteSpace: 'nowrap' }}>
-                      {new Date(log.timestamp).toLocaleTimeString()}
-                    </td>
-                    <td style={{ padding: '8px' }}>
-                      <span style={{ 
-                        padding: '2px 6px', 
-                        borderRadius: '4px', 
-                        background: log.level === 'error' ? 'rgba(255,0,0,0.1)' : log.level === 'warn' ? 'rgba(255,165,0,0.1)' : 'rgba(100,149,237,0.1)',
-                        color: log.level === 'error' ? '#ff4444' : log.level === 'warn' ? '#ff9900' : '#4a90e2',
-                        fontSize: '12px',
-                        fontWeight: 'bold'
-                      }}>{log.level.toUpperCase()}</span>
-                    </td>
-                    <td style={{ padding: '8px', wordBreak: 'break-word' }}>
-                      {log.message}
-                    </td>
+        <div
+          style={{
+            background: 'var(--bg-plaque)',
+            border: '1px solid var(--border-restraint)',
+            borderRadius: 4,
+            padding: 28,
+            backdropFilter: 'var(--blur-hero)'
+          }}
+        >
+          {logs.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 36, fontFamily: 'var(--font-editorial)', fontStyle: 'italic', fontSize: 18, color: 'var(--text-meta)' }}>
+              No system inscriptions recorded in the sanctuary ledger.
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', fontFamily: 'var(--font-ui)', fontSize: 13 }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border-hero)', color: 'var(--text-meta)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em' }}>
+                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>Chronicle</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>Designation</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>Inscription</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                </thead>
+                <tbody>
+                  {logs.slice().reverse().map((log, i) => {
+                    const isErr = log.level === 'error';
+                    const isWarn = log.level === 'warn';
+                    const levelColor = isErr ? 'rgb(255, 68, 68)' : isWarn ? 'rgb(255, 153, 0)' : 'rgb(74, 144, 226)';
+                    const badgeBg = isErr ? 'rgba(255, 68, 68, 0.1)' : isWarn ? 'rgba(255, 153, 0, 0.1)' : 'hsla(0, 0%, 100%, 0.05)';
+                    const badgeBorder = isErr ? 'rgba(255, 68, 68, 0.4)' : isWarn ? 'rgba(255, 153, 0, 0.4)' : 'var(--border-restraint)';
+
+                    return (
+                      <tr key={i} style={{ borderBottom: '1px solid var(--border-restraint)', color: isErr ? 'hsl(0, 60%, 80%)' : 'var(--text-reflection)' }}>
+                        <td style={{ padding: '14px 16px', whiteSpace: 'nowrap', color: 'var(--text-meta)', fontSize: 12 }}>
+                          {new Date(log.timestamp).toLocaleTimeString()}
+                        </td>
+                        <td style={{ padding: '14px 16px' }}>
+                          <span style={{
+                            padding: '4px 10px',
+                            borderRadius: 2,
+                            background: badgeBg,
+                            border: `1px solid ${badgeBorder}`,
+                            color: levelColor,
+                            fontSize: 10,
+                            fontWeight: 600,
+                            letterSpacing: '0.15em'
+                          }}>
+                            {log.level.toUpperCase()}
+                          </span>
+                        </td>
+                        <td style={{ padding: '14px 16px', wordBreak: 'break-word', fontFamily: 'var(--font-ui)', lineHeight: 1.5 }}>
+                          {log.message}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
