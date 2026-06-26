@@ -194,31 +194,56 @@ export function Home({ onNavigate }: HomeProps) {
                 key={stat.label}
                 onClick={stat.action}
                 style={{
-                  background: 'var(--bg-elevated)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 12,
-                  padding: '16px 18px',
+                  background: 'hsla(240, 16%, 8%, 0.8)',
+                  border: '1px solid hsla(0, 0%, 100%, 0.06)',
+                  borderRadius: 8,
+                  padding: '20px 24px',
                   textAlign: 'left',
                   cursor: 'pointer',
                   color: 'inherit',
+                  transition: 'border-color 160ms ease',
                 }}
+                onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.borderColor = 'hsla(45, 70%, 58%, 0.25)'}
+                onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.borderColor = 'hsla(0, 0%, 100%, 0.06)'}
               >
-                <div className="stat-value" style={{ fontSize: 28, fontWeight: 700, color: 'var(--primary)' }}>{stat.value}</div>
-                <div style={{ fontSize: 13, color: 'var(--fg-subtle)', marginTop: 4 }}>{stat.label}</div>
+                <div className="stat-value" style={{
+                  fontFamily: "'Newsreader', Georgia, serif",
+                  fontSize: 36,
+                  fontWeight: 300,
+                  color: 'hsl(0, 0%, 90%)',
+                  lineHeight: 1,
+                  marginBottom: 6,
+                }}>{stat.value}</div>
+                <div style={{
+                  fontFamily: "'Outfit', sans-serif",
+                  fontSize: 11,
+                  color: 'hsl(240, 8%, 40%)',
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  fontWeight: 400,
+                }}>{stat.label}</div>
               </button>
             ))}
           </div>
 
           <section>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid hsla(0,0%,100%,0.05)' }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Picked For You</h3>
-                <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--fg-subtle)' }}>
-                  Based on your library{watchedCount >= 3 ? '' : ' — rate 3+ watched titles for AI picks'}.
+                <h3 style={{
+                  fontFamily: "'Newsreader', Georgia, serif",
+                  fontSize: 22,
+                  fontWeight: 400,
+                  fontStyle: 'italic',
+                  color: 'hsl(0, 0%, 88%)',
+                  margin: '0 0 4px',
+                  letterSpacing: '-0.01em',
+                }}>Picked For You</h3>
+                <p style={{ fontFamily: "'Outfit', sans-serif", margin: 0, fontSize: 12, color: 'hsl(240, 8%, 40%)', letterSpacing: '0.04em' }}>
+                  {watchedCount >= 3 ? 'Curated from your taste profile' : 'Rate 3+ watched titles to unlock AI picks'}
                 </p>
               </div>
-              <button className="btn btn-secondary" style={{ fontSize: 12, padding: '6px 12px' }} onClick={() => onNavigate('recommendations')}>
-                See all →
+              <button className="btn btn-secondary" style={{ fontSize: 11, padding: '5px 12px', letterSpacing: '0.06em', textTransform: 'uppercase' }} onClick={() => onNavigate('recommendations')}>
+                See all
               </button>
             </div>
 
@@ -253,30 +278,37 @@ export function Home({ onNavigate }: HomeProps) {
           </section>
 
           <section>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid hsla(0,0%,100%,0.05)', gap: 12, flexWrap: 'wrap' }}>
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Your Weekly Picks</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 4 }}>
+                  <h3 style={{
+                    fontFamily: "'Newsreader', Georgia, serif",
+                    fontSize: 22,
+                    fontWeight: 400,
+                    fontStyle: 'italic',
+                    color: 'hsl(0, 0%, 88%)',
+                    margin: 0,
+                    letterSpacing: '-0.01em',
+                  }}>This Week</h3>
                   {weeklyDigest && (
-                    <span
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 600,
-                        padding: '3px 8px',
-                        borderRadius: 999,
-                        background: weeklyDigest.llmGenerated ? 'rgba(167, 139, 250, 0.15)' : 'rgba(255,255,255,0.08)',
-                        color: weeklyDigest.llmGenerated ? '#c4b5fd' : 'var(--fg-subtle)',
-                        border: `1px solid ${weeklyDigest.llmGenerated ? 'rgba(167, 139, 250, 0.35)' : 'var(--border)'}`,
-                      }}
-                    >
+                    <span style={{
+                      fontFamily: "'Outfit', sans-serif",
+                      fontSize: 10,
+                      fontWeight: 400,
+                      padding: '2px 8px',
+                      borderRadius: 2,
+                      background: weeklyDigest.llmGenerated ? 'hsla(45, 70%, 58%, 0.08)' : 'hsla(0,0%,100%,0.04)',
+                      color: weeklyDigest.llmGenerated ? 'hsl(45, 70%, 58%)' : 'hsl(240, 8%, 40%)',
+                      border: `1px solid ${weeklyDigest.llmGenerated ? 'hsla(45, 70%, 58%, 0.2)' : 'hsla(0,0%,100%,0.06)'}`,
+                      letterSpacing: '0.06em',
+                      textTransform: 'uppercase' as const,
+                    }}>
                       {digestBadge}
                     </span>
                   )}
                 </div>
-                <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--fg-subtle)' }}>
-                  {platformNames
-                    ? `New releases from the past week on ${platformNames}`
-                    : 'Personalized new releases from the past week'}
+                <p style={{ fontFamily: "'Outfit', sans-serif", margin: 0, fontSize: 12, color: 'hsl(240, 8%, 40%)', letterSpacing: '0.04em' }}>
+                  {platformNames ? `New on ${platformNames}` : 'Personalized new releases'}
                 </p>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>

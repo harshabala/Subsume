@@ -6,56 +6,187 @@ interface OnboardingProps {
 
 export function Onboarding({ onComplete }: OnboardingProps) {
   return (
-    <div className="page-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', textAlign: 'center', padding: 40 }}>
-      {/* Hero Icon */}
-      <div style={{ fontSize: 64, marginBottom: 24 }}>✨</div>
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      background: 'hsl(240, 18%, 4%)',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'hidden',
+      fontFamily: "'Outfit', 'Inter', sans-serif",
+    }}>
+      {/* Ambient glow — upper left */}
+      <div style={{
+        position: 'absolute',
+        top: '-20%',
+        left: '-10%',
+        width: 500,
+        height: 500,
+        background: 'radial-gradient(circle, hsla(240, 60%, 30%, 0.18) 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
+      {/* Ambient glow — lower right */}
+      <div style={{
+        position: 'absolute',
+        bottom: '-20%',
+        right: '-10%',
+        width: 400,
+        height: 400,
+        background: 'radial-gradient(circle, hsla(45, 80%, 50%, 0.08) 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
 
-      {/* Welcome Title */}
-      <h1 style={{ fontSize: 32, fontWeight: 700, marginBottom: 16, background: 'linear-gradient(135deg, var(--primary), var(--primary-hover))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-        Welcome to Subsume
-      </h1>
+      {/* Horizontal rule top */}
+      <div style={{
+        position: 'absolute',
+        top: 40,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: 1,
+        height: 48,
+        background: 'linear-gradient(to bottom, transparent, hsla(0,0%,100%,0.12))',
+      }} />
 
-      {/* Description */}
-      <p style={{ fontSize: 16, color: 'var(--color-text-secondary)', maxWidth: 500, lineHeight: 1.6, marginBottom: 40 }}>
-        Stop context-switching. Subsume automatically detects movies and TV shows on whatever page you're currently scrolling, bringing ratings and quick-saves straight to your cursor. Because breaking your flow to search a title is a minor tragedy.
-      </p>
+      {/* Content */}
+      <div style={{ position: 'relative', textAlign: 'center', maxWidth: 520, padding: '0 40px' }}>
 
-      {/* Features Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 40, textAlign: 'left', maxWidth: 640 }}>
-        <div style={{ background: 'var(--color-surface-hover)', padding: 24, borderRadius: 12, border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-          <h3 style={{ fontSize: 16, marginBottom: 8, color: '#e4e4ec' }}>🔎 Discover on Hover</h3>
-          <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-            Hover over any title on any site. Poster, ratings, and quick-add actions materialize instantly. Zero tab-switching required.
-          </p>
+        {/* Monogram */}
+        <div style={{
+          fontFamily: "'Newsreader', Georgia, serif",
+          fontSize: 13,
+          fontWeight: 300,
+          letterSpacing: '0.35em',
+          textTransform: 'uppercase',
+          color: 'hsl(45, 70%, 58%)',
+          marginBottom: 48,
+          opacity: 0.9,
+        }}>
+          SUBSUME
         </div>
-        <div style={{ background: 'var(--color-surface-hover)', padding: 24, borderRadius: 12, border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-          <h3 style={{ fontSize: 16, marginBottom: 8, color: '#e4e4ec' }}>📚 Watchlist Central</h3>
-          <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-            Keep track of what you actually want to watch. Build your library directly from the web, and manage it in one quiet, elegant dashboard.
-          </p>
+
+        {/* Hero headline */}
+        <h1 style={{
+          fontFamily: "'Newsreader', Georgia, serif",
+          fontSize: 42,
+          fontWeight: 300,
+          fontStyle: 'italic',
+          lineHeight: 1.2,
+          color: 'hsl(0, 0%, 93%)',
+          margin: '0 0 20px',
+          letterSpacing: '-0.02em',
+        }}>
+          Your private<br />cinematic sanctuary.
+        </h1>
+
+        {/* Divider line */}
+        <div style={{
+          width: 40,
+          height: 1,
+          background: 'hsla(45, 70%, 58%, 0.5)',
+          margin: '0 auto 28px',
+        }} />
+
+        {/* Body */}
+        <p style={{
+          fontFamily: "'Outfit', sans-serif",
+          fontSize: 14,
+          lineHeight: 1.75,
+          color: 'hsl(240, 8%, 50%)',
+          margin: '0 0 48px',
+          fontWeight: 300,
+          letterSpacing: '0.01em',
+        }}>
+          Not a tracker. Not a list. A place to reflect on what you watch —
+          where your emotional recall matters more than any algorithm's opinion.
+        </p>
+
+        {/* Three pillars */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 1,
+          marginBottom: 52,
+          borderTop: '1px solid hsla(0,0%,100%,0.06)',
+          borderBottom: '1px solid hsla(0,0%,100%,0.06)',
+        }}>
+          {[
+            { label: 'Discover', description: 'Museum plaques appear on any page you browse — ratings, without breaking your flow.' },
+            { label: 'Capture', description: 'A quiet canvas asks what stayed with you. Emotion before metadata, always.' },
+            { label: 'Archive', description: 'An editorial library of your taste — organised by intent, not date added.' },
+          ].map((item, i) => (
+            <div key={i} style={{
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: 20,
+              padding: '18px 0',
+              borderBottom: i < 2 ? '1px solid hsla(0,0%,100%,0.04)' : 'none',
+              textAlign: 'left',
+            }}>
+              <span style={{
+                fontFamily: "'Newsreader', Georgia, serif",
+                fontSize: 13,
+                fontStyle: 'italic',
+                color: 'hsl(45, 70%, 58%)',
+                minWidth: 72,
+                letterSpacing: '0.01em',
+              }}>
+                {item.label}
+              </span>
+              <span style={{
+                fontFamily: "'Outfit', sans-serif",
+                fontSize: 13,
+                color: 'hsl(240, 8%, 48%)',
+                lineHeight: 1.5,
+                fontWeight: 300,
+              }}>
+                {item.description}
+              </span>
+            </div>
+          ))}
         </div>
-        <div style={{ background: 'var(--color-surface-hover)', padding: 24, borderRadius: 12, border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-          <h3 style={{ fontSize: 16, marginBottom: 8, color: '#e4e4ec' }}>🍿 Honest Recommendations</h3>
-          <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-            Unlock AI suggestions that analyze your watch history and explain exactly why a title fits your taste. No black-box algorithmic nonsense here.
-          </p>
-        </div>
-        <div style={{ background: 'var(--color-surface-hover)', padding: 24, borderRadius: 12, border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-          <h3 style={{ fontSize: 16, marginBottom: 8, color: '#e4e4ec' }}>⚡ Fresh Off the Press</h3>
-          <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-            Stay on top of new releases and trending titles, fetched daily. Skip the endless scrolling on Netflix.
-          </p>
-        </div>
+
+        {/* CTA */}
+        <button
+          onClick={onComplete}
+          style={{
+            background: 'transparent',
+            border: '1px solid hsla(45, 70%, 58%, 0.45)',
+            color: 'hsl(45, 75%, 65%)',
+            padding: '12px 40px',
+            fontFamily: "'Outfit', sans-serif",
+            fontSize: 13,
+            fontWeight: 400,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            borderRadius: 2,
+            cursor: 'pointer',
+            transition: 'all 220ms ease',
+          }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLButtonElement).style.background = 'hsla(45, 70%, 58%, 0.08)';
+            (e.currentTarget as HTMLButtonElement).style.borderColor = 'hsla(45, 70%, 58%, 0.7)';
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
+            (e.currentTarget as HTMLButtonElement).style.borderColor = 'hsla(45, 70%, 58%, 0.45)';
+          }}
+        >
+          Enter
+        </button>
       </div>
 
-      {/* Get Started Button */}
-      <button 
-        className="btn btn-primary" 
-        onClick={onComplete}
-        style={{ padding: '12px 32px', fontSize: 16, fontWeight: 600 }}
-      >
-        Start discovering
-      </button>
+      {/* Bottom rule */}
+      <div style={{
+        position: 'absolute',
+        bottom: 40,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: 1,
+        height: 48,
+        background: 'linear-gradient(to top, transparent, hsla(0,0%,100%,0.08))',
+      }} />
     </div>
   );
 }

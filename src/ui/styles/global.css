@@ -5,29 +5,29 @@
 
 :root {
   /* ─── Gilded Night Tokens ───────────────────────────────── */
-  --bg-base: #0a0a0b;
-  --bg-elevated: #141416;
-  --bg-overlay: #1a1a1c;
-  --bg-hover: #222224;
-  --fg-base: #e8e6e1;
-  --fg-muted: #9e9a90;
-  --fg-subtle: #6a665e;
-  --primary: #c9a84c;
-  --primary-soft: rgba(201, 168, 76, 0.12);
-  --primary-hover: #d4b860;
-  --primary-pressed: #b8983e;
-  --border: #2a2a2c;
-  --border-subtle: #1e1e20;
-  --shadow-sm: 0 1px 2px rgba(10, 10, 11, 0.45);
-  --shadow-md: 0 4px 12px rgba(10, 10, 11, 0.5);
-  --shadow-lg: 0 8px 24px rgba(10, 10, 11, 0.55);
+  --bg-base: hsl(240, 18%, 5%);
+  --bg-elevated: hsl(240, 16%, 8%);
+  --bg-overlay: hsl(240, 14%, 11%);
+  --bg-hover: hsl(240, 12%, 14%);
+  --fg-base: hsl(0, 0%, 92%);
+  --fg-muted: hsl(240, 8%, 52%);
+  --fg-subtle: hsl(240, 8%, 36%);
+  --primary: hsl(45, 80%, 62%);
+  --primary-soft: hsla(45, 80%, 62%, 0.10);
+  --primary-hover: hsl(45, 85%, 68%);
+  --primary-pressed: hsl(45, 75%, 54%);
+  --border: hsla(0, 0%, 100%, 0.07);
+  --border-subtle: hsla(0, 0%, 100%, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.6);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6);
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
-  --transition-fast: 120ms ease;
-  --transition-base: 200ms ease;
+  --transition-fast: 130ms ease;
+  --transition-base: 220ms ease;
   --transition-normal: var(--transition-base);
-  --bg-sunken: #0e0e10;
+  --bg-sunken: hsl(240, 20%, 3%);
   --gold: var(--primary);
 
   /* ─── Scrollback ───────────────────────────────────────── */
@@ -45,9 +45,10 @@
 }
 
 body {
-  font-family: var(--font-sans);
+  font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
   background-color: var(--bg-base);
   color: var(--fg-base);
+
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -543,10 +544,11 @@ nav a.active {
   font-weight: 600;
 }
 
-/* ─── Typography (Geist + Geist Mono) ─────────────────── */
+/* ─── Typography (Outfit + Newsreader) ─────────────────── */
 :root {
-  --font-sans: 'Geist', system-ui, -apple-system, sans-serif;
-  --font-mono: 'Geist Mono', ui-monospace, 'Courier New', monospace;
+  --font-sans: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-editorial: 'Newsreader', 'Cormorant Garamond', Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Courier New', monospace;
 }
 
 /* ─── Brand Gradients (Gilded Night) ────────────────────── */
