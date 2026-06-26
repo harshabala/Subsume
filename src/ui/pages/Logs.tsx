@@ -12,7 +12,7 @@ export function Logs() {
         setLogs(result.system_logs || []);
       });
       
-      const listener = (changes: any, namespace: string) => {
+      const listener = (changes: Record<string, chrome.storage.StorageChange>, namespace: string) => {
         if (namespace === 'local' && changes.system_logs) {
           setLogs(changes.system_logs.newValue || []);
         }

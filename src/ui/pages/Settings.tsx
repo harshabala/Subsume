@@ -16,7 +16,7 @@ export function Settings() {
 
   useEffect(() => {
     async function load() {
-      const res = await sendMessage<any, UserPreferences>(MessageType.GET_FULL_PREFERENCES, {});
+      const res = await sendMessage<Record<string, unknown>, UserPreferences>(MessageType.GET_FULL_PREFERENCES, {});
       if (res.success && res.data) {
         setPrefs(res.data);
       }
@@ -24,9 +24,9 @@ export function Settings() {
     load();
   }, []);
 
-  const handleChange = (key: keyof UserPreferences, value: any) => {
+  const handleChange = (key: keyof UserPreferences, value: unknown) => {
     if (!prefs) return;
-    setPrefs({ ...prefs, [key]: value });
+    setPrefs({ ...prefs, [key]: value as UserPreferences[keyof UserPreferences] });
   };
 
   const toggleArrayItem = (key: 'favoriteGenres' | 'platforms', id: string) => {
@@ -86,8 +86,9 @@ export function Settings() {
     }
   };
 
-  const handleImport = (e: any) => {
-    const file = e.target.files[0];
+  const handleImport = (e: Event) => {
+    const target = e.target as HTMLInputElement;
+    const file = target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = async (ev) => {
@@ -96,8 +97,8 @@ export function Settings() {
         const data = validateImportData(raw);
         await sendMessage(MessageType.IMPORT_LIBRARY, data);
         alert('Library imported successfully!');
-      } catch (err: any) {
-        alert('Failed to import library: ' + (err?.message || err));
+      } catch (err: unknown) {
+        alert('Failed to import library: ' + (err instanceof Error ? err.message : String(err)));
       }
     };
     reader.readAsText(file);
@@ -107,8 +108,8 @@ export function Settings() {
     try {
       await getAuthToken(true);
       alert('Successfully connected to Google Drive!');
-    } catch (e: any) {
-      alert('Failed to connect to Google Drive: ' + e.message);
+    } catch (e: unknown) {
+      alert('Failed to connect to Google Drive: ' + (e instanceof Error ? e.message : String(e)));
     }
   };
 
@@ -118,8 +119,8 @@ export function Settings() {
       if (!res.success || !res.data) throw new Error('Failed to export local data');
       await uploadDatabaseBackup(JSON.stringify(res.data));
       alert('Backup successful!');
-    } catch (e: any) {
-      alert('Backup failed: ' + e.message);
+    } catch (e: unknown) {
+      alert('Backup failed: ' + (e instanceof Error ? e.message : String(e)));
     }
   };
 
@@ -130,8 +131,8 @@ export function Settings() {
       const data = validateImportData(raw);
       await sendMessage(MessageType.IMPORT_LIBRARY, data);
       alert('Restore successful!');
-    } catch (e: any) {
-      alert('Restore failed: ' + e.message);
+    } catch (e: unknown) {
+      alert('Restore failed: ' + (e instanceof Error ? e.message : String(e)));
     }
   };
 

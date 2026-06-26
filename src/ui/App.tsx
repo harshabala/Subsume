@@ -117,25 +117,25 @@ export function App() {
   const initialPrefetchDone = useRef(false);
 
   useEffect(() => {
-    sendMessage<any, UserPreferences>(MessageType.GET_PREFERENCES, {}).then((res) => {
+    sendMessage<Record<string, unknown>, UserPreferences>(MessageType.GET_PREFERENCES, {}).then((res) => {
       if (res.success && res.data) {
         setPrefs(res.data);
       }
-    });
+    }).catch(() => {});
 
-    sendMessage<any, { library: LibraryItem; media: MediaItem }[]>(MessageType.GET_LIBRARY, {}).then((res) => {
+    sendMessage<Record<string, unknown>, { library: LibraryItem; media: MediaItem }[]>(MessageType.GET_LIBRARY, {}).then((res) => {
       if (res.success && res.data) {
         const movieCount = res.data.filter((item) => item.media?.type === 'movie').length;
         const tvCount = res.data.filter((item) => item.media?.type === 'tv').length;
         setStats({ movieCount, tvCount });
       }
-    });
+    }).catch(() => {});
 
-    sendMessage<any, { people: PersonItem[] }>(MessageType.GET_ALL_PEOPLE, {}).then((res) => {
+    sendMessage<Record<string, unknown>, { people: PersonItem[] }>(MessageType.GET_ALL_PEOPLE, {}).then((res) => {
       if (res.success && res.data?.people) {
         setPeopleCount(res.data.people.length);
       }
-    });
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -146,13 +146,13 @@ export function App() {
   }, [currentPage]);
 
   useEffect(() => {
-    const handleMessage = (message: any) => {
-      if (message && message.type === 'FILMMAKERS_UPDATED') {
-        sendMessage<any, { people: PersonItem[] }>(MessageType.GET_ALL_PEOPLE, {}).then((res) => {
+    const handleMessage = (message: unknown) => {
+      if (message && typeof message === 'object' && 'type' in message && (message as Record<string, unknown>).type === 'FILMMAKERS_UPDATED') {
+        sendMessage<Record<string, unknown>, { people: PersonItem[] }>(MessageType.GET_ALL_PEOPLE, {}).then((res) => {
           if (res.success && res.data?.people) {
             setPeopleCount(res.data.people.length);
           }
-        });
+        }).catch(() => {});
       }
     };
     chrome.runtime.onMessage.addListener(handleMessage);

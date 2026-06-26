@@ -487,4 +487,371 @@
   font-size: 9px;
 }
 
+/* ── DetailModal Velvet Obscura Sanctuary Classes ── */
+.sanctuary-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 5, 8, 0.88);
+  backdrop-filter: var(--blur-hero);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
 
+.sanctuary-modal-content {
+  background: var(--bg-plaque);
+  border: 1px solid var(--border-hero);
+  box-shadow: var(--shadow-hero);
+  border-radius: 4px;
+  max-height: 90vh;
+  width: 100%;
+  max-width: 720px;
+  overflow-y: auto;
+  position: relative;
+  color: var(--text-artwork);
+  padding: 32px;
+  box-sizing: border-box;
+}
+
+.sanctuary-modal-close {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  background: transparent;
+  border: 1px solid var(--border-restraint);
+  color: var(--text-meta);
+  width: 32px;
+  height: 32px;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.sanctuary-modal-close:hover {
+  color: var(--text-reflection);
+}
+
+.sanctuary-detail-header {
+  display: flex;
+  gap: 28px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.sanctuary-detail-poster-wrap {
+  width: 180px;
+  flex-shrink: 0;
+  border-radius: 2px;
+  overflow: hidden;
+  border: 1px solid var(--border-restraint);
+  background: hsl(240, 18%, 6%);
+}
+
+.sanctuary-detail-poster-img {
+  width: 100%;
+  display: block;
+}
+
+.sanctuary-detail-poster-placeholder {
+  width: 100%;
+  height: 270px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-meta);
+}
+
+.sanctuary-detail-main {
+  flex: 1;
+  min-width: 260px;
+}
+
+.sanctuary-detail-inscription {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--border-hero);
+  margin-bottom: 6px;
+}
+
+.sanctuary-detail-title {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--text-sanctuary);
+  margin: 0 0 12px 0;
+  line-height: 1.1;
+}
+
+.sanctuary-detail-ratings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text-meta);
+  margin-bottom: 16px;
+}
+
+.sanctuary-detail-year {
+  color: var(--text-reflection);
+  font-weight: 600;
+}
+
+.sanctuary-detail-rating-chip {
+  background: hsla(0, 0%, 100%, 0.04);
+  padding: 3px 8px;
+  border-radius: 2px;
+  border: 1px solid var(--border-restraint);
+}
+
+.sanctuary-detail-rating-val {
+  color: var(--border-hero);
+}
+
+.sanctuary-detail-genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sanctuary-detail-genre-chip {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid var(--border-restraint);
+  color: var(--text-reflection);
+  border-radius: 2px;
+}
+
+.sanctuary-detail-section {
+  margin-bottom: 28px;
+  border-top: 1px solid var(--border-restraint);
+  padding-top: 20px;
+}
+
+.sanctuary-detail-section-title {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--text-meta);
+  margin: 0 0 12px 0;
+}
+
+.sanctuary-detail-synopsis {
+  font-family: var(--font-editorial);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-reflection);
+  margin: 0;
+}
+
+.sanctuary-detail-providers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sanctuary-detail-provider-btn {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--border-hero);
+  text-decoration: none;
+  padding: 6px 12px;
+  border: 1px solid var(--border-restraint);
+  border-radius: 2px;
+  transition: all 0.2s ease;
+}
+
+.sanctuary-detail-provider-btn:hover {
+  background: hsla(0, 0%, 100%, 0.05);
+  border-color: var(--border-hero);
+}
+
+.sanctuary-detail-library-wrap {
+  border-top: 1px solid var(--border-restraint);
+  padding-top: 28px;
+}
+
+.sanctuary-detail-library-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sanctuary-detail-control-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.sanctuary-detail-control-label {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--text-meta);
+}
+
+.sanctuary-detail-input {
+  width: 100%;
+  padding: 8px 12px;
+  background: hsla(0, 0%, 100%, 0.03);
+  border: 1px solid var(--border-restraint);
+  color: var(--text-sanctuary);
+  border-radius: 2px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.sanctuary-detail-input:focus {
+  border-color: var(--border-hero);
+}
+
+.sanctuary-detail-select {
+  width: auto;
+  min-width: 180px;
+}
+
+.sanctuary-detail-select option {
+  background: hsl(240, 18%, 8%);
+}
+
+.sanctuary-detail-range {
+  accent-color: var(--border-hero);
+  flex: 1;
+  max-width: 200px;
+  cursor: pointer;
+}
+
+.sanctuary-detail-rating-display {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-size: 18px;
+  color: var(--border-hero);
+  min-width: 32px;
+}
+
+.sanctuary-detail-rating-max {
+  font-size: 12px;
+  font-style: normal;
+  color: var(--text-meta);
+}
+
+.sanctuary-detail-tags-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sanctuary-detail-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sanctuary-detail-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  padding: 4px 10px;
+  background: hsla(43, 74%, 49%, 0.1);
+  border: 1px solid var(--border-hero);
+  border-radius: 2px;
+  color: var(--border-hero);
+}
+
+.sanctuary-detail-tag-remove {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.sanctuary-detail-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.sanctuary-detail-suggestions-label {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--text-meta);
+  margin-right: 4px;
+}
+
+.sanctuary-detail-suggestion-chip {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  background: transparent;
+  border: 1px solid var(--border-restraint);
+  border-radius: 2px;
+  cursor: pointer;
+  color: var(--text-artwork);
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.sanctuary-detail-suggestion-chip:hover {
+  border-color: var(--border-hero);
+  color: var(--text-reflection);
+}
+
+.sanctuary-detail-notes-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sanctuary-detail-textarea {
+  resize: vertical;
+  font-family: var(--font-editorial);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100px;
+}
+
+.sanctuary-detail-btn-inscribe {
+  background: var(--border-hero);
+  border: none;
+  color: hsl(240, 18%, 5%);
+  padding: 12px 28px;
+  border-radius: 2px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.sanctuary-detail-btn-inscribe:hover {
+  background: hsla(45, 90%, 75%, 0.8);
+}

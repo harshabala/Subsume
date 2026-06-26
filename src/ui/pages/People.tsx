@@ -1,9 +1,17 @@
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useCallback, useMemo } from 'preact/hooks';
 import { sendMessage } from '@/shared/messages';
-import { MessageType, PersonItem, CrewRole } from '@/shared/types';
+import { MessageType, PersonItem, CrewRole, UserPreferences } from '@/shared/types';
 import { FilmographyView } from '../components/FilmographyView';
 import '../styles/people.css';
+
+interface PersonSearchItem {
+  id: string;
+  name: string;
+  knownForDepartment: string;
+  profilePath?: string | null;
+  knownFor?: Array<{ title?: string; name?: string; mediaType?: string }>;
+}
 
 const ROLE_OPTIONS: { value: CrewRole; label: string }[] = [
   { value: 'director', label: 'Director' },
@@ -34,7 +42,7 @@ export function People() {
 
   // Search view states
   const [query, setQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<PersonSearchItem[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [hasApiKey, setHasApiKey] = useState(true);
   const [followingMap, setFollowingMap] = useState<Record<string, boolean>>({});
@@ -43,7 +51,7 @@ export function People() {
   const loadFollowing = useCallback(async () => {
     setLoadingFollowing(true);
     try {
-      const res = await sendMessage<any, { people: PersonItem[] }>(MessageType.GET_ALL_PEOPLE, {});
+      const res = await sendMessage<Record<string, unknown>, { people: PersonItem[] }>(MessageType.GET_ALL_PEOPLE, {});
       if (res.success && res.data?.people) {
         setFollowing(res.data.people);
         const map: Record<string, boolean> = {};
@@ -60,17 +68,17 @@ export function People() {
   }, []);
 
   useEffect(() => {
-    sendMessage<any, any>(MessageType.GET_PREFERENCES, {}).then((res) => {
+    sendMessage<Record<string, unknown>, UserPreferences>(MessageType.GET_PREFERENCES, {}).then((res) => {
       if (res.success && res.data) {
         setHasApiKey(!!res.data.tmdbApiKey);
       }
-    });
+    }).catch(() => {});
     loadFollowing();
   }, [loadFollowing]);
 
   useEffect(() => {
-    const handleMessage = (message: any) => {
-      if (message && message.type === 'FILMMAKERS_UPDATED') {
+    const handleMessage = (message: unknown) => {
+      if (message && typeof message === 'object' && 'type' in message && (message as Record<string, unknown>).type === 'FILMMAKERS_UPDATED') {
         loadFollowing();
       }
     };
@@ -93,7 +101,7 @@ export function People() {
     setSearchLoading(true);
     const delayDebounceFn = setTimeout(async () => {
       try {
-        const res = await sendMessage<{ query: string }, { results: any[] }>(MessageType.SEARCH_PERSON, {
+        const res = await sendMessage<{ query: string }, { results: PersonSearchItem[] }>(MessageType.SEARCH_PERSON, {
           query: query.trim(),
         });
         if (res.success && res.data?.results) {
@@ -111,10 +119,10 @@ export function People() {
     return () => clearTimeout(delayDebounceFn);
   }, [query]);
 
-  const handleFollow = async (person: any) => {
+  const handleFollow = async (person: PersonSearchItem) => {
     const role = selectedRoles[person.id] || getRoleFromDepartment(person.knownForDepartment);
     try {
-      const res = await sendMessage<any, { success: boolean; alreadyFollowing?: boolean }>(
+      const res = await sendMessage<Record<string, unknown>, { success: boolean; alreadyFollowing?: boolean }>(
         MessageType.FOLLOW_PERSON,
         {
           personId: person.id,
@@ -420,9 +428,9 @@ export function People() {
                             <span style={{ color: 'var(--text-meta)', textTransform: 'uppercase', letterSpacing: '0.1em', marginRight: 12 }}>
                               {person.knownForDepartment}
                             </span>
-                            {person.knownFor.length > 0 && (
+                            {person.knownFor && person.knownFor.length > 0 && (
                               <span style={{ color: 'var(--text-artwork)', fontStyle: 'italic', fontFamily: 'var(--font-editorial)' }}>
-                                Known for: {person.knownFor.map((k: any) => k.title).join(', ')}
+                                Known for: {person.knownFor.map((k: { title?: string; name?: string }) => k.title || k.name).join(', ')}
                               </span>
                             )}
                           </div>

@@ -35,7 +35,7 @@ export function FilmographyView({ person: initialPerson, onBack, onUnfollow }: F
         MessageType.GET_FILMOGRAPHY,
         { personId: initialPerson.id }
       );
-      const libRes = await sendMessage<any, { library: LibraryItem; media: MediaItem }[]>(
+      const libRes = await sendMessage<Record<string, unknown>, { library: LibraryItem; media: MediaItem }[]>(
         MessageType.GET_LIBRARY,
         {}
       );
@@ -63,8 +63,8 @@ export function FilmographyView({ person: initialPerson, onBack, onUnfollow }: F
   }, []);
 
   useEffect(() => {
-    const handleMessage = (message: any) => {
-      if (message && message.type === 'FILMMAKERS_UPDATED' && message.personId === person.id) {
+    const handleMessage = (message: unknown) => {
+      if (message && typeof message === 'object' && 'type' in message && (message as Record<string, unknown>).type === 'FILMMAKERS_UPDATED' && (message as Record<string, unknown>).personId === person.id) {
         loadFilmography();
       }
     };
@@ -84,7 +84,7 @@ export function FilmographyView({ person: initialPerson, onBack, onUnfollow }: F
         if (res.success) {
           loadFilmography();
         }
-      });
+      }).catch(() => {});
     }
   }, [initialPerson, loadFilmography]);
 
