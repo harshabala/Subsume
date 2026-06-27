@@ -2,7 +2,7 @@
 
 export type MediaType = 'movie' | 'tv';
 
-export type MediaProvider = 'imdb' | 'tmdb' | 'rt' | 'other';
+export type MediaProvider = 'imdb' | 'tmdb' | 'rt' | 'trakt' | 'tvmaze' | 'other';
 
 export interface MediaRating {
   provider: MediaProvider;
@@ -36,6 +36,8 @@ export interface MediaItem {
   overview?: string;
   runtimeMinutes?: number;
   streamingAvailability?: StreamingInfo[];
+  wikidataSummary?: string;
+  wikidataDirectorBio?: string;
 }
 
 export type LibraryStatus = 'to-watch' | 'watching' | 'watched' | 'abandoned';
