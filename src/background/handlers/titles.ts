@@ -64,11 +64,12 @@ function queryCacheSet(key: string, result: MediaItem | null): void {
 async function enrichWithFreeApis(item: MediaItem): Promise<MediaItem> {
   let enriched = { ...item };
 
-  // Enrich overview from Wikipedia if missing
-  const summary = await fetchWikipediaSummary(item.canonicalTitle, item.year).catch(() => null);
-  if (summary) {
-    enriched = { ...enriched, wikidataSummary: summary };
-    if (!enriched.overview) enriched = { ...enriched, overview: summary };
+  // Enrich overview from Wikipedia only when missing (avoids unnecessary fetch on keyed TMDb results)
+  if (!enriched.overview) {
+    const summary = await fetchWikipediaSummary(item.canonicalTitle, item.year).catch(() => null);
+    if (summary) {
+      enriched = { ...enriched, wikidataSummary: summary, overview: summary };
+    }
   }
 
   // Fetch Wikidata director bio if we have an IMDb ID

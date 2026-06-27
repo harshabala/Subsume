@@ -39,17 +39,30 @@ export const recommendationHandlers: MessageHandlerMap = {
     if (ruleRecs.length < 5) {
       const traktMovies = await getTraktTrending('movie', 10).catch(() => []);
       const traktTv = await getTraktTrending('tv', 10).catch(() => []);
-      const traktItems: MediaItem[] = [...traktMovies, ...traktTv].map((t) => ({
-        id: `trakt_trending_${t.traktSlug}`,
-        canonicalTitle: t.title,
-        type: 'movie' as const,
-        year: t.year,
-        genres: [],
-        ratings: [],
-        providers: [{ provider: 'trakt' as const, externalId: t.traktSlug, url: `https://trakt.tv/movies/${t.traktSlug}` }],
-        posterUrl: '',
-        overview: '',
-      }));
+      const traktItems: MediaItem[] = [
+        ...traktMovies.map((t) => ({
+          id: `trakt_trending_${t.traktSlug}`,
+          canonicalTitle: t.title,
+          type: 'movie' as const,
+          year: t.year,
+          genres: [],
+          ratings: [],
+          providers: [{ provider: 'trakt' as const, externalId: t.traktSlug, url: `https://trakt.tv/movies/${t.traktSlug}` }],
+          posterUrl: '',
+          overview: '',
+        })),
+        ...traktTv.map((t) => ({
+          id: `trakt_trending_${t.traktSlug}`,
+          canonicalTitle: t.title,
+          type: 'tv' as const,
+          year: t.year,
+          genres: [],
+          ratings: [],
+          providers: [{ provider: 'trakt' as const, externalId: t.traktSlug, url: `https://trakt.tv/shows/${t.traktSlug}` }],
+          posterUrl: '',
+          overview: '',
+        })),
+      ];
       // Deduplicate by title (rule recs don't have titles so no overlap possible; traktItems dedup against each other)
       const existingTraktTitles = new Set<string>();
       const dedupedTraktItems = traktItems.filter((item) => {
