@@ -65,12 +65,10 @@ async function enrichWithFreeApis(item: MediaItem): Promise<MediaItem> {
   let enriched = { ...item };
 
   // Enrich overview from Wikipedia if missing
-  if (!enriched.overview) {
-    const summary = await fetchWikipediaSummary(item.canonicalTitle, item.year).catch(() => null);
-    if (summary) {
-      enriched = { ...enriched, wikidataSummary: summary };
-      if (!enriched.overview) enriched = { ...enriched, overview: summary };
-    }
+  const summary = await fetchWikipediaSummary(item.canonicalTitle, item.year).catch(() => null);
+  if (summary) {
+    enriched = { ...enriched, wikidataSummary: summary };
+    if (!enriched.overview) enriched = { ...enriched, overview: summary };
   }
 
   // Fetch Wikidata director bio if we have an IMDb ID
@@ -87,8 +85,8 @@ async function enrichWithFreeApis(item: MediaItem): Promise<MediaItem> {
 
   // Enrich with Trakt rating if we can infer a slug (best-effort)
   const traktSlug = item.canonicalTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  if (traktSlug) {
-    const traktRating = await fetchTraktRating(traktSlug, item.type as 'movie' | 'tv').catch(() => null);
+  if (traktSlug && (item.type === 'movie' || item.type === 'tv')) {
+    const traktRating = await fetchTraktRating(traktSlug, item.type).catch(() => null);
     if (traktRating && !enriched.ratings.some((r) => r.provider === 'trakt')) {
       enriched = { ...enriched, ratings: [...enriched.ratings, traktRating] };
     }

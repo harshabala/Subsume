@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 // We test the enrichment helpers in isolation.
 // The handler itself is wired via message passing so we test the helpers it calls.
