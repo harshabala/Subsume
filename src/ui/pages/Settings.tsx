@@ -203,6 +203,16 @@ export function Settings() {
           </div>
         </div>
 
+        {/* Free API Status */}
+        <div className="settings-panel">
+          <h3 className="settings-panel-heading">Free Data Sources (No Key Required)</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.8125rem', opacity: 0.65 }}>
+            <span>✓ TVmaze — TV show metadata, cast, schedules</span>
+            <span>✓ Trakt — Ratings, trending, recommendations</span>
+            <span>✓ Wikidata / Wikipedia — Director bios, plot summaries</span>
+          </div>
+        </div>
+
         {/* API Configuration */}
         <div className="settings-panel">
           <h3 className="settings-panel-heading">Archive Credentials (API)</h3>
