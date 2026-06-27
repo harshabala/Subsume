@@ -3,12 +3,15 @@ import { logger } from '@/shared/logger';
 import {
   MessageType,
   GetRecommendationsRequest,
+  MediaItem,
+  Recommendation,
 } from '@/shared/types';
 import { getPreferences, getWeeklyDigest, saveWeeklyDigest } from '../storage';
 import { generateRuleBasedRecommendations } from '../recommendations';
 import { generateLLMRecommendations, getPersonalizedRecommendations } from '../llm';
 import { buildWatchProfile } from '../context';
 import { generateWeeklyDigest, isDigestStale } from '../digest';
+import { getTraktTrending } from '../trakt';
 
 export const recommendationHandlers: MessageHandlerMap = {
   [MessageType.GET_RECOMMENDATIONS]: async (payload) => {
@@ -30,7 +33,36 @@ export const recommendationHandlers: MessageHandlerMap = {
     }
     
     logger.log('[Subsume] Using rule-based recommendations fallback');
-    return generateRuleBasedRecommendations(req?.basedOnMediaId);
+    const ruleRecs: Recommendation[] = await generateRuleBasedRecommendations(req?.basedOnMediaId);
+
+    // If we have fewer than 5 recommendations, supplement with Trakt trending
+    if (ruleRecs.length < 5) {
+      const traktMovies = await getTraktTrending('movie', 10).catch(() => []);
+      const traktTv = await getTraktTrending('tv', 10).catch(() => []);
+      const traktItems: MediaItem[] = [...traktMovies, ...traktTv].map((t) => ({
+        id: `trakt_trending_${t.traktSlug}`,
+        canonicalTitle: t.title,
+        type: 'movie' as const,
+        year: t.year,
+        genres: [],
+        ratings: [],
+        providers: [{ provider: 'trakt' as const, externalId: t.traktSlug, url: `https://trakt.tv/movies/${t.traktSlug}` }],
+        posterUrl: '',
+        overview: '',
+      }));
+      // Deduplicate by title (rule recs don't have titles so no overlap possible; traktItems dedup against each other)
+      const existingTraktTitles = new Set<string>();
+      const dedupedTraktItems = traktItems.filter((item) => {
+        const key = item.canonicalTitle.toLowerCase();
+        if (existingTraktTitles.has(key)) return false;
+        existingTraktTitles.add(key);
+        return true;
+      });
+      const combined: Array<Recommendation | MediaItem> = [...ruleRecs, ...dedupedTraktItems].slice(0, 20);
+      return combined;
+    }
+
+    return ruleRecs;
   },
 
   [MessageType.BUILD_WATCH_PROFILE]: async () => {
