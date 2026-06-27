@@ -27,6 +27,9 @@ import {
   getAllMediaMap,
   getPreferences,
 } from '../storage';
+import { searchTvMaze } from '../tvmaze';
+import { fetchTraktRating } from '../trakt';
+import { fetchWikipediaSummary, fetchWikidataDirectorInfo } from '../wikidata';
 
 // In-memory poster-resolve result cache. Entries older than QUERY_CACHE_TTL
 // are evicted on access. Total size is capped at QUERY_CACHE_MAX to prevent
@@ -52,6 +55,46 @@ function queryCacheSet(key: string, result: MediaItem | null): void {
     if (oldestKey !== undefined) QUERY_CACHE.delete(oldestKey);
   }
   QUERY_CACHE.set(key, { result, ts: Date.now() });
+}
+
+/**
+ * Best-effort enrichment from free APIs (TVmaze rating via Trakt, Wikipedia summary,
+ * Wikidata director bio). Never throws — returns the item as-is if any step fails.
+ */
+async function enrichWithFreeApis(item: MediaItem): Promise<MediaItem> {
+  let enriched = { ...item };
+
+  // Enrich overview from Wikipedia if missing
+  if (!enriched.overview) {
+    const summary = await fetchWikipediaSummary(item.canonicalTitle, item.year).catch(() => null);
+    if (summary) {
+      enriched = { ...enriched, wikidataSummary: summary };
+      if (!enriched.overview) enriched = { ...enriched, overview: summary };
+    }
+  }
+
+  // Fetch Wikidata director bio if we have an IMDb ID
+  const imdbProvider = item.providers.find((p) => p.provider === 'imdb');
+  if (imdbProvider?.externalId) {
+    const dirInfo = await fetchWikidataDirectorInfo(imdbProvider.externalId).catch(() => null);
+    if (dirInfo) {
+      enriched = {
+        ...enriched,
+        wikidataDirectorBio: dirInfo.directorBio || undefined,
+      };
+    }
+  }
+
+  // Enrich with Trakt rating if we can infer a slug (best-effort)
+  const traktSlug = item.canonicalTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  if (traktSlug) {
+    const traktRating = await fetchTraktRating(traktSlug, item.type as 'movie' | 'tv').catch(() => null);
+    if (traktRating && !enriched.ratings.some((r) => r.provider === 'trakt')) {
+      enriched = { ...enriched, ratings: [...enriched.ratings, traktRating] };
+    }
+  }
+
+  return enriched;
 }
 
 async function fetchMediaDetails(tmdbId: string, mediaType: 'movie' | 'tv', apiKey: string): Promise<MediaItem> {
@@ -130,12 +173,27 @@ export const titleHandlers: MessageHandlerMap = {
       return result;
     }
 
-    // 2. Fetch from TMDb
-    const result = await searchTitle(req.title, req.yearGuess, req.typeGuess);
-    if (result) {
-      // Save it locally to avoid future network hits
-      await putMediaItem(result);
-      return result;
+    // 2. Fetch from TMDb (with TVmaze fallback for TV content when no TMDb key)
+    let mediaItem: MediaItem | null = null;
+    try {
+      mediaItem = await searchTitle(req.title, req.yearGuess, req.typeGuess);
+    } catch (err) {
+      // TMDb key missing — fall back to TVmaze for TV content
+      if (req.typeGuess === 'tv' || !req.typeGuess) {
+        const tvResult = await searchTvMaze(req.title, req.yearGuess).catch(() => null);
+        if (tvResult) {
+          mediaItem = tvResult;
+        }
+      }
+      if (!mediaItem) {
+        logger.warn('[Subsume] Title lookup failed and no fallback available:', err);
+      }
+    }
+
+    if (mediaItem) {
+      mediaItem = await enrichWithFreeApis(mediaItem).catch(() => mediaItem!);
+      await putMediaItem(mediaItem);
+      return mediaItem;
     }
 
     throw new Error('Title not found on TMDb');
