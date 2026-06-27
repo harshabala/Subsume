@@ -52,29 +52,25 @@ export function Recommendations() {
         const groupedData = recResponse.data;
         const hasGroups = Array.isArray(groupedData) && groupedData.length > 0 && 'seedTitle' in groupedData[0];
 
-        let mediaIds: string[] = [];
         if (hasGroups) {
-          mediaIds = (groupedData as GroupedRecommendation[]).flatMap(g => g.recommendations.map(r => r.mediaId));
-        } else {
-          mediaIds = (groupedData as Recommendation[]).map((r) => r.mediaId);
-        }
+          // Grouped path: unchanged, only Recommendation objects here
+          const mediaIds = (groupedData as GroupedRecommendation[]).flatMap(g => g.recommendations.map(r => r.mediaId));
 
-        if (mediaIds.length === 0) {
-          setLoading(false);
-          return;
-        }
+          if (mediaIds.length === 0) {
+            setLoading(false);
+            return;
+          }
 
-        const mediaResponse = await sendMessage<any, MediaItem[]>(
-          MessageType.GET_MEDIA_ITEMS,
-          { mediaIds }
-        );
-
-        if (mediaResponse.data) {
-          const mediaMap = new Map(
-            mediaResponse.data.map((m) => [m.id, m])
+          const mediaResponse = await sendMessage<any, MediaItem[]>(
+            MessageType.GET_MEDIA_ITEMS,
+            { mediaIds }
           );
 
-          if (hasGroups) {
+          if (mediaResponse.data) {
+            const mediaMap = new Map(
+              mediaResponse.data.map((m) => [m.id, m])
+            );
+
             const hydratedGroups = (groupedData as GroupedRecommendation[]).map(group => {
               const hydratedRecs = group.recommendations
                 .map(r => ({ ...r, media: mediaMap.get(r.mediaId)! }))
@@ -87,12 +83,59 @@ export function Recommendations() {
 
             setGroupedRecs(hydratedGroups);
             setIsGrouped(true);
-          } else {
-            const hydrated = (groupedData as Recommendation[])
+          }
+        } else {
+          // Flat path: may contain mix of Recommendation and MediaItem
+          const flatData = groupedData as Array<Recommendation | MediaItem>;
+
+          // Split into Recommendation (has mediaId) and MediaItem (has id but not mediaId)
+          const recommendations: Recommendation[] = [];
+          const mediaItems: MediaItem[] = [];
+
+          for (const entry of flatData) {
+            if ('mediaId' in entry) {
+              recommendations.push(entry as Recommendation);
+            } else if ('id' in entry) {
+              mediaItems.push(entry as MediaItem);
+            }
+          }
+
+          // Collect mediaIds from Recommendation entries
+          const mediaIds = recommendations.map(r => r.mediaId);
+
+          // Pre-hydrate MediaItem entries as if they were Recommendations
+          const traktHydrated: (Recommendation & { media: MediaItem })[] = mediaItems.map(item => ({
+            mediaId: item.id,
+            media: item,
+            explanation: 'Trending on Trakt',
+          }));
+
+          if (mediaIds.length === 0) {
+            // Only have Trakt items, no Recommendations to fetch
+            setRecs(traktHydrated);
+            setIsGrouped(false);
+            setLoading(false);
+            return;
+          }
+
+          const mediaResponse = await sendMessage<any, MediaItem[]>(
+            MessageType.GET_MEDIA_ITEMS,
+            { mediaIds }
+          );
+
+          if (mediaResponse.data) {
+            const mediaMap = new Map(
+              mediaResponse.data.map((m) => [m.id, m])
+            );
+
+            // Hydrate Recommendation entries from mediaMap
+            const hydratedFromBackend = recommendations
               .map((r) => ({ ...r, media: mediaMap.get(r.mediaId)! }))
               .filter((r) => r.media);
 
-            setRecs(hydrated);
+            // Merge both sets
+            const allHydrated = [...hydratedFromBackend, ...traktHydrated];
+            setRecs(allHydrated);
             setIsGrouped(false);
           }
         }
