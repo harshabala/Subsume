@@ -5,7 +5,7 @@ const CACHE_TTL = 86400000; // 24 hours
 
 const SPARQL_ENDPOINT = 'https://query.wikidata.org/sparql';
 const WIKIPEDIA_SUMMARY_URL = 'https://en.wikipedia.org/api/rest_v1/page/summary';
-const USER_AGENT = 'Subsume/1.0 (https://github.com/your-org/subsume; contact@example.com) tvmaze-wikidata-integration';
+const USER_AGENT = 'Subsume/1.0 (browser-extension; https://github.com/harshabalakrishnan/subsume) wikidata-integration';
 
 function cacheGet<T>(key: string): T | undefined {
   const entry = CACHE.get(key);

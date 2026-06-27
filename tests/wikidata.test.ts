@@ -16,35 +16,35 @@ beforeEach(() => {
 
 describe('fetchWikipediaSummary', () => {
   it('returns extract text for a found title', async () => {
-    (tmdbModule.fetchWithRetry as any).mockResolvedValue({
+    vi.mocked(tmdbModule.fetchWithRetry).mockResolvedValue({
       ok: true,
       json: async () => ({
         title: 'Breaking Bad',
         extract: 'Breaking Bad is an American crime drama television series.',
         thumbnail: { source: 'https://upload.wikimedia.org/img.jpg' },
       }),
-    });
+    } as Response);
     const summary = await fetchWikipediaSummary('Breaking Bad', 2008);
     expect(summary).toBe('Breaking Bad is an American crime drama television series.');
   });
 
   it('returns null on 404', async () => {
-    (tmdbModule.fetchWithRetry as any).mockResolvedValue({ ok: false, status: 404 });
+    vi.mocked(tmdbModule.fetchWithRetry).mockResolvedValue({ ok: false, status: 404 } as Response);
     const summary = await fetchWikipediaSummary('Nonexistent Title XYZ', 2000);
     expect(summary).toBeNull();
   });
 
   it('returns null on network error', async () => {
-    (tmdbModule.fetchWithRetry as any).mockRejectedValue(new Error('Network error'));
+    vi.mocked(tmdbModule.fetchWithRetry).mockRejectedValue(new Error('Network error'));
     const summary = await fetchWikipediaSummary('Unique Title For Network Error', 2008);
     expect(summary).toBeNull();
   });
 
   it('appends year disambiguation to query when provided', async () => {
-    (tmdbModule.fetchWithRetry as any).mockResolvedValue({
+    vi.mocked(tmdbModule.fetchWithRetry).mockResolvedValue({
       ok: true,
       json: async () => ({ title: 'Batman', extract: 'Batman is a superhero film.', thumbnail: null }),
-    });
+    } as Response);
     await fetchWikipediaSummary('Batman', 1989);
     // Should try title first, which calls fetch at least once
     expect(tmdbModule.fetchWithRetry).toHaveBeenCalled();
@@ -67,9 +67,9 @@ describe('fetchWikidataDirectorInfo', () => {
       extract: 'Vince Gilligan is an American writer, producer, and director.',
     };
 
-    (tmdbModule.fetchWithRetry as any)
-      .mockResolvedValueOnce({ ok: true, json: async () => sparqlResponse })
-      .mockResolvedValueOnce({ ok: true, json: async () => wikiResponse });
+    vi.mocked(tmdbModule.fetchWithRetry)
+      .mockResolvedValueOnce({ ok: true, json: async () => sparqlResponse } as Response)
+      .mockResolvedValueOnce({ ok: true, json: async () => wikiResponse } as Response);
 
     const result = await fetchWikidataDirectorInfo('tt0903747');
     expect(result).not.toBeNull();
@@ -78,16 +78,16 @@ describe('fetchWikidataDirectorInfo', () => {
   });
 
   it('returns null when SPARQL returns no bindings', async () => {
-    (tmdbModule.fetchWithRetry as any).mockResolvedValue({
+    vi.mocked(tmdbModule.fetchWithRetry).mockResolvedValue({
       ok: true,
       json: async () => ({ results: { bindings: [] } }),
-    });
+    } as Response);
     const result = await fetchWikidataDirectorInfo('tt9999999');
     expect(result).toBeNull();
   });
 
   it('returns null on SPARQL fetch error', async () => {
-    (tmdbModule.fetchWithRetry as any).mockResolvedValue({ ok: false, status: 500 });
+    vi.mocked(tmdbModule.fetchWithRetry).mockResolvedValue({ ok: false, status: 500 } as Response);
     const result = await fetchWikidataDirectorInfo('tt0000999');
     expect(result).toBeNull();
   });
