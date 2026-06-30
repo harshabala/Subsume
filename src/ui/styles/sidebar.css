@@ -1,186 +1,250 @@
-/* ─── Sanctuary Sidebar ─────────────────────────────────── */
+/* ─── Sanctuary Top & Drawer Navigation ─────────────────────────────────── */
 
 @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400&family=Outfit:wght@300;400;500;600&display=swap');
 
-.sidebar {
-  width: 240px;
-  min-height: 100vh;
-  background: hsl(240, 18%, 6%);
-  border-right: 1px solid hsla(0, 0%, 100%, 0.06);
-  display: flex;
-  flex-direction: column;
-  position: sticky;
+/* Fixed Top Nav Bar */
+.fixed-top-nav {
+  position: fixed;
   top: 0;
-}
-
-.sidebar-header {
-  padding: 28px 20px 20px;
+  left: 0;
+  right: 0;
+  height: 4rem; /* h-16 */
+  background: hsla(240, 18%, 6%, 0.85);
+  backdrop-filter: blur(20px);
   border-bottom: 1px solid hsla(0, 0%, 100%, 0.06);
-}
-
-.sidebar-logo {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 6px;
+  padding: 0 1.5rem;
+  z-index: 1000;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
 }
 
-.sidebar-logo-icon {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: hsla(45, 90%, 65%, 0.12);
-  border: 1px solid hsla(45, 90%, 65%, 0.3);
-  border-radius: 8px;
-  font-size: 18px;
-  font-weight: 300;
-  color: hsl(45, 85%, 68%);
+.nav-logo {
   font-family: 'Newsreader', Georgia, serif;
-  letter-spacing: -0.02em;
-}
-
-.sidebar-title {
-  font-family: 'Newsreader', Georgia, serif;
-  font-size: 20px;
-  font-weight: 400;
+  font-size: 1.5rem;
+  font-weight: 500;
   font-style: italic;
-  color: hsl(0, 0%, 92%);
+  color: hsl(45, 85%, 68%); /* Warm muted gold */
   letter-spacing: -0.01em;
 }
 
-.sidebar-tagline {
-  font-family: 'Outfit', sans-serif;
-  font-size: 10px;
-  color: hsl(240, 10%, 42%);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-weight: 400;
-  padding-left: 48px;
-}
-
-/* Navigation */
-.sidebar-nav {
-  flex: 1;
-  padding: 16px 8px;
+.nav-tabs {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  gap: 2rem;
+  align-items: center;
 }
 
-.sidebar-nav-item {
+.nav-tab-btn {
+  background: transparent;
+  border: none;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: hsl(240, 8%, 60%);
+  cursor: pointer;
+  padding: 0.5rem 0;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.nav-tab-btn:hover {
+  color: hsl(0, 0%, 96%);
+}
+
+.nav-tab-btn.active {
+  color: hsl(45, 85%, 68%);
+  font-weight: 600;
+}
+
+.nav-tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: hsl(45, 85%, 68%);
+  border-radius: 2px;
+}
+
+.nav-tabs-skeleton {
+  display: flex;
+  gap: 2rem;
+}
+
+.nav-menu-toggle {
+  background: transparent;
+  border: none;
+  color: hsl(0, 0%, 92%);
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border-radius: 6px;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  transition: background 0.2s ease;
+}
+
+.nav-menu-toggle:hover {
+  background: hsla(0, 0%, 100%, 0.05);
+  color: hsl(45, 85%, 68%);
+}
+
+/* Backdrop for Slide-out Navigation */
+.side-nav-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  z-index: 1999;
+  animation: fadeInBackdrop 0.4s ease forwards;
+}
+
+@keyframes fadeInBackdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Slide-out Navigation Menu Drawer */
+.side-menu-drawer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 320px;
+  background: hsl(240, 20%, 4%);
+  border-left: 1px solid hsla(0, 0%, 100%, 0.06);
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.6);
+}
+
+.side-menu-drawer.open {
+  transform: translateX(0);
+}
+
+.side-menu-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid hsla(0, 0%, 100%, 0.06);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.side-menu-title {
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 1.25rem;
+  font-style: italic;
+  color: hsl(45, 85%, 68%);
+}
+
+.side-menu-close {
+  background: transparent;
+  border: none;
+  color: hsl(240, 8%, 60%);
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.side-menu-close:hover {
+  background: hsla(0, 0%, 100%, 0.05);
+  color: hsl(0, 0%, 96%);
+}
+
+.side-menu-content {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.side-menu-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.side-menu-section-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: hsl(240, 8%, 40%);
+  margin-bottom: 0.5rem;
+  padding-left: 0.75rem;
+}
+
+.side-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
   font-family: 'Outfit', sans-serif;
   font-size: 13px;
-  font-weight: 400;
-  color: hsl(240, 8%, 52%);
-  transition: all 160ms ease;
-  width: 100%;
-  text-align: left;
+  color: hsl(240, 8%, 70%);
   background: transparent;
   border: 1px solid transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
 }
 
-.sidebar-nav-item:hover {
+.side-menu-item:hover {
   background: hsla(0, 0%, 100%, 0.04);
-  color: hsl(0, 0%, 82%);
+  color: hsl(0, 0%, 96%);
 }
 
-.sidebar-nav-item:active {
-  transform: scale(0.98);
-}
-
-.sidebar-nav-item.active {
+.side-menu-item.active {
   background: hsla(45, 90%, 65%, 0.08);
   color: hsl(45, 80%, 68%);
   border-color: hsla(45, 90%, 65%, 0.18);
-}
-
-.sidebar-nav-icon {
-  font-family: var(--font-editorial);
-  font-style: italic;
-  font-size: 14px;
   font-weight: 500;
+}
+
+.side-menu-roman {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  color: hsl(240, 8%, 45%);
   width: 20px;
-  min-width: 20px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   text-align: center;
-  opacity: 0.7;
 }
 
-.sidebar-nav-item.active .sidebar-nav-icon {
-  opacity: 1;
+.side-menu-item.active .side-menu-roman {
+  color: hsl(45, 80%, 68%);
 }
 
-.sidebar-nav-label {
+.side-menu-label {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
 }
 
-.sidebar-nav-badge {
-  background: var(--primary);
-  color: #121212;
-  border-radius: 10px;
-  padding: 1px 6px;
-  font-size: 10px;
-  font-weight: bold;
-  margin-left: 8px;
-  line-height: 1.2;
-}
-
-
-/* Footer */
-.sidebar-footer {
-  padding: 16px 20px;
+.side-menu-footer {
+  padding: 1.5rem;
   border-top: 1px solid hsla(0, 0%, 100%, 0.06);
-}
-
-.sidebar-stats {
   display: flex;
-  gap: 20px;
-  margin-bottom: 12px;
-}
-
-.sidebar-stat {
-  display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  flex: 1;
-}
-
-.sidebar-stat-value {
-  font-family: 'Newsreader', Georgia, serif;
-  font-size: 22px;
-  font-weight: 300;
-  color: hsl(0, 0%, 88%);
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-
-.sidebar-stat-label {
   font-family: 'Outfit', sans-serif;
   font-size: 10px;
-  color: hsl(240, 10%, 40%);
-  font-weight: 400;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  margin-top: 4px;
-}
-
-.sidebar-version {
-  font-family: 'Outfit', sans-serif;
-  font-size: 10px;
-  color: hsl(240, 10%, 32%);
-  text-align: center;
+  color: hsl(240, 8%, 40%);
   letter-spacing: 0.05em;
 }

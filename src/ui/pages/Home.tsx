@@ -25,6 +25,7 @@ interface DigestPick extends WeeklyDigestItem {
 
 interface HomeProps {
   onNavigate: (page: 'library' | 'recommendations' | 'new-releases') => void;
+  onOpenCapture?: (mediaId: string) => void;
 }
 
 function pickRating(media: MediaItem): string | null {
@@ -39,7 +40,13 @@ function platformsToAvailability(platforms: string[]) {
   return platforms.map((platform) => ({ region: '', platform }));
 }
 
-export function Home({ onNavigate }: HomeProps) {
+const SIMULATED_POSTS = [
+  { title: "The Elegance of Wong Kar-wai's Frames", excerpt: "Time is a recurring motif in the cinema of Wong Kar-wai. It is felt in the ticking clocks of Hong Kong, in the slow-motion glances across narrow corridors..." },
+  { title: "Neon Melancholy and Nostalgia", excerpt: "What is it about neon lighting that evokes such deep nostalgia? Perhaps it is the way it cuts through the obsidian night, illuminating faces but leaving eyes in shadow..." },
+  { title: "The Silence after the Dialogue Stops", excerpt: "In the most profound films, the dialogue is just a bridge between silences. The true reflection happens when the screen fades to black and the waltz lingers..." }
+];
+
+export function Home({ onNavigate, onOpenCapture }: HomeProps) {
   const [loading, setLoading] = useState(true);
   const [refreshingDigest, setRefreshingDigest] = useState(false);
   const [libraryCount, setLibraryCount] = useState(0);
@@ -160,20 +167,74 @@ export function Home({ onNavigate }: HomeProps) {
 
   const digestBadge = weeklyDigest?.llmGenerated ? 'AI Curated' : 'Algorithm';
 
+  const heroMedia = weeklyPicks.find((p) => p.media)?.media || picks[0]?.media || null;
+  const heroTitle = heroMedia?.canonicalTitle || "In the Mood for Love";
+  const heroDirector = heroMedia?.wikidataDirectorBio || "Wong Kar-wai";
+  const heroRating = heroMedia ? (pickRating(heroMedia) || "TMDb 4.8") : "TMDb 4.8";
+  const heroQuote = heroMedia?.overview
+    ? (heroMedia.overview.length > 120 ? heroMedia.overview.slice(0, 117) + "..." : heroMedia.overview)
+    : "He remembers those vanished years. As though looking through a dusty window pane, the past is something he could see, but not touch.";
+  const heroPoster = heroMedia?.posterUrl || "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=600&q=80";
+  const heroMediaId = heroMedia?.id || "tmdb_movie_1024";
+
   return (
-    <div className="page-container sanctuary-page">
-      <header className="sanctuary-header">
-        <div className="sanctuary-header-meta">
-          <span className="sanctuary-subtitle">Auditorium Sanctuary</span>
+    <div className="page-container sanctuary-page focus-pull-active">
+      {/* Blurred simulated blog background */}
+      <div className="simulated-blog-backdrop">
+        {SIMULATED_POSTS.map((post, idx) => (
+          <div key={idx} className="simulated-blog-post">
+            <div className="simulated-blog-title">{post.title}</div>
+            <p className="simulated-blog-excerpt">{post.excerpt}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Cinematic Lobby Header / Grid */}
+      <div className="lobby-container">
+        <div className="hero-poster-column">
+          <div className="hero-poster-frame">
+            <img src={heroPoster} alt={heroTitle} className="hero-poster-img" />
+            <div className="catalogue-plaque-card">
+              <div className="plaque-header">
+                <span className="plaque-rating">{heroRating}</span>
+                <span className="plaque-index">No. 001</span>
+              </div>
+              <h3 className="plaque-title">{heroTitle}</h3>
+              <p className="plaque-director">Directed by {heroDirector}</p>
+              <blockquote className="plaque-quote">"{heroQuote}"</blockquote>
+              <div className="plaque-actions">
+                <button
+                  className="plaque-btn reflect"
+                  onClick={() => onOpenCapture?.(heroMediaId)}
+                >
+                  Reflect
+                </button>
+                <button
+                  className="plaque-btn archive"
+                  onClick={() => onNavigate('library')}
+                >
+                  Archive
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-        <h2 className="sanctuary-title">Home</h2>
-        <p className="sanctuary-description">
-          Your taste-aware sanctuary — what to reflect on next and programme arrivals.
-        </p>
-      </header>
+
+        <div className="lobby-info-column">
+          <span className="lobby-act">Act I</span>
+          <h2 className="lobby-heading">Discovery</h2>
+          <p className="lobby-desc">
+            Welcome to the entry hall of your sanctuary. Here, the cinema you encounter is catalogued not merely by metadata, but by the emotional imprint it leaves behind.
+          </p>
+          <div className="lobby-status-panel">
+            <span className="status-indicator"></span>
+            <span className="status-text">Contextual Awareness Engine v2.4 Active</span>
+          </div>
+        </div>
+      </div>
 
       {loading ? (
-        <div className="home-main-content">
+        <div className="home-main-content" style={{ marginTop: '4rem' }}>
           <div className="home-stat-grid">
             {[0, 1, 2].map((i) => (
               <div key={i} className="skeleton skeleton-stat" style={{ animationDelay: `${i * 40}ms` }} />
@@ -186,7 +247,7 @@ export function Home({ onNavigate }: HomeProps) {
           </div>
         </div>
       ) : (
-        <div className="home-main-content">
+        <div className="home-main-content" style={{ marginTop: '4rem' }}>
           <div className="home-stat-grid">
             {[
               { label: 'In Sanctuary', value: libraryCount, action: () => onNavigate('library') },

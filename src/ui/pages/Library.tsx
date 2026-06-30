@@ -120,10 +120,19 @@ export function Library() {
     }
   }
 
-  async function updateNotes(mediaId: string, notes: string) {
-    const res = await sendMessage(MessageType.SET_USER_NOTES, { mediaId, notes });
+  async function updateNotes(mediaId: string, notes: string, atmosphere?: string, lingeringThought?: string) {
+    const res = await sendMessage(MessageType.SET_USER_NOTES, {
+      mediaId,
+      notes,
+      atmosphere: atmosphere || undefined,
+      lingeringThought: lingeringThought || undefined,
+    });
     if (res.success && isMountedRef.current) {
-      updateLibraryItem(mediaId, { notes: notes.trim() || undefined });
+      updateLibraryItem(mediaId, {
+        notes: notes.trim() || undefined,
+        atmosphere: atmosphere?.trim() || undefined,
+        lingeringThought: lingeringThought?.trim() || undefined,
+      });
     }
   }
 
@@ -257,7 +266,7 @@ export function Library() {
           onUpdateStatus={(status) => updateStatus(selectedItem.library.mediaId, status)}
           onUpdateRating={(rating) => updateRating(selectedItem.library.mediaId, rating)}
           onUpdateTags={(tags) => updateTags(selectedItem.library.mediaId, tags)}
-          onUpdateNotes={(notes) => updateNotes(selectedItem.library.mediaId, notes)}
+          onUpdateNotes={(notes, atmosphere, lingeringThought) => updateNotes(selectedItem.library.mediaId, notes, atmosphere, lingeringThought)}
         />
       )}
     </div>

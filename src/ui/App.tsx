@@ -114,6 +114,7 @@ export function App() {
   const [prefs, setPrefs] = useState<UserPreferences | null>(null);
   const [stats, setStats] = useState<LibraryStats>({ movieCount: 0, tvCount: 0 });
   const [peopleCount, setPeopleCount] = useState(0);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const initialPrefetchDone = useRef(false);
 
   useEffect(() => {
@@ -173,19 +174,14 @@ export function App() {
   if (!prefs) {
     return (
       <div className="app-layout">
-        <aside className="sidebar">
-          <div className="sidebar-header">
-            <div className="sidebar-logo">
-              <div className="sidebar-logo-icon">S</div>
-              <h1 className="sidebar-title">Subsume</h1>
-            </div>
+        <nav className="fixed-top-nav">
+          <div className="nav-logo">Subsume</div>
+          <div className="nav-tabs-skeleton">
+            <div className="skeleton skeleton-tab" style={{ width: '80px', height: '16px' }} />
+            <div className="skeleton skeleton-tab" style={{ width: '80px', height: '16px' }} />
+            <div className="skeleton skeleton-tab" style={{ width: '80px', height: '16px' }} />
           </div>
-          <nav className="sidebar-nav">
-            {[0, 1, 2, 3, 4].map((i) => (
-              <div key={i} className="skeleton skeleton-nav-item" style={{ animationDelay: `${i * 40}ms` }} />
-            ))}
-          </nav>
-        </aside>
+        </nav>
         <main className="main-content">
           <div className="page-container">
             <div className="skeleton app-skeleton-header" />
@@ -207,7 +203,7 @@ export function App() {
   const renderPage = () => {
     switch (currentPage) {
       case 'home':
-        return <Home onNavigate={setCurrentPage} />;
+        return <Home onNavigate={setCurrentPage} onOpenCapture={setCaptureMediaId} />;
       case 'library':
         return <Library />;
       case 'search':
@@ -231,31 +227,72 @@ export function App() {
 
   return (
     <div className="app-layout">
-      <aside className="sidebar">
-        <div className="sidebar-header">
-          <div className="sidebar-logo">
-            <div className="sidebar-logo-icon">S</div>
-            <h1 className="sidebar-title">Subsume</h1>
-          </div>
-          <p className="sidebar-tagline">Movies & TV Tracker</p>
+      {/* Top Navigation Bar */}
+      <nav className="fixed-top-nav">
+        <div className="nav-logo">Subsume</div>
+        <div className="nav-tabs">
+          <button
+            onClick={() => {
+              setCurrentPage('library');
+              prefetchPage('library');
+            }}
+            className={`nav-tab-btn ${currentPage === 'library' ? 'active' : ''}`}
+          >
+            Sanctuary
+          </button>
+          <button
+            onClick={() => {
+              setCurrentPage('home');
+              prefetchPage('home');
+            }}
+            className={`nav-tab-btn ${currentPage === 'home' ? 'active' : ''}`}
+          >
+            Discovery
+          </button>
+          <button
+            onClick={() => {
+              setCurrentPage('settings');
+              prefetchPage('settings');
+            }}
+            className={`nav-tab-btn ${currentPage === 'settings' ? 'active' : ''}`}
+          >
+            Settings
+          </button>
         </div>
+        <button className="nav-menu-toggle" onClick={() => setIsMenuOpen(true)}>
+          <span className="material-symbols-outlined">menu</span>
+        </button>
+      </nav>
 
-        <nav className="sidebar-nav">
+      {/* Backdrop for Slide-out Navigation */}
+      {isMenuOpen && (
+        <div className="side-nav-backdrop" onClick={() => setIsMenuOpen(false)} />
+      )}
+
+      {/* Slide-out Navigation Menu */}
+      <div className={`side-menu-drawer ${isMenuOpen ? 'open' : ''}`}>
+        <div className="side-menu-header">
+          <span className="side-menu-title">Catalogue Directory</span>
+          <button className="side-menu-close" onClick={() => setIsMenuOpen(false)}>
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div className="side-menu-content">
           {NAV_SECTIONS.map((section) => (
-            <div key={section.label} className="sidebar-nav-section">
-              <span className="sidebar-nav-section-label">{section.label}</span>
+            <div key={section.label} className="side-menu-section">
+              <span className="side-menu-section-label">{section.label}</span>
               {section.items.map((item) => (
                 <button
                   key={item.key}
-                  className={`sidebar-nav-item ${currentPage === item.key ? 'active' : ''}`}
-                  onClick={() => setCurrentPage(item.key)}
-                  onMouseEnter={() => prefetchPage(item.key)}
-                  onFocus={() => prefetchPage(item.key)}
+                  className={`side-menu-item ${currentPage === item.key ? 'active' : ''}`}
+                  onClick={() => {
+                    setCurrentPage(item.key);
+                    prefetchPage(item.key);
+                    setIsMenuOpen(false);
+                  }}
                 >
-                  <span className="sidebar-nav-icon">
-                    <NavIcon item={item} />
-                  </span>
-                  <span className="sidebar-nav-label">
+                  <span className="side-menu-roman">{item.icon}</span>
+                  <span className="side-menu-label">
                     <span>{item.label}</span>
                     {item.key === 'people' && peopleCount > 0 && (
                       <span className="sidebar-nav-badge stat-value">
@@ -267,23 +304,14 @@ export function App() {
               ))}
             </div>
           ))}
-        </nav>
-
-        <div className="sidebar-footer">
-          <div className="sidebar-stats">
-            <div className="sidebar-stat">
-              <span className="sidebar-stat-value">{stats.movieCount}</span>
-              <span className="sidebar-stat-label">Movies</span>
-            </div>
-            <div className="sidebar-stat">
-              <span className="sidebar-stat-value">{stats.tvCount}</span>
-              <span className="sidebar-stat-label">TV Shows</span>
-            </div>
-          </div>
-          <p className="sidebar-version">v0.1.0</p>
         </div>
-      </aside>
+        <div className="side-menu-footer">
+          <span>v0.1.0</span>
+          <span>{stats.movieCount} M / {stats.tvCount} T</span>
+        </div>
+      </div>
 
+      {/* Main Content Area */}
       <main className="main-content">
         {renderPage()}
         {captureMediaId && (

@@ -10,7 +10,7 @@ interface DetailModalProps {
   onUpdateStatus?: (status: LibraryStatus) => void;
   onUpdateRating?: (rating: number) => void;
   onUpdateTags?: (tags: string[]) => void;
-  onUpdateNotes?: (notes: string) => void;
+  onUpdateNotes?: (notes: string, atmosphere?: string, lingeringThought?: string) => void;
   onAddToLibrary?: () => void;
 }
 
@@ -35,11 +35,15 @@ export function DetailModal({
   onAddToLibrary,
 }: DetailModalProps) {
   const [notes, setNotes] = useState(libraryItem?.notes || '');
+  const [atmosphere, setAtmosphere] = useState(libraryItem?.atmosphere || '');
+  const [lingeringThought, setLingeringThought] = useState(libraryItem?.lingeringThought || '');
   const notesDebounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     setNotes(libraryItem?.notes || '');
-  }, [libraryItem?.notes]);
+    setAtmosphere(libraryItem?.atmosphere || '');
+    setLingeringThought(libraryItem?.lingeringThought || '');
+  }, [libraryItem?.notes, libraryItem?.atmosphere, libraryItem?.lingeringThought]);
 
   useEffect(() => {
     return () => {
@@ -55,7 +59,27 @@ export function DetailModal({
       clearTimeout(notesDebounceRef.current);
     }
     notesDebounceRef.current = setTimeout(() => {
-      onUpdateNotes?.(value);
+      onUpdateNotes?.(value, atmosphere, lingeringThought);
+    }, 500);
+  };
+
+  const handleAtmosphereChange = (value: string) => {
+    setAtmosphere(value);
+    if (notesDebounceRef.current) {
+      clearTimeout(notesDebounceRef.current);
+    }
+    notesDebounceRef.current = setTimeout(() => {
+      onUpdateNotes?.(notes, value, lingeringThought);
+    }, 500);
+  };
+
+  const handleLingeringChange = (value: string) => {
+    setLingeringThought(value);
+    if (notesDebounceRef.current) {
+      clearTimeout(notesDebounceRef.current);
+    }
+    notesDebounceRef.current = setTimeout(() => {
+      onUpdateNotes?.(notes, atmosphere, value);
     }, 500);
   };
 
@@ -63,7 +87,7 @@ export function DetailModal({
     if (notesDebounceRef.current) {
       clearTimeout(notesDebounceRef.current);
       notesDebounceRef.current = undefined;
-      onUpdateNotes?.(notes);
+      onUpdateNotes?.(notes, atmosphere, lingeringThought);
     }
   };
 
@@ -286,6 +310,31 @@ export function DetailModal({
                   rows={4}
                   className="sanctuary-detail-input sanctuary-detail-textarea"
                 />
+
+                <div className="sanctuary-detail-metadata-inputs" style={{ marginTop: '1.25rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="sanctuary-detail-input-wrap" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    <span className="sanctuary-detail-control-label" style={{ fontSize: '11px' }}>Atmosphere:</span>
+                    <input
+                      type="text"
+                      value={atmosphere}
+                      placeholder="e.g. Melancholic, Warm Amber"
+                      onChange={(e) => handleAtmosphereChange(e.currentTarget.value)}
+                      onBlur={flushNotes}
+                      className="sanctuary-detail-input"
+                    />
+                  </div>
+                  <div className="sanctuary-detail-input-wrap" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    <span className="sanctuary-detail-control-label" style={{ fontSize: '11px' }}>Lingering Thought:</span>
+                    <input
+                      type="text"
+                      value={lingeringThought}
+                      placeholder="e.g. The cost of love..."
+                      onChange={(e) => handleLingeringChange(e.currentTarget.value)}
+                      onBlur={flushNotes}
+                      className="sanctuary-detail-input"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           ) : (

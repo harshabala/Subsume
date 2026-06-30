@@ -2,6 +2,7 @@
 
 .app-layout {
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
 }
 
@@ -10,6 +11,7 @@
   min-width: 0;
   overflow-y: auto;
   background: hsl(240, 18%, 5%);
+  padding-top: 4rem;
 }
 
 /* ─── Page Shell ──────────────────────────────────────────────────── */
@@ -150,4 +152,255 @@
   letter-spacing: 0.08em;
   color: var(--color-text-muted);
   padding: var(--spacing-sm) var(--spacing-md) var(--spacing-xs);
+}
+
+/* ─── Cinematic Museum Lobby ─────────────────────────────────────── */
+
+.lobby-container {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 3rem;
+  max-width: 1100px;
+  margin: 4rem auto;
+  padding: 0 2rem;
+  align-items: center;
+  position: relative;
+  z-index: 10;
+}
+
+.hero-poster-column {
+  display: flex;
+  justify-content: center;
+}
+
+.hero-poster-frame {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  aspect-ratio: 2 / 3;
+  border-radius: 6px;
+  overflow: visible;
+  border: 1px solid var(--border);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.7);
+}
+
+.hero-poster-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+  filter: brightness(0.95);
+}
+
+/* Catalogue Plaque Card */
+.catalogue-plaque-card {
+  position: absolute;
+  bottom: -2.5rem;
+  right: -2rem;
+  width: 290px;
+  background: hsla(240, 15%, 11%, 0.88);
+  backdrop-filter: blur(25px);
+  border: 1px solid hsla(45, 80%, 62%, 0.25);
+  border-radius: 4px;
+  padding: 1.25rem;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
+}
+
+.plaque-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.plaque-rating {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  color: hsl(45, 85%, 68%); /* gold */
+  background: hsla(45, 80%, 62%, 0.12);
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+
+.plaque-index {
+  font-family: 'Geist Mono', monospace;
+  font-size: 9px;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.plaque-title {
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 1.35rem;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.2;
+  margin-bottom: 0.25rem;
+}
+
+.plaque-director {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  color: var(--fg-muted);
+  margin-bottom: 0.75rem;
+}
+
+.plaque-quote {
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 0.95rem;
+  font-style: italic;
+  line-height: 1.4;
+  color: hsl(0, 0%, 82%);
+  border-left: 2px solid hsla(45, 80%, 62%, 0.4);
+  padding-left: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.plaque-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.plaque-btn {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  border-radius: 2px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.plaque-btn.reflect {
+  background: hsl(45, 85%, 68%);
+  color: hsl(240, 20%, 6%);
+  border: none;
+  font-weight: 600;
+}
+
+.plaque-btn.reflect:hover {
+  background: hsl(45, 95%, 72%);
+}
+
+.plaque-btn.archive {
+  background: transparent;
+  color: var(--fg-base);
+  border: 1px solid var(--border);
+}
+
+.plaque-btn.archive:hover {
+  background: hsla(0, 0%, 100%, 0.05);
+  border-color: var(--fg-muted);
+}
+
+/* Right Column Lobby Info */
+.lobby-info-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.lobby-act {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  color: hsl(45, 85%, 68%);
+}
+
+.lobby-heading {
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 2.75rem;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--fg-base);
+}
+
+.lobby-desc {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--fg-muted);
+  max-width: 440px;
+  margin-bottom: 1.5rem;
+}
+
+.lobby-status-panel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: hsla(240, 16%, 8%, 0.5);
+  border: 1px solid var(--border);
+  padding: 0.75rem 1.25rem;
+  border-radius: 4px;
+  max-width: fit-content;
+}
+
+.status-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34d399; /* emerald green active */
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.8);
+}
+
+.status-text {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  color: hsl(240, 8%, 65%);
+}
+
+/* Simulated Blog Backdrop */
+.simulated-blog-backdrop {
+  position: absolute;
+  inset: 0;
+  opacity: 0.02;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.simulated-blog-post {
+  padding: 2.5rem;
+  border-bottom: 1px solid var(--fg-base);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.simulated-blog-title {
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 2rem;
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+
+.simulated-blog-excerpt {
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.focus-pull-active {
+  position: relative;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .lobby-container {
+    grid-template-columns: 1fr;
+    gap: 5rem;
+    padding-bottom: 4rem;
+  }
+  .catalogue-plaque-card {
+    right: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: -3.5rem;
+  }
 }
