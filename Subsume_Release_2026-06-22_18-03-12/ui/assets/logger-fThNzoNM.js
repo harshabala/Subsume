@@ -1,1 +1,0 @@
-var e={log:(...e)=>{},warn:(...e)=>{},error:(...e)=>{}};export{e as t};
