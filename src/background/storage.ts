@@ -9,7 +9,7 @@ import {
   ImportLibraryData,
   SanctuaryIntent,
 } from '@/shared/types';
-import { SEED_MEDIA, SEED_LIBRARY } from './seedData';
+import { SEED_MEDIA, SEED_LIBRARY, SEED_PEOPLE } from './seedData';
 
 interface SubsumeDB extends DBSchema {
   media: {
@@ -66,6 +66,16 @@ async function seedDatabaseIfEmpty(db: IDBPDatabase<SubsumeDB>) {
       }
       for (const item of SEED_LIBRARY) {
         await libraryStore.put(item);
+      }
+      await tx.done;
+    }
+
+    const peopleCount = await db.count('people');
+    if (peopleCount === 0) {
+      const tx = db.transaction('people', 'readwrite');
+      const peopleStore = tx.objectStore('people');
+      for (const person of SEED_PEOPLE) {
+        await peopleStore.put(person);
       }
       await tx.done;
     }
