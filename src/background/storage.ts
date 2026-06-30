@@ -9,6 +9,7 @@ import {
   ImportLibraryData,
   SanctuaryIntent,
 } from '@/shared/types';
+import { SEED_MEDIA, SEED_LIBRARY } from './seedData';
 
 interface SubsumeDB extends DBSchema {
   media: {
@@ -52,6 +53,27 @@ const DB_VERSION = 3;
 
 let dbPromise: Promise<IDBPDatabase<SubsumeDB>> | null = null;
 
+async function seedDatabaseIfEmpty(db: IDBPDatabase<SubsumeDB>) {
+  try {
+    const mediaCount = await db.count('media');
+    if (mediaCount === 0) {
+      const tx = db.transaction(['media', 'library'], 'readwrite');
+      const mediaStore = tx.objectStore('media');
+      const libraryStore = tx.objectStore('library');
+      
+      for (const item of SEED_MEDIA) {
+        await mediaStore.put(item);
+      }
+      for (const item of SEED_LIBRARY) {
+        await libraryStore.put(item);
+      }
+      await tx.done;
+    }
+  } catch (err) {
+    console.error('Failed to seed database:', err);
+  }
+}
+
 function getDb() {
   if (!dbPromise) {
     dbPromise = openDB<SubsumeDB>(DB_NAME, DB_VERSION, {
@@ -82,6 +104,9 @@ function getDb() {
           alertsStore.createIndex('by-created', 'createdAt');
         }
       },
+    }).then(async (db) => {
+      await seedDatabaseIfEmpty(db);
+      return db;
     });
     dbPromise.catch(() => {
       dbPromise = null;

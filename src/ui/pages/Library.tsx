@@ -216,12 +216,15 @@ export function Library() {
           </div>
         ) : items.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-state-icon">📖</div>
-            <h3 className="empty-state-title" style={{ fontFamily: 'var(--font-serif, "Newsreader", Georgia, serif)' }}>Your archive is quiet</h3>
-            <p className="empty-state-description">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" style={{ color: 'var(--primary)', marginBottom: '1.25rem' }}>
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="M7 3v18M17 3v18M3 8h4M17 8h4M3 16h4M17 16h4M7 9h10v6H7z" />
+            </svg>
+            <h3 className="empty-state-title" style={{ fontFamily: 'Newsreader, Georgia, serif', fontStyle: 'italic', fontWeight: '400', fontSize: '1.75rem', color: 'var(--fg-base)' }}>Your archive is quiet</h3>
+            <p className="empty-state-description" style={{ fontFamily: 'Outfit, sans-serif', color: 'var(--fg-muted)', fontSize: '0.95rem', marginTop: '0.5rem', maxWidth: '380px' }}>
               A blank canvas waiting for titles that leave an imprint on your memory.
             </p>
-            <p className="empty-state-hint" style={{ marginTop: 12, fontSize: 14, color: 'var(--color-text-secondary)', maxWidth: 400 }}>
+            <p className="empty-state-hint" style={{ fontFamily: 'Outfit, sans-serif', marginTop: '1rem', fontSize: '0.85rem', color: 'var(--fg-subtle)', maxWidth: '400px' }}>
               Hover over titles while browsing or capture moments to populate your collection.
             </p>
           </div>
