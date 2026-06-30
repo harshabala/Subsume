@@ -10,7 +10,7 @@ export const SEED_MEDIA: MediaItem[] = [
     ratings: [{ score: 8.3, provider: 'tmdb' }, { score: 9.6, provider: 'rt' }],
     providers: [],
     posterUrl: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80',
-    overview: 'After more than thirty years of service as one of the Navy\'s top aviators, Pete Mitchell is where he belongs, pushing the envelope as a courageous test pilot.',
+    overview: 'After thirty years, Maverick pushes the envelope as a Navy test pilot.\n\n• Directed by: Joseph Kosinski\n• Starring: Tom Cruise, Miles Teller, Jennifer Connelly\n• Cinematography: Claudio Miranda\n• Music by: Harold Faltermeyer, Hans Zimmer',
     wikidataDirectorBio: 'Joseph Kosinski'
   },
   {
@@ -22,7 +22,7 @@ export const SEED_MEDIA: MediaItem[] = [
     ratings: [{ score: 8.5, provider: 'tmdb' }, { score: 9.7, provider: 'rt' }],
     providers: [],
     posterUrl: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=400&q=80',
-    overview: 'Ethan Hunt and his IMF team, along with some familiar allies, race against time after a mission gone wrong.',
+    overview: 'Ethan Hunt and his IMF team race against time after a mission gone wrong.\n\n• Directed by: Christopher McQuarrie\n• Starring: Tom Cruise, Henry Cavill, Ving Rhames, Simon Pegg\n• Cinematography: Rob Hardy\n• Music by: Lorne Balfe',
     wikidataDirectorBio: 'Christopher McQuarrie'
   },
   {
@@ -34,7 +34,7 @@ export const SEED_MEDIA: MediaItem[] = [
     ratings: [{ score: 9.0, provider: 'tmdb' }, { score: 10.0, provider: 'rt' }],
     providers: [],
     posterUrl: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=400&q=80',
-    overview: 'A common man\'s struggle against a corrupt police force leads him to become a powerful don in Mumbai\'s slums.',
+    overview: 'A common man\'s struggle leads him to become a powerful don in Mumbai\'s slums.\n\n• Directed by: Mani Ratnam\n• Starring: Kamal Haasan, Saranya, Karthika\n• Cinematography: P. C. Sreeram\n• Music by: Ilaiyaraaja',
     wikidataDirectorBio: 'Mani Ratnam'
   },
   {
@@ -46,7 +46,7 @@ export const SEED_MEDIA: MediaItem[] = [
     ratings: [{ score: 9.2, provider: 'tmdb' }],
     providers: [],
     posterUrl: 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&w=400&q=80',
-    overview: 'Two men of contrasting personalities and ideologies embark on a journey from Bhubaneswar to Chennai, finding unexpected bonds along the way.',
+    overview: 'Two men of contrasting personalities embark on a journey, finding unexpected bonds.\n\n• Directed by: Sundar C.\n• Starring: Kamal Haasan, Madhavan, Kiran Rathod\n• Cinematography: Arthur A. Wilson\n• Music by: Vidyasagar',
     wikidataDirectorBio: 'Sundar C.'
   },
   {
@@ -58,7 +58,7 @@ export const SEED_MEDIA: MediaItem[] = [
     ratings: [{ score: 9.5, provider: 'tmdb' }, { score: 9.8, provider: 'rt' }],
     providers: [],
     posterUrl: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=400&q=80',
-    overview: 'A depiction of rural life in a Bengali village, focusing on the growth and discoveries of young Apu and his sister Durga.',
+    overview: 'A depiction of rural life in a Bengali village, focusing on young Apu and Durga.\n\n• Directed by: Satyajit Ray\n• Starring: Subir Banerjee, Kanu Banerjee, Karuna Banerjee\n• Cinematography: Subrata Mitra\n• Music by: Ravi Shankar',
     wikidataDirectorBio: 'Satyajit Ray'
   },
   {
@@ -70,7 +70,7 @@ export const SEED_MEDIA: MediaItem[] = [
     ratings: [{ score: 9.1, provider: 'tmdb' }],
     providers: [],
     posterUrl: 'https://images.unsplash.com/photo-1505686994434-e3cc5abf1330?auto=format&fit=crop&w=400&q=80',
-    overview: 'A lonely young wife of a busy newspaper editor in late 19th-century Bengal finds her intellectual and romantic awakening in her husband\'s cousin.',
+    overview: 'A lonely young wife finds her intellectual and romantic awakening in late 19th-century Bengal.\n\n• Directed by: Satyajit Ray\n• Starring: Madhabi Mukherjee, Soumitra Chatterjee\n• Cinematography: Subrata Mitra\n• Music by: Satyajit Ray',
     wikidataDirectorBio: 'Satyajit Ray'
   },
   {
@@ -82,7 +82,7 @@ export const SEED_MEDIA: MediaItem[] = [
     ratings: [{ score: 9.2, provider: 'tmdb' }],
     providers: [],
     posterUrl: 'https://images.unsplash.com/photo-1524712245354-2c4e5e7134cd?auto=format&fit=crop&w=400&q=80',
-    overview: 'An epic tale tracking the friendship and rivalry between a charismatic actor and a passionate writer who rise to define Tamil Nadu\'s political landscape.',
+    overview: 'An epic tale tracking the friendship and rivalry between a charismatic actor and a writer.\n\n• Directed by: Mani Ratnam\n• Starring: Mohanlal, Aishwarya Rai, Prakash Raj\n• Cinematography: Santosh Sivan\n• Music by: A. R. Rahman',
     wikidataDirectorBio: 'Mani Ratnam'
   },
   {
@@ -94,7 +94,7 @@ export const SEED_MEDIA: MediaItem[] = [
     ratings: [{ score: 8.8, provider: 'tmdb' }],
     providers: [],
     posterUrl: 'https://images.unsplash.com/photo-1542204172-e70528091867?auto=format&fit=crop&w=400&q=80',
-    overview: 'A young adopted girl journeys to war-torn Sri Lanka to find her biological mother, navigating the emotional depths of identity and belonging.',
+    overview: 'A young adopted girl journeys to war-torn Sri Lanka to find her biological mother.\n\n• Directed by: Mani Ratnam\n• Starring: Madhavan, Simran, P. S. Keerthana\n• Cinematography: Ravi K. Chandran\n• Music by: A. R. Rahman',
     wikidataDirectorBio: 'Mani Ratnam'
   },
   {
@@ -106,7 +106,7 @@ export const SEED_MEDIA: MediaItem[] = [
     ratings: [{ score: 8.7, provider: 'tmdb' }],
     providers: [],
     posterUrl: 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?auto=format&fit=crop&w=400&q=80',
-    overview: 'An officer reflects on his father\'s profound influence on his life, tracking his youth, heartbreaks, military career, and reconciliation with grief.',
+    overview: 'An officer reflects on his father\'s profound influence on his life.\n\n• Directed by: Gautham Vasudev Menon\n• Starring: Suriya, Simran, Sameera Reddy, Divya Spandana\n• Cinematography: R. Rathnavelu\n• Music by: Harris Jayaraj',
     wikidataDirectorBio: 'Gautham Vasudev Menon'
   },
   {
@@ -118,7 +118,7 @@ export const SEED_MEDIA: MediaItem[] = [
     ratings: [{ score: 8.5, provider: 'tmdb' }],
     providers: [],
     posterUrl: 'https://images.unsplash.com/photo-1535016120720-40c646be5580?auto=format&fit=crop&w=400&q=80',
-    overview: 'An aspiring filmmaker falls deeply in love with a Christian girl from a conservative family, triggering a complex saga of longing and emotional maturity.',
+    overview: 'An aspiring filmmaker falls deeply in love with a Christian girl from a conservative family.\n\n• Directed by: Gautham Vasudev Menon\n• Starring: Silambarasan, Trisha Krishnan\n• Cinematography: Manoj Paramahamsa\n• Music by: A. R. Rahman',
     wikidataDirectorBio: 'Gautham Vasudev Menon'
   },
   {
@@ -130,7 +130,7 @@ export const SEED_MEDIA: MediaItem[] = [
     ratings: [{ score: 8.9, provider: 'tmdb' }],
     providers: [],
     posterUrl: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80',
-    overview: 'A man journeys back to his native village to invite his childhood friends and past loves to his wedding, reflecting on the eras that shaped his heart.',
+    overview: 'A man journeys back to his native village to invite past friends and loves to his wedding.\n\n• Directed by: Cheran\n• Starring: Cheran, Gopika, Mallika, Kanika\n• Cinematography: Vijay Milton\n• Music by: Bharadwaj',
     wikidataDirectorBio: 'Cheran'
   },
   {
@@ -142,7 +142,7 @@ export const SEED_MEDIA: MediaItem[] = [
     ratings: [{ score: 9.4, provider: 'tmdb' }],
     providers: [],
     posterUrl: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=400&q=80',
-    overview: 'The tragic tale of Sethumadhavan, whose dreams of becoming a police officer are shattered when he intervenes to save his father from a local gangster.',
+    overview: 'Sethumadhavan\'s dreams of joining the police are ruined when he saves his father from a gangster.\n\n• Directed by: Sibi Malayil\n• Starring: Mohanlal, Thilakan, Parvathy\n• Cinematography: S. Kumar\n• Music by: Johnson',
     wikidataDirectorBio: 'Sibi Malayil'
   },
   {
@@ -154,7 +154,7 @@ export const SEED_MEDIA: MediaItem[] = [
     ratings: [{ score: 9.5, provider: 'tmdb' }],
     providers: [],
     posterUrl: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=400&q=80',
-    overview: 'When a young couple moves into an ancestral mansion rumored to be haunted, a series of uncanny events triggers an investigation by a brilliant psychiatrist.',
+    overview: 'Uncanny events in a haunted mansion trigger an investigation by a psychiatrist.\n\n• Directed by: Fazil\n• Starring: Mohanlal, Shobana, Suresh Gopi\n• Cinematography: Venu\n• Music by: Johnson, M. G. Radhakrishnan',
     wikidataDirectorBio: 'Fazil'
   },
   {
@@ -166,7 +166,7 @@ export const SEED_MEDIA: MediaItem[] = [
     ratings: [{ score: 9.0, provider: 'tmdb' }],
     providers: [],
     posterUrl: 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&w=400&q=80',
-    overview: 'A youth rebels against his authoritarian father, a school headmaster, growing up to become a hard-edged, logic-defying local rowdy.',
+    overview: 'A youth rebels against his authoritarian father, growing up to become a local rowdy.\n\n• Directed by: Bhadran\n• Starring: Mohanlal, Thilakan, Urvashi\n• Cinematography: J. Williams\n• Music by: S. P. Venkatesh',
     wikidataDirectorBio: 'Bhadran'
   },
   {
@@ -178,7 +178,7 @@ export const SEED_MEDIA: MediaItem[] = [
     ratings: [{ score: 9.3, provider: 'tmdb' }],
     providers: [],
     posterUrl: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=400&q=80',
-    overview: 'A revisionist view of the legendary warrior Chandu, framing him not as a traitor but as a victim of family politics and tragic honor.',
+    overview: 'A revisionist view of the legendary warrior Chandu, framing him as a victim of tragic honor.\n\n• Directed by: Hariharan\n• Starring: Mammootty, Balan K. Nair, Madhavi\n• Cinematography: Ramachandra Babu\n• Music by: Bombay Ravi',
     wikidataDirectorBio: 'Hariharan'
   },
   {
@@ -190,7 +190,7 @@ export const SEED_MEDIA: MediaItem[] = [
     ratings: [{ score: 8.8, provider: 'tmdb' }],
     providers: [],
     posterUrl: 'https://images.unsplash.com/photo-1505686994434-e3cc5abf1330?auto=format&fit=crop&w=400&q=80',
-    overview: 'Explores the master-slave dynamic between Thommy, an obedient migrant laborer, and Bhaskara Patelar, an aggressive, abusive landlord.',
+    overview: 'Explores the master-slave dynamic between a migrant laborer and a tyrannical landlord.\n\n• Directed by: Adoor Gopalakrishnan\n• Starring: Mammootty, Tanvi Azmi, M. R. Gopakumar\n• Cinematography: Mankada Ravi Varma\n• Music by: Vijay Bhaskar',
     wikidataDirectorBio: 'Adoor Gopalakrishnan'
   },
   {
@@ -202,7 +202,7 @@ export const SEED_MEDIA: MediaItem[] = [
     ratings: [{ score: 8.9, provider: 'tmdb' }],
     providers: [],
     posterUrl: 'https://images.unsplash.com/photo-1524712245354-2c4e5e7134cd?auto=format&fit=crop&w=400&q=80',
-    overview: 'Two high school sweethearts meet at a reunion after twenty-two years, navigating the bittersweet space of unfulfilled love.',
+    overview: 'Two high school sweethearts meet at a reunion after twenty-two years.\n\n• Directed by: C. Prem Kumar\n• Starring: Vijay Sethupathi, Trisha Krishnan\n• Cinematography: Mahendiran Jayaraju\n• Music by: Govind Vasantha',
     wikidataDirectorBio: 'C. Prem Kumar'
   },
   {
@@ -214,7 +214,7 @@ export const SEED_MEDIA: MediaItem[] = [
     ratings: [{ score: 9.0, provider: 'tmdb' }],
     providers: [],
     posterUrl: 'https://images.unsplash.com/photo-1542204172-e70528091867?auto=format&fit=crop&w=400&q=80',
-    overview: 'A man returning to his hometown for a family wedding forms an unexpected, emotionally-anchored bond with a relative whose name he cannot recall.',
+    overview: 'A man returning to his hometown forms a deep bond with a warm-hearted relative.\n\n• Directed by: C. Prem Kumar\n• Starring: Karthi, Arvind Swamy\n• Cinematography: Mahendiran Jayaraju\n• Music by: Govind Vasantha',
     wikidataDirectorBio: 'C. Prem Kumar'
   },
   {
@@ -226,7 +226,7 @@ export const SEED_MEDIA: MediaItem[] = [
     ratings: [{ score: 8.7, provider: 'tmdb' }, { score: 9.5, provider: 'rt' }],
     providers: [],
     posterUrl: 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?auto=format&fit=crop&w=400&q=80',
-    overview: 'A filmmaker forges an unusual friendship with an octopus living in a South African kelp forest, learning lessons about the fragility of life.',
+    overview: 'A filmmaker forges an unusual friendship with an octopus living in a kelp forest.\n\n• Directed by: Pippa Ehrlich, James Reed\n• Starring: Craig Foster\n• Cinematography: Roger Horrocks\n• Music by: Kevin Smuts',
     wikidataDirectorBio: 'Pippa Ehrlich, James Reed'
   },
   {
@@ -238,7 +238,7 @@ export const SEED_MEDIA: MediaItem[] = [
     ratings: [{ score: 8.6, provider: 'tmdb' }, { score: 9.7, provider: 'rt' }],
     providers: [],
     posterUrl: 'https://images.unsplash.com/photo-1535016120720-40c646be5580?auto=format&fit=crop&w=400&q=80',
-    overview: 'Alex Honnold attempts to conquer the first free solo climb of El Capitan\'s 3,000-foot vertical rock face in Yosemite National Park.',
+    overview: 'Alex Honnold attempts to free solo climb the vertical face of El Capitan.\n\n• Directed by: Elizabeth Chai Vasarhelyi, Jimmy Chin\n• Starring: Alex Honnold, Tommy Caldwell\n• Cinematography: Jimmy Chin, Clair Popkin\n• Music by: Marco Beltrami',
     wikidataDirectorBio: 'Elizabeth Chai Vasarhelyi, Jimmy Chin'
   },
   {
@@ -250,7 +250,7 @@ export const SEED_MEDIA: MediaItem[] = [
     ratings: [{ score: 9.6, provider: 'tmdb' }, { score: 9.9, provider: 'rt' }],
     providers: [],
     posterUrl: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80',
-    overview: 'Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.',
+    overview: 'Greed and class discrimination threaten the relationship between two Korean families.\n\n• Directed by: Bong Joon Ho\n• Starring: Song Kang-ho, Lee Sun-kyun, Cho Yeo-jeong\n• Cinematography: Hong Kyung-pyo\n• Music by: Jung Jae-il',
     wikidataDirectorBio: 'Bong Joon Ho'
   },
   {
@@ -262,7 +262,7 @@ export const SEED_MEDIA: MediaItem[] = [
     ratings: [{ score: 9.3, provider: 'tmdb' }, { score: 9.4, provider: 'rt' }],
     providers: [],
     posterUrl: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=400&q=80',
-    overview: 'A middle-aged Chinese immigrant is swept up into an insane adventure in which she alone can save existence by exploring other universes.',
+    overview: 'A Chinese immigrant explores other universes to save existence.\n\n• Directed by: Daniel Kwan, Daniel Scheinert\n• Starring: Michelle Yeoh, Ke Huy Quan, Stephanie Hsu, Jamie Lee Curtis\n• Cinematography: Larkin Seiple\n• Music by: Son Lux',
     wikidataDirectorBio: 'Daniel Kwan, Daniel Scheinert'
   },
   {
@@ -274,7 +274,7 @@ export const SEED_MEDIA: MediaItem[] = [
     ratings: [{ score: 9.4, provider: 'tmdb' }, { score: 9.7, provider: 'rt' }],
     providers: [],
     posterUrl: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=400&q=80',
-    overview: 'On an isolated island in Brittany at the end of the eighteenth century, a female painter is obliged to paint a wedding portrait of a young woman.',
+    overview: 'On an isolated island in Brittany, a female painter falls in love with her subject.\n\n• Directed by: Céline Sciamma\n• Starring: Noémie Merlant, Adèle Haenel\n• Cinematography: Claire Mathon\n• Music by: Jean-Baptiste de Laubier, Arthur Simonini',
     wikidataDirectorBio: 'Céline Sciamma'
   },
   {
@@ -286,7 +286,7 @@ export const SEED_MEDIA: MediaItem[] = [
     ratings: [{ score: 9.0, provider: 'tmdb' }, { score: 9.8, provider: 'rt' }],
     providers: [],
     posterUrl: 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&w=400&q=80',
-    overview: 'A young Afro-American visits his white girlfriend\'s parents for the weekend, where their simmering uneasiness reaches a boiling point.',
+    overview: 'A young man visits his white girlfriend\'s family estate, uncovering dark secrets.\n\n• Directed by: Jordan Peele\n• Starring: Daniel Kaluuya, Allison Williams, Bradley Whitford\n• Cinematography: Toby Oliver\n• Music by: Michael Abels',
     wikidataDirectorBio: 'Jordan Peele'
   }
 ];
@@ -294,6 +294,6 @@ export const SEED_MEDIA: MediaItem[] = [
 export const SEED_LIBRARY: LibraryItem[] = SEED_MEDIA.map((m, idx) => ({
   mediaId: m.id,
   status: 'to-watch',
-  addedAt: Date.now() - idx * 24 * 60 * 60 * 1000, // staggered dates
+  addedAt: Date.now() - idx * 24 * 60 * 60 * 1000,
   updatedAt: Date.now() - idx * 24 * 60 * 60 * 1000
 }));

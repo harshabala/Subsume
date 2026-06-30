@@ -1,5 +1,12 @@
 /* ─── Library Page ────────────────────────────────────────────────── */
 
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 2rem;
+  margin: 1.5rem 0 3rem;
+}
+
 .library-tabs {
   margin-bottom: var(--spacing-xl);
 }
