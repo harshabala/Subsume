@@ -69,6 +69,8 @@ export interface LibraryItem {
   scriptParallels?: string[]; // Screenplay dialogue echoes
   originalScreenplaySparks?: string; // Story ideas
   contemplatedAt?: number;
+  atmosphere?: string;
+  lingeringThought?: string;
 }
 
 export interface LibraryMediaPair {
@@ -215,6 +217,8 @@ export interface SetUserTagsRequest {
 export interface SetUserNotesRequest {
   mediaId: string;
   notes: string;
+  atmosphere?: string;
+  lingeringThought?: string;
 }
 
 export interface GetLibraryRequest {
