@@ -263,6 +263,37 @@ describe('SET_USER_NOTES and SET_USER_TAGS', () => {
     expect(result).toEqual({ updated: false });
     expect(putLibraryItem).not.toHaveBeenCalled();
   });
+
+  it('updates notes, atmosphere, and lingeringThought successfully', async () => {
+    const existingItem = {
+      mediaId: 'tmdb_movie_1',
+      notes: 'Old notes',
+      atmosphere: 'Old atmosphere',
+      lingeringThought: 'Old lingering thought',
+    };
+    vi.mocked(getLibraryItem).mockResolvedValue(existingItem as any);
+
+    const handler = handlers[MessageType.SET_USER_NOTES]!;
+    const result = await handler(
+      {
+        mediaId: 'tmdb_movie_1',
+        notes: 'Great film',
+        atmosphere: 'Cozy',
+        lingeringThought: 'Beautiful ending',
+      },
+      sender
+    );
+
+    expect(result).toEqual({ updated: true });
+    expect(putLibraryItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mediaId: 'tmdb_movie_1',
+        notes: 'Great film',
+        atmosphere: 'Cozy',
+        lingeringThought: 'Beautiful ending',
+      })
+    );
+  });
 });
 
 describe('GET_PREFERENCES sanitization', () => {

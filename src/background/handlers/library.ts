@@ -132,6 +132,8 @@ export const libraryHandlers: MessageHandlerMap = {
       return { updated: false };
     }
     existing.notes = req.notes.trim() || undefined;
+    existing.atmosphere = req.atmosphere?.trim() || undefined;
+    existing.lingeringThought = req.lingeringThought?.trim() || undefined;
     existing.updatedAt = Date.now();
     await putLibraryItem(existing);
     invalidateProfileCache();

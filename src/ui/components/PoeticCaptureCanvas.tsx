@@ -26,6 +26,8 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
   const [emotionalRecall, setEmotionalRecall] = useState<string>('');
   const [intent, setIntent] = useState<SanctuaryIntent>('keep_memory');
   const [rating, setRating] = useState<number>(0);
+  const [atmosphere, setAtmosphere] = useState<string>('');
+  const [lingeringThought, setLingeringThought] = useState<string>('');
   const [isWriting, setIsWriting] = useState<boolean>(false);
 
   useEffect(() => {
@@ -68,6 +70,8 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
         await sendMessage<SetUserNotesRequest, Record<string, unknown>>(MessageType.SET_USER_NOTES, {
           mediaId,
           notes: emotionalRecall.trim(),
+          atmosphere: atmosphere.trim() || undefined,
+          lingeringThought: lingeringThought.trim() || undefined,
         });
       }
       if (rating > 0) {
@@ -107,7 +111,7 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
           onBlur={() => setIsWriting(false)}
         />
 
-        {emotionalRecall.length > 0 && (
+        {emotionalRecall.length >= 140 && (
           <div class="progressive-controls">
             <div class="intent-selectors" data-testid="intent-selectors">
               <button
@@ -149,6 +153,32 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
                 </button>
               ))}
             </div>
+
+            <div class="metadata-fields-group">
+              <div class="metadata-input-group">
+                <label class="metadata-label">Atmosphere</label>
+                <input
+                  type="text"
+                  class="poetic-input"
+                  placeholder="e.g. Melancholic, Neon-drenched, Warm Amber"
+                  value={atmosphere}
+                  onInput={(e) => setAtmosphere((e.currentTarget as HTMLInputElement).value)}
+                  data-testid="atmosphere-input"
+                />
+              </div>
+
+              <div class="metadata-input-group">
+                <label class="metadata-label">Lingering Thought</label>
+                <input
+                  type="text"
+                  class="poetic-input"
+                  placeholder="e.g. The cost of love / A memory frozen in time..."
+                  value={lingeringThought}
+                  onInput={(e) => setLingeringThought((e.currentTarget as HTMLInputElement).value)}
+                  data-testid="lingering-thought-input"
+                />
+              </div>
+            </div>
           </div>
         )}
 
@@ -157,7 +187,7 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
             Close
           </button>
           <button type="button" class="save-btn" data-testid="save-btn" onClick={handleSave}>
-            Save
+            Commit to Sanctuary
           </button>
         </div>
       </div>
