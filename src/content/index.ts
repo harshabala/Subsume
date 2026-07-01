@@ -7,7 +7,7 @@
 
 import { scanPage, startObserving, scanImages, setImageScanConfig, DetectedTitle } from './scanner';
 import { detectCatalogRegions } from './catalogDetector';
-import { HoverCardManager } from './hoverCard';
+import { HoverCardManager } from './HoverCardManager';
 import { MuseumPlaqueManager as PosterBadgeManager } from './overlay';
 import { AuteurScreenplayDock } from './dock';
 import { sendMessage } from '@/shared/messages';

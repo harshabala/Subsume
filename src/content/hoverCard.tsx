@@ -1,67 +1,58 @@
-import { render, h } from 'preact';
-import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
-import { sendMessage } from '@/shared/messages';
-import { MessageType, MediaItem, MediaType, LibraryItem } from '@/shared/types';
+import { h, Fragment } from 'preact';
+import { MediaItem, MediaType, LibraryItem } from '@/shared/types';
 import { formatPlatformName } from '@/shared/platforms';
+import { CardPosition } from './positioning';
 
-// ─── Positioning ─────────────────────────────────────────────────────
-
-interface CardPosition {
-  top: number;
-  left: number;
-}
-
-function computePosition(target: HTMLElement): CardPosition {
-  const rect = target.getBoundingClientRect();
-  const cardW = 340;
-  const cardH = 380;
-  const gap = 12;
-
-  let top = rect.bottom + gap + window.scrollY;
-  let left = rect.left + window.scrollX;
-
-  // Keep within viewport
-  if (left + cardW > window.innerWidth) {
-    left = window.innerWidth - cardW - 16;
-  }
-  if (left < 8) left = 8;
-
-  // If card would go below viewport, show above
-  if (rect.bottom + gap + cardH > window.innerHeight) {
-    top = rect.top - cardH - gap + window.scrollY;
-  }
-
-  return { top, left };
-}
-
-// ─── Hover Card Component ────────────────────────────────────────────
-
-interface HoverCardProps {
+export interface HoverCardProps {
   mediaItem: MediaItem | null;
   loading: boolean;
   position: CardPosition;
   visible: boolean;
   inLibrary: boolean;
   libraryItem: LibraryItem | null;
+  actionStatus: 'added-movie' | 'added-tv' | 'removed' | null;
   onAdd: (type: MediaType) => void;
   onRemove: () => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
 }
 
-function HoverCard({
+export function HoverCard({
   mediaItem,
   loading,
   position,
   visible,
   inLibrary,
   libraryItem,
+  actionStatus,
   onAdd,
   onRemove,
   onMouseEnter,
   onMouseLeave,
 }: HoverCardProps) {
   if (!visible) return null;
+
+  if (actionStatus) {
+    const isRemove = actionStatus === 'removed';
+    const addedLabel = actionStatus === 'added-movie' ? 'Movies' : 'TV Shows';
+    const message = isRemove ? 'Removed from library!' : `Added to ${addedLabel}!`;
+    
+    return (
+      <div
+        className="subsume-hover-card subsume-visible subsume-added"
+        style={{ top: `${position.top}px`, left: `${position.left}px` }}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+      >
+        <div className="subsume-added-msg">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 6L9 17l-5-5" />
+          </svg>
+          <span>{message}</span>
+        </div>
+      </div>
+    );
+  }
 
   const imdbRating = mediaItem?.ratings.find((r) => r.provider === 'imdb');
   const rtRating = mediaItem?.ratings.find((r) => r.provider === 'rt');
@@ -178,7 +169,7 @@ function HoverCard({
             {inLibrary ? (
               <button className="subsume-btn subsume-btn-danger" onClick={onRemove}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2-2v2" />
                 </svg>
                 Remove
               </button>
@@ -207,302 +198,7 @@ function HoverCard({
   );
 }
 
-// ─── Hover Card Manager ──────────────────────────────────────────────
-
-export class HoverCardManager {
-  private container: HTMLDivElement;
-  private shadowRoot: ShadowRoot;
-  private currentTarget: HTMLElement | null = null;
-  private showTimeout: ReturnType<typeof setTimeout> | null = null;
-  private hideTimeout: ReturnType<typeof setTimeout> | null = null;
-  private isCardHovered = false;
-  private libraryItems: Map<string, LibraryItem> = new Map();
-
-  constructor() {
-    // Create shadow DOM container
-    this.container = document.createElement('div');
-    this.container.id = 'subsume-hover-root';
-    this.shadowRoot = this.container.attachShadow({ mode: 'open' });
-
-    // Inject styles into shadow DOM
-    const style = document.createElement('style');
-    style.textContent = HOVER_CARD_STYLES;
-    this.shadowRoot.appendChild(style);
-
-    // Render mount point
-    const mount = document.createElement('div');
-    mount.id = 'subsume-mount';
-    this.shadowRoot.appendChild(mount);
-
-    document.body.appendChild(this.container);
-
-    // Note: initLibraryCache() is deferred to the first attachToElement() call.
-    // This avoids an IDB round-trip on pages where no titles are detected.
-    this.setupSyncListener();
-  }
-
-  // Tracks whether the library cache has already been populated to ensure
-  // initLibraryCache is only called once per HoverCardManager instance.
-  private libraryCacheInitialized = false;
-
-  private async initLibraryCache() {
-    try {
-      const libResponse = await sendMessage<{}, { library: LibraryItem; media: MediaItem }[]>(
-        MessageType.GET_LIBRARY,
-        {}
-      );
-      if (libResponse.success && libResponse.data) {
-        this.libraryItems = new Map(
-          libResponse.data.map(item => [item.library.mediaId, item.library])
-        );
-      }
-    } catch (err) {
-      console.error('[Subsume] Failed to initialize library cache:', err);
-    }
-  }
-
-  private setupSyncListener() {
-    chrome.runtime.onMessage.addListener((message, sender) => {
-      // Only accept messages originating from our own extension service worker.
-      // This prevents a compromised page from spoofing LIBRARY_UPDATED events.
-      if (sender.id !== chrome.runtime.id) return;
-
-      if (message && message.type === 'LIBRARY_UPDATED') {
-        const libItem = message.libraryItem as LibraryItem | undefined;
-        const mediaId = message.mediaId || libItem?.mediaId;
-        if (!mediaId) return;
-
-        if (message.action === 'add' && libItem) {
-          this.libraryItems.set(mediaId, libItem);
-        } else if (message.action === 'update' && libItem) {
-          this.libraryItems.set(mediaId, libItem);
-        } else if (message.action === 'remove') {
-          this.libraryItems.delete(mediaId);
-        }
-      }
-    });
-  }
-
-  attachToElement(element: HTMLElement, title: string, yearGuess?: number): void {
-    // Lazy-initialize the library cache on the first detected title element.
-    // This avoids an unnecessary IDB fetch on pages with no movie/TV content.
-    if (!this.libraryCacheInitialized) {
-      this.libraryCacheInitialized = true;
-      this.initLibraryCache();
-    }
-
-    element.addEventListener('mouseenter', () => {
-      this.scheduleShow(element, title, yearGuess);
-    });
-    element.addEventListener('mouseleave', () => {
-      this.scheduleHide();
-    });
-  }
-
-  private scheduleShow(target: HTMLElement, title: string, yearGuess?: number): void {
-    this.cancelHide();
-    this.showTimeout = setTimeout(() => {
-      this.currentTarget = target;
-      this.showCard(target, title, yearGuess);
-    }, 300);
-  }
-
-  private scheduleHide(): void {
-    this.cancelShow();
-    this.hideTimeout = setTimeout(() => {
-      if (!this.isCardHovered) {
-        this.hideCard();
-      }
-    }, 200);
-  }
-
-  private cancelShow(): void {
-    if (this.showTimeout) {
-      clearTimeout(this.showTimeout);
-      this.showTimeout = null;
-    }
-  }
-
-  private cancelHide(): void {
-    if (this.hideTimeout) {
-      clearTimeout(this.hideTimeout);
-      this.hideTimeout = null;
-    }
-  }
-
-  private async showCard(target: HTMLElement, title: string, yearGuess?: number): Promise<void> {
-    const mount = this.shadowRoot.getElementById('subsume-mount');
-    if (!mount) return;
-
-    const position = computePosition(target);
-
-    // Immediately show loading state
-    render(
-      <HoverCard
-        mediaItem={null}
-        loading={true}
-        position={position}
-        visible={true}
-        inLibrary={false}
-        libraryItem={null}
-        onAdd={() => {}}
-        onRemove={() => {}}
-        onMouseEnter={() => {
-          this.isCardHovered = true;
-          this.cancelHide();
-        }}
-        onMouseLeave={() => {
-          this.isCardHovered = false;
-          this.scheduleHide();
-        }}
-      />,
-      mount
-    );
-
-    // Fetch metadata
-    try {
-      const response = await sendMessage<
-        { title: string; yearGuess?: number },
-        MediaItem
-      >(MessageType.GET_TITLE_DETAILS, { title, yearGuess });
-
-      if (this.currentTarget !== target) return; // User moved on
-
-      const mediaItem = response.success ? response.data ?? null : null;
-
-      const libraryItem = mediaItem ? this.libraryItems.get(mediaItem.id) || null : null;
-      const inLibrary = libraryItem !== null;
-
-      render(
-        <HoverCard
-          mediaItem={mediaItem}
-          loading={false}
-          position={position}
-          visible={true}
-          inLibrary={inLibrary}
-          libraryItem={libraryItem}
-          onAdd={(type) => this.handleAdd(mediaItem!, type)}
-          onRemove={() => this.handleRemove(mediaItem!)}
-          onMouseEnter={() => {
-            this.isCardHovered = true;
-            this.cancelHide();
-          }}
-          onMouseLeave={() => {
-            this.isCardHovered = false;
-            this.scheduleHide();
-          }}
-        />,
-        mount
-      );
-    } catch (err) {
-      console.error('[Subsume] Failed to fetch title details:', err);
-      render(
-        <HoverCard
-          mediaItem={null}
-          loading={false}
-          position={computePosition(target)}
-          visible={true}
-          inLibrary={false}
-          libraryItem={null}
-          onAdd={() => {}}
-          onRemove={() => {}}
-          onMouseEnter={() => {
-            this.isCardHovered = true;
-            this.cancelHide();
-          }}
-          onMouseLeave={() => {
-            this.isCardHovered = false;
-            this.scheduleHide();
-          }}
-        />,
-        mount
-      );
-    }
-  }
-
-  private hideCard(): void {
-    const mount = this.shadowRoot.getElementById('subsume-mount');
-    if (mount) {
-      render(
-        <HoverCard
-          mediaItem={null}
-          loading={false}
-          position={{ top: 0, left: 0 }}
-          visible={false}
-          inLibrary={false}
-          libraryItem={null}
-          onAdd={() => {}}
-          onRemove={() => {}}
-          onMouseEnter={() => {}}
-          onMouseLeave={() => {}}
-        />,
-        mount
-      );
-    }
-    this.currentTarget = null;
-  }
-
-  private async handleAdd(mediaItem: MediaItem, type: MediaType): Promise<void> {
-    try {
-      await sendMessage(MessageType.ADD_TO_LIST, {
-        mediaItem: { ...mediaItem, type },
-        type,
-      });
-
-      // Brief confirmation feedback
-      const mount = this.shadowRoot.getElementById('subsume-mount');
-      if (mount) {
-        const addedLabel = type === 'movie' ? 'Movies' : 'TV Shows';
-        render(
-          <div className="subsume-hover-card subsume-visible subsume-added">
-            <div className="subsume-added-msg">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20 6L9 17l-5-5" />
-              </svg>
-              <span>Added to {addedLabel}!</span>
-            </div>
-          </div>,
-          mount
-        );
-
-        setTimeout(() => this.hideCard(), 1200);
-      }
-    } catch (err) {
-      console.error('[Subsume] Failed to add to list:', err);
-    }
-  }
-
-  private async handleRemove(mediaItem: MediaItem): Promise<void> {
-    try {
-      await sendMessage(MessageType.REMOVE_FROM_LIBRARY, {
-        mediaId: mediaItem.id,
-      });
-
-      const mount = this.shadowRoot.getElementById('subsume-mount');
-      if (mount) {
-        render(
-          <div className="subsume-hover-card subsume-visible subsume-added">
-            <div className="subsume-added-msg">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20 6L9 17l-5-5" />
-              </svg>
-              <span>Removed from library!</span>
-            </div>
-          </div>,
-          mount
-        );
-
-        setTimeout(() => this.hideCard(), 1200);
-      }
-    } catch (err) {
-      console.error('[Subsume] Failed to remove from library:', err);
-    }
-  }
-}
-
-// ─── Shadow DOM Styles ───────────────────────────────────────────────
-
-const HOVER_CARD_STYLES = `
+export const HOVER_CARD_STYLES = `
   :host {
     all: initial;
   }
