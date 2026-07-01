@@ -2032,3 +2032,16 @@ select.sanctuary-input option {
   cursor: pointer;
 }
 
+
+.sanctuary-detail-metadata-inputs {
+  margin-top: 1.25rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.sanctuary-detail-input-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}

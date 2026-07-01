@@ -9,20 +9,27 @@ interface ReflectionNotesProps {
 }
 
 export function ReflectionNotes({
-  initialNotes = '',
-  initialAtmosphere = '',
-  initialLingeringThought = '',
+  initialNotes = "",
+  initialAtmosphere = "",
+  initialLingeringThought = "",
   onUpdateNotes,
 }: ReflectionNotesProps) {
-  const [notes, setNotes] = useState(initialNotes);
-  const [atmosphere, setAtmosphere] = useState(initialAtmosphere);
-  const [lingeringThought, setLingeringThought] = useState(initialLingeringThought);
+  const [state, setState] = useState({
+    notes: initialNotes,
+    atmosphere: initialAtmosphere,
+    lingeringThought: initialLingeringThought
+  });
+  const stateRef = useRef(state);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
-    setNotes(initialNotes);
-    setAtmosphere(initialAtmosphere);
-    setLingeringThought(initialLingeringThought);
+    const newState = {
+      notes: initialNotes,
+      atmosphere: initialAtmosphere,
+      lingeringThought: initialLingeringThought
+    };
+    setState(newState);
+    stateRef.current = newState;
   }, [initialNotes, initialAtmosphere, initialLingeringThought]);
 
   useEffect(() => {
@@ -37,27 +44,16 @@ export function ReflectionNotes({
     field: 'notes' | 'atmosphere' | 'lingeringThought',
     value: string
   ) => {
-    let newNotes = notes;
-    let newAtmosphere = atmosphere;
-    let newLingeringThought = lingeringThought;
-
-    if (field === 'notes') {
-      setNotes(value);
-      newNotes = value;
-    } else if (field === 'atmosphere') {
-      setAtmosphere(value);
-      newAtmosphere = value;
-    } else if (field === 'lingeringThought') {
-      setLingeringThought(value);
-      newLingeringThought = value;
-    }
+    const newState = { ...stateRef.current, [field]: value };
+    stateRef.current = newState;
+    setState(newState);
 
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
 
     debounceRef.current = setTimeout(() => {
-      onUpdateNotes?.(newNotes, newAtmosphere, newLingeringThought);
+      onUpdateNotes?.(newState.notes, newState.atmosphere, newState.lingeringThought);
     }, 500);
   };
 
@@ -65,7 +61,7 @@ export function ReflectionNotes({
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
       debounceRef.current = undefined;
-      onUpdateNotes?.(notes, atmosphere, lingeringThought);
+      onUpdateNotes?.(stateRef.current.notes, stateRef.current.atmosphere, stateRef.current.lingeringThought);
     }
   };
 
@@ -73,7 +69,7 @@ export function ReflectionNotes({
     <div className="sanctuary-detail-notes-section">
       <span className="sanctuary-detail-control-label">Private Reflections & Notes:</span>
       <textarea
-        value={notes}
+        value={state.notes}
         placeholder="Record private thoughts, directorial motifs, or memorable sequences..."
         onChange={(e) => updateField('notes', e.currentTarget.value)}
         onBlur={flushNotes}
@@ -81,23 +77,23 @@ export function ReflectionNotes({
         className="sanctuary-detail-input sanctuary-detail-textarea"
       />
 
-      <div className="sanctuary-detail-metadata-inputs" style={{ marginTop: '1.25rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-        <div className="sanctuary-detail-input-wrap" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          <span className="sanctuary-detail-control-label" style={{ fontSize: '11px' }}>Atmosphere:</span>
+      <div className="sanctuary-detail-metadata-inputs" >
+        <div className="sanctuary-detail-input-wrap" >
+          <span className="sanctuary-detail-control-label" >Atmosphere:</span>
           <input
             type="text"
-            value={atmosphere}
+            value={state.atmosphere}
             placeholder="e.g. Melancholic, Warm Amber"
             onChange={(e) => updateField('atmosphere', e.currentTarget.value)}
             onBlur={flushNotes}
             className="sanctuary-detail-input"
           />
         </div>
-        <div className="sanctuary-detail-input-wrap" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          <span className="sanctuary-detail-control-label" style={{ fontSize: '11px' }}>Lingering Thought:</span>
+        <div className="sanctuary-detail-input-wrap" >
+          <span className="sanctuary-detail-control-label" >Lingering Thought:</span>
           <input
             type="text"
-            value={lingeringThought}
+            value={state.lingeringThought}
             placeholder="e.g. The cost of love..."
             onChange={(e) => updateField('lingeringThought', e.currentTarget.value)}
             onBlur={flushNotes}
