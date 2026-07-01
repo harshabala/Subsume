@@ -91,6 +91,36 @@ describe('Logger Stability & Polish', () => {
     expect(lastErrorAccessed).toBe(true);
   });
 
+  test('truncates large persisted log details instead of storing full response bodies', async () => {
+    chrome.storage.local.get = vi.fn().mockImplementation((key: string, cb?: any) => {
+      const res = { system_logs: [...storedLogs] };
+      if (cb && typeof cb === 'function') cb(res);
+      return Promise.resolve(res);
+    });
+
+    chrome.storage.local.set = vi.fn().mockImplementation((obj: any, cb?: any) => {
+      if (obj.system_logs) {
+        storedLogs = [...obj.system_logs];
+      }
+      if (cb && typeof cb === 'function') cb();
+      return Promise.resolve();
+    });
+
+    const hugeBody = 'x'.repeat(500);
+    logger.error('Gemini API error (Status 500):', hugeBody);
+
+    await new Promise((r) => setTimeout(r, 40));
+    if ((logger as any)._flushQueue) {
+      await (logger as any)._flushQueue();
+    }
+
+    expect(storedLogs).toHaveLength(1);
+    const persistedDetails = storedLogs[0].details?.[0];
+    expect(typeof persistedDetails).toBe('string');
+    expect((persistedDetails as string).length).toBeLessThanOrEqual(201);
+    expect(persistedDetails).toContain('…');
+  });
+
   test('Logs page renders correct badge styles for info, warn, and error levels', async () => {
     storedLogs = [
       { timestamp: 1000, level: 'info', message: 'info message' },

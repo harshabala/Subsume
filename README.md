@@ -69,6 +69,8 @@ Your **Hardcover Library Archive** organises everything you've captured. Each ti
 
 ## 📐 Architecture & Engineering Blueprints
 
+> **Design authority:** UI implementation follows `CINEMATIC_JOURNAL_DESIGN_SPEC.md` and `src/shared/tokens.css`. Those sources supersede `brand.md` on conflicts (typography, tokens, motion).
+
 ```text
   ┌────────────────────────────────────────────────────────┐
   │              Any Website (Content Layer)               │
@@ -99,6 +101,54 @@ Your **Hardcover Library Archive** organises everything you've captured. Each ti
 
 ---
 
+## 🔐 Security
+
+Subsume is a client-side Chrome extension. There is no backend proxy — API keys and library data stay on your machine. Understand these tradeoffs before enabling LLM features or distributing a fork.
+
+### API Keys & Local Storage
+
+| Topic | Behavior |
+| :--- | :--- |
+| **Where keys live** | TMDb, OMDb, and LLM API keys are stored in **IndexedDB** (`subsume-db`) as part of `UserPreferences`. They are **not encrypted at rest**. |
+| **Who is responsible** | You. Keys never leave your browser except when the extension calls the providers you configure. Treat your machine and Chrome profile as trusted. |
+| **Content-script exposure** | API keys are **never** sent to content scripts. `GET_CONTENT_PREFS` returns feature toggles only (see `buildContentPrefs()`). |
+| **Export/backup** | Library export excludes API keys. Only media and library records are included. |
+
+### LLM Integration
+
+LLM calls (OpenAI, Anthropic, Gemini) are made **directly from the background service worker** using **your** API keys. Prompts are built from your local library — not from arbitrary page DOM — but short note excerpts (≤100 chars) may be included in taste-profile prompts.
+
+**Anthropic browser header:** When using Anthropic, the extension sends `anthropic-dangerous-direct-browser-access: true`. Anthropic requires this header for API requests originating in a browser context (MV3 service worker). Without it, direct client calls fail. The tradeoff is that your API key is used client-side and is visible to anyone with access to the extension bundle or your browser profile.
+
+**Recommendations:**
+
+- Use **personal API keys** for solo or portfolio use.
+- Do **not** ship a public Chrome Web Store build that embeds shared or enterprise keys.
+- For team or enterprise distribution, route LLM calls through a **server-side proxy** that holds keys and enforces rate limits — do not rely on client-side key storage.
+
+### Google Drive Sync
+
+Drive backup requires a **real Google OAuth client ID** in `manifest.json`. The committed placeholder `YOUR_CLIENT_ID_HERE` will not work until you replace it with a Chrome-extension OAuth client from [Google Cloud Console](https://console.cloud.google.com/). See [Setup → Google Drive OAuth](#google-drive-oauth-optional).
+
+### Content Script Surface
+
+Subsume injects on all `http://` and `https://` pages so discovery works on any site you browse. That broad surface is deliberate, but hostile pages must not be able to exfiltrate your full library or exhaust API quotas.
+
+| Mitigation | What it does |
+| :--- | :--- |
+| **Message allowlist** | Content scripts may only call a small set of background messages (`GET_CONTENT_PREFS`, `RESOLVE_POSTER`, `CHECK_LIBRARY_STATUS`, etc.). `GET_LIBRARY`, `SET_USER_NOTES`, and settings/key messages are extension-UI only. |
+| **Scoped library checks** | Hover cards call `CHECK_LIBRARY_STATUS` per `mediaId` when a card opens — never the full watchlist. |
+| **Per-origin poster budget** | Max **10** `RESOLVE_POSTER` calls per origin per content-script session; additional resolves are skipped and logged. |
+| **Poster query clamping** | Ancestor-text poster queries are capped at 60 characters and require ≥2 words before hitting TMDb. |
+| **API key stripping** | `GET_CONTENT_PREFS` returns feature toggles only — no TMDb/OMDb/LLM keys in the content layer. |
+| **Page reflection storage** | The Auteur Reflection Dock saves notes in `chrome.storage.local` keyed by `hostname + pathname`, not via fake `mediaId` library writes. |
+| **Sync listener hardening** | `LIBRARY_UPDATED` handlers verify `sender.id === chrome.runtime.id` before mutating in-memory caches. |
+| **Lifecycle teardown** | `HoverCardManager`, `MuseumPlaqueManager`, and `AuteurScreenplayDock` expose `destroy()`; the content entry point tears down on `pagehide`. |
+
+You can blacklist domains in **Settings → Disabled Domains** to disable all content-script features on specific sites.
+
+---
+
 ## ⚙️ Setup & Local Run Guide
 
 ### Prerequisites
@@ -119,6 +169,12 @@ cd subsume
 npm install
 npm run build
 ```
+
+### Google Drive OAuth (Optional)
+
+> **Required for Drive sync:** The repo ships with a placeholder OAuth client ID. Google Drive backup and restore **will not work** until you register your own client.
+
+Replace `YOUR_CLIENT_ID_HERE` in `manifest.json` with a real **Chrome extension OAuth client ID** from [Google Cloud Console](https://console.cloud.google.com/) (APIs & Services → Credentials → Create OAuth client ID → Chrome extension). Use the extension ID shown on `chrome://extensions` when creating the client. Do not commit your production client ID if you maintain a public fork — use a local override ignored by git (see `.gitignore`).
 
 ### Loading into Chrome / Brave
 

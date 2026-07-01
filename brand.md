@@ -1,5 +1,7 @@
 # Brand — Subsume
 
+> **UI typography note:** For in-app UI, the Cinematic Sanctuary spec is canonical — **Outfit** (sans/UI) and **Newsreader** (editorial). Geist tokens below are legacy reference; live tokens live in `src/shared/tokens.css`.
+
 > A Chrome extension for tracking movies and TV shows discovered while browsing.
 
 ## Palette: Gilded Night
@@ -102,15 +104,18 @@
 
 | Role | Family | Source |
 |---|---|---|
-| Sans / UI | **Geist** | [Google Fonts](https://fonts.google.com/specimen/Geist) |
-| Mono / numbers | **Geist Mono** | [Google Fonts](https://fonts.google.com/specimen/Geist+Mono) |
+| Sans / UI | **Outfit** | [Google Fonts](https://fonts.google.com/specimen/Outfit) |
+| Editorial / serif | **Newsreader** | [Google Fonts](https://fonts.google.com/specimen/Newsreader) |
+| Mono / numbers | **JetBrains Mono** | System fallback stack in `tokens.css` |
 
-Applied via Google Fonts `<link>` in `src/ui/index.html`. CSS variables set in `global.css`:
+Applied via Google Fonts `<link>` in `src/ui/index.html`. CSS variables set in `src/shared/tokens.css`:
 
 ```css
 :root {
-  --font-sans: 'Geist', system-ui, -apple-system, sans-serif;
-  --font-mono: 'Geist Mono', ui-monospace, 'Courier New', monospace;
+  --font-ui: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-editorial: 'Newsreader', 'Cormorant Garamond', Georgia, serif;
+  --font-sans: var(--font-ui);
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Courier New', monospace;
 }
 ```
 
@@ -163,9 +168,9 @@ Use on: Hero CTAs, featured cards. Never under body text.
 ### Don'ts
 - Don't put body text directly on `--gradient-accent` (contrast fails at midpoint)
 - Don't use more than one gradient per screen
-- Don't add more fonts — Geist + Geist Mono covers everything
+- Don't add more fonts — Outfit + Newsreader covers UI and editorial needs
 - Don't override the palette per "dark mode" — the dark tokens ARE the default
 
 ## For Future Sessions
 
-`frontend-design-guidelines` reads this file as source of truth for colors, typography, and voice. Any component work should reference these tokens, not hardcoded values.
+`frontend-design-guidelines` reads this file as source of truth for colors, typography, and voice. **Implementation tokens** are centralized in `src/shared/tokens.css` — reference CSS variables from there, not hardcoded values.

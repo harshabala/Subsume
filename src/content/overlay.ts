@@ -7,8 +7,9 @@
 
 import { render, h } from 'preact';
 import { sendMessage } from '@/shared/messages';
-import { MessageType, MediaItem, MediaRating, PosterMatch, LibraryItem } from '@/shared/types';
+import { MessageType, MediaRating, PosterMatch } from '@/shared/types';
 import { logger } from '@/shared/logger';
+import { setupShadowStyles } from '@/shared/shadowTokens';
 
 const BADGE_ATTR = 'data-subsume-badge';
 const WRAP_CLASS = 'subsume-poster-wrap';
@@ -88,11 +89,6 @@ const PLAQUE_STYLES = `
     inset: 0;
     pointer-events: none;
     z-index: 2147483646;
-    --bg-plaque: hsla(240, 15%, 11%, 0.85);
-    --text-artwork: hsl(0, 0%, 82%);
-    --border-restraint: hsla(0, 0%, 100%, 0.08);
-    --font-editorial: 'Newsreader', 'Cormorant Garamond', Georgia, serif;
-    --font-ui: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-family: var(--font-ui);
   }
 
@@ -104,18 +100,18 @@ const PLAQUE_STYLES = `
 
   .museum-plaque {
     position: absolute;
-    bottom: 8px;
-    right: 8px;
+    bottom: var(--spacing-sm);
+    right: var(--spacing-sm);
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    border-radius: 8px;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
     background: var(--bg-plaque);
     color: var(--text-artwork);
     border: 1px solid var(--border-restraint);
     backdrop-filter: blur(8px);
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    box-shadow: var(--shadow-md);
     font-family: var(--font-ui);
     font-size: 12px;
     font-weight: 500;
@@ -129,23 +125,23 @@ const PLAQUE_STYLES = `
   }
 
   .museum-plaque:hover {
-    background: hsla(240, 15%, 16%, 0.95);
-    color: hsl(0, 0%, 96%);
-    border-color: hsla(0, 0%, 100%, 0.2);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
+    background: var(--bg-plaque-hover);
+    color: var(--text-reflection);
+    border-color: var(--border);
+    box-shadow: var(--shadow-lg);
     transform: translateY(-1px);
   }
 
   .plaque-score {
     display: inline-block;
-    color: hsl(0, 0%, 96%);
+    color: var(--text-reflection);
     font-weight: 600;
   }
 
   .plaque-reveal {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--spacing-sm);
     max-width: 0;
     opacity: 0;
     transition: all 450ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -165,7 +161,7 @@ const PLAQUE_STYLES = `
     font-family: var(--font-editorial);
     font-size: 13px;
     font-weight: 600;
-    color: hsl(0, 0%, 96%);
+    color: var(--text-reflection);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -238,24 +234,6 @@ export class MuseumPlaqueManager {
     this.libraryIds.clear();
   }
 
-  async initLibraryCache(): Promise<void> {
-    try {
-      const res = await sendMessage<{}, { library: LibraryItem; media: MediaItem }[]>(
-        MessageType.GET_LIBRARY,
-        {}
-      );
-      if (res.success && res.data) {
-        this.libraryIds = new Set(res.data.map((item) => item.library.mediaId));
-        for (const state of this.badges.values()) {
-          state.inLibrary = this.libraryIds.has(state.mediaId);
-          this.renderBadge(state);
-        }
-      }
-    } catch (err) {
-      logger.warn('[Subsume] Failed to load library cache for museum plaques:', err);
-    }
-  }
-
   attachBadge(img: HTMLImageElement, match: PosterMatch): void {
     if (img.hasAttribute(BADGE_ATTR)) return;
 
@@ -268,9 +246,7 @@ export class MuseumPlaqueManager {
     wrapper.appendChild(host);
 
     const shadowRoot = host.attachShadow({ mode: 'open' });
-    const style = document.createElement('style');
-    style.textContent = PLAQUE_STYLES;
-    shadowRoot.appendChild(style);
+    setupShadowStyles(shadowRoot, PLAQUE_STYLES);
 
     const mount = document.createElement('div');
     shadowRoot.appendChild(mount);

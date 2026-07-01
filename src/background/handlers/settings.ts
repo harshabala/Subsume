@@ -5,6 +5,13 @@ import { setTmdbApiKey } from '../tmdb';
 import { setOmdbApiKey } from '../omdb';
 import { buildContentPrefs } from '../contentPrefs';
 
+const API_KEY_FIELDS: (keyof UserPreferences)[] = [
+  'tmdbApiKey',
+  'omdbApiKey',
+  'llmApiKey',
+  'llmSecondaryApiKey',
+];
+
 /**
  * Returns a copy of UserPreferences with all sensitive API key fields removed.
  * Used by GET_PREFERENCES so that content scripts running on arbitrary web
@@ -15,6 +22,47 @@ function sanitizePreferencesForContentScript(
 ): Omit<UserPreferences, 'tmdbApiKey' | 'omdbApiKey' | 'llmApiKey' | 'llmSecondaryApiKey'> {
   const { tmdbApiKey: _tmdb, omdbApiKey: _omdb, llmApiKey: _llm, llmSecondaryApiKey: _llmSec, ...safe } = prefs;
   return safe;
+}
+
+function maskApiKey(key: string | undefined): string | undefined {
+  if (!key) return key;
+  if (key.length <= 4) return key;
+  const last4 = key.slice(-4);
+  return key.startsWith('sk-') ? `sk-...${last4}` : `...${last4}`;
+}
+
+function maskPreferencesApiKeys(prefs: UserPreferences): UserPreferences {
+  return {
+    ...prefs,
+    tmdbApiKey: maskApiKey(prefs.tmdbApiKey),
+    omdbApiKey: maskApiKey(prefs.omdbApiKey),
+    llmApiKey: maskApiKey(prefs.llmApiKey),
+    llmSecondaryApiKey: maskApiKey(prefs.llmSecondaryApiKey),
+  };
+}
+
+function isMaskedApiKey(value: string | undefined): boolean {
+  return typeof value === 'string' && value.includes('...');
+}
+
+function mergePreferences(
+  existing: UserPreferences,
+  incoming: Partial<UserPreferences>
+): UserPreferences {
+  const merged: UserPreferences = { ...existing };
+
+  for (const [key, value] of Object.entries(incoming)) {
+    if (value === undefined) continue;
+
+    const field = key as keyof UserPreferences;
+    if (API_KEY_FIELDS.includes(field) && isMaskedApiKey(value as string)) {
+      continue;
+    }
+
+    (merged as Record<string, unknown>)[field] = value;
+  }
+
+  return merged;
 }
 
 function isValidUserPreferences(prefs: any): prefs is UserPreferences {
@@ -42,20 +90,22 @@ export const settingHandlers: MessageHandlerMap = {
     return sanitizePreferencesForContentScript(prefs);
   },
 
-  [MessageType.GET_FULL_PREFERENCES]: async () => {
-    // Returns the full unredacted preferences including API keys.
-    // Only the Settings UI should call this message type.
-    return getPreferences();
+  [MessageType.GET_FULL_PREFERENCES]: async (payload) => {
+    const { revealKeys } = (payload as { revealKeys?: boolean } | undefined) ?? {};
+    const prefs = await getPreferences();
+    return revealKeys ? prefs : maskPreferencesApiKeys(prefs);
   },
 
   [MessageType.SET_PREFERENCES]: async (payload) => {
-    const prefs = payload as UserPreferences;
-    if (!isValidUserPreferences(prefs)) {
+    const incoming = payload as Partial<UserPreferences>;
+    const existing = await getPreferences();
+    const merged = mergePreferences(existing, incoming);
+    if (!isValidUserPreferences(merged)) {
       throw new Error('Invalid preferences payload');
     }
-    await savePreferences(prefs);
-    setTmdbApiKey(prefs.tmdbApiKey ?? '');
-    setOmdbApiKey(prefs.omdbApiKey ?? '');
+    await savePreferences(merged);
+    setTmdbApiKey(merged.tmdbApiKey ?? '');
+    setOmdbApiKey(merged.omdbApiKey ?? '');
     return { updated: true };
   },
 

@@ -1,11 +1,4 @@
-:root {
-  --bg-sanctuary: hsl(240, 18%, 5%);
-  --text-sanctuary: hsl(0, 0%, 96%);
-  --bg-plaque: hsla(240, 15%, 11%, 0.85);
-  --border-restraint: hsla(0, 0%, 100%, 0.08);
-  --border-hero: hsla(45, 90%, 65%, 0.4);
-  --accent-sanctuary: hsla(45, 90%, 65%, 0.4);
-}
+/* Sanctuary tokens live in src/shared/tokens.css */
 
 .poetic-sanctuary-modal {
   position: fixed;
@@ -16,7 +9,7 @@
   justify-content: center;
   background-color: var(--bg-sanctuary);
   color: var(--text-sanctuary);
-  font-family: 'Newsreader', Georgia, serif;
+  font-family: var(--font-editorial);
   overflow: hidden;
 }
 
@@ -35,12 +28,18 @@
   height: 100%;
   object-fit: cover;
   opacity: 0.2;
-  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all var(--duration-slow) cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .poetic-poster.writing {
-  filter: blur(10px) brightness(0.5);
+  filter: blur(8px) brightness(0.5);
   transform: scale(1.03);
+}
+
+/* One hero moment: further dim poster when writing begins */
+.poetic-sanctuary-modal.staging-one-focal-point .poetic-poster {
+  opacity: 0.08;
+  filter: blur(12px) brightness(0.35);
 }
 
 
@@ -56,9 +55,34 @@
   background: var(--bg-plaque);
   border: 1px solid var(--border-restraint);
   border-radius: 4px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  box-shadow: var(--shadow-hero);
   backdrop-filter: blur(20px);
   box-sizing: border-box;
+}
+
+.poetic-media-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.poetic-film-title {
+  font-family: 'Outfit', -apple-system, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: hsl(0, 0%, 82%);
+  margin: 0;
+}
+
+.poetic-film-director {
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 1rem;
+  font-style: italic;
+  color: hsl(240, 10%, 50%);
+  margin: 0;
 }
 
 .poetic-heading {
@@ -69,6 +93,71 @@
   text-align: center;
   color: var(--text-sanctuary);
   margin: 0;
+}
+
+.poetic-loading,
+.poetic-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  min-height: 200px;
+  text-align: center;
+}
+
+.poetic-loading-pulse {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid var(--border-restraint);
+  animation: poetic-pulse 1.8s var(--ease-focus-pull, cubic-bezier(0.25, 1, 0.5, 1)) infinite;
+}
+
+@keyframes poetic-pulse {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.poetic-loading-text,
+.poetic-error-text {
+  font-family: 'Newsreader', Georgia, serif;
+  font-style: italic;
+  font-size: 1.1rem;
+  color: hsl(240, 10%, 50%);
+  margin: 0;
+}
+
+.poetic-retry-btn {
+  background: transparent;
+  border: 1px solid var(--border-restraint);
+  color: var(--text-sanctuary);
+  padding: 0.75rem 1.5rem;
+  border-radius: 2px;
+  font-family: 'Outfit', -apple-system, sans-serif;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+
+.poetic-retry-btn:hover {
+  border-color: var(--border-hero);
+}
+
+.poetic-save-error {
+  color: var(--text-sanctuary);
+  margin: 0 0 12px;
+  font-family: 'Outfit', -apple-system, sans-serif;
+  font-size: 0.85rem;
+  text-align: center;
 }
 
 .poetic-textarea {
@@ -84,7 +173,7 @@
   border-radius: 2px;
   resize: vertical;
   outline: none;
-  transition: border-color 0.4s ease;
+  transition: border-color var(--duration-normal) ease;
   box-sizing: border-box;
 }
 
@@ -96,7 +185,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  animation: fadeInSanctuary 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeInSanctuary var(--duration-normal) cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes fadeInSanctuary {
@@ -123,7 +212,7 @@
   color: var(--text-sanctuary);
   padding: 0.75rem 1.25rem;
   border-radius: 2px;
-  font-family: 'Outfit', -apple-system, sans-serif;
+  font-family: var(--font-ui);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.15em;
@@ -153,7 +242,7 @@
   background: transparent;
   border: 1px solid var(--border-restraint);
   color: var(--text-sanctuary);
-  font-family: 'Outfit', -apple-system, sans-serif;
+  font-family: var(--font-ui);
   font-size: 11px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -176,7 +265,7 @@
 .poetic-actions button {
   padding: 0.75rem 2rem;
   border-radius: 2px;
-  font-family: 'Outfit', -apple-system, sans-serif;
+  font-family: var(--font-ui);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.15em;
@@ -211,7 +300,7 @@
 }
 
 .metadata-label {
-  font-family: 'Outfit', -apple-system, sans-serif;
+  font-family: var(--font-ui);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.15em;
@@ -228,10 +317,30 @@
   padding: 0.75rem;
   border-radius: 2px;
   outline: none;
-  transition: border-color 0.4s ease;
+  transition: border-color var(--duration-normal) ease;
   box-sizing: border-box;
 }
 
 .poetic-input:focus {
   border-color: var(--border-hero);
+}
+
+/* ─── Reduced Motion ──────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .poetic-poster,
+  .poetic-textarea,
+  .poetic-input,
+  .progressive-controls,
+  .intent-selectors button,
+  .rating-control button,
+  .poetic-actions button {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .poetic-poster.writing {
+    transform: none;
+    filter: none;
+  }
 }

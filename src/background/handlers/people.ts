@@ -19,6 +19,7 @@ import {
   getMediaItem,
   getAllPeople,
 } from '../storage';
+import { logger } from '@/shared/logger';
 import { broadcastMessage } from './utils';
 
 export const peopleHandlers: MessageHandlerMap = {
@@ -78,7 +79,9 @@ export const peopleHandlers: MessageHandlerMap = {
           personId: req.personId
         });
       })
-      .catch(() => {});
+      .catch((err) => {
+        logger.warn('[Subsume] Filmography sync failed for person', req.personId, err);
+      });
 
     broadcastMessage({
       type: 'FILMMAKERS_UPDATED',

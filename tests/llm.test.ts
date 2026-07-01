@@ -117,6 +117,31 @@ describe('LLM Recommendations Module', () => {
         callLLMProvider('prompt', { ...prefs, llmProvider: 'gemini' })
       ).rejects.toThrow('Gemini API error (Status 403)');
     });
+
+    it('sends Gemini API key via x-goog-api-key header, not URL query string', async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          candidates: [{ content: { parts: [{ text: 'ok' }] } }],
+        }),
+      });
+      vi.stubGlobal('fetch', fetchMock);
+
+      await callLLMProvider('prompt', { ...prefs, llmProvider: 'gemini' });
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'x-goog-api-key': 'test-api-key',
+          }),
+        })
+      );
+
+      const calledUrl = fetchMock.mock.calls[0][0] as string;
+      expect(calledUrl).not.toContain('key=');
+      expect(calledUrl).not.toContain('test-api-key');
+    });
   });
 
   describe('generateLLMRecommendations flow', () => {

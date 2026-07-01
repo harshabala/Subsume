@@ -91,11 +91,30 @@ export class LLMRateLimitError extends Error {
   }
 }
 
+const MAX_ERROR_MESSAGE_LENGTH = 200;
+
+function truncateErrorMessage(message: string): string {
+  if (message.length <= MAX_ERROR_MESSAGE_LENGTH) return message;
+  return `${message.slice(0, MAX_ERROR_MESSAGE_LENGTH)}…`;
+}
+
 async function assertResponseOk(res: Response, provider: string): Promise<void> {
   if (!res.ok) {
     if (res.status === 401) throw new LLMAuthError();
     if (res.status === 429) throw new LLMRateLimitError();
-    logger.error(`${provider} API error body:`, await res.text());
+    const bodyText = await res.text();
+    let message = bodyText;
+    try {
+      const parsed = JSON.parse(bodyText) as { error?: { message?: string } | string };
+      if (typeof parsed.error === 'string') {
+        message = parsed.error;
+      } else if (parsed.error?.message) {
+        message = parsed.error.message;
+      }
+    } catch {
+      // Keep raw body text when response is not JSON.
+    }
+    logger.error(`${provider} API error (Status ${res.status}): ${truncateErrorMessage(message)}`);
     throw new Error(`${provider} API error (Status ${res.status})`);
   }
 }
@@ -125,6 +144,10 @@ async function callAnthropic(prompt: string, apiKey: string): Promise<string> {
       'Content-Type': 'application/json',
       'x-api-key': apiKey,
       'anthropic-version': '2023-06-01',
+      // Required by Anthropic for direct browser/MV3 service-worker calls. Without this
+      // header the API rejects the request. Tradeoff: the user's API key is used
+      // client-side (see README Security). Use personal keys only; enterprise builds
+      // should proxy LLM calls through a backend instead.
       'anthropic-dangerous-direct-browser-access': 'true',
     },
     body: JSON.stringify({
@@ -139,9 +162,12 @@ async function callAnthropic(prompt: string, apiKey: string): Promise<string> {
 }
 
 async function callGemini(prompt: string, apiKey: string): Promise<string> {
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+  const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-goog-api-key': apiKey,
+    },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
     }),

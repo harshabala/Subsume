@@ -24,31 +24,38 @@ vi.mock('@/background/omdb', () => ({
   setOmdbApiKey: vi.fn(),
 }));
 
-vi.mock('@/background/storage', () => ({
-  findMediaByTitle: vi.fn(),
-  putMediaItem: vi.fn(),
-  getMediaItem: vi.fn(),
-  getLibraryItem: vi.fn(),
-  putLibraryItem: vi.fn(),
-  removeLibraryItem: vi.fn(),
-  getAllLibraryItems: vi.fn().mockResolvedValue([]),
-  getLibraryPage: vi.fn(),
-  getAllMediaMap: vi.fn(),
-  getPreferences: vi.fn().mockResolvedValue({}),
-  savePreferences: vi.fn(),
-  exportLibraryData: vi.fn(),
-  importLibraryData: vi.fn(),
-  getAllPeople: vi.fn(),
-  getPersonById: vi.fn(),
-  savePerson: vi.fn(),
-  deletePerson: vi.fn(),
-  updatePersonSync: vi.fn(),
-  getWeeklyDigest: vi.fn(),
-  saveWeeklyDigest: vi.fn(),
-  getAllWatchAlerts: vi.fn(),
-  putWatchAlert: vi.fn(),
-  deleteWatchAlert: vi.fn(),
-}));
+vi.mock('@/background/storage', async () => {
+  const { intentForStatus, isValidMediaItem } = await vi.importActual<
+    typeof import('@/background/storage')
+  >('@/background/storage');
+  return {
+    findMediaByTitle: vi.fn(),
+    putMediaItem: vi.fn(),
+    getMediaItem: vi.fn(),
+    getLibraryItem: vi.fn(),
+    putLibraryItem: vi.fn(),
+    removeLibraryItem: vi.fn(),
+    getAllLibraryItems: vi.fn().mockResolvedValue([]),
+    getLibraryPage: vi.fn(),
+    getAllMediaMap: vi.fn(),
+    getPreferences: vi.fn().mockResolvedValue({}),
+    savePreferences: vi.fn(),
+    exportLibraryData: vi.fn(),
+    importLibraryData: vi.fn(),
+    getAllPeople: vi.fn(),
+    getPersonById: vi.fn(),
+    savePerson: vi.fn(),
+    deletePerson: vi.fn(),
+    updatePersonSync: vi.fn(),
+    getWeeklyDigest: vi.fn(),
+    saveWeeklyDigest: vi.fn(),
+    getAllWatchAlerts: vi.fn(),
+    putWatchAlert: vi.fn(),
+    deleteWatchAlert: vi.fn(),
+    intentForStatus,
+    isValidMediaItem,
+  };
+});
 
 vi.mock('@/background/alerts', () => ({
   checkWatchAlerts: vi.fn(),
@@ -78,7 +85,7 @@ vi.mock('@/background/contentPrefs', () => ({
 }));
 
 import { handlers } from '@/background/index';
-import { getLibraryItem, putLibraryItem, getMediaItem, getPreferences } from '@/background/storage';
+import { getLibraryItem, putLibraryItem, getMediaItem, getPreferences, savePreferences } from '@/background/storage';
 import { MediaItem } from '@/shared/types';
 
 const sender = {} as chrome.runtime.MessageSender;
@@ -161,6 +168,31 @@ describe('UPDATE_STATUS validation', () => {
     expect(result).toEqual({ updated: false });
     expect(getLibraryItem).not.toHaveBeenCalled();
   });
+
+  it('syncs sanctuaryIntent when status is updated', async () => {
+    const item = {
+      mediaId: 'tmdb_movie_1',
+      status: 'to-watch' as const,
+      sanctuaryIntent: 'wishlist' as const,
+      addedAt: 1,
+      updatedAt: 1,
+    };
+    vi.mocked(getLibraryItem).mockResolvedValue(item);
+
+    const handler = handlers[MessageType.UPDATE_STATUS]!;
+    const result = await handler(
+      { mediaId: 'tmdb_movie_1', status: 'watched' },
+      sender
+    );
+
+    expect(result).toEqual({ updated: true });
+    expect(putLibraryItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'watched',
+        sanctuaryIntent: 'keep_memory',
+      })
+    );
+  });
 });
 
 const sampleMedia: MediaItem = {
@@ -233,6 +265,47 @@ describe('ADD_TO_LIST', () => {
   });
 });
 
+describe('CHECK_LIBRARY_STATUS', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns inLibrary false for invalid mediaId', async () => {
+    const handler = handlers[MessageType.CHECK_LIBRARY_STATUS]!;
+    const result = await handler({ mediaId: 'page_example.com' }, sender);
+    expect(result).toEqual({ inLibrary: false });
+    expect(getLibraryItem).not.toHaveBeenCalled();
+  });
+
+  it('returns inLibrary false when item is not in library', async () => {
+    vi.mocked(getLibraryItem).mockResolvedValue(undefined);
+
+    const handler = handlers[MessageType.CHECK_LIBRARY_STATUS]!;
+    const result = await handler({ mediaId: 'tmdb_movie_99' }, sender);
+
+    expect(result).toEqual({ inLibrary: false });
+  });
+
+  it('returns scoped status fields when item exists', async () => {
+    vi.mocked(getLibraryItem).mockResolvedValue({
+      mediaId: 'tmdb_movie_42',
+      status: 'watched',
+      userRating: 9,
+      addedAt: 1,
+      updatedAt: 2,
+    });
+
+    const handler = handlers[MessageType.CHECK_LIBRARY_STATUS]!;
+    const result = await handler({ mediaId: 'tmdb_movie_42' }, sender);
+
+    expect(result).toEqual({
+      inLibrary: true,
+      status: 'watched',
+      userRating: 9,
+    });
+  });
+});
+
 describe('SET_USER_NOTES and SET_USER_TAGS', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -264,9 +337,10 @@ describe('SET_USER_NOTES and SET_USER_TAGS', () => {
     expect(putLibraryItem).not.toHaveBeenCalled();
   });
 
-  it('updates notes, atmosphere, and lingeringThought successfully', async () => {
+  it('updates emotionalRecall, notes, atmosphere, and lingeringThought successfully', async () => {
     const existingItem = {
       mediaId: 'tmdb_movie_1',
+      emotionalRecall: 'Old recall',
       notes: 'Old notes',
       atmosphere: 'Old atmosphere',
       lingeringThought: 'Old lingering thought',
@@ -278,6 +352,7 @@ describe('SET_USER_NOTES and SET_USER_TAGS', () => {
       {
         mediaId: 'tmdb_movie_1',
         notes: 'Great film',
+        emotionalRecall: 'What stayed with me',
         atmosphere: 'Cozy',
         lingeringThought: 'Beautiful ending',
       },
@@ -288,6 +363,7 @@ describe('SET_USER_NOTES and SET_USER_TAGS', () => {
     expect(putLibraryItem).toHaveBeenCalledWith(
       expect.objectContaining({
         mediaId: 'tmdb_movie_1',
+        emotionalRecall: 'What stayed with me',
         notes: 'Great film',
         atmosphere: 'Cozy',
         lingeringThought: 'Beautiful ending',
@@ -317,6 +393,56 @@ describe('GET_PREFERENCES sanitization', () => {
   });
 });
 
+describe('GET_FULL_PREFERENCES masking', () => {
+  it('returns masked API keys by default', async () => {
+    vi.mocked(getPreferences).mockResolvedValue({
+      favoriteGenres: [],
+      platforms: [],
+      region: 'US',
+      llmEnabled: false,
+      llmApiKey: 'sk-abcdefghijklmnop',
+      llmSecondaryApiKey: 'sk-secondarykey1234',
+      tmdbApiKey: 'tmdb-secret-key-99',
+      omdbApiKey: 'omdb-secret-key-88',
+      hoverCardsEnabled: true,
+      posterOverlaysEnabled: true,
+      disabledDomains: [],
+      detectionSensitivity: 'medium',
+      onboardingComplete: true,
+    });
+
+    const handler = handlers[MessageType.GET_FULL_PREFERENCES]!;
+    const result: any = await handler({}, sender);
+
+    expect(result.llmApiKey).toBe('sk-...mnop');
+    expect(result.llmSecondaryApiKey).toBe('sk-...1234');
+    expect(result.tmdbApiKey).toBe('...y-99');
+    expect(result.omdbApiKey).toBe('...y-88');
+  });
+
+  it('returns full API keys when revealKeys is true', async () => {
+    vi.mocked(getPreferences).mockResolvedValue({
+      favoriteGenres: [],
+      platforms: [],
+      region: 'US',
+      llmEnabled: false,
+      llmApiKey: 'sk-full-secret-key',
+      tmdbApiKey: 'tmdb-full-secret',
+      hoverCardsEnabled: true,
+      posterOverlaysEnabled: true,
+      disabledDomains: [],
+      detectionSensitivity: 'medium',
+      onboardingComplete: true,
+    } as any);
+
+    const handler = handlers[MessageType.GET_FULL_PREFERENCES]!;
+    const result: any = await handler({ revealKeys: true }, sender);
+
+    expect(result.llmApiKey).toBe('sk-full-secret-key');
+    expect(result.tmdbApiKey).toBe('tmdb-full-secret');
+  });
+});
+
 describe('SET_PREFERENCES validation', () => {
   const validBase = {
     favoriteGenres: ['Sci-Fi'],
@@ -339,5 +465,46 @@ describe('SET_PREFERENCES validation', () => {
   it('rejects preferences where llmSecondaryApiKey is not a string', async () => {
     const handler = handlers[MessageType.SET_PREFERENCES]!;
     await expect(handler({ ...validBase, llmSecondaryApiKey: 12345 }, sender)).rejects.toThrow('Invalid preferences payload');
+  });
+
+  it('merges partial updates with existing preferences instead of replacing them', async () => {
+    vi.mocked(getPreferences).mockResolvedValue({
+      ...validBase,
+      tmdbApiKey: 'existing-tmdb-key',
+      llmApiKey: 'existing-llm-key',
+    } as any);
+
+    const handler = handlers[MessageType.SET_PREFERENCES]!;
+    await handler({ onboardingComplete: false }, sender);
+
+    expect(savePreferences).toHaveBeenCalledWith(
+      expect.objectContaining({
+        onboardingComplete: false,
+        tmdbApiKey: 'existing-tmdb-key',
+        llmApiKey: 'existing-llm-key',
+      })
+    );
+  });
+
+  it('does not overwrite API keys when masked values are submitted', async () => {
+    vi.mocked(getPreferences).mockResolvedValue({
+      ...validBase,
+      tmdbApiKey: 'existing-tmdb-key',
+      llmApiKey: 'existing-llm-key',
+    } as any);
+
+    const handler = handlers[MessageType.SET_PREFERENCES]!;
+    await handler({
+      ...validBase,
+      tmdbApiKey: '...y-99',
+      llmApiKey: 'sk-...mnop',
+    }, sender);
+
+    expect(savePreferences).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tmdbApiKey: 'existing-tmdb-key',
+        llmApiKey: 'existing-llm-key',
+      })
+    );
   });
 });

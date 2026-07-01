@@ -1,4 +1,5 @@
-/* Content script host-page styles – minimal, only for the shadow root container */
+/* Content script host-page styles – minimal, only for the shadow root container.
+   Design tokens: src/shared/tokens.css (injected into shadow roots via shadowTokens.ts) */
 #subsume-hover-root {
   position: absolute;
   top: 0;

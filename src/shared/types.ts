@@ -138,8 +138,13 @@ export enum MessageType {
   REMOVE_FROM_LIBRARY = 'REMOVE_FROM_LIBRARY',
   GET_LIBRARY = 'GET_LIBRARY',
   GET_LIBRARY_PAGE = 'GET_LIBRARY_PAGE',
+  CHECK_LIBRARY_STATUS = 'CHECK_LIBRARY_STATUS',
   EXPORT_LIBRARY = 'EXPORT_LIBRARY',
   IMPORT_LIBRARY = 'IMPORT_LIBRARY',
+  CONNECT_GOOGLE_DRIVE = 'CONNECT_GOOGLE_DRIVE',
+  BACKUP_TO_DRIVE = 'BACKUP_TO_DRIVE',
+  RESTORE_FROM_DRIVE = 'RESTORE_FROM_DRIVE',
+  CLEAR_NOTIFICATION_BADGE = 'CLEAR_NOTIFICATION_BADGE',
 
   // Media
   GET_MEDIA_ITEMS = 'GET_MEDIA_ITEMS',
@@ -217,6 +222,7 @@ export interface SetUserTagsRequest {
 export interface SetUserNotesRequest {
   mediaId: string;
   notes: string;
+  emotionalRecall?: string;
   atmosphere?: string;
   lingeringThought?: string;
 }
@@ -237,6 +243,16 @@ export interface GetLibraryPageRequest {
 
 export interface RemoveFromLibraryRequest {
   mediaId: string;
+}
+
+export interface CheckLibraryStatusRequest {
+  mediaId: string;
+}
+
+export interface CheckLibraryStatusResponse {
+  inLibrary: boolean;
+  status?: LibraryStatus;
+  userRating?: number;
 }
 
 export interface GetMediaItemsRequest {
@@ -394,6 +410,20 @@ export interface ExtensionResponse<T = unknown> {
   error?: string;
 }
 
+/** Tab broadcast payloads sent from the background service worker to content scripts / UI. */
+export type BroadcastMessage =
+  | {
+      type: 'LIBRARY_UPDATED';
+      action: 'add' | 'update' | 'remove';
+      mediaId: string;
+      libraryItem?: LibraryItem;
+    }
+  | {
+      type: 'FILMMAKERS_UPDATED';
+      action: 'sync' | 'follow' | 'unfollow';
+      personId: string;
+    };
+
 export interface PosterMatch {
   tmdbId: string;
   title: string;
@@ -410,6 +440,6 @@ export interface SystemLog {
   timestamp: number;
   level: 'info' | 'warn' | 'error';
   message: string;
-  details?: any;
+  details?: unknown;
 }
 

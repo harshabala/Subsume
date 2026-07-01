@@ -55,13 +55,24 @@ describe('PoeticCaptureCanvas', () => {
 
     render(<PoeticCaptureCanvas mediaId="media_123" onClose={vi.fn()} />, container);
     await act(async () => {
-      await new Promise(r => setTimeout(r, 30));
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
     });
 
     const textarea = container.querySelector('textarea');
     const poster = container.querySelector('.poetic-poster') as HTMLElement;
     expect(textarea).toBeTruthy();
     expect(poster).toBeTruthy();
+
+    // Dialog auto-focuses the textarea on open
+    textarea?.focus();
+    await act(async () => {});
+    expect(poster.classList.contains('writing')).toBe(true);
+
+    await act(async () => {
+      textarea?.dispatchEvent(new Event('blur'));
+    });
 
     expect(poster.classList.contains('writing')).toBe(false);
 
@@ -70,12 +81,6 @@ describe('PoeticCaptureCanvas', () => {
     });
 
     expect(poster.classList.contains('writing')).toBe(true);
-
-    await act(async () => {
-      textarea?.dispatchEvent(new Event('blur'));
-    });
-
-    expect(poster.classList.contains('writing')).toBe(false);
   });
 
   it('verifies progressive disclosure on input', async () => {
@@ -169,7 +174,8 @@ describe('PoeticCaptureCanvas', () => {
     const noteCall = sendMessageCalls.find(c => (c[0] as any).type === MessageType.SET_USER_NOTES);
     expect((noteCall?.[0] as any).payload).toEqual({
       mediaId: 'media_123',
-      notes: longProse,
+      notes: '',
+      emotionalRecall: longProse,
       atmosphere: 'Melancholic, Warm Amber',
       lingeringThought: 'The beauty of fleeting moments.',
     });

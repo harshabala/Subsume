@@ -1,5 +1,6 @@
 import { render } from 'preact';
 import { App } from './App';
+import '../shared/tokens.css';
 import '../styles/sanctuary.css';
 import './styles/global.css';
 import './styles/layout.css';

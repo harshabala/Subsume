@@ -21,6 +21,18 @@ Please ensure all tests pass before submitting a pull request:
 npm run test
 ```
 
+## Pre-Ship Checklist
+
+Before merging UI, security, or capture-flow changes, confirm:
+
+- [ ] **`manifest.json`** — `YOUR_CLIENT_ID_HERE` is replaced locally if you test Drive sync; broad `content_scripts` matches are intentional and documented in the manifest `__comment_content_scripts` field.
+- [ ] **`emotionalRecall` capture flow** — Poetic Capture Canvas persists `emotionalRecall` via `SET_USER_NOTES`; run `npm run test -- tests/captureToLibrary.test.ts tests/poeticCaptureCanvas.test.tsx tests/libraryHandlers.test.ts`.
+- [ ] **`sendMessage` error handling** — Typed IPC rejects `success: false`, missing responses, and `chrome.runtime.lastError`; run `npm run test -- tests/sendMessage.test.ts`.
+- [ ] **Security regression tests** — Message allowlist, API-key stripping, and poster budget caps still pass:
+  ```bash
+  npm run test -- tests/messageRouter.test.ts tests/contentPrefs.test.ts tests/posterBudget.test.ts tests/screenplayDock.test.ts
+  ```
+
 ## Pull Request Process
 
 1. Ensure any new code includes appropriate tests and documentation.

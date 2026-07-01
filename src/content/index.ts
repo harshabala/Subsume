@@ -5,7 +5,7 @@
  * detections, and injects rating badges on poster images.
  */
 
-import { scanPage, startObserving, scanImages, setImageScanConfig, DetectedTitle } from './scanner';
+import { scanPage, startObserving, stopObserving, scanImages, setImageScanConfig, DetectedTitle } from './scanner';
 import { detectCatalogRegions } from './catalogDetector';
 import { HoverCardManager } from './hoverCard';
 import { MuseumPlaqueManager as PosterBadgeManager } from './overlay';
@@ -15,7 +15,23 @@ import { MessageType, PosterMatch, ContentPrefs } from '@/shared/types';
 import { logger } from '@/shared/logger';
 import './content.css';
 
+let hoverManagerRef: HoverCardManager | null = null;
+let badgeManagerRef: PosterBadgeManager | null = null;
+let dockManagerRef: AuteurScreenplayDock | null = null;
+
+function teardownContentScript(): void {
+  stopObserving();
+  hoverManagerRef?.destroy();
+  hoverManagerRef = null;
+  badgeManagerRef?.destroy();
+  badgeManagerRef = null;
+  dockManagerRef?.destroy();
+  dockManagerRef = null;
+}
+
 async function init(): Promise<void> {
+  teardownContentScript();
+
   logger.log('[Subsume] Content script loaded.');
 
   const hostname = window.location.hostname;
@@ -27,9 +43,10 @@ async function init(): Promise<void> {
 
   const prefs = prefsRes.success ? prefsRes.data : null;
 
-  const hoverEnabled = prefs?.hoverCardsEnabled ?? true;
-  const overlaysEnabled = prefs?.posterOverlaysEnabled ?? true;
-  const dockEnabled = prefs?.screenplayDockEnabled ?? true;
+  // Fail-safe: if GET_CONTENT_PREFS fails, keep all surface features off.
+  const hoverEnabled = prefs?.hoverCardsEnabled ?? false;
+  const overlaysEnabled = prefs?.posterOverlaysEnabled ?? false;
+  const dockEnabled = prefs?.screenplayDockEnabled ?? false;
   const sensitivity = prefs?.detectionSensitivity || 'medium';
 
   if (prefs?.domainDisabled) {
@@ -42,13 +59,9 @@ async function init(): Promise<void> {
     return;
   }
 
-  let hoverManager: HoverCardManager | null = null;
-  let badgeManager: PosterBadgeManager | null = null;
-  let dockManager: AuteurScreenplayDock | null = null;
-
   if (dockEnabled) {
-    dockManager = new AuteurScreenplayDock();
-    dockManager.mount();
+    dockManagerRef = new AuteurScreenplayDock();
+    dockManagerRef.mount();
   }
 
   const catalogRegions = detectCatalogRegions(document.body);
@@ -56,11 +69,10 @@ async function init(): Promise<void> {
   const catalogMode = highConfidenceRegions.length > 0;
 
   if (overlaysEnabled) {
-    badgeManager = new PosterBadgeManager();
-    void badgeManager.initLibraryCache();
+    badgeManagerRef = new PosterBadgeManager();
 
     const onPosterMatch = (img: HTMLImageElement, match: PosterMatch) => {
-      badgeManager?.attachBadge(img, match);
+      badgeManagerRef?.attachBadge(img, match);
     };
 
     setImageScanConfig(sensitivity, onPosterMatch, catalogMode);
@@ -84,11 +96,11 @@ async function init(): Promise<void> {
   }
 
   if (hoverEnabled) {
-    hoverManager = new HoverCardManager();
+    hoverManagerRef = new HoverCardManager();
 
     const attachHoverListeners = (titles: DetectedTitle[]): void => {
       for (const detected of titles) {
-        hoverManager!.attachToElement(detected.element, detected.title, detected.yearGuess);
+        hoverManagerRef!.attachToElement(detected.element, detected.title, detected.yearGuess);
       }
     };
 
@@ -112,3 +124,5 @@ if (document.readyState === 'loading') {
 } else {
   init();
 }
+
+window.addEventListener('pagehide', teardownContentScript);

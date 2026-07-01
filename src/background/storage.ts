@@ -9,6 +9,7 @@ import {
   ImportLibraryData,
   SanctuaryIntent,
 } from '@/shared/types';
+import { isValidPersonItem } from '@/shared/validation';
 import { SEED_MEDIA, SEED_LIBRARY, SEED_PEOPLE } from './seedData';
 
 interface SubsumeDB extends DBSchema {
@@ -54,6 +55,9 @@ const DB_VERSION = 3;
 let dbPromise: Promise<IDBPDatabase<SubsumeDB>> | null = null;
 
 async function seedDatabaseIfEmpty(db: IDBPDatabase<SubsumeDB>) {
+  // Demo seed data is for local development only — never populate production installs.
+  if (!import.meta.env.DEV) return;
+
   try {
     const mediaCount = await db.count('media');
     if (mediaCount === 0) {
@@ -278,15 +282,15 @@ const VALID_LIBRARY_STATUSES = new Set(['to-watch', 'watching', 'watched', 'aban
 const VALID_MEDIA_TYPES = new Set(['movie', 'tv']);
 const VALID_SANCTUARY_INTENTS = new Set(['keep_memory', 'revisit_this_month', 'wishlist']);
 
+export function intentForStatus(status: LibraryItem['status']): SanctuaryIntent {
+  if (status === 'watched') return 'keep_memory';
+  if (status === 'watching') return 'revisit_this_month';
+  return 'wishlist';
+}
+
 export function normalizeLibraryItem(item: LibraryItem): LibraryItem {
   if (!item.sanctuaryIntent) {
-    if (item.status === 'watched') {
-      item.sanctuaryIntent = 'keep_memory';
-    } else if (item.status === 'watching') {
-      item.sanctuaryIntent = 'revisit_this_month';
-    } else {
-      item.sanctuaryIntent = 'wishlist';
-    }
+    item.sanctuaryIntent = intentForStatus(item.status);
   }
   return item;
 }
@@ -310,11 +314,18 @@ export function isValidLibraryItem(l: unknown): l is LibraryItem {
   return true;
 }
 
-function isValidMediaItem(m: unknown): m is MediaItem {
+// Media IDs use provider-specific prefixes (see tvmaze.ts, recommendations.ts trakt fallback):
+//   tmdb_(movie|tv)_<id>  — canonical TMDb records
+//   tvmaze_tv_<id>        — TVmaze fallback metadata
+//   trakt_trending_<slug> — Trakt trending recommendations
+//   seed_<name>           — DEV-only demo seed data (seedData.ts)
+const MEDIA_ID_PATTERN =
+  /^(tmdb_(movie|tv)_\d+|tvmaze_tv_\d+|trakt_trending_[a-zA-Z0-9-]+|seed_[a-z0-9_]+)$/;
+
+export function isValidMediaItem(m: unknown): m is MediaItem {
   if (!m || typeof m !== 'object') return false;
   const item = m as Record<string, unknown>;
-  // id must follow our tmdb_<type>_<number> format
-  if (typeof item.id !== 'string' || !/^tmdb_(movie|tv)_\d+$/.test(item.id)) return false;
+  if (typeof item.id !== 'string' || !MEDIA_ID_PATTERN.test(item.id)) return false;
   // type must be a valid MediaType
   if (!VALID_MEDIA_TYPES.has(item.type as string)) return false;
   // year must be a finite number
@@ -322,17 +333,9 @@ function isValidMediaItem(m: unknown): m is MediaItem {
   return true;
 }
 
-function isValidPersonItem(p: unknown): p is PersonItem {
-  if (!p || typeof p !== 'object') return false;
-  const item = p as Record<string, unknown>;
-  if (typeof item.id !== 'string' || !item.id) return false;
-  if (typeof item.name !== 'string' || !item.name) return false;
-  return true;
-}
-
 const VALID_ALERT_TYPES = new Set(['movie', 'tv', 'both']);
 
-function isValidWatchAlert(a: unknown): a is WatchAlert {
+export function isValidWatchAlert(a: unknown): a is WatchAlert {
   if (!a || typeof a !== 'object') return false;
   const item = a as Record<string, unknown>;
   if (typeof item.id !== 'string' || !item.id) return false;

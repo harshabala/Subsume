@@ -3,13 +3,13 @@ import { logger } from '@/shared/logger';
 import {
   MessageType,
   AddToListRequest,
-  UpdateStatusRequest,
   SetUserRatingRequest,
   SetUserTagsRequest,
-  SetUserNotesRequest,
   RemoveFromLibraryRequest,
   GetLibraryRequest,
   GetLibraryPageRequest,
+  CheckLibraryStatusRequest,
+  CheckLibraryStatusResponse,
   LibraryItem,
 } from '@/shared/types';
 import {
@@ -21,14 +21,19 @@ import {
   getAllLibraryItems,
   getLibraryPage,
   getAllMediaMap,
+  intentForStatus,
+  isValidMediaItem,
 } from '../storage';
 import { invalidateProfileCache } from '../context';
 import { mergeMediaItems } from '../mediaMerge';
-import { broadcastMessage } from './utils';
+import { broadcastMessage, parseSetUserNotesRequest, parseUpdateStatusRequest } from './utils';
 
 export const libraryHandlers: MessageHandlerMap = {
   [MessageType.ADD_TO_LIST]: async (payload) => {
     const req = payload as AddToListRequest;
+    if (!isValidMediaItem(req.mediaItem)) {
+      throw new Error('Invalid media item payload');
+    }
     logger.log('[Subsume] ADD_TO_LIST:', req.mediaItem.canonicalTitle);
 
     const existingMedia = await getMediaItem(req.mediaItem.id);
@@ -60,17 +65,17 @@ export const libraryHandlers: MessageHandlerMap = {
   },
 
   [MessageType.UPDATE_STATUS]: async (payload) => {
-    const req = payload as UpdateStatusRequest;
-    logger.log('[Subsume] UPDATE_STATUS:', req.mediaId, '→', req.status);
-    const validStatuses = new Set(['to-watch', 'watching', 'watched', 'abandoned']);
-    if (!validStatuses.has(req.status)) {
+    const req = parseUpdateStatusRequest(payload);
+    if (!req) {
       return { updated: false };
     }
+    logger.log('[Subsume] UPDATE_STATUS:', req.mediaId, '→', req.status);
     const existing = await getLibraryItem(req.mediaId);
     if (!existing) {
       return { updated: false };
     }
     existing.status = req.status;
+    existing.sanctuaryIntent = intentForStatus(req.status);
     existing.updatedAt = Date.now();
     await putLibraryItem(existing);
     invalidateProfileCache();
@@ -126,12 +131,16 @@ export const libraryHandlers: MessageHandlerMap = {
   },
 
   [MessageType.SET_USER_NOTES]: async (payload) => {
-    const req = payload as SetUserNotesRequest;
+    const req = parseSetUserNotesRequest(payload);
+    if (!req) {
+      return { updated: false };
+    }
     const existing = await getLibraryItem(req.mediaId);
     if (!existing) {
       return { updated: false };
     }
-    existing.notes = req.notes.trim() || undefined;
+    existing.emotionalRecall = req.emotionalRecall?.trim() || undefined;
+    existing.notes = req.notes?.trim() || undefined;
     existing.atmosphere = req.atmosphere?.trim() || undefined;
     existing.lingeringThought = req.lingeringThought?.trim() || undefined;
     existing.updatedAt = Date.now();
@@ -158,6 +167,22 @@ export const libraryHandlers: MessageHandlerMap = {
     return { removed: true };
   },
 
+  [MessageType.CHECK_LIBRARY_STATUS]: async (payload) => {
+    const req = payload as CheckLibraryStatusRequest;
+    if (!req?.mediaId || !/^tmdb_(movie|tv)_\d+$/.test(req.mediaId)) {
+      return { inLibrary: false } satisfies CheckLibraryStatusResponse;
+    }
+    const libraryItem = await getLibraryItem(req.mediaId);
+    if (!libraryItem) {
+      return { inLibrary: false } satisfies CheckLibraryStatusResponse;
+    }
+    return {
+      inLibrary: true,
+      status: libraryItem.status,
+      userRating: libraryItem.userRating,
+    } satisfies CheckLibraryStatusResponse;
+  },
+
   [MessageType.GET_LIBRARY]: async (payload) => {
     const req = payload as GetLibraryRequest;
     logger.log('[Subsume] GET_LIBRARY with filters:', req);
@@ -178,25 +203,59 @@ export const libraryHandlers: MessageHandlerMap = {
       filtered = filtered.filter((i) => mediaMap[i.mediaId]?.type === req.type);
     }
 
-    // Sort by added date by default
-    filtered.sort((a, b) => b.addedAt - a.addedAt);
+    let joined = filtered
+      .filter((item) => mediaMap[item.mediaId])
+      .map((item) => ({
+        library: item,
+        media: mediaMap[item.mediaId],
+      }));
 
-    // Return joined result
-    return filtered.map((item) => ({
-      library: item,
-      media: mediaMap[item.mediaId],
-    }));
+    if (req?.genre) {
+      joined = joined.filter(({ media }) => media.genres?.includes(req.genre!));
+    }
+
+    if (req?.yearRange) {
+      const { min, max } = req.yearRange;
+      joined = joined.filter(({ media }) => {
+        const year = media.year;
+        return Number.isFinite(year) && year >= min && year <= max;
+      });
+    }
+
+    const sortBy = req?.sortBy ?? 'addedAt';
+    joined.sort((a, b) => {
+      switch (sortBy) {
+        case 'year':
+          return (b.media?.year ?? 0) - (a.media?.year ?? 0);
+        case 'rating': {
+          const scoreA = a.media?.ratings?.[0]?.score ?? 0;
+          const scoreB = b.media?.ratings?.[0]?.score ?? 0;
+          return scoreB - scoreA;
+        }
+        case 'userRating':
+          return (b.library.userRating ?? 0) - (a.library.userRating ?? 0);
+        case 'addedAt':
+        default:
+          return b.library.addedAt - a.library.addedAt;
+      }
+    });
+
+    return joined;
   },
 
   [MessageType.GET_LIBRARY_PAGE]: async (payload) => {
     const req = payload as GetLibraryPageRequest;
-    logger.log('[Subsume] GET_LIBRARY_PAGE limit:', req.limit, 'offset:', req.offset);
-    const libraryItems = await getLibraryPage(req.limit, req.offset, req.type);
+    const limit = Math.min(100, Math.max(1, req.limit));
+    const offset = Math.max(0, req.offset);
+    logger.log('[Subsume] GET_LIBRARY_PAGE limit:', limit, 'offset:', offset);
+    const libraryItems = await getLibraryPage(limit, offset, req.type);
     const mediaIds = libraryItems.map((item) => item.mediaId);
     const mediaMap = await getAllMediaMap(mediaIds);
-    return libraryItems.map((item) => ({
-      library: item,
-      media: mediaMap[item.mediaId],
-    }));
+    return libraryItems
+      .filter((item) => mediaMap[item.mediaId])
+      .map((item) => ({
+        library: item,
+        media: mediaMap[item.mediaId],
+      }));
   },
 };

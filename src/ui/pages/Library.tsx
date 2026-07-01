@@ -20,6 +20,7 @@ export function Library() {
   const [intentFilter, setIntentFilter] = useState<IntentFilterOption>('all');
   const [items, setItems] = useState<JoinedItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [removeConfirmId, setRemoveConfirmId] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<JoinedItem | null>(null);
   const [statusFilter, setStatusFilter] = useState<LibraryStatus | ''>('');
@@ -28,6 +29,7 @@ export function Library() {
   const [activeTagFilter, setActiveTagFilter] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [hasMore, setHasMore] = useState<boolean>(true);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const isMountedRef = useRef(true);
 
@@ -41,6 +43,7 @@ export function Library() {
   async function fetchLibrary(page: number, append: boolean = false, isCancelled?: () => boolean) {
     if (page === 0 && !append) {
       setLoading(true);
+      setLoadError(false);
     }
     try {
       const limit = 40;
@@ -54,20 +57,28 @@ export function Library() {
         return;
       }
       if (res.success && res.data) {
+        setLoadError(false);
         if (append) {
           setItems((prev) => [...prev, ...res.data!]);
         } else {
           setItems(res.data);
         }
-        
+
         if (res.data.length < limit) {
           setHasMore(false);
         } else {
           setHasMore(true);
         }
+      } else {
+        if (page === 0 && !append) {
+          setLoadError(true);
+        }
       }
     } catch (err: unknown) {
       logger.error('Failed to load library page', err);
+      if (page === 0 && !append) {
+        setLoadError(true);
+      }
     } finally {
       if (isMountedRef.current && (!isCancelled || !isCancelled())) {
         setLoading(false);
@@ -107,47 +118,87 @@ export function Library() {
   }
 
   async function updateStatus(mediaId: string, status: LibraryStatus) {
-    const res = await sendMessage(MessageType.UPDATE_STATUS, { mediaId, status });
-    if (res.success && isMountedRef.current) {
-      updateLibraryItem(mediaId, { status });
+    setActionError(null);
+    try {
+      await sendMessage(MessageType.UPDATE_STATUS, { mediaId, status });
+      if (isMountedRef.current) {
+        updateLibraryItem(mediaId, { status });
+      }
+    } catch (err) {
+      logger.error('Failed to update status', err);
+      if (isMountedRef.current) {
+        setActionError(err instanceof Error ? err.message : 'Failed to update status.');
+      }
     }
   }
 
   async function updateRating(mediaId: string, rating: number) {
-    const res = await sendMessage(MessageType.SET_USER_RATING, { mediaId, rating });
-    if (res.success && isMountedRef.current) {
-      updateLibraryItem(mediaId, { userRating: rating });
+    setActionError(null);
+    try {
+      await sendMessage(MessageType.SET_USER_RATING, { mediaId, rating });
+      if (isMountedRef.current) {
+        updateLibraryItem(mediaId, { userRating: rating });
+      }
+    } catch (err) {
+      logger.error('Failed to update rating', err);
+      if (isMountedRef.current) {
+        setActionError(err instanceof Error ? err.message : 'Failed to update rating.');
+      }
     }
   }
 
   async function updateNotes(mediaId: string, notes: string, atmosphere?: string, lingeringThought?: string) {
-    const res = await sendMessage(MessageType.SET_USER_NOTES, {
-      mediaId,
-      notes,
-      atmosphere: atmosphere || undefined,
-      lingeringThought: lingeringThought || undefined,
-    });
-    if (res.success && isMountedRef.current) {
-      updateLibraryItem(mediaId, {
-        notes: notes.trim() || undefined,
-        atmosphere: atmosphere?.trim() || undefined,
-        lingeringThought: lingeringThought?.trim() || undefined,
+    setActionError(null);
+    try {
+      await sendMessage(MessageType.SET_USER_NOTES, {
+        mediaId,
+        notes,
+        atmosphere: atmosphere || undefined,
+        lingeringThought: lingeringThought || undefined,
       });
+      if (isMountedRef.current) {
+        updateLibraryItem(mediaId, {
+          notes: notes.trim() || undefined,
+          atmosphere: atmosphere?.trim() || undefined,
+          lingeringThought: lingeringThought?.trim() || undefined,
+        });
+      }
+    } catch (err) {
+      logger.error('Failed to update notes', err);
+      if (isMountedRef.current) {
+        setActionError(err instanceof Error ? err.message : 'Failed to update notes.');
+      }
     }
   }
 
   async function updateTags(mediaId: string, tags: string[]) {
-    const res = await sendMessage(MessageType.SET_USER_TAGS, { mediaId, tags });
-    if (res.success && isMountedRef.current) {
-      updateLibraryItem(mediaId, { userTags: tags });
+    setActionError(null);
+    try {
+      await sendMessage(MessageType.SET_USER_TAGS, { mediaId, tags });
+      if (isMountedRef.current) {
+        updateLibraryItem(mediaId, { userTags: tags });
+      }
+    } catch (err) {
+      logger.error('Failed to update tags', err);
+      if (isMountedRef.current) {
+        setActionError(err instanceof Error ? err.message : 'Failed to update tags.');
+      }
     }
   }
 
   async function removeItem(mediaId: string) {
-    const res = await sendMessage(MessageType.REMOVE_FROM_LIBRARY, { mediaId });
-    if (res.success && isMountedRef.current) {
-      setItems((prev) => prev.filter((item) => item.library.mediaId !== mediaId));
-      setRemoveConfirmId(null);
+    setActionError(null);
+    try {
+      await sendMessage(MessageType.REMOVE_FROM_LIBRARY, { mediaId });
+      if (isMountedRef.current) {
+        setItems((prev) => prev.filter((item) => item.library.mediaId !== mediaId));
+        setRemoveConfirmId(null);
+      }
+    } catch (err) {
+      logger.error('Failed to remove item', err);
+      if (isMountedRef.current) {
+        setActionError(err instanceof Error ? err.message : 'Failed to remove item from library.');
+      }
     }
   }
 
@@ -186,6 +237,12 @@ export function Library() {
     <div className="page-container">
       <ArchiveHeader />
 
+      {actionError && (
+        <div className="sanctuary-empty-plaque" style={{ maxWidth: 500, margin: '0 auto 24px', borderColor: 'var(--border-hero)' }}>
+          <p className="sanctuary-plaque-text" style={{ color: 'var(--text-reflection)' }}>{actionError}</p>
+        </div>
+      )}
+
       <IntentNavigation
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -210,21 +267,36 @@ export function Library() {
         />
 
         {loading ? (
-          <div className="empty-state" style={{ padding: 0 }}>
-            <div className="subsume-spinner" />
-            <p style={{ marginTop: 16, color: 'var(--color-text-secondary)' }}>Gathering your sanctuary titles...</p>
+          <div className="library-skeleton-grid">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="skeleton skeleton-card" style={{ animationDelay: `${i * 40}ms` }} />
+            ))}
+          </div>
+        ) : loadError ? (
+          <div className="sanctuary-empty-plaque library-error-plaque">
+            <span className="sanctuary-plaque-index">Archive Unreachable</span>
+            <h3 className="sanctuary-plaque-title">Could not open your sanctuary</h3>
+            <p className="sanctuary-plaque-text library-error-text">
+              The archive could not be reached. Check your connection and try again.
+            </p>
+            <button
+              onClick={() => fetchLibrary(0, false)}
+              className="optical-button library-retry-btn"
+            >
+              Try Again
+            </button>
           </div>
         ) : items.length === 0 ? (
-          <div className="empty-state">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" style={{ color: 'var(--primary)', marginBottom: '1.25rem' }}>
+          <div className="empty-state library-empty-state">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" className="library-empty-state-icon">
               <rect x="3" y="3" width="18" height="18" rx="2" />
               <path d="M7 3v18M17 3v18M3 8h4M17 8h4M3 16h4M17 16h4M7 9h10v6H7z" />
             </svg>
-            <h3 className="empty-state-title" style={{ fontFamily: 'Newsreader, Georgia, serif', fontStyle: 'italic', fontWeight: '400', fontSize: '1.75rem', color: 'var(--fg-base)' }}>Your archive is quiet</h3>
-            <p className="empty-state-description" style={{ fontFamily: 'Outfit, sans-serif', color: 'var(--fg-muted)', fontSize: '0.95rem', marginTop: '0.5rem', maxWidth: '380px' }}>
+            <h3 className="empty-state-title library-empty-state-title">Your archive is quiet</h3>
+            <p className="empty-state-description library-empty-state-description">
               A blank canvas waiting for titles that leave an imprint on your memory.
             </p>
-            <p className="empty-state-hint" style={{ fontFamily: 'Outfit, sans-serif', marginTop: '1rem', fontSize: '0.85rem', color: 'var(--fg-subtle)', maxWidth: '400px' }}>
+            <p className="library-empty-state-hint">
               Hover over titles while browsing or capture moments to populate your collection.
             </p>
           </div>

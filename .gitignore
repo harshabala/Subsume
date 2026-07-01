@@ -5,6 +5,9 @@ dist/
 *.log
 .env
 .env.*
+*.local.json
+manifest.local.json
+local.config.*
 subsume.zip
 .vite/
 coverage/

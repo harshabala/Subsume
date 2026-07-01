@@ -14,10 +14,18 @@ export function sendMessage<TReq, TRes>(
     }, timeoutMs);
 
     const message: ExtensionMessage<TReq> = { type, payload };
-    chrome.runtime.sendMessage(message, (response: ExtensionResponse<TRes>) => {
+    chrome.runtime.sendMessage(message, (response: ExtensionResponse<TRes> | undefined) => {
       clearTimeout(timeoutId);
       if (chrome.runtime.lastError) {
         reject(new Error(chrome.runtime.lastError.message));
+        return;
+      }
+      if (!response) {
+        reject(new Error(`Message ${type} received no response`));
+        return;
+      }
+      if (!response.success) {
+        reject(new Error(response.error ?? `Message ${type} failed`));
         return;
       }
       resolve(response);
@@ -57,10 +65,9 @@ export function createMessageRouter(handlers: MessageHandlerMap): void {
         MessageType.GET_TITLE_DETAILS,
         MessageType.ADD_TO_LIST,
         MessageType.REMOVE_FROM_LIBRARY,
-        MessageType.GET_LIBRARY,
+        MessageType.CHECK_LIBRARY_STATUS,
         MessageType.OPEN_DETAIL,
         MessageType.OPEN_CAPTURE_CANVAS,
-        MessageType.SET_USER_NOTES,
       ]);
 
       if (!isExtensionOrigin && !ALLOWED_CONTENT_SCRIPT_MESSAGES.has(message.type)) {

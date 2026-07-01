@@ -33,6 +33,7 @@ export function Recommendations() {
   const [recsError, setRecsError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'flat' | 'grouped'>('grouped');
   const [aiAddedIds, setAiAddedIds] = useState<Set<string>>(new Set());
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // ── Existing rule-based fetch ─────────────────────────────────────────
   useEffect(() => {
@@ -162,12 +163,14 @@ export function Recommendations() {
 
   // ── Existing: add to library (rule-based) ────────────────────────────
   async function addToLibrary(media: MediaItem) {
+    setActionError(null);
     try {
       await sendMessage(MessageType.ADD_TO_LIST, { mediaItem: media, type: media.type });
       setAddedIds((prev) => new Set(prev).add(media.id));
       setAiAddedIds((prev) => new Set(prev).add(media.id));
     } catch (err) {
       console.error('Failed to add to library', err);
+      setActionError(err instanceof Error ? err.message : 'Failed to add title to your library.');
     }
   }
 
@@ -213,6 +216,7 @@ export function Recommendations() {
   // ── Phase 4: Add AI rec to library ────────────────────────────────────
   async function addAiRecToLibrary(rec: PersonalizedRecommendation) {
     if (!rec.tmdbId) return;
+    setActionError(null);
     try {
       const mediaItem: MediaItem = {
         id: rec.tmdbId,
@@ -228,6 +232,7 @@ export function Recommendations() {
       setAiAddedIds(prev => new Set(prev).add(rec.tmdbId));
     } catch (err) {
       console.error('Failed to add AI rec to library', err);
+      setActionError(err instanceof Error ? err.message : 'Failed to add recommendation to your library.');
     }
   }
 
@@ -242,6 +247,12 @@ export function Recommendations() {
 
   return (
     <div className="page-container">
+      {actionError && (
+        <div className="sanctuary-empty-plaque" style={{ maxWidth: 500, margin: '0 auto 24px', borderColor: 'var(--border-hero)' }}>
+          <p className="sanctuary-plaque-text" style={{ color: 'var(--text-reflection)' }}>{actionError}</p>
+        </div>
+      )}
+
       <header className="sanctuary-header">
         <div className="sanctuary-header-meta">
           <span className="sanctuary-subtitle">Catalogue No. 01 — Curated Discovery</span>

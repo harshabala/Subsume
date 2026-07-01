@@ -14,9 +14,8 @@ import { Logs } from './pages/Logs';
 import { PoeticCaptureCanvas } from './components/PoeticCaptureCanvas';
 import { sendMessage } from '../shared/messages';
 import { MessageType, UserPreferences, LibraryItem, MediaItem, PersonItem } from '../shared/types';
+import { usePrefetch, prefetchPage, prefetchProps, type Page } from './hooks/usePrefetch';
 import './styles/sidebar.css';
-
-type Page = 'home' | 'library' | 'search' | 'people' | 'stats' | 'recommendations' | 'new-releases' | 'alerts' | 'settings' | 'logs';
 
 interface LibraryStats {
   movieCount: number;
@@ -62,32 +61,6 @@ const NAV_SECTIONS: NavSection[] = [
   },
 ];
 
-const PREFETCH_BY_PAGE: Partial<Record<Page, Array<{ type: MessageType; payload?: unknown }>>> = {
-  home: [
-    { type: MessageType.GET_WEEKLY_DIGEST },
-    { type: MessageType.GET_RECOMMENDATIONS },
-    { type: MessageType.GET_LIBRARY },
-  ],
-  library: [{ type: MessageType.GET_LIBRARY }],
-  recommendations: [{ type: MessageType.GET_RECOMMENDATIONS }],
-  'new-releases': [{ type: MessageType.GET_LATEST_RELEASES, payload: { type: 'movie' } }],
-  stats: [{ type: MessageType.GET_LIBRARY }],
-  people: [{ type: MessageType.GET_ALL_PEOPLE }],
-  alerts: [{ type: MessageType.GET_WATCH_ALERTS }],
-};
-
-const prefetchedPages = new Set<Page>();
-
-function prefetchPage(page: Page) {
-  if (prefetchedPages.has(page)) return;
-  const requests = PREFETCH_BY_PAGE[page];
-  if (!requests) return;
-  prefetchedPages.add(page);
-  for (const req of requests) {
-    sendMessage(req.type, req.payload ?? {}).catch(() => {});
-  }
-}
-
 function getInitialPage(): Page {
   const page = new URLSearchParams(window.location.search).get('page');
   if (page === 'alerts') return 'alerts';
@@ -103,6 +76,7 @@ function NavIcon({ item }: { item: NavItem }) {
 }
 
 export function App() {
+  const { prefetchPageOnMount } = usePrefetch();
   const [currentPage, setCurrentPage] = useState<Page>(getInitialPage);
   const [captureMediaId, setCaptureMediaId] = useState<string | null>(() => {
     const params = new URLSearchParams(window.location.search);
@@ -115,7 +89,27 @@ export function App() {
   const [stats, setStats] = useState<LibraryStats>({ movieCount: 0, tvCount: 0 });
   const [peopleCount, setPeopleCount] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isBackdropVisible, setIsBackdropVisible] = useState(false);
+  const [isBackdropClosing, setIsBackdropClosing] = useState(false);
   const initialPrefetchDone = useRef(false);
+
+  const openMenu = () => {
+    setIsBackdropVisible(true);
+    setIsBackdropClosing(false);
+    setIsMenuOpen(true);
+  };
+
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+    setIsBackdropClosing(true);
+  };
+
+  const handleBackdropAnimationEnd = (e: AnimationEvent) => {
+    if (isBackdropClosing && e.animationName === 'fadeOutBackdrop') {
+      setIsBackdropVisible(false);
+      setIsBackdropClosing(false);
+    }
+  };
 
   useEffect(() => {
     sendMessage<Record<string, unknown>, UserPreferences>(MessageType.GET_PREFERENCES, {}).then((res) => {
@@ -142,9 +136,9 @@ export function App() {
   useEffect(() => {
     if (!initialPrefetchDone.current) {
       initialPrefetchDone.current = true;
-      prefetchPage(currentPage);
+      prefetchPageOnMount(currentPage);
     }
-  }, [currentPage]);
+  }, [currentPage, prefetchPageOnMount]);
 
   useEffect(() => {
     const handleMessage = (message: unknown) => {
@@ -168,6 +162,7 @@ export function App() {
       setPrefs(newPrefs);
     } catch (err) {
       console.error('[Subsume] Failed to save onboarding completion:', err);
+      alert('Failed to complete onboarding: ' + (err instanceof Error ? err.message : String(err)));
     }
   };
 
@@ -232,48 +227,55 @@ export function App() {
         <div className="nav-logo">Subsume</div>
         <div className="nav-tabs">
           <button
-            onClick={() => {
-              setCurrentPage('library');
-              prefetchPage('library');
-            }}
+            onClick={() => setCurrentPage('library')}
             className={`nav-tab-btn ${currentPage === 'library' ? 'active' : ''}`}
+            aria-current={currentPage === 'library' ? 'page' : undefined}
+            {...prefetchProps('library')}
           >
             Sanctuary
           </button>
           <button
-            onClick={() => {
-              setCurrentPage('home');
-              prefetchPage('home');
-            }}
+            onClick={() => setCurrentPage('home')}
             className={`nav-tab-btn ${currentPage === 'home' ? 'active' : ''}`}
+            aria-current={currentPage === 'home' ? 'page' : undefined}
+            {...prefetchProps('home')}
           >
             Discovery
           </button>
           <button
-            onClick={() => {
-              setCurrentPage('settings');
-              prefetchPage('settings');
-            }}
+            onClick={() => setCurrentPage('settings')}
             className={`nav-tab-btn ${currentPage === 'settings' ? 'active' : ''}`}
+            aria-current={currentPage === 'settings' ? 'page' : undefined}
+            {...prefetchProps('settings')}
           >
             Settings
           </button>
         </div>
-        <button className="nav-menu-toggle" onClick={() => setIsMenuOpen(true)}>
+        <button
+          className="nav-menu-toggle"
+          onClick={openMenu}
+          aria-expanded={isMenuOpen}
+          aria-controls="side-menu-drawer"
+          aria-label="Open navigation menu"
+        >
           <span className="material-symbols-outlined">menu</span>
         </button>
       </nav>
 
       {/* Backdrop for Slide-out Navigation */}
-      {isMenuOpen && (
-        <div className="side-nav-backdrop" onClick={() => setIsMenuOpen(false)} />
+      {isBackdropVisible && (
+        <div
+          className={`side-nav-backdrop ${isBackdropClosing ? 'closing' : ''}`}
+          onClick={closeMenu}
+          onAnimationEnd={handleBackdropAnimationEnd}
+        />
       )}
 
       {/* Slide-out Navigation Menu */}
-      <div className={`side-menu-drawer ${isMenuOpen ? 'open' : ''}`}>
+      <div id="side-menu-drawer" className={`side-menu-drawer ${isMenuOpen ? 'open' : ''}`}>
         <div className="side-menu-header">
           <span className="side-menu-title">Catalogue Directory</span>
-          <button className="side-menu-close" onClick={() => setIsMenuOpen(false)}>
+          <button className="side-menu-close" onClick={closeMenu}>
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
@@ -285,11 +287,13 @@ export function App() {
                 <button
                   key={item.key}
                   className={`side-menu-item ${currentPage === item.key ? 'active' : ''}`}
+                  aria-current={currentPage === item.key ? 'page' : undefined}
                   onClick={() => {
                     setCurrentPage(item.key);
                     prefetchPage(item.key);
-                    setIsMenuOpen(false);
+                    closeMenu();
                   }}
+                  {...prefetchProps(item.key)}
                 >
                   <span className="side-menu-roman">{item.icon}</span>
                   <span className="side-menu-label">

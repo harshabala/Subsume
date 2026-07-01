@@ -62,6 +62,7 @@ export function Alerts() {
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<CreateWatchAlertRequest>(EMPTY_FORM);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const loadAlerts = async () => {
     setLoading(true);
@@ -122,16 +123,24 @@ export function Alerts() {
 
   const handleToggleEnabled = async (alert: WatchAlert) => {
     const updated: WatchAlert = { ...alert, enabled: !alert.enabled };
-    const res = await sendMessage(MessageType.UPDATE_WATCH_ALERT, { alert: updated });
-    if (res.success) {
+    setActionError(null);
+    try {
+      await sendMessage(MessageType.UPDATE_WATCH_ALERT, { alert: updated });
       setAlerts((prev) => prev.map((item) => (item.id === alert.id ? updated : item)));
+    } catch (err) {
+      console.error('Failed to update alert', err);
+      setActionError(err instanceof Error ? err.message : 'Failed to update alert.');
     }
   };
 
   const handleDelete = async (id: string) => {
-    const res = await sendMessage(MessageType.DELETE_WATCH_ALERT, { id });
-    if (res.success) {
+    setActionError(null);
+    try {
+      await sendMessage(MessageType.DELETE_WATCH_ALERT, { id });
       setAlerts((prev) => prev.filter((alert) => alert.id !== id));
+    } catch (err) {
+      console.error('Failed to delete alert', err);
+      setActionError(err instanceof Error ? err.message : 'Failed to delete alert.');
     }
   };
 
@@ -144,6 +153,12 @@ export function Alerts() {
         <h2 className="sanctuary-title">Watch Alerts</h2>
         <p className="sanctuary-description">Configure telegraphic surveillance criteria for forthcoming sanctuary releases.</p>
       </header>
+
+      {actionError && (
+        <div className="sanctuary-empty-plaque" style={{ maxWidth: 500, margin: '0 auto 24px', borderColor: 'var(--border-hero)' }}>
+          <p className="sanctuary-plaque-text" style={{ color: 'var(--text-reflection)' }}>{actionError}</p>
+        </div>
+      )}
 
       <div className="alerts-content">
         <div>

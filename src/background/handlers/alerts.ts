@@ -10,6 +10,7 @@ import {
   putWatchAlert,
   getAllWatchAlerts,
   deleteWatchAlert,
+  isValidWatchAlert,
 } from '../storage';
 
 export const alertHandlers: MessageHandlerMap = {
@@ -42,6 +43,9 @@ export const alertHandlers: MessageHandlerMap = {
 
   [MessageType.UPDATE_WATCH_ALERT]: async (payload) => {
     const req = payload as UpdateWatchAlertRequest;
+    if (!isValidWatchAlert(req.alert)) {
+      throw new Error('Invalid watch alert payload');
+    }
     await putWatchAlert(req.alert);
     return req.alert;
   },

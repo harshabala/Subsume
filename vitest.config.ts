@@ -11,10 +11,13 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       include: [
+        'src/shared/messages.ts',
+        'src/background/events.ts',
         'src/background/storage.ts',
         'src/background/llm.ts',
         'src/background/context.ts',
         'src/background/recommendations.ts',
+        'src/background/handlers/**/*.ts',
         'src/content/scanner.ts',
       ],
       exclude: [

@@ -2,6 +2,7 @@ import { h } from 'preact';
 import { useEffect, useState, useRef } from 'preact/hooks';
 import { MediaItem, LibraryItem, LibraryStatus } from '@/shared/types';
 import { PlatformChips } from './PlatformChips';
+import { STATUS_OPTIONS, getReflectionExcerpt } from './archive/constants';
 
 interface DetailModalProps {
   media: MediaItem;
@@ -13,13 +14,6 @@ interface DetailModalProps {
   onUpdateNotes?: (notes: string, atmosphere?: string, lingeringThought?: string) => void;
   onAddToLibrary?: () => void;
 }
-
-const STATUS_OPTIONS: { value: LibraryStatus; label: string }[] = [
-  { value: 'to-watch', label: 'Want to Watch' },
-  { value: 'watching', label: 'Watching' },
-  { value: 'watched', label: 'Watched' },
-  { value: 'abandoned', label: 'Abandoned' },
-];
 
 const SUGGESTED_TAGS = ["Rewatchable", "Festival", "Criterion", "Silent Era", "Foreign Language", "Comfort Watch", "One-Timer"];
 
@@ -37,7 +31,10 @@ export function DetailModal({
   const [notes, setNotes] = useState(libraryItem?.notes || '');
   const [atmosphere, setAtmosphere] = useState(libraryItem?.atmosphere || '');
   const [lingeringThought, setLingeringThought] = useState(libraryItem?.lingeringThought || '');
+  const [detailsExpanded, setDetailsExpanded] = useState(false);
   const notesDebounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const reflectionExcerpt = libraryItem ? getReflectionExcerpt(libraryItem) : undefined;
 
   useEffect(() => {
     setNotes(libraryItem?.notes || '');
@@ -117,6 +114,12 @@ export function DetailModal({
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </button>
+
+        {libraryItem && reflectionExcerpt && (
+          <blockquote className="sanctuary-detail-reflection-lead" data-testid="detail-reflection-lead">
+            &ldquo;{reflectionExcerpt}&rdquo;
+          </blockquote>
+        )}
 
         <div className="sanctuary-detail-header">
           <div className="sanctuary-detail-poster-wrap">
@@ -208,134 +211,148 @@ export function DetailModal({
         <div className="sanctuary-detail-library-wrap">
           {libraryItem ? (
             <div className="sanctuary-detail-library-stack">
-              <div className="sanctuary-detail-control-row">
-                <span className="sanctuary-detail-control-label">Sanctuary State:</span>
-                <select
-                  value={libraryItem.status}
-                  onChange={(e) => onUpdateStatus?.((e.target as HTMLSelectElement).value as LibraryStatus)}
-                  className="sanctuary-detail-input sanctuary-detail-select"
-                >
-                  {STATUS_OPTIONS.map((opt) => (
-                    <option value={opt.value} key={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
+              <button
+                type="button"
+                className="sanctuary-detail-details-toggle"
+                aria-expanded={detailsExpanded}
+                onClick={() => setDetailsExpanded((prev) => !prev)}
+              >
+                Details
+                <span className="sanctuary-detail-details-chevron">{detailsExpanded ? '▴' : '▾'}</span>
+              </button>
 
-              {libraryItem.status === 'watched' && (
-                <div className="sanctuary-detail-control-row">
-                  <span className="sanctuary-detail-control-label">Resonance Rating:</span>
-                  <input
-                    type="range"
-                    min={1}
-                    max={10}
-                    step={1}
-                    value={libraryItem.userRating || 5}
-                    onChange={(e) => onUpdateRating?.(parseInt((e.target as HTMLInputElement).value, 10))}
-                    className="sanctuary-detail-range"
-                  />
-                  <span className="sanctuary-detail-rating-display">
-                    {libraryItem.userRating || 5} <span className="sanctuary-detail-rating-max">/ X</span>
-                  </span>
+              {detailsExpanded && (
+                <div className="sanctuary-detail-details-panel">
+                  <div className="sanctuary-detail-control-row">
+                    <span className="sanctuary-detail-control-label">Sanctuary State:</span>
+                    <select
+                      value={libraryItem.status}
+                      onChange={(e) => onUpdateStatus?.((e.target as HTMLSelectElement).value as LibraryStatus)}
+                      className="sanctuary-detail-input sanctuary-detail-select"
+                    >
+                      {STATUS_OPTIONS.map((opt) => (
+                        <option value={opt.value} key={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {libraryItem.status === 'watched' && (
+                    <div className="sanctuary-detail-control-row">
+                      <span className="sanctuary-detail-control-label">Resonance Rating:</span>
+                      <input
+                        type="range"
+                        min={1}
+                        max={10}
+                        step={1}
+                        value={libraryItem.userRating || 5}
+                        onChange={(e) => onUpdateRating?.(parseInt((e.target as HTMLInputElement).value, 10))}
+                        className="sanctuary-detail-range"
+                      />
+                      <span className="sanctuary-detail-rating-display">
+                        {libraryItem.userRating || 5} <span className="sanctuary-detail-rating-max">/ X</span>
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="sanctuary-detail-tags-section">
+                    <span className="sanctuary-detail-control-label">Sanctuary Tags:</span>
+
+                    <div className="sanctuary-detail-tags-list">
+                      {(libraryItem.userTags || []).map((tag) => (
+                        <span key={tag} className="sanctuary-detail-tag-chip">
+                          {tag}
+                          <span
+                            onClick={() => {
+                              const newTags = (libraryItem.userTags || []).filter(t => t !== tag);
+                              onUpdateTags?.(newTags);
+                            }}
+                            className="sanctuary-detail-tag-remove"
+                          >
+                            ×
+                          </span>
+                        </span>
+                      ))}
+                    </div>
+
+                    <input
+                      type="text"
+                      placeholder="Inscribe custom tag and press Enter..."
+                      className="sanctuary-detail-input"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const target = e.target as HTMLInputElement;
+                          const newTag = target.value.trim();
+                          if (newTag) {
+                            const currentTags = libraryItem.userTags || [];
+                            if (!currentTags.includes(newTag)) {
+                              onUpdateTags?.([...currentTags, newTag]);
+                            }
+                            target.value = '';
+                          }
+                        }
+                      }}
+                    />
+
+                    <div className="sanctuary-detail-suggestions">
+                      <span className="sanctuary-detail-suggestions-label">Archival Suggestions:</span>
+                      {SUGGESTED_TAGS.map((tag) => {
+                        const isAdded = (libraryItem.userTags || []).includes(tag);
+                        if (isAdded) return null;
+                        return (
+                          <span
+                            key={tag}
+                            onClick={() => {
+                              const currentTags = libraryItem.userTags || [];
+                              onUpdateTags?.([...currentTags, tag]);
+                            }}
+                            className="sanctuary-detail-suggestion-chip"
+                          >
+                            + {tag}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="sanctuary-detail-notes-section">
+                    <span className="sanctuary-detail-control-label">Private Reflections & Notes:</span>
+                    <textarea
+                      value={notes}
+                      placeholder="Record private thoughts, directorial motifs, or memorable sequences..."
+                      onChange={(e) => handleNotesChange(e.currentTarget.value)}
+                      onBlur={flushNotes}
+                      rows={4}
+                      className="sanctuary-detail-input sanctuary-detail-textarea"
+                    />
+
+                    <div className="sanctuary-detail-metadata-inputs">
+                      <div className="sanctuary-detail-input-wrap">
+                        <span className="sanctuary-detail-control-label sanctuary-detail-control-label-sm">Atmosphere:</span>
+                        <input
+                          type="text"
+                          value={atmosphere}
+                          placeholder="e.g. Melancholic, Warm Amber"
+                          onChange={(e) => handleAtmosphereChange(e.currentTarget.value)}
+                          onBlur={flushNotes}
+                          className="sanctuary-detail-input"
+                        />
+                      </div>
+                      <div className="sanctuary-detail-input-wrap">
+                        <span className="sanctuary-detail-control-label sanctuary-detail-control-label-sm">Lingering Thought:</span>
+                        <input
+                          type="text"
+                          value={lingeringThought}
+                          placeholder="e.g. The cost of love..."
+                          onChange={(e) => handleLingeringChange(e.currentTarget.value)}
+                          onBlur={flushNotes}
+                          className="sanctuary-detail-input"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
-
-              <div className="sanctuary-detail-tags-section">
-                <span className="sanctuary-detail-control-label">Sanctuary Tags:</span>
-                
-                <div className="sanctuary-detail-tags-list">
-                  {(libraryItem.userTags || []).map((tag) => (
-                    <span key={tag} className="sanctuary-detail-tag-chip">
-                      {tag}
-                      <span
-                        onClick={() => {
-                          const newTags = (libraryItem.userTags || []).filter(t => t !== tag);
-                          onUpdateTags?.(newTags);
-                        }}
-                        className="sanctuary-detail-tag-remove"
-                      >
-                        ×
-                      </span>
-                    </span>
-                  ))}
-                </div>
-
-                <input
-                  type="text"
-                  placeholder="Inscribe custom tag and press Enter..."
-                  className="sanctuary-detail-input"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      const target = e.target as HTMLInputElement;
-                      const newTag = target.value.trim();
-                      if (newTag) {
-                        const currentTags = libraryItem.userTags || [];
-                        if (!currentTags.includes(newTag)) {
-                          onUpdateTags?.([...currentTags, newTag]);
-                        }
-                        target.value = '';
-                      }
-                    }
-                  }}
-                />
-
-                <div className="sanctuary-detail-suggestions">
-                  <span className="sanctuary-detail-suggestions-label">Archival Suggestions:</span>
-                  {SUGGESTED_TAGS.map((tag) => {
-                    const isAdded = (libraryItem.userTags || []).includes(tag);
-                    if (isAdded) return null;
-                    return (
-                      <span
-                        key={tag}
-                        onClick={() => {
-                          const currentTags = libraryItem.userTags || [];
-                          onUpdateTags?.([...currentTags, tag]);
-                        }}
-                        className="sanctuary-detail-suggestion-chip"
-                      >
-                        + {tag}
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="sanctuary-detail-notes-section">
-                <span className="sanctuary-detail-control-label">Private Reflections & Notes:</span>
-                <textarea
-                  value={notes}
-                  placeholder="Record private thoughts, directorial motifs, or memorable sequences..."
-                  onChange={(e) => handleNotesChange(e.currentTarget.value)}
-                  onBlur={flushNotes}
-                  rows={4}
-                  className="sanctuary-detail-input sanctuary-detail-textarea"
-                />
-
-                <div className="sanctuary-detail-metadata-inputs" style={{ marginTop: '1.25rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div className="sanctuary-detail-input-wrap" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                    <span className="sanctuary-detail-control-label" style={{ fontSize: '11px' }}>Atmosphere:</span>
-                    <input
-                      type="text"
-                      value={atmosphere}
-                      placeholder="e.g. Melancholic, Warm Amber"
-                      onChange={(e) => handleAtmosphereChange(e.currentTarget.value)}
-                      onBlur={flushNotes}
-                      className="sanctuary-detail-input"
-                    />
-                  </div>
-                  <div className="sanctuary-detail-input-wrap" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                    <span className="sanctuary-detail-control-label" style={{ fontSize: '11px' }}>Lingering Thought:</span>
-                    <input
-                      type="text"
-                      value={lingeringThought}
-                      placeholder="e.g. The cost of love..."
-                      onChange={(e) => handleLingeringChange(e.currentTarget.value)}
-                      onBlur={flushNotes}
-                      className="sanctuary-detail-input"
-                    />
-                  </div>
-                </div>
-              </div>
             </div>
           ) : (
             <button className="sanctuary-detail-btn-inscribe" onClick={onAddToLibrary}>

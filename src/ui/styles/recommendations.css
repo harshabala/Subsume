@@ -318,6 +318,7 @@
   background: var(--bg-plaque);
   border: 1px solid var(--border-restraint);
   border-radius: 4px;
+  animation: subsume-pulse 1.5s ease-in-out infinite;
 }
 
 .recommendations-loading-text {

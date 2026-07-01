@@ -115,3 +115,61 @@
   color: #f87171;
   border: 1px solid rgba(248, 113, 113, 0.2);
 }
+
+/* ─── Library Loading Skeleton ───────────────────────────────────── */
+
+.library-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 2rem;
+  margin: 1.5rem 0 3rem;
+}
+
+/* ─── Library Empty State ────────────────────────────────────────── */
+
+.library-empty-state {
+  padding: 48px 32px;
+}
+
+.library-empty-state-icon {
+  color: var(--primary);
+  margin-bottom: 1.25rem;
+}
+
+.library-empty-state-title {
+  font-family: 'Newsreader', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.75rem;
+  color: var(--fg-base);
+}
+
+.library-empty-state-description {
+  font-family: 'Outfit', sans-serif;
+  color: var(--fg-muted);
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+  max-width: 380px;
+}
+
+.library-empty-state-hint {
+  font-family: 'Outfit', sans-serif;
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: var(--fg-subtle);
+  max-width: 400px;
+}
+
+/* ─── Library Error State ────────────────────────────────────────── */
+
+.library-error-plaque {
+  margin: 2rem 0;
+}
+
+.library-error-text {
+  margin-bottom: 16px;
+}
+
+.library-retry-btn {
+  padding: 8px 20px;
+}

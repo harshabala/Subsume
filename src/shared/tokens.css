@@ -1,0 +1,209 @@
+/* ──────────────────────────────────────────────────────────────────
+   Subsume Design Tokens — Single Source of Truth
+   Combines Cinematic Sanctuary spec + Gilded Night brand palette
+   ────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ─── Gilded Night — App Shell ─────────────────────────────── */
+  --bg-base: hsl(240, 18%, 5%);
+  --bg-elevated: hsl(240, 16%, 8%);
+  --bg-overlay: hsl(240, 14%, 11%);
+  --bg-hover: hsl(240, 12%, 14%);
+  --bg-sunken: hsl(240, 20%, 3%);
+  --fg-base: hsl(0, 0%, 92%);
+  --fg-muted: hsl(240, 8%, 52%);
+  --fg-subtle: hsl(240, 8%, 36%);
+  --primary: hsl(45, 80%, 62%);
+  --primary-soft: hsla(45, 80%, 62%, 0.10);
+  --primary-hover: hsl(45, 85%, 68%);
+  --primary-pressed: hsl(45, 75%, 54%);
+  --border: hsla(0, 0%, 100%, 0.07);
+  --border-subtle: hsla(0, 0%, 100%, 0.04);
+  --gold: var(--primary);
+
+  /* ─── Sanctuary — Cinematic Capture & Archive ──────────────── */
+  --bg-sanctuary: hsl(240, 18%, 5%);
+  --bg-plaque: hsla(240, 15%, 11%, 0.85);
+  --bg-plaque-hover: hsla(240, 15%, 16%, 0.95);
+  --border-restraint: hsla(0, 0%, 100%, 0.08);
+  --border-hero: hsla(45, 90%, 65%, 0.4);
+  --accent-sanctuary: var(--border-hero);
+
+  /* ─── Literary Text Hierarchy (Sanctuary) ──────────────────── */
+  --text-reflection: hsl(0, 0%, 96%);
+  --text-artwork: hsl(0, 0%, 82%);
+  --text-title: hsl(240, 10%, 70%);
+  --text-meta: hsl(240, 10%, 50%);
+  --text-control: hsl(240, 10%, 32%);
+  --text-sanctuary: var(--text-reflection);
+  --outline: var(--text-meta);
+
+  /* ─── Typography ───────────────────────────────────────────── */
+  --font-editorial: 'Newsreader', 'Cormorant Garamond', Georgia, serif;
+  --font-ui: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: var(--font-ui);
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Courier New', monospace;
+
+  /* ─── Spacing Scale ────────────────────────────────────────── */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 20px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+
+  /* ─── Radius & Transitions ───────────────────────────────────── */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --duration-instant: 100ms;
+  --duration-fast: 130ms;
+  --duration-normal: 220ms;
+  --duration-slow: 260ms;
+  --transition-fast: var(--duration-fast) ease;
+  --transition-base: var(--duration-normal) ease;
+  --transition-normal: var(--transition-base);
+
+  /* ─── Shadows (obsidian-tinted, not pure black) ──────────────── */
+  --shadow-sm: 0 1px 3px hsla(240, 18%, 4%, 0.6);
+  --shadow-md: 0 4px 16px hsla(240, 18%, 4%, 0.55);
+  --shadow-lg: 0 12px 40px hsla(240, 18%, 4%, 0.6);
+  --shadow-hero: 0 20px 60px hsla(240, 18%, 4%, 0.8);
+
+  /* ─── Cinematic Motion ───────────────────────────────────────── */
+  --ease-focus-pull: cubic-bezier(0.25, 1, 0.5, 1);
+  --duration-curtain: 450ms;
+  --blur-hero: blur(16px);
+
+  /* ─── Brand Gradients (Gilded Night) ─────────────────────────── */
+  --gradient-bg: linear-gradient(
+    135deg,
+    oklch(0.04 0.01 82) 0%,
+    oklch(0.07 0.015 97) 100%
+  );
+  --gradient-accent: linear-gradient(
+    to right,
+    oklch(0.72 0.17 82) 0%,
+    oklch(0.74 0.18 112) 100%
+  );
+
+  /* ─── Scrollback ─────────────────────────────────────────────── */
+  --scrollback-bg: var(--bg-base);
+  --scrollback-text: var(--fg-muted);
+
+  /* ─── Alias Tokens (sidebar + inline style compatibility) ──── */
+  --color-surface: var(--bg-elevated);
+  --color-surface-elevated: var(--bg-overlay);
+  --color-surface-hover: var(--bg-hover);
+  --color-border: var(--border);
+  --color-text: var(--fg-base);
+  --color-text-secondary: var(--fg-muted);
+  --color-text-muted: var(--fg-subtle);
+  --color-accent-bg: var(--primary-soft);
+  --color-accent-light: var(--primary);
+  --color-accent-border: rgba(201, 168, 76, 0.25);
+
+  --font-size-lg: 18px;
+  --font-size-sm: 14px;
+  --font-size-xs: 11px;
+
+  /* ─── Shadcn-compatible tokens (dark default) ──────────────── */
+  --background: #0a0a0b;
+  --foreground: #e8e6e1;
+  --card: #141416;
+  --card-foreground: #e8e6e1;
+  --popover: #141416;
+  --popover-foreground: #e8e6e1;
+  --primary-foreground: #0a0a0b;
+  --secondary: #222224;
+  --secondary-foreground: #e8e6e1;
+  --muted: #1a1a1c;
+  --muted-foreground: #9e9a90;
+  --accent: #1a1a1c;
+  --accent-foreground: #e8e6e1;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --input: #2a2a2c;
+  --ring: #c9a84c;
+  --radius: 0.5rem;
+}
+
+.dark {
+  --gradient-bg: linear-gradient(
+    135deg,
+    oklch(0.04 0.01 82) 0%,
+    oklch(0.07 0.015 97) 100%
+  );
+  --gradient-accent: linear-gradient(
+    to right,
+    oklch(0.72 0.17 82) 0%,
+    oklch(0.74 0.18 112) 100%
+  );
+}
+
+/* ─── Light Mode (Gilded Night — brand.md) ─────────────────────── */
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-base: #f5f0e8;
+    --bg-elevated: #ffffff;
+    --bg-overlay: #ede8e0;
+    --bg-hover: #e8e3db;
+    --bg-sunken: #ede8e0;
+    --fg-base: #1a1918;
+    --fg-muted: #6b6560;
+    --fg-subtle: #9e9a90;
+    --primary: #b8962e;
+    --primary-soft: rgba(184, 150, 46, 0.12);
+    --primary-hover: #a68829;
+    --primary-pressed: #94771f;
+    --border: #e0dbd3;
+    --border-subtle: #eae5dd;
+
+    --bg-sanctuary: #f5f0e8;
+    --bg-plaque: hsla(0, 0%, 100%, 0.92);
+    --bg-plaque-hover: hsla(0, 0%, 100%, 0.98);
+    --border-restraint: hsla(240, 8%, 20%, 0.12);
+    --border-hero: hsla(45, 70%, 42%, 0.45);
+
+    --text-reflection: #1a1918;
+    --text-artwork: #3d3a36;
+    --text-title: #5c5850;
+    --text-meta: #6b6560;
+    --text-control: #9e9a90;
+
+    --shadow-sm: 0 1px 3px hsla(240, 18%, 4%, 0.08);
+    --shadow-md: 0 4px 16px hsla(240, 18%, 4%, 0.10);
+    --shadow-lg: 0 12px 40px hsla(240, 18%, 4%, 0.12);
+    --shadow-hero: 0 20px 60px hsla(240, 18%, 4%, 0.16);
+
+    --gradient-bg: linear-gradient(
+      135deg,
+      oklch(0.96 0.01 82) 0%,
+      oklch(0.94 0.015 97) 100%
+    );
+    --gradient-accent: linear-gradient(
+      to right,
+      oklch(0.52 0.17 82) 0%,
+      oklch(0.54 0.18 112) 100%
+    );
+
+    --scrollback-bg: var(--bg-base);
+    --scrollback-text: var(--fg-muted);
+
+    --background: #f5f0e8;
+    --foreground: #1a1918;
+    --card: #ffffff;
+    --card-foreground: #1a1918;
+    --popover: #ffffff;
+    --popover-foreground: #1a1918;
+    --primary-foreground: #ffffff;
+    --secondary: #f5f0e8;
+    --secondary-foreground: #1a1918;
+    --muted: #ede8e0;
+    --muted-foreground: #6b6560;
+    --accent: #ede8e0;
+    --accent-foreground: #1a1918;
+    --input: #e0dbd3;
+    --ring: #b8962e;
+  }
+}

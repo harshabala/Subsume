@@ -28,8 +28,6 @@ const TITLE_PATTERNS = [
   { re: /^(.{3,60})\s*\((\d{4})\s+(?:TV series|TV show|Movie|Film).*\)$/i, titleIdx: 1, yearIdx: 2 },
 ];
 
-const SEASON_EPISODE_RE = /\b[Ss]\d{1,2}[Ee]\d{1,2}\b/;
-
 const PLATFORM_KEYWORDS = [
   'netflix', 'prime video', 'amazon prime', 'disney+', 'hulu',
   'hbo', 'apple tv', 'hotstar', 'paramount+', 'peacock',
@@ -248,6 +246,48 @@ function processPendingElements(onDetected: (titles: DetectedTitle[]) => void) {
   }
 }
 
+const POSTER_RESOLVE_BUDGET_PER_ORIGIN = 10;
+
+/** Per-origin RESOLVE_POSTER call count for the current content-script session. */
+const posterResolveCounts = new Map<string, number>();
+const posterBudgetExceededLogged = new Set<string>();
+
+function getPageOrigin(): string {
+  return window.location.origin;
+}
+
+function canResolvePoster(): boolean {
+  const origin = getPageOrigin();
+  const count = posterResolveCounts.get(origin) ?? 0;
+  if (count >= POSTER_RESOLVE_BUDGET_PER_ORIGIN) {
+    if (!posterBudgetExceededLogged.has(origin)) {
+      posterBudgetExceededLogged.add(origin);
+      console.warn(
+        `[Subsume] Poster resolve budget exceeded for origin ${origin} ` +
+          `(max ${POSTER_RESOLVE_BUDGET_PER_ORIGIN} per session). Skipping further resolves.`
+      );
+    }
+    return false;
+  }
+  return true;
+}
+
+function recordPosterResolve(): void {
+  const origin = getPageOrigin();
+  posterResolveCounts.set(origin, (posterResolveCounts.get(origin) ?? 0) + 1);
+}
+
+/** @internal Exported for unit tests. */
+export function resetPosterResolveBudgetForTests(): void {
+  posterResolveCounts.clear();
+  posterBudgetExceededLogged.clear();
+}
+
+/** @internal Exported for unit tests. */
+export function getPosterResolveCountForOrigin(origin: string): number {
+  return posterResolveCounts.get(origin) ?? 0;
+}
+
 const TMDB_IMAGE_CDN = 'image.tmdb.org/t/p/';
 
 const POSTER_CDN_PATTERNS = [
@@ -388,6 +428,11 @@ export async function scanImages(
           return;
         }
 
+        if (!canResolvePoster()) {
+          img.setAttribute('data-subsume-poster-scanned', 'skip');
+          return;
+        }
+
         try {
           let res: any = null;
 
@@ -397,12 +442,14 @@ export async function scanImages(
               img.setAttribute('data-subsume-poster-scanned', 'skip');
               return;
             }
+            recordPosterResolve();
             res = await sendMessage<any, { match: PosterMatch | null }>(MessageType.RESOLVE_POSTER, {
               strategy: 'tmdb-cdn',
               tmdbId: parsed.tmdbId,
               mediaType: parsed.mediaType,
             });
           } else if (strategy === 'alt-text') {
+            recordPosterResolve();
             res = await sendMessage<any, { match: PosterMatch | null }>(MessageType.RESOLVE_POSTER, {
               strategy: 'alt-text',
               query: altText,
@@ -432,6 +479,7 @@ export async function scanImages(
               return;
             }
 
+            recordPosterResolve();
             res = await sendMessage<any, { match: PosterMatch | null }>(MessageType.RESOLVE_POSTER, {
               strategy: 'ancestor-text',
               query: clampedText,

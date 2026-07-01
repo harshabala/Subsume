@@ -165,7 +165,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
     .filter(Boolean)
     .join(', ');
 
-  const digestBadge = weeklyDigest?.llmGenerated ? 'AI Curated' : 'Algorithm';
+  const digestBadge = weeklyDigest?.llmGenerated ? 'Personally Curated' : 'Editorial Selection';
 
   const heroMedia = weeklyPicks.find((p) => p.media)?.media || picks[0]?.media || null;
   const heroTitle = heroMedia?.canonicalTitle || "In the Mood for Love";
@@ -228,7 +228,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
           </p>
           <div className="lobby-status-panel">
             <span className="status-indicator"></span>
-            <span className="status-text">Contextual Awareness Engine v2.4 Active</span>
+            <span className="status-text">Quiet catalogue overlay while you browse</span>
           </div>
         </div>
       </div>
@@ -342,7 +342,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
             {weeklyPicks.length === 0 ? (
               <div className="sanctuary-empty-plaque home-empty-notice">
                 <span className="sanctuary-plaque-index">Programme Notice</span>
-                <p className="sanctuary-plaque-text">No weekly programme yet. Check your TMDb API key in Settings or refresh programme.</p>
+                <p className="sanctuary-plaque-text">No weekly programme yet. Add your exhibition credentials in Settings, or refresh the programme.</p>
               </div>
             ) : (
               <div className="home-weekly-grid">

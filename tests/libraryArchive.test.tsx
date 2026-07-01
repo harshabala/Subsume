@@ -147,7 +147,7 @@ describe('Act III Hardcover Library Archive', () => {
 
     const snippet = container.querySelector('.hardcover-snippet') as HTMLElement;
     expect(snippet).toBeTruthy();
-    expect(snippet.textContent).toContain('"The haunting waltz theme."');
+    expect(snippet.textContent).toContain('The haunting waltz theme.');
 
     // Check poster element exists
     const posterImg = container.querySelector('.media-card-poster img') as HTMLElement;

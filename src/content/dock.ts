@@ -1,23 +1,45 @@
-import { sendMessage } from '@/shared/messages';
-import { MessageType } from '@/shared/types';
 import { logger } from '@/shared/logger';
+import { setupShadowStyles } from '@/shared/shadowTokens';
 
 const DOCK_ATTR = 'data-subsume-dock';
+export const PAGE_REFLECTIONS_STORAGE_KEY = 'subsume_page_reflections';
+
+export interface PageReflection {
+  notes: string;
+  updatedAt: number;
+}
+
+export type PageReflectionStore = Record<string, PageReflection>;
+
+export function pageReflectionKey(hostname = window.location.hostname, pathname = window.location.pathname): string {
+  return `${hostname}${pathname}`;
+}
+
+export async function loadPageReflection(key: string): Promise<string> {
+  const result = await chrome.storage.local.get(PAGE_REFLECTIONS_STORAGE_KEY);
+  const store = (result[PAGE_REFLECTIONS_STORAGE_KEY] as PageReflectionStore | undefined) ?? {};
+  return store[key]?.notes ?? '';
+}
+
+export async function savePageReflection(key: string, notes: string): Promise<void> {
+  const result = await chrome.storage.local.get(PAGE_REFLECTIONS_STORAGE_KEY);
+  const store = { ...((result[PAGE_REFLECTIONS_STORAGE_KEY] as PageReflectionStore | undefined) ?? {}) };
+  const trimmed = notes.trim();
+  if (trimmed) {
+    store[key] = { notes: trimmed, updatedAt: Date.now() };
+  } else {
+    delete store[key];
+  }
+  await chrome.storage.local.set({ [PAGE_REFLECTIONS_STORAGE_KEY]: store });
+}
 
 const DOCK_STYLES = `
   :host {
     all: initial;
     position: fixed;
-    bottom: 24px;
-    right: 24px;
+    bottom: var(--spacing-xl);
+    right: var(--spacing-xl);
     z-index: 2147483647;
-    --bg-dock: hsl(220, 15%, 10%);
-    --border-gold: hsla(43, 45%, 55%, 0.35);
-    --border-gold-hover: hsla(43, 45%, 55%, 0.65);
-    --text-primary: hsl(0, 0%, 94%);
-    --text-muted: hsl(0, 0%, 65%);
-    --font-editorial: 'Newsreader', Georgia, serif;
-    --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
 
   .dock-container {
@@ -25,38 +47,38 @@ const DOCK_STYLES = `
   }
 
   .dock-toggle-btn {
-    background: var(--bg-dock);
-    color: var(--text-primary);
-    border: 1px solid var(--border-gold);
-    padding: 10px 18px;
+    background: var(--bg-overlay);
+    color: var(--text-reflection);
+    border: 1px solid var(--border-hero);
+    padding: var(--spacing-md) var(--spacing-lg);
     border-radius: 20px;
     font-family: var(--font-editorial);
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+    box-shadow: var(--shadow-md);
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--spacing-sm);
   }
 
   .dock-toggle-btn:hover {
-    border-color: var(--border-gold-hover);
+    border-color: var(--primary);
     transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
+    box-shadow: var(--shadow-lg);
   }
 
   .dock-card {
-    background: var(--bg-dock);
-    border: 1px solid var(--border-gold);
-    border-radius: 12px;
+    background: var(--bg-overlay);
+    border: 1px solid var(--border-hero);
+    border-radius: var(--radius-lg);
     width: 320px;
-    padding: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-lg);
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--spacing-md);
   }
 
   .dock-header {
@@ -69,36 +91,36 @@ const DOCK_STYLES = `
     font-family: var(--font-editorial);
     font-size: 16px;
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--text-reflection);
   }
 
   .dock-collapse-btn {
     background: none;
     border: none;
-    color: var(--text-muted);
+    color: var(--text-meta);
     cursor: pointer;
     font-size: 14px;
-    padding: 4px;
+    padding: var(--spacing-xs);
   }
 
   .dock-collapse-btn:hover {
-    color: var(--text-primary);
+    color: var(--text-reflection);
   }
 
   .dock-subtitle {
     font-size: 12px;
-    color: var(--text-muted);
+    color: var(--text-meta);
     line-height: 1.4;
   }
 
   .dock-textarea {
     width: 100%;
     height: 120px;
-    background: hsla(220, 15%, 7%, 0.8);
-    border: 1px solid hsla(43, 45%, 55%, 0.2);
-    border-radius: 8px;
-    padding: 10px;
-    color: var(--text-primary);
+    background: var(--bg-sunken);
+    border: 1px solid var(--color-accent-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    color: var(--text-reflection);
     font-family: var(--font-editorial);
     font-size: 14px;
     resize: vertical;
@@ -107,7 +129,7 @@ const DOCK_STYLES = `
 
   .dock-textarea:focus {
     outline: none;
-    border-color: var(--border-gold-hover);
+    border-color: var(--primary);
   }
 
   .dock-footer {
@@ -116,20 +138,20 @@ const DOCK_STYLES = `
   }
 
   .dock-save-btn {
-    background: hsla(43, 45%, 55%, 0.15);
-    color: var(--text-primary);
-    border: 1px solid var(--border-gold);
-    padding: 6px 14px;
-    border-radius: 6px;
+    background: var(--primary-soft);
+    color: var(--text-reflection);
+    border: 1px solid var(--border-hero);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-sm);
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all var(--transition-fast);
   }
 
   .dock-save-btn:hover {
-    background: hsla(43, 45%, 55%, 0.25);
-    border-color: var(--border-gold-hover);
+    background: var(--primary-soft);
+    border-color: var(--primary);
   }
 `;
 
@@ -138,6 +160,7 @@ export class AuteurScreenplayDock {
   private shadowRoot: ShadowRoot | null = null;
   private mountPoint: HTMLElement | null = null;
   private isExpandedState: boolean = false;
+  private pageKey: string = pageReflectionKey();
 
   private boundOnToggle: ((e: MouseEvent) => void) | null;
   private boundOnSave: ((e: MouseEvent) => void) | null;
@@ -178,6 +201,11 @@ export class AuteurScreenplayDock {
     const textarea = document.createElement('textarea');
     textarea.className = 'dock-textarea';
     textarea.placeholder = 'Record your reflections...';
+    void loadPageReflection(this.pageKey).then((notes) => {
+      textarea.value = notes;
+    }).catch((err) => {
+      logger.warn('[Subsume] Failed to load page reflection notes:', err);
+    });
 
     const footer = document.createElement('div');
     footer.className = 'dock-footer';
@@ -209,15 +237,15 @@ export class AuteurScreenplayDock {
   public mount(): void {
     if (this.container) return;
 
+    this.pageKey = pageReflectionKey();
+
     this.container = document.createElement('div');
     this.container.setAttribute(DOCK_ATTR, 'true');
     this.container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:2147483647;';
     document.body.appendChild(this.container);
 
     this.shadowRoot = this.container.attachShadow({ mode: 'open' });
-    const style = document.createElement('style');
-    style.textContent = DOCK_STYLES;
-    this.shadowRoot.appendChild(style);
+    setupShadowStyles(this.shadowRoot, DOCK_STYLES);
 
     this.mountPoint = document.createElement('div');
     this.mountPoint.className = 'dock-container';
@@ -269,19 +297,14 @@ export class AuteurScreenplayDock {
     if (!textarea) return;
 
     const notes = textarea.value;
-    const mediaId = 'page_' + window.location.hostname;
 
-    sendMessage(MessageType.SET_USER_NOTES, { mediaId, notes })
-      .then((res) => {
-        if (res.success) {
-          logger.log('[Subsume] Successfully saved auteur reflection notes.');
-          this.toggle(); // collapse after save
-        } else {
-          logger.warn('[Subsume] Failed to save reflection notes:', res.error);
-        }
+    savePageReflection(this.pageKey, notes)
+      .then(() => {
+        logger.log('[Subsume] Successfully saved auteur reflection notes.');
+        this.toggle();
       })
       .catch((err) => {
-        logger.error('[Subsume] Error sending SET_USER_NOTES message:', err);
+        logger.error('[Subsume] Error saving page reflection notes:', err);
       });
   }
 }

@@ -7,19 +7,11 @@ import { getLatestReleases } from './tmdb';
 import { getPreferences, saveWeeklyDigest } from './storage';
 import { checkWatchAlerts } from './alerts';
 import { generateWeeklyDigest } from './digest';
-
-type NotificationBadgeKind = 'new-releases' | 'watch-alert' | 'weekly-digest';
-
-const NOTIFICATION_BADGE_TEXT: Record<NotificationBadgeKind, string> = {
-  'new-releases': 'NEW',
-  'watch-alert': '!',
-  'weekly-digest': '✦',
-};
-
-function setNotificationBadge(kind: NotificationBadgeKind) {
-  chrome.action.setBadgeText({ text: NOTIFICATION_BADGE_TEXT[kind] });
-  chrome.action.setBadgeBackgroundColor({ color: '#a78bfa' });
-}
+import {
+  setNotificationBadge,
+  clearNotificationBadge,
+  NotificationBadgeKind,
+} from './notifications';
 
 async function notifyWatchAlertMatches(
   matches: WatchAlertMatch[],
@@ -78,60 +70,64 @@ const DAILY_RELEASE_WINDOW_DAYS = 7;
 export function setupLifecycleAndAlarms(): void {
   chrome.runtime.onInstalled.addListener((details) => {
     if (details.reason === 'install') {
-      logger.log('[Subsume] Extension installed — welcome!');
+      logger.info('[Subsume] Extension installed — welcome!');
       chrome.tabs.create({ url: chrome.runtime.getURL('ui/index.html') });
     }
   });
 
   chrome.alarms.onAlarm.addListener(async (alarm) => {
     if (alarm.name === 'dailyRefresh') {
-      logger.log('[Subsume] Daily refresh triggered.');
-      const prefs = await getPreferences();
-
-      const [movies, tv] = await Promise.all([
-        getLatestReleases('movie', prefs, DAILY_RELEASE_WINDOW_DAYS),
-        getLatestReleases('tv', prefs, DAILY_RELEASE_WINDOW_DAYS),
-      ]);
-      const allReleases = [...movies, ...tv];
-
-      let dailyBadge: NotificationBadgeKind | null = null;
-
-      if (
-        (prefs.favoriteGenres.length > 0 || prefs.platforms.length > 0) &&
-        allReleases.length > 0
-      ) {
-        chrome.notifications.create('daily-new-releases', {
-          type: 'basic',
-          iconUrl: 'icons/icon128.png',
-          title: 'New Releases Available',
-          message:
-            allReleases.length +
-            ' new title' +
-            (allReleases.length === 1 ? '' : 's') +
-            ' matching your preferences',
-          priority: 1,
-        });
-        dailyBadge = 'new-releases';
-      }
-
       try {
-        const alertMatches = await checkWatchAlerts(prefs, allReleases);
-        await notifyWatchAlertMatches(alertMatches, { updateBadge: false });
-        if (alertMatches.length > 0) {
-          dailyBadge = dailyBadge ?? 'watch-alert';
+        logger.info('[Subsume] Daily refresh triggered.');
+        const prefs = await getPreferences();
+
+        const [movies, tv] = await Promise.all([
+          getLatestReleases('movie', prefs, DAILY_RELEASE_WINDOW_DAYS),
+          getLatestReleases('tv', prefs, DAILY_RELEASE_WINDOW_DAYS),
+        ]);
+        const allReleases = [...movies, ...tv];
+
+        let dailyBadge: NotificationBadgeKind | null = null;
+
+        if (
+          (prefs.favoriteGenres.length > 0 || prefs.platforms.length > 0) &&
+          allReleases.length > 0
+        ) {
+          chrome.notifications.create('daily-new-releases', {
+            type: 'basic',
+            iconUrl: 'icons/icon128.png',
+            title: 'New Releases Available',
+            message:
+              allReleases.length +
+              ' new title' +
+              (allReleases.length === 1 ? '' : 's') +
+              ' matching your preferences',
+            priority: 1,
+          });
+          dailyBadge = 'new-releases';
+        }
+
+        try {
+          const alertMatches = await checkWatchAlerts(prefs, allReleases);
+          await notifyWatchAlertMatches(alertMatches, { updateBadge: false });
+          if (alertMatches.length > 0) {
+            dailyBadge = dailyBadge ?? 'watch-alert';
+          }
+        } catch (err) {
+          logger.error('[Subsume] Watch alert check failed:', err);
+        }
+
+        if (dailyBadge) {
+          setNotificationBadge(dailyBadge);
         }
       } catch (err) {
-        logger.error('[Subsume] Watch alert check failed:', err);
-      }
-
-      if (dailyBadge) {
-        setNotificationBadge(dailyBadge);
+        logger.error('[Subsume] Daily refresh alarm failed:', err);
       }
     }
 
     if (alarm.name === 'weeklyDigest') {
-      logger.log('[Subsume] Weekly digest alarm triggered.');
       try {
+        logger.info('[Subsume] Weekly digest alarm triggered.');
         const prefs = await getPreferences();
         const digest = await generateWeeklyDigest(prefs);
         await saveWeeklyDigest(digest);
@@ -148,6 +144,7 @@ export function setupLifecycleAndAlarms(): void {
       notificationId === 'weekly-digest' ||
       notificationId.startsWith('watch-alert-')
     ) {
+      clearNotificationBadge();
       const page = notificationId.startsWith('watch-alert-') ? '?page=alerts' : '';
       chrome.tabs.create({ url: chrome.runtime.getURL(`ui/index.html${page}`) });
       chrome.notifications.clear(notificationId);

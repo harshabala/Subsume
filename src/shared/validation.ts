@@ -1,4 +1,24 @@
-import { ImportLibraryData } from './types';
+import { ImportLibraryData, PersonItem } from './types';
+
+const VALID_CREW_ROLES = new Set([
+  'director', 'writer', 'cinematographer', 'actor',
+  'composer', 'producer', 'editor',
+]);
+
+export function isValidPersonItem(p: unknown): p is PersonItem {
+  if (!p || typeof p !== 'object') return false;
+  const item = p as Record<string, unknown>;
+  if (typeof item.id !== 'string' || !item.id) return false;
+  if (typeof item.name !== 'string' || !item.name) return false;
+  if (typeof item.role !== 'string' || !VALID_CREW_ROLES.has(item.role)) return false;
+  if (!Array.isArray(item.knownFor) || !item.knownFor.every((k) => typeof k === 'string')) return false;
+  if (!Array.isArray(item.filmographyIds) || !item.filmographyIds.every((id) => typeof id === 'string')) return false;
+  if (!Number.isFinite(item.followedAt)) return false;
+  if (!Number.isFinite(item.lastSyncedAt)) return false;
+  if (item.profileImageUrl !== undefined && typeof item.profileImageUrl !== 'string') return false;
+  if (item.biography !== undefined && typeof item.biography !== 'string') return false;
+  return true;
+}
 
 export const validateImportData = (data: unknown): ImportLibraryData => {
   if (!data || typeof data !== 'object') {
@@ -11,6 +31,9 @@ export const validateImportData = (data: unknown): ImportLibraryData => {
   }
   if (d.media !== undefined && !Array.isArray(d.media)) {
     throw new Error('"media" must be an array');
+  }
+  if (d.people !== undefined && !Array.isArray(d.people)) {
+    throw new Error('"people" must be an array');
   }
   if (d.alerts !== undefined && !Array.isArray(d.alerts)) {
     throw new Error('"alerts" must be an array');
@@ -78,6 +101,14 @@ export const validateImportData = (data: unknown): ImportLibraryData => {
       }
       if (typeof m.posterUrl !== 'string') {
         throw new Error(`media[${i}].posterUrl must be a string`);
+      }
+    }
+  }
+
+  if (Array.isArray(d.people)) {
+    for (let i = 0; i < d.people.length; i++) {
+      if (!isValidPersonItem(d.people[i])) {
+        throw new Error(`people[${i}] is not a valid person item`);
       }
     }
   }

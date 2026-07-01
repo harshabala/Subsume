@@ -19,24 +19,23 @@ export function Search() {
   const [addingId, setAddingId] = useState<string | null>(null);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSearch = useCallback(async () => {
     if (!query.trim()) return;
     setLoading(true);
     setSearched(true);
+    setError(null);
     try {
       const res = await sendMessage<
         { query: string; type?: MediaType },
         MediaItem[]
       >(MessageType.SEARCH_TITLES, { query: query.trim(), type: typeFilter || undefined });
-      if (res.success && res.data) {
-        setResults(res.data);
-      } else {
-        setResults([]);
-      }
+      setResults(res.data ?? []);
     } catch (err) {
       console.error('[Subsume] Search failed:', err);
       setResults([]);
+      setError(err instanceof Error ? err.message : 'Search failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -44,6 +43,7 @@ export function Search() {
 
   const handleAdd = async (item: MediaItem) => {
     setAddingId(item.id);
+    setError(null);
     try {
       await sendMessage(MessageType.ADD_TO_LIST, {
         mediaItem: item,
@@ -52,6 +52,7 @@ export function Search() {
       setAddedIds((prev) => new Set(prev).add(item.id));
     } catch (err) {
       console.error('[Subsume] Failed to add:', err);
+      setError(err instanceof Error ? err.message : 'Failed to add title to your library.');
     } finally {
       setAddingId(null);
     }
@@ -74,6 +75,12 @@ export function Search() {
           Query the global cinematic repository with archival precision and museum filters.
         </p>
       </header>
+
+      {error && (
+        <div className="sanctuary-empty-plaque" style={{ maxWidth: 500, margin: '0 auto 24px', borderColor: 'var(--border-hero)' }}>
+          <p className="sanctuary-plaque-text" style={{ color: 'var(--text-reflection)' }}>{error}</p>
+        </div>
+      )}
 
       <div className="optical-search-container">
         <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
@@ -127,7 +134,21 @@ export function Search() {
       {results.length > 0 && (
         <div className="card-grid" style={{ padding: '0 32px', maxWidth: 1200, margin: '0 auto 48px' }}>
           {results.map((item) => (
-            <div key={item.id} className="sanctuary-media-card" onClick={() => setSelectedMedia(item)} style={{ cursor: 'pointer' }}>
+            <div
+              key={item.id}
+              className="sanctuary-media-card"
+              role="button"
+              tabIndex={0}
+              onClick={() => setSelectedMedia(item)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSelectedMedia(item);
+                }
+              }}
+              aria-label={`View details for ${item.canonicalTitle}`}
+              style={{ cursor: 'pointer' }}
+            >
               <div className="sanctuary-card-poster">
                 {item.posterUrl ? (
                   <img src={item.posterUrl} alt={item.canonicalTitle} loading="lazy" className="sanctuary-poster-img" />

@@ -214,9 +214,7 @@ export const titleHandlers: MessageHandlerMap = {
     const req = payload as GetLatestReleasesRequest;
     const type = req?.type || 'movie';
     logger.log(`[Subsume] GET_LATEST_RELEASES for ${type}`);
-    
-    chrome.action.setBadgeText({ text: '' });
-    
+
     const prefs = await getPreferences();
     return getLatestReleases(type, prefs);
   },

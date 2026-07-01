@@ -2,8 +2,37 @@
 import { SystemLog } from './types';
 
 const DEBUG = import.meta.env.DEV;
+const MAX_PERSISTED_DETAIL_LENGTH = 200;
 
 let storageQueue = Promise.resolve();
+
+function truncateForStorage(value: string): string {
+  if (value.length <= MAX_PERSISTED_DETAIL_LENGTH) return value;
+  return `${value.slice(0, MAX_PERSISTED_DETAIL_LENGTH)}…`;
+}
+
+function sanitizeForStorage(value: unknown): unknown {
+  if (typeof value === 'string') {
+    return truncateForStorage(value);
+  }
+  if (value instanceof Error) {
+    return {
+      name: value.name,
+      message: truncateForStorage(value.message),
+    };
+  }
+  if (Array.isArray(value)) {
+    return value.map(sanitizeForStorage);
+  }
+  if (value && typeof value === 'object') {
+    const sanitized: Record<string, unknown> = {};
+    for (const [key, entry] of Object.entries(value)) {
+      sanitized[key] = sanitizeForStorage(entry);
+    }
+    return sanitized;
+  }
+  return value;
+}
 
 function pushLog(level: 'info' | 'warn' | 'error', args: any[]) {
   if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.local) return;
@@ -18,7 +47,7 @@ function pushLog(level: 'info' | 'warn' | 'error', args: any[]) {
     timestamp: Date.now(),
     level,
     message,
-    details: args.length > 1 ? args.slice(1) : undefined
+    details: args.length > 1 ? sanitizeForStorage(args.slice(1)) : undefined
   };
 
   storageQueue = storageQueue.then(async () => {

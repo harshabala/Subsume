@@ -1,27 +1,4 @@
-:root {
-  /* Sanctuary Palette — Deep Velvet & Warm Parchment Accents */
-  --bg-sanctuary: hsl(240, 18%, 5%); /* Deep Obsidian Auditorium */
-  --bg-plaque: hsla(240, 15%, 11%, 0.85); /* Museum Plaque Glass */
-  --bg-plaque-hover: hsla(240, 15%, 16%, 0.95);
-  --border-restraint: hsla(0, 0%, 100%, 0.08); /* Whisper Border */
-  --border-hero: hsla(45, 90%, 65%, 0.4); /* Gold Velvet Accent */
-  
-  /* Editorial Typography */
-  --font-editorial: 'Newsreader', 'Cormorant Garamond', Georgia, serif;
-  --font-ui: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  
-  /* Literary Text Hierarchy */
-  --text-reflection: hsl(0, 0%, 96%); /* High-contrast Hero Reflection */
-  --text-artwork: hsl(0, 0%, 82%);
-  --text-title: hsl(240, 10%, 70%);
-  --text-meta: hsl(240, 10%, 50%);
-  --text-control: hsl(240, 10%, 32%); /* Quiet UI Controls */
-
-  /* Cinematic Motion Easing (Slow Dolly & Focus Pulls) */
-  --ease-focus-pull: cubic-bezier(0.25, 1, 0.5, 1);
-  --duration-curtain: 450ms;
-  --blur-hero: blur(16px);
-}
+/* Sanctuary tokens live in src/shared/tokens.css */
 
 /* ── Velvet Obscura Sanctuary Shared Components ── */
 
@@ -49,7 +26,7 @@
   font-size: 34px;
   font-weight: 400;
   color: var(--text-reflection);
-  margin: 0 0 10px 0;
+  margin: 0 0 var(--spacing-md) 0;
   letter-spacing: -0.02em;
 }
 
@@ -110,7 +87,7 @@
   color: var(--text-reflection);
   border: 1px solid var(--border-hero);
   border-radius: 4px;
-  padding: 12px 28px;
+  padding: var(--spacing-md) calc(var(--spacing-xl) + var(--spacing-xs));
   cursor: pointer;
   transition: all 0.3s ease;
   backdrop-filter: blur(16px);
@@ -153,7 +130,7 @@
 /* ── Optical Instrument Search Input ── */
 .optical-search-container {
   max-width: 640px;
-  margin: 28px 0;
+  margin: calc(var(--spacing-xl) + var(--spacing-xs)) 0;
 }
 
 .optical-input-wrapper {
@@ -230,7 +207,7 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  padding: 6px 14px;
+  padding: var(--spacing-sm) var(--spacing-md);
   background: transparent;
   border: 1px solid var(--border-restraint);
   color: var(--text-meta);
@@ -265,7 +242,7 @@
   color: var(--text-meta);
   background: transparent;
   border: none;
-  padding: 10px 0;
+  padding: var(--spacing-md) 0;
   position: relative;
   cursor: pointer;
   transition: color 0.3s ease;
@@ -368,7 +345,7 @@
 }
 
 .sanctuary-card-badge {
-  padding: 2px 6px;
+  padding: 2px var(--spacing-sm);
   border: 1px solid var(--border-restraint);
   border-radius: 2px;
   color: var(--text-artwork);
@@ -489,7 +466,7 @@
 }
 
 .programme-acquire-btn {
-  padding: 6px 12px;
+  padding: var(--spacing-sm) var(--spacing-md);
   font-size: 9px;
 }
 
@@ -504,6 +481,11 @@
   justify-content: center;
   z-index: 1000;
   padding: 24px;
+  animation: sanctuary-backdrop-enter var(--duration-normal, 220ms) ease-out;
+}
+
+.sanctuary-modal-backdrop.closing {
+  animation: sanctuary-backdrop-exit var(--duration-normal, 220ms) ease-in forwards;
 }
 
 .sanctuary-modal-content {
@@ -519,6 +501,43 @@
   color: var(--text-artwork);
   padding: 32px;
   box-sizing: border-box;
+  animation: sanctuary-modal-enter var(--duration-normal, 220ms) ease-out;
+}
+
+.sanctuary-modal-content.closing {
+  animation: sanctuary-modal-exit var(--duration-normal, 220ms) ease-in forwards;
+}
+
+@keyframes sanctuary-backdrop-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sanctuary-backdrop-exit {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes sanctuary-modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes sanctuary-modal-exit {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
 }
 
 .sanctuary-modal-close {
@@ -544,7 +563,7 @@
 
 .sanctuary-detail-header {
   display: flex;
-  gap: 28px;
+  gap: calc(var(--spacing-xl) + var(--spacing-xs));
   margin-bottom: 32px;
   flex-wrap: wrap;
 }
@@ -583,7 +602,7 @@
   text-transform: uppercase;
   letter-spacing: 0.2em;
   color: var(--border-hero);
-  margin-bottom: 6px;
+  margin-bottom: var(--spacing-sm);
 }
 
 .sanctuary-detail-title {
@@ -621,12 +640,13 @@
 
 .sanctuary-detail-rating-val {
   color: var(--border-hero);
+  font-variant-numeric: tabular-nums;
 }
 
 .sanctuary-detail-genres {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--spacing-sm);
 }
 
 .sanctuary-detail-genre-chip {
@@ -634,7 +654,7 @@
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  padding: 4px 10px;
+  padding: var(--spacing-xs) var(--spacing-md);
   background: transparent;
   border: 1px solid var(--border-restraint);
   color: var(--text-reflection);
@@ -642,7 +662,7 @@
 }
 
 .sanctuary-detail-section {
-  margin-bottom: 28px;
+  margin-bottom: calc(var(--spacing-xl) + var(--spacing-xs));
   border-top: 1px solid var(--border-restraint);
   padding-top: 20px;
 }
@@ -667,7 +687,7 @@
 .sanctuary-detail-providers {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: var(--spacing-md);
 }
 
 .sanctuary-detail-provider-btn {
@@ -677,7 +697,7 @@
   letter-spacing: 0.15em;
   color: var(--border-hero);
   text-decoration: none;
-  padding: 6px 12px;
+  padding: var(--spacing-sm) var(--spacing-md);
   border: 1px solid var(--border-restraint);
   border-radius: 2px;
   transition: all 0.2s ease;
@@ -690,7 +710,7 @@
 
 .sanctuary-detail-library-wrap {
   border-top: 1px solid var(--border-restraint);
-  padding-top: 28px;
+  padding-top: calc(var(--spacing-xl) + var(--spacing-xs));
 }
 
 .sanctuary-detail-library-stack {
@@ -764,23 +784,23 @@
 .sanctuary-detail-tags-section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--spacing-md);
 }
 
 .sanctuary-detail-tags-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--spacing-sm);
 }
 
 .sanctuary-detail-tag-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--spacing-sm);
   font-family: var(--font-ui);
   font-size: 11px;
   letter-spacing: 0.1em;
-  padding: 4px 10px;
+  padding: var(--spacing-xs) var(--spacing-md);
   background: hsla(43, 74%, 49%, 0.1);
   border: 1px solid var(--border-hero);
   border-radius: 2px;
@@ -790,12 +810,24 @@
 .sanctuary-detail-tag-remove {
   cursor: pointer;
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  margin: -8px -10px -8px -4px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+  line-height: 1;
 }
 
 .sanctuary-detail-suggestions {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--spacing-sm);
   align-items: center;
   margin-top: 4px;
 }
@@ -821,11 +853,71 @@
   color: var(--text-artwork);
   user-select: none;
   transition: all 0.2s ease;
+  min-height: auto;
 }
 
 .sanctuary-detail-suggestion-chip:hover {
   border-color: var(--border-hero);
   color: var(--text-reflection);
+}
+
+.sanctuary-detail-reflection-lead {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-size: 1.15rem;
+  line-height: 1.55;
+  color: var(--text-reflection);
+  margin: 0 0 calc(var(--spacing-xl) + var(--spacing-xs)) 0;
+  padding: 0;
+  border: none;
+}
+
+.sanctuary-detail-details-toggle {
+  background: transparent;
+  border: none;
+  padding: 8px 0;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-meta);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+}
+
+.sanctuary-detail-details-toggle:hover {
+  color: var(--text-artwork);
+}
+
+.sanctuary-detail-details-chevron {
+  font-size: 10px;
+}
+
+.sanctuary-detail-details-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 8px;
+}
+
+.sanctuary-detail-metadata-inputs {
+  margin-top: 1.25rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.sanctuary-detail-input-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sanctuary-detail-control-label-sm {
+  font-size: 11px;
 }
 
 .sanctuary-detail-notes-section {
@@ -846,7 +938,7 @@
   background: var(--border-hero);
   border: none;
   color: hsl(240, 18%, 5%);
-  padding: 12px 28px;
+  padding: var(--spacing-md) calc(var(--spacing-xl) + var(--spacing-xs));
   border-radius: 2px;
   font-family: var(--font-ui);
   font-size: 11px;
@@ -896,7 +988,7 @@
   background: var(--border-hero);
   border: none;
   color: hsl(240, 18%, 5%);
-  padding: 10px 24px;
+  padding: var(--spacing-md) var(--spacing-xl);
   border-radius: 2px;
   font-family: var(--font-ui);
   font-size: 11px;
@@ -918,7 +1010,7 @@
   border: 1px solid var(--border-restraint);
   color: var(--text-sanctuary);
   border-radius: 2px;
-  padding: 10px 14px;
+  padding: var(--spacing-md);
   font-family: var(--font-ui);
   font-size: 13px;
   width: 100%;
@@ -945,7 +1037,7 @@ select.sanctuary-input option {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 28px;
+  margin-bottom: calc(var(--spacing-xl) + var(--spacing-xs));
 }
 .filmography-bio-card {
   background: var(--bg-plaque);
@@ -1071,7 +1163,7 @@ select.sanctuary-input option {
   background: var(--border-hero);
   border: none;
   color: hsl(240, 18%, 5%);
-  padding: 10px 24px;
+  padding: var(--spacing-md) var(--spacing-xl);
   border-radius: 2px;
   font-family: var(--font-ui);
   font-size: 11px;
@@ -1107,7 +1199,7 @@ select.sanctuary-input option {
   background: transparent;
   border: 1px solid var(--border-restraint);
   color: var(--text-reflection);
-  padding: 6px 14px;
+  padding: var(--spacing-sm) var(--spacing-md);
   border-radius: 2px;
   font-family: var(--font-ui);
   font-size: 11px;
@@ -1133,7 +1225,7 @@ select.sanctuary-input option {
 .filmography-sort-group {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--spacing-md);
   font-family: var(--font-ui);
   font-size: 11px;
   text-transform: uppercase;
@@ -1144,7 +1236,7 @@ select.sanctuary-input option {
   background: hsla(0, 0%, 100%, 0.03);
   border: 1px solid var(--border-restraint);
   color: var(--text-sanctuary);
-  padding: 6px 12px;
+  padding: var(--spacing-sm) var(--spacing-md);
   border-radius: 2px;
   font-family: var(--font-ui);
   font-size: 11px;
@@ -1186,12 +1278,12 @@ select.sanctuary-input option {
 .filmography-sprockets {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: var(--spacing-sm);
   opacity: 0.3;
 }
 .filmography-sprockets.bottom {
   margin-bottom: 8px;
-  margin-top: 6px;
+  margin-top: var(--spacing-sm);
 }
 .filmography-sprocket-hole {
   width: 6px;
@@ -1216,7 +1308,7 @@ select.sanctuary-input option {
   font-family: var(--font-ui);
   font-size: 9px;
   font-weight: 600;
-  padding: 2px 6px;
+  padding: 2px var(--spacing-sm);
   border-radius: 2px;
 }
 .filmography-badge-tmdb {
@@ -1230,7 +1322,7 @@ select.sanctuary-input option {
   font-family: var(--font-ui);
   font-size: 9px;
   font-weight: 600;
-  padding: 2px 6px;
+  padding: 2px var(--spacing-sm);
   border-radius: 2px;
 }
 .filmography-poster-img {
@@ -1281,7 +1373,7 @@ select.sanctuary-input option {
   font-size: 15px;
   font-weight: 400;
   color: var(--text-sanctuary);
-  margin: 0 0 6px 0;
+  margin: 0 0 var(--spacing-sm) 0;
   line-height: 1.2;
 }
 .filmography-card-info {
@@ -1326,7 +1418,7 @@ select.sanctuary-input option {
   background: var(--bg-plaque);
   border: 1px solid var(--border-restraint);
   border-radius: 4px;
-  padding: 24px 28px;
+  padding: var(--spacing-xl) calc(var(--spacing-xl) + var(--spacing-xs));
   text-align: left;
   cursor: pointer;
   color: inherit;
@@ -1372,7 +1464,7 @@ select.sanctuary-input option {
   font-weight: 400;
   font-style: italic;
   color: var(--text-reflection);
-  margin: 0 0 6px;
+  margin: 0 0 var(--spacing-sm);
 }
 .home-section-desc {
   font-family: var(--font-ui);
@@ -1398,7 +1490,7 @@ select.sanctuary-input option {
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 6px;
+  margin-bottom: var(--spacing-sm);
 }
 .home-section-title-row .home-section-title {
   margin: 0;
@@ -1407,7 +1499,7 @@ select.sanctuary-input option {
   font-family: var(--font-ui);
   font-size: 10px;
   font-weight: 500;
-  padding: 4px 10px;
+  padding: var(--spacing-xs) var(--spacing-md);
   border-radius: 2px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1424,7 +1516,7 @@ select.sanctuary-input option {
 }
 .home-btn-group {
   display: flex;
-  gap: 10px;
+  gap: var(--spacing-md);
 }
 .sanctuary-media-card.clickable {
   cursor: pointer;
@@ -1481,19 +1573,19 @@ select.sanctuary-input option {
   display: block;
 }
 .settings-field-group {
-  margin-bottom: 28px;
+  margin-bottom: calc(var(--spacing-xl) + var(--spacing-xs));
 }
 .settings-chips-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: var(--spacing-md);
   margin-top: 12px;
 }
 .settings-chip {
   border: 1px solid var(--border-restraint);
   background: transparent;
   color: var(--text-artwork);
-  padding: 6px 14px;
+  padding: var(--spacing-sm) var(--spacing-md);
   border-radius: 2px;
   font-size: 12px;
   font-family: var(--font-ui);
@@ -1551,7 +1643,7 @@ select.sanctuary-input option {
 .settings-toggle-label {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--spacing-md);
   cursor: pointer;
 }
 .settings-checkbox {
@@ -1623,13 +1715,13 @@ select.sanctuary-input option {
 .alerts-stack {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: calc(var(--spacing-xl) + var(--spacing-xs));
 }
 .alerts-form-plaque {
   background: var(--bg-plaque);
   border: 1px solid var(--border-hero);
   border-radius: 4px;
-  padding: 28px;
+  padding: calc(var(--spacing-xl) + var(--spacing-xs));
   backdrop-filter: var(--blur-hero);
 }
 .alerts-heading {
@@ -1776,7 +1868,7 @@ select.sanctuary-input option {
   background: var(--border-hero);
   color: hsl(240, 18%, 5%);
   border-radius: 10px;
-  padding: 1px 6px;
+  padding: 1px var(--spacing-sm);
   font-size: 10px;
   font-weight: bold;
   margin-left: 8px;
@@ -1809,13 +1901,18 @@ select.sanctuary-input option {
 .intent-tab-btn {
   background: none;
   border: none;
-  padding: 6px 4px;
+  padding: var(--spacing-sm) var(--spacing-xs);
   font-family: var(--font-editorial);
   font-size: 16px;
+  font-style: italic;
   color: var(--text-meta);
   border-bottom: 2px solid transparent;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.intent-tab-btn:hover {
+  color: var(--text-reflection);
 }
 
 .intent-tab-btn.active {
@@ -1950,6 +2047,79 @@ select.sanctuary-input option {
   line-height: 1.4;
 }
 
+.hardcover-snippet-lead {
+  font-size: 14px;
+  margin: 0 0 var(--spacing-md) 0;
+  line-height: 1.5;
+}
+
+.hardcover-snippet-placeholder {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--text-meta);
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+.intent-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 2px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-meta);
+  border: 1px solid var(--border-restraint);
+  margin-top: var(--spacing-sm);
+}
+
+.intent-chip[data-intent="keep_memory"] {
+  color: hsl(45, 80%, 62%);
+  border-color: hsla(45, 80%, 62%, 0.3);
+}
+
+.intent-chip[data-intent="revisit_this_month"] {
+  color: hsl(200, 70%, 65%);
+  border-color: hsla(200, 70%, 65%, 0.3);
+}
+
+.intent-chip[data-intent="wishlist"] {
+  color: var(--text-meta);
+}
+
+.hardcover-details-toggle {
+  background: transparent;
+  border: none;
+  padding: 4px 0;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-meta);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  align-self: flex-start;
+}
+
+.hardcover-details-toggle:hover {
+  color: var(--text-artwork);
+}
+
+.hardcover-details-chevron {
+  font-size: 10px;
+}
+
+.hardcover-details-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+}
+
 .hardcover-controls {
   margin-top: 12px;
   display: flex;
@@ -2002,7 +2172,7 @@ select.sanctuary-input option {
 }
 
 .hardcover-remove-btn {
-  padding: 4px 10px;
+  padding: var(--spacing-xs) var(--spacing-md);
   font-size: 11px;
   font-family: var(--font-ui);
   text-transform: uppercase;
@@ -2022,7 +2192,7 @@ select.sanctuary-input option {
 }
 
 .hardcover-confirm-btn {
-  padding: 4px 10px;
+  padding: var(--spacing-xs) var(--spacing-md);
   font-size: 11px;
   font-family: var(--font-ui);
   background: hsl(0, 70%, 50%);

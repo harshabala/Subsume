@@ -11,8 +11,22 @@ interface RecommendationMediaCardProps {
 export function RecommendationMediaCard({ media, explanation, onClick }: RecommendationMediaCardProps) {
   const tmdbRating = media.ratings?.find(r => r.provider === 'tmdb');
 
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
   return (
-    <div className="media-card recommendation-media-card" onClick={onClick}>
+    <div
+      className="media-card recommendation-media-card"
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={handleKeyDown}
+      aria-label={`View details for ${media.canonicalTitle}`}
+    >
        <div className="recommendation-media-card-content">
          <div className="media-card-poster recommendation-media-card-poster-wrapper">
            {media.posterUrl ? (

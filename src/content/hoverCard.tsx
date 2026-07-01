@@ -1,8 +1,15 @@
 import { render, h } from 'preact';
 import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import { sendMessage } from '@/shared/messages';
-import { MessageType, MediaItem, MediaType, LibraryItem } from '@/shared/types';
+import {
+  MessageType,
+  MediaItem,
+  MediaType,
+  LibraryItem,
+  CheckLibraryStatusResponse,
+} from '@/shared/types';
 import { formatPlatformName } from '@/shared/platforms';
+import { setupShadowStyles } from '@/shared/shadowTokens';
 
 // ─── Positioning ─────────────────────────────────────────────────────
 
@@ -41,6 +48,7 @@ interface HoverCardProps {
   loading: boolean;
   position: CardPosition;
   visible: boolean;
+  exiting?: boolean;
   inLibrary: boolean;
   libraryItem: LibraryItem | null;
   onAdd: (type: MediaType) => void;
@@ -54,6 +62,7 @@ function HoverCard({
   loading,
   position,
   visible,
+  exiting = false,
   inLibrary,
   libraryItem,
   onAdd,
@@ -61,22 +70,30 @@ function HoverCard({
   onMouseEnter,
   onMouseLeave,
 }: HoverCardProps) {
-  if (!visible) return null;
+  if (!visible && !exiting) return null;
 
   const imdbRating = mediaItem?.ratings.find((r) => r.provider === 'imdb');
   const rtRating = mediaItem?.ratings.find((r) => r.provider === 'rt');
 
   return (
     <div
-      className={`subsume-hover-card ${visible ? 'subsume-visible' : ''}`}
+      className={`subsume-hover-card ${visible && !exiting ? 'subsume-visible' : ''} ${exiting ? 'subsume-exiting' : ''}`}
       style={{ top: `${position.top}px`, left: `${position.left}px` }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
       {loading ? (
-        <div className="subsume-loading">
-          <div className="subsume-spinner" />
-          <span>Loading details…</span>
+        <div className="subsume-skeleton">
+          <div className="subsume-skeleton-header">
+            <div className="subsume-skeleton-poster" />
+            <div className="subsume-skeleton-info">
+              <div className="subsume-skeleton-line subsume-skeleton-title" />
+              <div className="subsume-skeleton-line subsume-skeleton-meta" />
+            </div>
+          </div>
+          <div className="subsume-skeleton-line subsume-skeleton-ratings" />
+          <div className="subsume-skeleton-line subsume-skeleton-overview" />
+          <div className="subsume-skeleton-line subsume-skeleton-overview short" />
         </div>
       ) : mediaItem ? (
         <>
@@ -209,14 +226,24 @@ function HoverCard({
 
 // ─── Hover Card Manager ──────────────────────────────────────────────
 
+type PrefetchEntry = {
+  promise: Promise<{ success: boolean; data?: MediaItem }>;
+};
+
 export class HoverCardManager {
   private container: HTMLDivElement;
   private shadowRoot: ShadowRoot;
   private currentTarget: HTMLElement | null = null;
   private showTimeout: ReturnType<typeof setTimeout> | null = null;
   private hideTimeout: ReturnType<typeof setTimeout> | null = null;
+  private prefetchDebounce: ReturnType<typeof setTimeout> | null = null;
   private isCardHovered = false;
+  private isExiting = false;
   private libraryItems: Map<string, LibraryItem> = new Map();
+  private prefetchCache = new Map<string, PrefetchEntry>();
+  private static readonly SHOW_DELAY_MS = 150;
+  private static readonly PREFETCH_DEBOUNCE_MS = 50;
+  private syncListener: ((message: unknown, sender: chrome.runtime.MessageSender) => void) | null = null;
 
   constructor() {
     // Create shadow DOM container
@@ -224,10 +251,7 @@ export class HoverCardManager {
     this.container.id = 'subsume-hover-root';
     this.shadowRoot = this.container.attachShadow({ mode: 'open' });
 
-    // Inject styles into shadow DOM
-    const style = document.createElement('style');
-    style.textContent = HOVER_CARD_STYLES;
-    this.shadowRoot.appendChild(style);
+    setupShadowStyles(this.shadowRoot, HOVER_CARD_STYLES);
 
     // Render mount point
     const mount = document.createElement('div');
@@ -235,34 +259,13 @@ export class HoverCardManager {
     this.shadowRoot.appendChild(mount);
 
     document.body.appendChild(this.container);
-
-    // Note: initLibraryCache() is deferred to the first attachToElement() call.
-    // This avoids an IDB round-trip on pages where no titles are detected.
     this.setupSyncListener();
   }
 
-  // Tracks whether the library cache has already been populated to ensure
-  // initLibraryCache is only called once per HoverCardManager instance.
-  private libraryCacheInitialized = false;
-
-  private async initLibraryCache() {
-    try {
-      const libResponse = await sendMessage<{}, { library: LibraryItem; media: MediaItem }[]>(
-        MessageType.GET_LIBRARY,
-        {}
-      );
-      if (libResponse.success && libResponse.data) {
-        this.libraryItems = new Map(
-          libResponse.data.map(item => [item.library.mediaId, item.library])
-        );
-      }
-    } catch (err) {
-      console.error('[Subsume] Failed to initialize library cache:', err);
-    }
-  }
-
   private setupSyncListener() {
-    chrome.runtime.onMessage.addListener((message, sender) => {
+    if (typeof chrome === 'undefined' || !chrome.runtime?.onMessage) return;
+
+    this.syncListener = (message, sender) => {
       // Only accept messages originating from our own extension service worker.
       // This prevents a compromised page from spoofing LIBRARY_UPDATED events.
       if (sender.id !== chrome.runtime.id) return;
@@ -280,18 +283,61 @@ export class HoverCardManager {
           this.libraryItems.delete(mediaId);
         }
       }
-    });
+    };
+    chrome.runtime.onMessage.addListener(this.syncListener);
+  }
+
+  private async fetchLibraryStatus(mediaId: string): Promise<LibraryItem | null> {
+    const cached = this.libraryItems.get(mediaId);
+    if (cached) return cached;
+
+    try {
+      const response = await sendMessage<{ mediaId: string }, CheckLibraryStatusResponse>(
+        MessageType.CHECK_LIBRARY_STATUS,
+        { mediaId }
+      );
+      if (!response.success || !response.data?.inLibrary) {
+        return null;
+      }
+
+      const libraryItem: LibraryItem = {
+        mediaId,
+        status: response.data.status ?? 'to-watch',
+        addedAt: Date.now(),
+        updatedAt: Date.now(),
+        userRating: response.data.userRating,
+      };
+      this.libraryItems.set(mediaId, libraryItem);
+      return libraryItem;
+    } catch (err) {
+      console.error('[Subsume] Failed to check library status:', err);
+      return null;
+    }
+  }
+
+  public destroy(): void {
+    if (this.syncListener && typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
+      chrome.runtime.onMessage.removeListener(this.syncListener);
+      this.syncListener = null;
+    }
+
+    this.cancelShow();
+    this.cancelHide();
+    this.currentTarget = null;
+    this.isCardHovered = false;
+    this.libraryItems.clear();
+
+    const mount = this.shadowRoot.getElementById('subsume-mount');
+    if (mount) {
+      render(null, mount);
+    }
+
+    this.container.remove();
   }
 
   attachToElement(element: HTMLElement, title: string, yearGuess?: number): void {
-    // Lazy-initialize the library cache on the first detected title element.
-    // This avoids an unnecessary IDB fetch on pages with no movie/TV content.
-    if (!this.libraryCacheInitialized) {
-      this.libraryCacheInitialized = true;
-      this.initLibraryCache();
-    }
-
     element.addEventListener('mouseenter', () => {
+      this.schedulePrefetch(title, yearGuess);
       this.scheduleShow(element, title, yearGuess);
     });
     element.addEventListener('mouseleave', () => {
@@ -299,12 +345,46 @@ export class HoverCardManager {
     });
   }
 
+  private prefetchKey(title: string, yearGuess?: number): string {
+    return `${title}:${yearGuess ?? ''}`;
+  }
+
+  private schedulePrefetch(title: string, yearGuess?: number): void {
+    if (this.prefetchDebounce) {
+      clearTimeout(this.prefetchDebounce);
+    }
+    this.prefetchDebounce = setTimeout(() => {
+      this.prefetchDebounce = null;
+      this.startPrefetch(title, yearGuess);
+    }, HoverCardManager.PREFETCH_DEBOUNCE_MS);
+  }
+
+  private startPrefetch(title: string, yearGuess?: number): PrefetchEntry {
+    const key = this.prefetchKey(title, yearGuess);
+    const existing = this.prefetchCache.get(key);
+    if (existing) return existing;
+
+    const promise = sendMessage<
+      { title: string; yearGuess?: number },
+      MediaItem
+    >(MessageType.GET_TITLE_DETAILS, { title, yearGuess }).then((response) => ({
+      success: response.success,
+      data: response.data,
+    }));
+
+    const entry = { promise };
+    this.prefetchCache.set(key, entry);
+    return entry;
+  }
+
   private scheduleShow(target: HTMLElement, title: string, yearGuess?: number): void {
     this.cancelHide();
+    this.cancelShow();
     this.showTimeout = setTimeout(() => {
       this.currentTarget = target;
+      this.isExiting = false;
       this.showCard(target, title, yearGuess);
-    }, 300);
+    }, HoverCardManager.SHOW_DELAY_MS);
   }
 
   private scheduleHide(): void {
@@ -359,18 +439,18 @@ export class HoverCardManager {
       mount
     );
 
-    // Fetch metadata
+    // Fetch metadata (use prefetched result when available)
     try {
-      const response = await sendMessage<
-        { title: string; yearGuess?: number },
-        MediaItem
-      >(MessageType.GET_TITLE_DETAILS, { title, yearGuess });
+      const prefetch = this.startPrefetch(title, yearGuess);
+      const response = await prefetch.promise;
 
       if (this.currentTarget !== target) return; // User moved on
 
       const mediaItem = response.success ? response.data ?? null : null;
 
-      const libraryItem = mediaItem ? this.libraryItems.get(mediaItem.id) || null : null;
+      const libraryItem = mediaItem ? await this.fetchLibraryStatus(mediaItem.id) : null;
+      if (this.currentTarget !== target) return;
+
       const inLibrary = libraryItem !== null;
 
       render(
@@ -420,26 +500,48 @@ export class HoverCardManager {
     }
   }
 
-  private hideCard(): void {
+  private clearMount(): void {
     const mount = this.shadowRoot.getElementById('subsume-mount');
     if (mount) {
-      render(
-        <HoverCard
-          mediaItem={null}
-          loading={false}
-          position={{ top: 0, left: 0 }}
-          visible={false}
-          inLibrary={false}
-          libraryItem={null}
-          onAdd={() => {}}
-          onRemove={() => {}}
-          onMouseEnter={() => {}}
-          onMouseLeave={() => {}}
-        />,
-        mount
-      );
+      render(null, mount);
     }
     this.currentTarget = null;
+    this.isExiting = false;
+  }
+
+  private hideCard(): void {
+    const mount = this.shadowRoot.getElementById('subsume-mount');
+    if (!mount || !this.currentTarget) {
+      this.clearMount();
+      return;
+    }
+
+    const cardEl = mount.querySelector('.subsume-hover-card') as HTMLElement | null;
+    if (!cardEl || this.isExiting) {
+      this.clearMount();
+      return;
+    }
+
+    this.isExiting = true;
+    cardEl.classList.remove('subsume-visible');
+    cardEl.classList.add('subsume-exiting');
+
+    let finished = false;
+    const finishExit = () => {
+      if (finished) return;
+      finished = true;
+      cardEl.removeEventListener('transitionend', onTransitionEnd);
+      this.clearMount();
+    };
+
+    const onTransitionEnd = (e: TransitionEvent) => {
+      if (e.propertyName === 'opacity') {
+        finishExit();
+      }
+    };
+
+    cardEl.addEventListener('transitionend', onTransitionEnd);
+    setTimeout(finishExit, 300);
   }
 
   private async handleAdd(mediaItem: MediaItem, type: MediaType): Promise<void> {
@@ -511,17 +613,15 @@ const HOVER_CARD_STYLES = `
     position: absolute;
     z-index: 2147483647;
     width: 340px;
-    padding: 16px;
-    background: linear-gradient(135deg, rgba(10, 10, 11, 0.98), rgba(26, 26, 28, 0.98));
+    padding: var(--spacing-md);
+    background: linear-gradient(135deg, hsla(240, 18%, 5%, 0.98), hsla(240, 14%, 11%, 0.98));
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(201, 168, 76, 0.15);
-    border-radius: 16px;
-    box-shadow:
-      0 8px 32px rgba(0, 0, 0, 0.6),
-      0 0 0 1px rgba(255, 255, 255, 0.03) inset;
-    font-family: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    color: #e8e6e1;
+    border: 1px solid var(--color-accent-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg), 0 0 0 1px var(--border-subtle) inset;
+    font-family: var(--font-ui);
+    color: var(--foreground);
     opacity: 0;
     transform: translateY(8px) scale(0.96);
     transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -534,46 +634,89 @@ const HOVER_CARD_STYLES = `
     pointer-events: auto;
   }
 
-  /* Loading */
-  .subsume-loading {
+  .subsume-hover-card.subsume-exiting {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+    pointer-events: none;
+  }
+
+  /* Skeleton loading */
+  .subsume-skeleton {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 32px 0;
-    color: rgba(232, 230, 225, 0.45);
-    font-size: 13px;
+    gap: var(--spacing-md);
   }
 
-  .subsume-spinner {
-    width: 24px;
-    height: 24px;
-    border: 2px solid rgba(201, 168, 76, 0.1);
-    border-top-color: #c9a84c;
-    border-radius: 50%;
-    animation: subsume-spin 0.8s linear infinite;
+  .subsume-skeleton-header {
+    display: flex;
+    gap: var(--spacing-md);
   }
 
-  @keyframes subsume-spin {
-    to { transform: rotate(360deg); }
+  .subsume-skeleton-poster {
+    flex-shrink: 0;
+    width: 72px;
+    height: 108px;
+    border-radius: var(--radius-sm);
+    background: var(--border-subtle);
+    animation: subsume-skeleton-pulse 1.5s ease-in-out infinite;
+  }
+
+  .subsume-skeleton-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    padding-top: var(--spacing-xs);
+  }
+
+  .subsume-skeleton-line {
+    height: 12px;
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.06);
+    animation: subsume-skeleton-pulse 1.5s ease-in-out infinite;
+  }
+
+  .subsume-skeleton-title {
+    width: 85%;
+    height: 16px;
+  }
+
+  .subsume-skeleton-meta {
+    width: 55%;
+  }
+
+  .subsume-skeleton-ratings {
+    width: 70%;
+  }
+
+  .subsume-skeleton-overview {
+    width: 100%;
+  }
+
+  .subsume-skeleton-overview.short {
+    width: 75%;
+  }
+
+  @keyframes subsume-skeleton-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
   }
 
   /* Header */
   .subsume-card-header {
     display: flex;
-    gap: 14px;
-    margin-bottom: 12px;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
   }
 
   .subsume-poster {
     flex-shrink: 0;
     width: 72px;
     height: 108px;
-    border-radius: 10px;
+    border-radius: 2px;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: var(--border-subtle);
+    border: 1px solid var(--border);
   }
 
   .subsume-poster img {
@@ -588,7 +731,7 @@ const HOVER_CARD_STYLES = `
     display: flex;
     align-items: center;
     justify-content: center;
-    color: rgba(232, 230, 225, 0.15);
+    color: var(--text-control);
   }
 
   .subsume-card-info {
@@ -597,10 +740,10 @@ const HOVER_CARD_STYLES = `
   }
 
   .subsume-title {
-    margin: 0 0 6px;
+    margin: 0 0 var(--spacing-xs);
     font-size: 16px;
     font-weight: 700;
-    color: #fff;
+    color: var(--text-reflection);
     line-height: 1.3;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -612,16 +755,16 @@ const HOVER_CARD_STYLES = `
   .subsume-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: var(--spacing-sm);
     font-size: 12px;
-    color: rgba(232, 230, 225, 0.45);
+    color: var(--text-meta);
   }
 
   .subsume-type-badge {
-    background: rgba(201, 168, 76, 0.12);
-    color: #c9a84c;
-    padding: 1px 8px;
-    border-radius: 4px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    padding: 1px var(--spacing-sm);
+    border-radius: var(--radius-sm);
     font-weight: 600;
     font-size: 10px;
     text-transform: uppercase;
@@ -631,16 +774,16 @@ const HOVER_CARD_STYLES = `
   /* Ratings */
   .subsume-ratings {
     display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
   }
 
   .subsume-rating-chip {
     display: flex;
     align-items: center;
     gap: 5px;
-    padding: 5px 10px;
-    border-radius: 8px;
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--radius-md);
     font-size: 12px;
     font-weight: 600;
   }
@@ -660,7 +803,7 @@ const HOVER_CARD_STYLES = `
   }
 
   .subsume-rating-label {
-    color: rgba(232, 230, 225, 0.4);
+    color: var(--text-meta);
     font-weight: 500;
     font-size: 10px;
     text-transform: uppercase;
@@ -668,7 +811,8 @@ const HOVER_CARD_STYLES = `
   }
 
   .subsume-rating-value {
-    color: #fff;
+    color: var(--text-reflection);
+    font-variant-numeric: tabular-nums;
   }
 
   /* Streaming platforms */
@@ -676,17 +820,17 @@ const HOVER_CARD_STYLES = `
     display: flex;
     flex-wrap: wrap;
     gap: 5px;
-    margin-bottom: 10px;
+    margin-bottom: var(--spacing-md);
   }
 
   .subsume-platform-tag {
-    padding: 3px 8px;
-    background: rgba(201, 168, 76, 0.1);
-    border: 1px solid rgba(201, 168, 76, 0.2);
-    border-radius: 8px;
+    padding: 3px var(--spacing-sm);
+    background: var(--primary-soft);
+    border: 1px solid var(--color-accent-border);
+    border-radius: var(--radius-md);
     font-size: 10px;
     font-weight: 600;
-    color: #c9a84c;
+    color: var(--primary);
   }
 
   /* Genres */
@@ -694,25 +838,25 @@ const HOVER_CARD_STYLES = `
     display: flex;
     flex-wrap: wrap;
     gap: 5px;
-    margin-bottom: 12px;
+    margin-bottom: var(--spacing-md);
   }
 
   .subsume-genre-tag {
-    padding: 3px 10px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 12px;
+    padding: 3px var(--spacing-md);
+    background: var(--border-subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
     font-size: 11px;
-    color: rgba(232, 230, 225, 0.55);
+    color: var(--text-artwork);
     font-weight: 500;
   }
 
   /* Overview */
   .subsume-overview {
-    margin: 0 0 12px;
+    margin: 0 0 var(--spacing-md);
     font-size: 12px;
     line-height: 1.5;
-    color: rgba(232, 230, 225, 0.5);
+    color: var(--text-meta);
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
@@ -725,11 +869,11 @@ const HOVER_CARD_STYLES = `
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 12px;
-    background: rgba(201, 168, 76, 0.05);
-    border: 1px solid rgba(201, 168, 76, 0.12);
-    border-radius: 12px;
-    margin-bottom: 14px;
+    padding: var(--spacing-md);
+    background: var(--primary-soft);
+    border: 1px solid var(--color-accent-border);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-md);
   }
 
   .subsume-library-status-left,
@@ -743,7 +887,7 @@ const HOVER_CARD_STYLES = `
     font-size: 9px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: rgba(232, 230, 225, 0.4);
+    color: var(--text-meta);
     font-weight: 600;
   }
 
@@ -753,11 +897,11 @@ const HOVER_CARD_STYLES = `
   }
 
   .subsume-status-badge.status-to-watch {
-    color: #9e9a90;
+    color: var(--muted-foreground);
   }
 
   .subsume-status-badge.status-watching {
-    color: #c9a84c;
+    color: var(--primary);
   }
 
   .subsume-status-badge.status-watched {
@@ -771,20 +915,20 @@ const HOVER_CARD_STYLES = `
   .subsume-user-rating-badge {
     font-size: 12px;
     font-weight: 700;
-    color: #c9a84c;
+    color: var(--primary);
     display: flex;
     align-items: center;
     gap: 3px;
   }
 
   .subsume-star {
-    color: #c9a84c;
+    color: var(--primary);
   }
 
   /* Actions */
   .subsume-actions {
     display: flex;
-    gap: 8px;
+    gap: var(--spacing-sm);
   }
 
   .subsume-btn {
@@ -792,10 +936,10 @@ const HOVER_CARD_STYLES = `
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 8px 12px;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
     border: none;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     font-size: 12px;
     font-weight: 600;
     font-family: inherit;
@@ -808,41 +952,41 @@ const HOVER_CARD_STYLES = `
   }
 
   .subsume-btn-primary {
-    background: linear-gradient(135deg, #c9a84c, #d4b860);
-    color: #0a0a0b;
-    box-shadow: 0 4px 12px rgba(201, 168, 76, 0.15);
+    background: linear-gradient(135deg, var(--ring), var(--primary-hover));
+    color: var(--background);
+    box-shadow: var(--shadow-sm);
   }
 
   .subsume-btn-primary:hover {
-    background: linear-gradient(135deg, #d4b860, #e2cb7c);
+    background: linear-gradient(135deg, var(--primary-hover), var(--primary));
     transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(201, 168, 76, 0.3);
+    box-shadow: var(--shadow-md);
   }
 
   .subsume-btn-secondary {
-    background: rgba(255, 255, 255, 0.04);
-    color: rgba(232, 230, 225, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--border-subtle);
+    color: var(--text-artwork);
+    border: 1px solid var(--border);
   }
 
   .subsume-btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(201, 168, 76, 0.25);
-    color: #fff;
+    background: var(--border);
+    border-color: var(--color-accent-border);
+    color: var(--text-reflection);
     transform: translateY(-1px);
   }
 
   .subsume-btn-danger {
     flex: 1;
-    background: rgba(239, 68, 68, 0.1);
+    background: hsla(0, 84%, 60%, 0.1);
     color: #fca5a5;
-    border: 1px solid rgba(239, 68, 68, 0.2);
+    border: 1px solid hsla(0, 84%, 60%, 0.2);
   }
 
   .subsume-btn-danger:hover {
-    background: rgba(239, 68, 68, 0.18);
+    background: hsla(0, 84%, 60%, 0.18);
     transform: translateY(-1px);
-    border-color: rgba(239, 68, 68, 0.3);
+    border-color: hsla(0, 84%, 60%, 0.3);
   }
 
   /* Added confirmation */
@@ -856,7 +1000,7 @@ const HOVER_CARD_STYLES = `
   .subsume-added-msg {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--spacing-md);
     color: #34d399;
     font-size: 15px;
     font-weight: 600;
@@ -865,8 +1009,8 @@ const HOVER_CARD_STYLES = `
   /* Error */
   .subsume-error {
     text-align: center;
-    padding: 24px;
-    color: rgba(232, 230, 225, 0.35);
+    padding: var(--spacing-xl);
+    color: var(--text-control);
     font-size: 13px;
   }
 
@@ -874,9 +1018,9 @@ const HOVER_CARD_STYLES = `
     .subsume-hover-card {
       transition: none;
     }
-    .subsume-spinner {
+    .subsume-skeleton-poster,
+    .subsume-skeleton-line {
       animation: none;
-      border-top-color: #c9a84c;
     }
     .subsume-btn,
     .subsume-btn-primary,

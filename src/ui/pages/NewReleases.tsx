@@ -11,19 +11,26 @@ export function NewReleases() {
   const [loading, setLoading] = useState(true);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  useEffect(() => {
+    sendMessage(MessageType.CLEAR_NOTIFICATION_BADGE, {}).catch(() => {});
+  }, []);
 
   useEffect(() => {
     async function fetchReleases() {
       setLoading(true);
+      setLoadError(null);
       try {
         const res = await sendMessage<any, MediaItem[]>(MessageType.GET_LATEST_RELEASES, {
           type: activeTab
         });
-        if (res.success && res.data) {
-          setItems(res.data);
-        }
+        setItems(res.data ?? []);
       } catch (err) {
         console.error('Failed to load new releases', err);
+        setItems([]);
+        setLoadError(err instanceof Error ? err.message : 'Failed to load new releases.');
       } finally {
         setLoading(false);
       }
@@ -32,11 +39,13 @@ export function NewReleases() {
   }, [activeTab]);
 
   const handleAddToLibrary = async (media: MediaItem) => {
+    setActionError(null);
     try {
       await sendMessage(MessageType.ADD_TO_LIST, { mediaItem: media, type: media.type });
       setAddedIds(prev => new Set([...prev, media.id]));
     } catch (err) {
       console.error('Failed to add to library', err);
+      setActionError(err instanceof Error ? err.message : 'Failed to add title to your library.');
     }
   };
 
@@ -68,6 +77,12 @@ export function NewReleases() {
           Series & Repertoires
         </button>
       </div>
+
+      {(loadError || actionError) && (
+        <div className="sanctuary-empty-plaque" style={{ maxWidth: 500, margin: '0 auto 24px', borderColor: 'var(--border-hero)' }}>
+          <p className="sanctuary-plaque-text" style={{ color: 'var(--text-reflection)' }}>{loadError || actionError}</p>
+        </div>
+      )}
 
       <div className="programme-container">
         {loading ? (

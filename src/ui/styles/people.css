@@ -90,15 +90,20 @@
 
 .person-card-unfollow {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
   background: none;
   border: none;
   color: var(--color-text-secondary);
   font-size: 16px;
   cursor: pointer;
-  padding: 4px;
+  padding: 0;
   line-height: 1;
+  min-width: 32px;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .person-card-photo {
@@ -127,7 +132,7 @@
   font-size: 15px;
   font-weight: 600;
   color: var(--color-text);
-  margin-bottom: 6px;
+  margin-bottom: var(--spacing-sm);
   margin-top: 0;
 }
 
@@ -138,7 +143,7 @@
   background: var(--color-surface-hover);
   border: 1px solid var(--color-border);
   border-radius: 20px;
-  padding: 2px 10px;
+  padding: 2px var(--spacing-md);
   color: var(--color-text-secondary);
   margin-bottom: 8px;
 }
@@ -168,7 +173,7 @@
 .people-search-input {
   width: 100%;
   max-width: 480px;
-  padding: 10px 14px;
+  padding: var(--spacing-md);
   background: var(--color-surface-hover);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: white;
@@ -197,7 +202,7 @@
 .search-result-info-wrapper {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--spacing-md);
 }
 
 .search-result-photo {
@@ -236,7 +241,7 @@
 .search-result-dept {
   font-size: 11px;
   background: rgba(255, 255, 255, 0.06);
-  padding: 1px 6px;
+  padding: 1px var(--spacing-sm);
   border-radius: 4px;
   color: var(--color-text-secondary);
 }
@@ -261,7 +266,7 @@
   color: var(--color-text);
   border: 1px solid var(--color-border);
   border-radius: 6px;
-  padding: 6px 10px;
+  padding: var(--spacing-sm) var(--spacing-md);
   font-size: 13px;
   cursor: pointer;
 }
@@ -292,10 +297,10 @@
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--spacing-sm);
   font-size: 14px;
   font-weight: 600;
-  padding: 6px 0;
+  padding: var(--spacing-sm) 0;
 }
 
 .filmography-unfollow-btn {
@@ -303,10 +308,14 @@
   border: 1px solid rgba(239, 68, 68, 0.25);
   border-radius: 6px;
   color: #f87171;
-  padding: 6px 12px;
+  padding: 0 12px;
+  min-height: 32px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .filmography-bio-card {
@@ -366,14 +375,14 @@
   background: var(--color-surface-hover);
   border: 1px solid var(--color-border);
   border-radius: 20px;
-  padding: 2px 10px;
+  padding: 2px var(--spacing-md);
   color: var(--color-text-secondary);
 }
 
 .filmography-bio-meta {
   font-size: 12px;
   color: var(--color-text-muted);
-  margin-top: 6px;
+  margin-top: var(--spacing-sm);
   display: flex;
   gap: 8px;
 }
@@ -415,7 +424,7 @@
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
-  margin-top: 6px;
+  margin-top: var(--spacing-sm);
   padding: 0;
 }
 
@@ -453,7 +462,7 @@
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border);
   border-radius: 20px;
-  padding: 6px 14px;
+  padding: var(--spacing-sm) var(--spacing-md);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -481,7 +490,7 @@
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--spacing-sm);
 }
 
 .filmography-poster-wrapper {

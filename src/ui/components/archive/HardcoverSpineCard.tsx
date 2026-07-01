@@ -1,6 +1,12 @@
 import { h } from 'preact';
+import { useState } from 'preact/hooks';
 import { LibraryItem, MediaItem, LibraryStatus } from '@/shared/types';
-import { STATUS_OPTIONS } from './constants';
+import {
+  STATUS_OPTIONS,
+  INTENT_CHIP_LABELS,
+  resolveSanctuaryIntent,
+  getReflectionExcerpt,
+} from './constants';
 
 export interface HardcoverSpineCardProps {
   library: LibraryItem;
@@ -23,8 +29,27 @@ export function HardcoverSpineCard({
   removeConfirmId,
   setRemoveConfirmId,
 }: HardcoverSpineCardProps) {
+  const [detailsExpanded, setDetailsExpanded] = useState(false);
+  const reflectionExcerpt = getReflectionExcerpt(library);
+  const intent = resolveSanctuaryIntent(library);
+  const title = media?.canonicalTitle || 'Untitled Archive';
+
+  const handleCardKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onSelect();
+    }
+  };
+
   return (
-    <div className="media-card sanctuary-media-card" onClick={onSelect}>
+    <div
+      className="media-card sanctuary-media-card"
+      role="button"
+      tabIndex={0}
+      onClick={onSelect}
+      onKeyDown={handleCardKeyDown}
+      aria-label={`View details for ${title}`}
+    >
       <div className="media-card-poster sanctuary-card-poster">
         {media?.posterUrl ? (
           <img
@@ -40,6 +65,14 @@ export function HardcoverSpineCard({
         )}
       </div>
       <div className="sanctuary-card-content">
+        {reflectionExcerpt ? (
+          <p className="hardcover-snippet hardcover-snippet-lead">
+            "{reflectionExcerpt}"
+          </p>
+        ) : (
+          <p className="hardcover-snippet-placeholder">A reflection yet to be inscribed…</p>
+        )}
+
         <h4 className="media-card-title">
           {media?.canonicalTitle || 'Untitled Archive'}
         </h4>
@@ -47,71 +80,84 @@ export function HardcoverSpineCard({
           <span>{media?.year}</span>
           {media?.ratings?.find((r) => r.provider === 'tmdb') && (
             <span className="sanctuary-card-badge">
-              TMDB {media.ratings.find((r) => r.provider === 'tmdb')!.score.toFixed(1)}
+              TMDb {media.ratings.find((r) => r.provider === 'tmdb')!.score.toFixed(1)}
             </span>
           )}
         </div>
 
-        {library.emotionalRecall && (
-          <p className="hardcover-snippet">
-            "{library.emotionalRecall}"
-          </p>
-        )}
+        <span className="intent-chip" data-intent={intent}>
+          {INTENT_CHIP_LABELS[intent]}
+        </span>
 
         <div className="hardcover-controls">
-          <select
-            value={library.status}
-            onChange={(e) => onUpdateStatus(library.mediaId, (e.target as HTMLSelectElement).value as LibraryStatus)}
-            onClick={(e) => e.stopPropagation()}
-            className="hardcover-select"
+          <button
+            type="button"
+            className="hardcover-details-toggle"
+            aria-expanded={detailsExpanded}
+            onClick={(e) => {
+              e.stopPropagation();
+              setDetailsExpanded((prev) => !prev);
+            }}
           >
-            {STATUS_OPTIONS.map((opt) => (
-              <option value={opt.value} key={opt.value}>{opt.label}</option>
-            ))}
-          </select>
+            Details
+            <span className="hardcover-details-chevron">{detailsExpanded ? '▴' : '▾'}</span>
+          </button>
 
-          {library.status === 'watched' && (
-            <div className="hardcover-rating-row">
-              <span className="hardcover-rating-label">Rating:</span>
-              <input
-                type="range"
-                min={1}
-                max={10}
-                step={1}
-                value={library.userRating || 5}
-                onChange={(e) => onUpdateRating(library.mediaId, parseInt((e.target as HTMLInputElement).value, 10))}
-                onClick={(e) => e.stopPropagation()}
-                className="hardcover-range"
-              />
-              <span className="hardcover-rating-val">
-                {library.userRating || 5} / 10
-              </span>
-            </div>
-          )}
+          {detailsExpanded && (
+            <div className="hardcover-details-panel" onClick={(e) => e.stopPropagation()}>
+              <select
+                value={library.status}
+                onChange={(e) => onUpdateStatus(library.mediaId, (e.target as HTMLSelectElement).value as LibraryStatus)}
+                className="hardcover-select"
+              >
+                {STATUS_OPTIONS.map((opt) => (
+                  <option value={opt.value} key={opt.value}>{opt.label}</option>
+                ))}
+              </select>
 
-          {removeConfirmId === library.mediaId ? (
-            <div className="hardcover-remove-row">
-              <span className="hardcover-rating-label">Confirm Purge?</span>
-              <button
-                className="hardcover-confirm-btn"
-                onClick={(e) => { e.stopPropagation(); onRemoveItem(library.mediaId); }}
-              >
-                Purge
-              </button>
-              <button
-                className="hardcover-remove-btn"
-                onClick={(e) => { e.stopPropagation(); setRemoveConfirmId(null); }}
-              >
-                Retain
-              </button>
+              {library.status === 'watched' && (
+                <div className="hardcover-rating-row">
+                  <span className="hardcover-rating-label">Rating:</span>
+                  <input
+                    type="range"
+                    min={1}
+                    max={10}
+                    step={1}
+                    value={library.userRating || 5}
+                    onChange={(e) => onUpdateRating(library.mediaId, parseInt((e.target as HTMLInputElement).value, 10))}
+                    className="hardcover-range"
+                  />
+                  <span className="hardcover-rating-val">
+                    {library.userRating || 5} / 10
+                  </span>
+                </div>
+              )}
+
+              {removeConfirmId === library.mediaId ? (
+                <div className="hardcover-remove-row">
+                  <span className="hardcover-rating-label">Confirm Purge?</span>
+                  <button
+                    className="hardcover-confirm-btn"
+                    onClick={(e) => { e.stopPropagation(); onRemoveItem(library.mediaId); }}
+                  >
+                    Purge
+                  </button>
+                  <button
+                    className="hardcover-remove-btn"
+                    onClick={(e) => { e.stopPropagation(); setRemoveConfirmId(null); }}
+                  >
+                    Retain
+                  </button>
+                </div>
+              ) : (
+                <button
+                  className="hardcover-remove-btn"
+                  onClick={(e) => { e.stopPropagation(); setRemoveConfirmId(library.mediaId); }}
+                >
+                  Purge from Sanctuary
+                </button>
+              )}
             </div>
-          ) : (
-            <button
-              className="hardcover-remove-btn"
-              onClick={(e) => { e.stopPropagation(); setRemoveConfirmId(library.mediaId); }}
-            >
-              Purge from Sanctuary
-            </button>
           )}
         </div>
       </div>

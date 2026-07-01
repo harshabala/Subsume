@@ -1,11 +1,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { AuteurScreenplayDock } from '@/content/dock';
-import { MessageType } from '@/shared/types';
+import {
+  AuteurScreenplayDock,
+  pageReflectionKey,
+  loadPageReflection,
+  savePageReflection,
+  PAGE_REFLECTIONS_STORAGE_KEY,
+} from '@/content/dock';
 
 describe('AuteurScreenplayDock (dock.ts)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     document.body.innerHTML = '';
+    vi.mocked(chrome.storage.local.get).mockResolvedValue({});
+    vi.mocked(chrome.storage.local.set).mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -49,14 +56,10 @@ describe('AuteurScreenplayDock (dock.ts)', () => {
     expect(dock.shadow!.querySelector('.dock-save-btn')).not.toBeNull();
   });
 
-  it('dispatches SET_USER_NOTES message on Save click', () => {
-    vi.mocked(chrome.runtime.sendMessage).mockImplementation((msg: any, cb: any) => {
-      if (cb) cb({ success: true, data: null });
-    });
-
+  it('saves page reflections to chrome.storage.local on Save click', async () => {
     const dock = new AuteurScreenplayDock();
     dock.mount();
-    dock.toggle(); // expand
+    dock.toggle();
 
     const textarea = dock.shadow!.querySelector('textarea') as HTMLTextAreaElement;
     textarea.value = 'Cinematic masterpiece of framing.';
@@ -64,14 +67,15 @@ describe('AuteurScreenplayDock (dock.ts)', () => {
     const saveBtn = dock.shadow!.querySelector('.dock-save-btn') as HTMLElement;
     saveBtn.click();
 
-    expect(chrome.runtime.sendMessage).toHaveBeenCalled();
-    const calls = vi.mocked(chrome.runtime.sendMessage).mock.calls;
-    const noteCall = calls.find((c: any) => c[0].type === MessageType.SET_USER_NOTES);
-    expect(noteCall).toBeDefined();
-    expect((noteCall as any)[0].payload).toEqual({
-      mediaId: 'page_' + window.location.hostname,
-      notes: 'Cinematic masterpiece of framing.',
+    await vi.waitFor(() => {
+      expect(chrome.storage.local.set).toHaveBeenCalled();
     });
+
+    const setCall = vi.mocked(chrome.storage.local.set).mock.calls.at(-1)?.[0] as Record<string, unknown>;
+    const store = setCall[PAGE_REFLECTIONS_STORAGE_KEY] as Record<string, { notes: string }>;
+    const key = pageReflectionKey();
+    expect(store[key].notes).toBe('Cinematic masterpiece of framing.');
+    expect(chrome.runtime.sendMessage).not.toHaveBeenCalled();
   });
 
   it('destroy() unmounts container DOM node and cleans up', () => {
@@ -82,5 +86,39 @@ describe('AuteurScreenplayDock (dock.ts)', () => {
     dock.destroy();
     expect(document.querySelector('div[data-subsume-dock]')).toBeNull();
     expect(dock.host).toBeNull();
+  });
+});
+
+describe('page reflection storage helpers', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(chrome.storage.local.get).mockResolvedValue({});
+    vi.mocked(chrome.storage.local.set).mockResolvedValue(undefined);
+  });
+
+  it('builds stable keys from hostname and pathname', () => {
+    expect(pageReflectionKey('example.com', '/movies/inception')).toBe('example.com/movies/inception');
+  });
+
+  it('loads saved notes for a page key', async () => {
+    const key = 'example.com/reviews';
+    vi.mocked(chrome.storage.local.get).mockResolvedValue({
+      [PAGE_REFLECTIONS_STORAGE_KEY]: {
+        [key]: { notes: 'Lingering shot of rain.', updatedAt: 1 },
+      },
+    });
+
+    await expect(loadPageReflection(key)).resolves.toBe('Lingering shot of rain.');
+  });
+
+  it('persists notes under hostname+path key', async () => {
+    const key = 'example.com/reviews';
+    await savePageReflection(key, 'A quiet ending.');
+
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      [PAGE_REFLECTIONS_STORAGE_KEY]: {
+        [key]: expect.objectContaining({ notes: 'A quiet ending.' }),
+      },
+    });
   });
 });

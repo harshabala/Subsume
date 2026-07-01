@@ -42,4 +42,4 @@ getPreferences()
 
 setupLifecycleAndAlarms();
 
-logger.log('[Subsume] Background service worker started.');
+logger.info('[Subsume] Background service worker started.');

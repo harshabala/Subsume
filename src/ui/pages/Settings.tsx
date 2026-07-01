@@ -5,7 +5,6 @@ import { MessageType, UserPreferences, ImportLibraryData } from '@/shared/types'
 import { AVAILABLE_PLATFORMS } from '@/shared/platforms';
 import { AVAILABLE_GENRES } from '@/shared/genres';
 import { validateImportData } from '@/shared/validation';
-import { getAuthToken, uploadDatabaseBackup, downloadDatabaseBackup } from '@/background/drive-sync';
 import '../styles/settings.css';
 
 export function Settings() {
@@ -13,12 +12,18 @@ export function Settings() {
   const [saving, setSaving] = useState(false);
   const [updateStatus, setUpdateStatus] = useState<string | null>(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
-      const res = await sendMessage<Record<string, unknown>, UserPreferences>(MessageType.GET_FULL_PREFERENCES, {});
-      if (res.success && res.data) {
-        setPrefs(res.data);
+      try {
+        const res = await sendMessage<{ revealKeys: boolean }, UserPreferences>(
+          MessageType.GET_FULL_PREFERENCES,
+          { revealKeys: true }
+        );
+        setPrefs(res.data!);
+      } catch (err) {
+        setLoadError(err instanceof Error ? err.message : 'Failed to load settings.');
       }
     }
     load();
@@ -41,23 +46,28 @@ export function Settings() {
   const save = async () => {
     if (!prefs) return;
     setSaving(true);
-    await sendMessage(MessageType.SET_PREFERENCES, prefs);
-    setSaving(false);
+    try {
+      await sendMessage(MessageType.SET_PREFERENCES, prefs);
+    } catch (err) {
+      alert('Failed to save settings: ' + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleExport = async () => {
-    const res = await sendMessage(MessageType.EXPORT_LIBRARY, {});
-    if (!res.success || !res.data) {
-      alert('Failed to export library');
-      return;
-    }
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(res.data));
+    try {
+      const res = await sendMessage(MessageType.EXPORT_LIBRARY, {});
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(res.data));
     const downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute("href", dataStr);
     downloadAnchorNode.setAttribute("download", "subsume_library.json");
     document.body.appendChild(downloadAnchorNode);
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
+    } catch (err) {
+      alert('Failed to export library: ' + (err instanceof Error ? err.message : String(err)));
+    }
   };
 
   const handleCheckUpdate = () => {
@@ -106,7 +116,7 @@ export function Settings() {
 
   const handleConnectDrive = async () => {
     try {
-      await getAuthToken(true);
+      await sendMessage(MessageType.CONNECT_GOOGLE_DRIVE, {});
       alert('Successfully connected to Google Drive!');
     } catch (e: unknown) {
       alert('Failed to connect to Google Drive: ' + (e instanceof Error ? e.message : String(e)));
@@ -115,9 +125,7 @@ export function Settings() {
 
   const handleBackupNow = async () => {
     try {
-      const res = await sendMessage(MessageType.EXPORT_LIBRARY, {});
-      if (!res.success || !res.data) throw new Error('Failed to export local data');
-      await uploadDatabaseBackup(JSON.stringify(res.data));
+      await sendMessage(MessageType.BACKUP_TO_DRIVE, {});
       alert('Backup successful!');
     } catch (e: unknown) {
       alert('Backup failed: ' + (e instanceof Error ? e.message : String(e)));
@@ -126,10 +134,7 @@ export function Settings() {
 
   const handleRestoreBackup = async () => {
     try {
-      const jsonString = await downloadDatabaseBackup();
-      const raw = JSON.parse(jsonString);
-      const data = validateImportData(raw);
-      await sendMessage(MessageType.IMPORT_LIBRARY, data);
+      await sendMessage(MessageType.RESTORE_FROM_DRIVE, {});
       alert('Restore successful!');
     } catch (e: unknown) {
       alert('Restore failed: ' + (e instanceof Error ? e.message : String(e)));
@@ -139,7 +144,7 @@ export function Settings() {
   if (!prefs) {
     return (
       <div className="page-container settings-loading">
-        Warming sanctuary instruments...
+        {loadError ? `Failed to load settings: ${loadError}` : 'Warming sanctuary instruments...'}
       </div>
     );
   }
@@ -332,6 +337,16 @@ export function Settings() {
                 className="settings-toggle-checkbox"
               />
               <span className="settings-toggle-text-sm">Superimpose Archival Badges on Posters</span>
+            </label>
+
+            <label className="settings-toggle-label">
+              <input
+                type="checkbox"
+                checked={prefs.screenplayDockEnabled ?? true}
+                onChange={(e) => handleChange('screenplayDockEnabled', e.currentTarget.checked)}
+                className="settings-toggle-checkbox"
+              />
+              <span className="settings-toggle-text-sm">Enable Auteur Screenplay Dock</span>
             </label>
 
             <div>
