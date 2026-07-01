@@ -74,6 +74,11 @@
   gap: 2rem;
 }
 
+.skeleton-tab-sized {
+  width: 80px;
+  height: 16px;
+}
+
 .nav-menu-toggle {
   background: transparent;
   border: none;
