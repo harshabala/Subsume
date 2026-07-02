@@ -54,10 +54,16 @@ const DB_VERSION = 3;
 
 let dbPromise: Promise<IDBPDatabase<SubsumeDB>> | null = null;
 
-async function seedDatabaseIfEmpty(db: IDBPDatabase<SubsumeDB>) {
-  // Demo seed data is for local development only — never populate production installs.
-  if (!import.meta.env.DEV) return;
+export async function seedDemoLibraryIfEmpty(): Promise<boolean> {
+  const db = await getDb();
+  const mediaCount = await db.count('media');
+  if (mediaCount > 0) return false;
+  await seedDatabaseIfEmpty(db);
+  return true;
+}
 
+async function seedDatabaseIfEmpty(db: IDBPDatabase<SubsumeDB>) {
+  // Populate a starter sanctuary library on first install so new users see the archive vision.
   try {
     const mediaCount = await db.count('media');
     if (mediaCount === 0) {
@@ -220,6 +226,8 @@ const DEFAULT_PREFS: UserPreferences = {
   posterOverlaysEnabled: true,
   disabledDomains: [],
   detectionSensitivity: 'medium',
+  theme: 'dark',
+  screenplayDockEnabled: false,
   onboardingComplete: false,
   omdbApiKey: undefined,
 };

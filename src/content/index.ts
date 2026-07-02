@@ -43,9 +43,9 @@ async function init(): Promise<void> {
 
   const prefs = prefsRes.success ? prefsRes.data : null;
 
-  // Fail-safe: if GET_CONTENT_PREFS fails, keep all surface features off.
-  const hoverEnabled = prefs?.hoverCardsEnabled ?? false;
-  const overlaysEnabled = prefs?.posterOverlaysEnabled ?? false;
+  // Default discovery features on; only disable when prefs explicitly say so.
+  const hoverEnabled = prefs?.hoverCardsEnabled ?? true;
+  const overlaysEnabled = prefs?.posterOverlaysEnabled ?? true;
   const dockEnabled = prefs?.screenplayDockEnabled ?? false;
   const sensitivity = prefs?.detectionSensitivity || 'medium';
 

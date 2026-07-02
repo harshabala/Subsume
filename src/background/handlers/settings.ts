@@ -81,6 +81,7 @@ function isValidUserPreferences(prefs: any): prefs is UserPreferences {
   if (!Array.isArray(prefs.disabledDomains) || !prefs.disabledDomains.every((d: any) => typeof d === 'string')) return false;
   if (!['low', 'medium', 'high'].includes(prefs.detectionSensitivity)) return false;
   if (typeof prefs.onboardingComplete !== 'boolean') return false;
+  if (prefs.theme !== undefined && !['dark', 'light', 'system'].includes(prefs.theme)) return false;
   return true;
 }
 

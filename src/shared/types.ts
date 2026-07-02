@@ -97,6 +97,7 @@ export interface PersonItem {
 // ─── User Preferences ────────────────────────────────────────────────
 
 export type LLMProvider = 'openai' | 'anthropic' | 'gemini' | 'local';
+export type ThemePreference = 'dark' | 'light' | 'system';
 
 export interface LLMConfig {
   provider: LLMProvider;
@@ -120,6 +121,7 @@ export interface UserPreferences {
   screenplayDockEnabled?: boolean;
   disabledDomains: string[];
   detectionSensitivity: 'low' | 'medium' | 'high';
+  theme?: ThemePreference;
   onboardingComplete: boolean;
 }
 
@@ -144,6 +146,7 @@ export enum MessageType {
   CONNECT_GOOGLE_DRIVE = 'CONNECT_GOOGLE_DRIVE',
   BACKUP_TO_DRIVE = 'BACKUP_TO_DRIVE',
   RESTORE_FROM_DRIVE = 'RESTORE_FROM_DRIVE',
+  RESTORE_DEMO_LIBRARY = 'RESTORE_DEMO_LIBRARY',
   CLEAR_NOTIFICATION_BADGE = 'CLEAR_NOTIFICATION_BADGE',
 
   // Media

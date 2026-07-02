@@ -15,6 +15,7 @@ import { PoeticCaptureCanvas } from './components/PoeticCaptureCanvas';
 import { sendMessage } from '../shared/messages';
 import { MessageType, UserPreferences, LibraryItem, MediaItem, PersonItem } from '../shared/types';
 import { usePrefetch, prefetchPage, prefetchProps, type Page } from './hooks/usePrefetch';
+import { applyThemePreference } from '../shared/theme';
 import './styles/sidebar.css';
 
 interface LibraryStats {
@@ -115,6 +116,7 @@ export function App() {
     sendMessage<Record<string, unknown>, UserPreferences>(MessageType.GET_PREFERENCES, {}).then((res) => {
       if (res.success && res.data) {
         setPrefs(res.data);
+        applyThemePreference(res.data.theme ?? 'dark');
       }
     }).catch(() => {});
 

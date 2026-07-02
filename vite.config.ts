@@ -19,13 +19,19 @@ export default defineConfig(({ command }) => ({
     {
       name: 'post-build-fix',
       closeBundle() {
-        const srcHtml = resolve(__dirname, 'dist/src/ui/index.html');
         const destDir = resolve(__dirname, 'dist/ui');
-        const destHtml = resolve(__dirname, 'dist/ui/index.html');
-        if (fs.existsSync(srcHtml)) {
-          if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
-          fs.renameSync(srcHtml, destHtml);
-          fs.rmSync(resolve(__dirname, 'dist/src'), { recursive: true, force: true });
+        if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
+
+        for (const name of ['index', 'popup']) {
+          const srcHtml = resolve(__dirname, `dist/src/ui/${name}.html`);
+          const destHtml = resolve(__dirname, `dist/ui/${name}.html`);
+          if (fs.existsSync(srcHtml)) {
+            fs.renameSync(srcHtml, destHtml);
+          }
+        }
+        const distSrc = resolve(__dirname, 'dist/src');
+        if (fs.existsSync(distSrc)) {
+          fs.rmSync(distSrc, { recursive: true, force: true });
         }
         const srcIcons = resolve(__dirname, 'src/assets/icons');
         const destIcons = resolve(__dirname, 'dist/icons');
@@ -48,6 +54,7 @@ export default defineConfig(({ command }) => ({
         background: resolve(__dirname, 'src/background/index.ts'),
         content: resolve(__dirname, 'src/content/index.ts'),
         ui: resolve(__dirname, 'src/ui/index.html'),
+        popup: resolve(__dirname, 'src/ui/popup.html'),
       },
       output: {
         entryFileNames: (chunkInfo) => {

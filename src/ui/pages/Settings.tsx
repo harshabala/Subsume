@@ -1,7 +1,8 @@
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { sendMessage } from '@/shared/messages';
-import { MessageType, UserPreferences, ImportLibraryData } from '@/shared/types';
+import { MessageType, UserPreferences, ImportLibraryData, ThemePreference } from '@/shared/types';
+import { applyThemePreference } from '@/shared/theme';
 import { AVAILABLE_PLATFORMS } from '@/shared/platforms';
 import { AVAILABLE_GENRES } from '@/shared/genres';
 import { validateImportData } from '@/shared/validation';
@@ -160,6 +161,36 @@ export function Settings() {
       </header>
 
       <div className="settings-section-stack">
+        {/* Appearance */}
+        <div className="settings-panel">
+          <h3 className="settings-panel-heading">Appearance</h3>
+          <div className="settings-field-group">
+            <span className="settings-field-label">Sanctuary Theme</span>
+            <div className="settings-chip-grid">
+              {(['dark', 'light', 'system'] as ThemePreference[]).map((theme) => {
+                const active = (prefs.theme ?? 'dark') === theme;
+                return (
+                  <label key={theme} className={`settings-chip ${active ? 'active' : 'inactive'}`}>
+                    <input
+                      type="radio"
+                      name="theme"
+                      checked={active}
+                      onChange={() => {
+                        handleChange('theme', theme);
+                        applyThemePreference(theme);
+                      }}
+                      className="settings-chip-hidden-input"
+                    />
+                    <span className={`settings-chip-dot ${active ? 'active' : 'inactive'}`} />
+                    {theme === 'dark' ? 'Gilded Night' : theme === 'light' ? 'Parchment' : 'System'}
+                  </label>
+                );
+              })}
+            </div>
+            <p className="settings-help-text-italic">Keeps popup and sanctuary visually consistent.</p>
+          </div>
+        </div>
+
         {/* Content Preferences */}
         <div className="settings-panel">
           <h3 className="settings-panel-heading">Taxonomy &amp; Curation Preferences</h3>
@@ -342,7 +373,7 @@ export function Settings() {
             <label className="settings-toggle-label">
               <input
                 type="checkbox"
-                checked={prefs.screenplayDockEnabled ?? true}
+                checked={prefs.screenplayDockEnabled ?? false}
                 onChange={(e) => handleChange('screenplayDockEnabled', e.currentTarget.checked)}
                 className="settings-toggle-checkbox"
               />

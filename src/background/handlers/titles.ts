@@ -96,6 +96,34 @@ async function enrichWithFreeApis(item: MediaItem): Promise<MediaItem> {
   return enriched;
 }
 
+function parseTitleYear(query: string): { title: string; year?: number } {
+  const trimmed = query.trim();
+  const match = trimmed.match(/^(.+?)\s*\((\d{4})\)\s*$/);
+  if (match) {
+    const year = parseInt(match[2], 10);
+    return { title: match[1].trim(), year: isNaN(year) ? undefined : year };
+  }
+  return { title: trimmed };
+}
+
+/** Resolve a title using local seed/cache and free APIs when TMDb key is absent. */
+async function resolveTitleFree(query: string): Promise<MediaItem | null> {
+  const { title, year } = parseTitleYear(query);
+  if (!title) return null;
+
+  const local = await findMediaByTitle(title, year);
+  if (local) return local;
+
+  const tvmaze = await searchTvMaze(title, year).catch(() => null);
+  if (tvmaze) {
+    const enriched = await enrichWithFreeApis(tvmaze).catch(() => tvmaze);
+    await putMediaItem(enriched);
+    return enriched;
+  }
+
+  return null;
+}
+
 async function fetchMediaDetails(tmdbId: string, mediaType: 'movie' | 'tv', apiKey: string): Promise<MediaItem> {
   const baseUrl = 'https://api.themoviedb.org/3';
   const url = `${baseUrl}/${mediaType}/${tmdbId}?language=en-US`;
@@ -177,13 +205,8 @@ export const titleHandlers: MessageHandlerMap = {
     try {
       mediaItem = await searchTitle(req.title, req.yearGuess, req.typeGuess);
     } catch (err) {
-      // TMDb key missing — fall back to TVmaze for TV content
-      if (req.typeGuess === 'tv' || !req.typeGuess) {
-        const tvResult = await searchTvMaze(req.title, req.yearGuess).catch(() => null);
-        if (tvResult) {
-          mediaItem = tvResult;
-        }
-      }
+      const query = req.yearGuess ? `${req.title} (${req.yearGuess})` : req.title;
+      mediaItem = await resolveTitleFree(query);
       if (!mediaItem) {
         logger.warn('[Subsume] Title lookup failed and no fallback available:', err);
       }
@@ -257,20 +280,32 @@ export const titleHandlers: MessageHandlerMap = {
           const prefs = await getPreferences();
           if (prefs.tmdbApiKey) {
             media = await searchTitle(req.query, undefined, undefined);
-            queryCacheSet(cacheKey, media);
-            if (media) {
-              const cachedMedia = await getMediaItem(media.id);
-              if (!cachedMedia) {
-                await putMediaItem(media);
-              } else {
-                media = cachedMedia;
-              }
+          } else {
+            media = await resolveTitleFree(req.query);
+          }
+          queryCacheSet(cacheKey, media);
+          if (media) {
+            const cachedMedia = await getMediaItem(media.id);
+            if (!cachedMedia) {
+              await putMediaItem(media);
+            } else {
+              media = cachedMedia;
             }
           }
         } catch (err) {
-          logger.error('[Subsume] Failed to search/resolve title:', err);
+          const fallback = await resolveTitleFree(req.query).catch(() => null);
+          if (fallback) {
+            media = fallback;
+            queryCacheSet(cacheKey, fallback);
+          } else {
+            logger.error('[Subsume] Failed to search/resolve title:', err);
+          }
         }
       }
+    }
+
+    if (media) {
+      media = await enrichWithFreeApis(media).catch(() => media!);
     }
 
     if (!media) {

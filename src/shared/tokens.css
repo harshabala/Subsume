@@ -141,9 +141,8 @@
   );
 }
 
-/* ─── Light Mode (Gilded Night — brand.md) ─────────────────────── */
-@media (prefers-color-scheme: light) {
-  :root {
+/* ─── Light Mode (explicit user choice) ────────────────────────── */
+[data-theme="light"] {
     --bg-base: #f5f0e8;
     --bg-elevated: #ffffff;
     --bg-overlay: #ede8e0;
@@ -204,6 +203,35 @@
     --accent: #ede8e0;
     --accent-foreground: #1a1918;
     --input: #e0dbd3;
+    --ring: #b8962e;
+}
+
+/* ─── System theme follows OS when data-theme is unset ─────────── */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]):not([data-theme="light"]) {
+    --bg-base: #f5f0e8;
+    --bg-elevated: #ffffff;
+    --bg-overlay: #ede8e0;
+    --bg-hover: #e8e3db;
+    --bg-sunken: #ede8e0;
+    --fg-base: #1a1918;
+    --fg-muted: #6b6560;
+    --fg-subtle: #9e9a90;
+    --primary: #b8962e;
+    --primary-soft: rgba(184, 150, 46, 0.12);
+    --primary-hover: #a68829;
+    --primary-pressed: #94771f;
+    --border: #e0dbd3;
+    --border-subtle: #eae5dd;
+    --bg-sanctuary: #f5f0e8;
+    --text-reflection: #1a1918;
+    --text-artwork: #3d3a36;
+    --text-title: #5c5850;
+    --text-meta: #6b6560;
+    --background: #f5f0e8;
+    --foreground: #1a1918;
+    --card: #ffffff;
+    --card-foreground: #1a1918;
     --ring: #b8962e;
   }
 }

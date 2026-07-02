@@ -23,6 +23,7 @@ import {
   getAllMediaMap,
   intentForStatus,
   isValidMediaItem,
+  seedDemoLibraryIfEmpty,
 } from '../storage';
 import { invalidateProfileCache } from '../context';
 import { mergeMediaItems } from '../mediaMerge';
@@ -257,5 +258,10 @@ export const libraryHandlers: MessageHandlerMap = {
         library: item,
         media: mediaMap[item.mediaId],
       }));
+  },
+
+  [MessageType.RESTORE_DEMO_LIBRARY]: async () => {
+    const seeded = await seedDemoLibraryIfEmpty();
+    return { seeded };
   },
 };
