@@ -17,6 +17,7 @@ import { DetailModal } from '../components/DetailModal';
 import { PlatformChips } from '../components/PlatformChips';
 import { getPlatformNameById } from '@/shared/platforms';
 import '../styles/discovery-search.css';
+import { ensureDemoLibraryIfEmpty } from '../lib/ensureDemoLibrary';
 
 interface JoinedItem {
   library: LibraryItem;
@@ -211,23 +212,13 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
           );
         }
 
-        let libraryRes = await sendMessage<{}, JoinedItem[]>(MessageType.GET_LIBRARY, {});
-        if (libraryRes.success && libraryRes.data?.length === 0) {
-          try {
-            await sendMessage(MessageType.RESTORE_DEMO_LIBRARY, {});
-            libraryRes = await sendMessage<{}, JoinedItem[]>(MessageType.GET_LIBRARY, {});
-          } catch {
-            // Best-effort demo seed
-          }
-        }
+        const libraryItems = await ensureDemoLibraryIfEmpty();
 
         if (prefsRes?.success && prefsRes.data) setPrefs(prefsRes.data);
 
-        if (libraryRes.success && libraryRes.data) {
-          setLibraryCount(libraryRes.data.length);
-          setWatchedCount(libraryRes.data.filter((i) => i.library.status === 'watched').length);
-          setToWatchCount(libraryRes.data.filter((i) => i.library.status === 'to-watch').length);
-        }
+        setLibraryCount(libraryItems.length);
+        setWatchedCount(libraryItems.filter((i) => i.library.status === 'watched').length);
+        setToWatchCount(libraryItems.filter((i) => i.library.status === 'to-watch').length);
 
         if (feedRes?.success && feedRes.data) {
           setDiscoveryFeed(feedRes.data);
@@ -357,15 +348,24 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
 
   const digestBadge = weeklyDigest?.llmGenerated ? 'Personally Curated' : 'Editorial Selection';
 
-  const heroMedia = weeklyPicks.find((p) => p.media)?.media || picks[0]?.media || null;
-  const heroTitle = heroMedia?.canonicalTitle || "In the Mood for Love";
-  const heroDirector = heroMedia?.wikidataDirectorBio || "Wong Kar-wai";
-  const heroRating = heroMedia ? (pickRating(heroMedia) || "TMDb 4.8") : "TMDb 4.8";
+  const heroFromFeed = discoveryFeed?.items[0]
+    ? feedItemToDigestPick(discoveryFeed.items[0]).media
+    : null;
+  const heroMedia =
+    weeklyPicks.find((p) => p.media)?.media ||
+    picks[0]?.media ||
+    heroFromFeed ||
+    null;
+  const heroTitle = heroMedia?.canonicalTitle || 'Your cinematic sanctuary awaits';
+  const heroDirector = heroMedia?.wikidataDirectorBio || 'Acquire a title to begin reflecting';
+  const heroRating = heroMedia ? pickRating(heroMedia) : null;
   const heroQuote = heroMedia?.overview
-    ? (heroMedia.overview.length > 120 ? heroMedia.overview.slice(0, 117) + "..." : heroMedia.overview)
-    : "He remembers those vanished years. As though looking through a dusty window pane, the past is something he could see, but not touch.";
-  const heroPoster = heroMedia?.posterUrl || "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=600&q=80";
-  const heroMediaId = heroMedia?.id || "tmdb_movie_1024";
+    ? (heroMedia.overview.length > 120 ? heroMedia.overview.slice(0, 117) + '...' : heroMedia.overview)
+    : 'Browse the discovery feed or search the archive below to find your first title.';
+  const heroPoster =
+    heroMedia?.posterUrl ||
+    'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=600&q=80';
+  const canReflect = Boolean(heroMedia);
 
   return (
     <div className="page-container sanctuary-page focus-pull-active">
@@ -386,16 +386,20 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
             <img src={heroPoster} alt={heroTitle} className="hero-poster-img" />
             <div className="catalogue-plaque-card">
               <div className="plaque-header">
-                <span className="plaque-rating">{heroRating}</span>
+                {heroRating && <span className="plaque-rating">{heroRating}</span>}
                 <span className="plaque-index">No. 001</span>
               </div>
               <h3 className="plaque-title">{heroTitle}</h3>
-              <p className="plaque-director">Directed by {heroDirector}</p>
+              <p className="plaque-director">
+                {heroMedia?.wikidataDirectorBio ? `Directed by ${heroDirector}` : heroDirector}
+              </p>
               <blockquote className="plaque-quote">"{heroQuote}"</blockquote>
               <div className="plaque-actions">
                 <button
                   className="plaque-btn reflect"
-                  onClick={() => onOpenCapture?.(heroMediaId)}
+                  disabled={!canReflect}
+                  title={canReflect ? 'Open reflection canvas' : 'Acquire a title first'}
+                  onClick={() => heroMedia && onOpenCapture?.(heroMedia.id)}
                 >
                   Reflect
                 </button>
@@ -460,7 +464,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
           <div className="sanctuary-empty-plaque discovery-search-empty">
             <span className="sanctuary-plaque-index">No Matches</span>
             <p className="sanctuary-plaque-text">
-              No titles matched your query across TVmaze, Trakt, or your local catalogue.
+              No titles matched your query. Films are searched via Trakt; series via TVmaze and Trakt.
             </p>
           </div>
         )}

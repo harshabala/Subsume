@@ -25,6 +25,7 @@ import {
   isValidMediaItem,
   seedDemoLibraryIfEmpty,
 } from '../storage';
+import { isSafeNavMediaId } from '@/shared/mediaIds';
 import { invalidateProfileCache } from '../context';
 import { mergeMediaItems } from '../mediaMerge';
 import { broadcastMessage, parseSetUserNotesRequest, parseUpdateStatusRequest } from './utils';
@@ -170,7 +171,7 @@ export const libraryHandlers: MessageHandlerMap = {
 
   [MessageType.CHECK_LIBRARY_STATUS]: async (payload) => {
     const req = payload as CheckLibraryStatusRequest;
-    if (!req?.mediaId || !/^tmdb_(movie|tv)_\d+$/.test(req.mediaId)) {
+    if (!req?.mediaId || !isSafeNavMediaId(req.mediaId)) {
       return { inLibrary: false } satisfies CheckLibraryStatusResponse;
     }
     const libraryItem = await getLibraryItem(req.mediaId);

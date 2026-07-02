@@ -3,7 +3,7 @@ import { h } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { sendMessage } from '../shared/messages';
 import { MessageType, UserPreferences, LibraryItem, MediaItem } from '../shared/types';
-import { applyThemePreference } from '../shared/theme';
+import { applyThemePreference, watchSystemTheme } from '../shared/theme';
 import '../shared/tokens.css';
 import './styles/popup.css';
 
@@ -45,10 +45,13 @@ function Popup() {
 
         const p = prefsRes.data!;
         setPrefs(p);
-        applyThemePreference(p.theme ?? 'dark');
+        const theme = p.theme ?? 'dark';
+        applyThemePreference(theme);
+        watchSystemTheme(theme);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load');
-        applyThemePreference('dark');
+        applyThemePreference('system');
+        watchSystemTheme('system');
       } finally {
         setLoading(false);
       }

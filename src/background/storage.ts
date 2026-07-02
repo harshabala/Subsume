@@ -11,6 +11,7 @@ import {
   SanctuaryIntent,
 } from '@/shared/types';
 import { isValidPersonItem } from '@/shared/validation';
+import { MEDIA_ID_PATTERN } from '@/shared/mediaIds';
 import { SEED_MEDIA, SEED_LIBRARY, SEED_PEOPLE } from './seedData';
 
 interface SubsumeDB extends DBSchema {
@@ -344,14 +345,6 @@ export function isValidLibraryItem(l: unknown): l is LibraryItem {
   }
   return true;
 }
-
-// Media IDs use provider-specific prefixes (see tvmaze.ts, recommendations.ts trakt fallback):
-//   tmdb_(movie|tv)_<id>  — canonical TMDb records
-//   tvmaze_tv_<id>        — TVmaze fallback metadata
-//   trakt_trending_<slug> — Trakt trending recommendations
-//   seed_<name>           — DEV-only demo seed data (seedData.ts)
-const MEDIA_ID_PATTERN =
-  /^(tmdb_(movie|tv)_\d+|tvmaze_tv_\d+|trakt_trending_[a-zA-Z0-9-]+|seed_[a-z0-9_]+)$/;
 
 export function isValidMediaItem(m: unknown): m is MediaItem {
   if (!m || typeof m !== 'object') return false;

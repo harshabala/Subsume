@@ -11,6 +11,7 @@ import {
   PosterMatch,
 } from '@/shared/types';
 import { discoverySearch } from '../discoverySearch';
+import { isSafeNavMediaId } from '@/shared/mediaIds';
 import {
   searchTitle,
   searchTitles,
@@ -220,7 +221,7 @@ export const titleHandlers: MessageHandlerMap = {
       return mediaItem;
     }
 
-    throw new Error('Title not found on TMDb');
+    throw new Error('Title not found in local catalogue or free sources (TVmaze, Trakt).');
   },
 
   [MessageType.GET_MEDIA_ITEMS]: async (payload) => {
@@ -359,7 +360,7 @@ export const titleHandlers: MessageHandlerMap = {
   [MessageType.OPEN_DETAIL]: async (payload) => {
     const req = payload as { mediaId: string };
     // Validate mediaId format to prevent query-string injection into the extension URL.
-    if (!/^tmdb_(movie|tv)_\d+$/.test(req.mediaId)) {
+    if (!isSafeNavMediaId(req.mediaId)) {
       logger.warn('[Subsume] OPEN_DETAIL rejected invalid mediaId:', req.mediaId);
       return { success: false, error: 'Invalid mediaId format' };
     }
@@ -371,7 +372,7 @@ export const titleHandlers: MessageHandlerMap = {
 
   [MessageType.OPEN_CAPTURE_CANVAS]: async (payload) => {
     const req = payload as { mediaId: string };
-    if (!/^tmdb_(movie|tv)_\d+$/.test(req.mediaId)) {
+    if (!isSafeNavMediaId(req.mediaId)) {
       logger.warn('[Subsume] OPEN_CAPTURE_CANVAS rejected invalid mediaId:', req.mediaId);
       return { success: false, error: 'Invalid mediaId format' };
     }

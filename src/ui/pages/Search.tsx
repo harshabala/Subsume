@@ -72,7 +72,7 @@ export function Search() {
         </div>
         <h1 className="sanctuary-title">Search Archive</h1>
         <p className="sanctuary-description">
-          Query TVmaze, Trakt, and your local catalogue — no API keys required. Add a TMDb key in Settings for deeper sync.
+          Films via Trakt, series via TVmaze and Trakt, plus your local catalogue — no API keys required. Add a TMDb key in Settings for deeper sync.
         </p>
       </header>
 

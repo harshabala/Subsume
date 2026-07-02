@@ -340,8 +340,8 @@ export function Settings() {
               <span className="settings-discovery-badge free">Free</span>
               <h4 className="settings-discovery-title">No key required</h4>
               <ul className="settings-discovery-list">
-                <li><strong>TVmaze</strong> — TV metadata when TMDb is unavailable</li>
-                <li><strong>Trakt</strong> — Ratings and trending recommendations</li>
+                <li><strong>TVmaze</strong> — TV series metadata, cast, and schedules</li>
+                <li><strong>Trakt</strong> — Film &amp; TV search, ratings, and trending</li>
                 <li><strong>Wikidata / Wikipedia</strong> — Plot summaries and director bios</li>
               </ul>
             </div>

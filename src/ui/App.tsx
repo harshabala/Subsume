@@ -16,6 +16,7 @@ import { sendMessage } from '../shared/messages';
 import { MessageType, UserPreferences, LibraryItem, MediaItem, PersonItem } from '../shared/types';
 import { usePrefetch, prefetchPage, prefetchProps, type Page } from './hooks/usePrefetch';
 import { applyThemePreference, watchSystemTheme } from '../shared/theme';
+import { ensureDemoLibraryIfEmpty } from './lib/ensureDemoLibrary';
 import './styles/sidebar.css';
 
 interface LibraryStats {
@@ -122,29 +123,10 @@ export function App() {
       }
     }).catch(() => {});
 
-    sendMessage<Record<string, unknown>, { library: LibraryItem; media: MediaItem }[]>(MessageType.GET_LIBRARY, {}).then(async (res) => {
-      if (res.success && res.data) {
-        if (res.data.length === 0) {
-          try {
-            await sendMessage(MessageType.RESTORE_DEMO_LIBRARY, {});
-            const refreshed = await sendMessage<Record<string, unknown>, { library: LibraryItem; media: MediaItem }[]>(
-              MessageType.GET_LIBRARY,
-              {}
-            );
-            if (refreshed.success && refreshed.data) {
-              const movieCount = refreshed.data.filter((item) => item.media?.type === 'movie').length;
-              const tvCount = refreshed.data.filter((item) => item.media?.type === 'tv').length;
-              setStats({ movieCount, tvCount });
-              return;
-            }
-          } catch {
-            // Demo seed is best-effort; empty library is still valid.
-          }
-        }
-        const movieCount = res.data.filter((item) => item.media?.type === 'movie').length;
-        const tvCount = res.data.filter((item) => item.media?.type === 'tv').length;
-        setStats({ movieCount, tvCount });
-      }
+    ensureDemoLibraryIfEmpty().then((library) => {
+      const movieCount = library.filter((item) => item.media?.type === 'movie').length;
+      const tvCount = library.filter((item) => item.media?.type === 'tv').length;
+      setStats({ movieCount, tvCount });
     }).catch(() => {});
 
     sendMessage<Record<string, unknown>, { people: PersonItem[] }>(MessageType.GET_ALL_PEOPLE, {}).then((res) => {
@@ -331,7 +313,7 @@ export function App() {
           ))}
         </div>
         <div className="side-menu-footer">
-          <span>v0.1.3</span>
+          <span>v0.1.4</span>
           <span>{stats.movieCount} M / {stats.tvCount} T</span>
         </div>
       </div>
