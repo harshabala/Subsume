@@ -1,4 +1,5 @@
-import { DiscoveryFeed, DiscoveryFeedItem, MediaType, WeeklyDigest } from '@/shared/types';
+import { DiscoveryFeed, DiscoveryFeedItem, MediaItem, MediaType, WeeklyDigest } from '@/shared/types';
+import { putMediaItem } from './storage';
 import { getTraktTrending } from './trakt';
 import { fetchTvMazePremieres } from './tvmaze';
 import { fetchWikipediaSummary } from './wikidata';
@@ -161,11 +162,30 @@ export function __clearDiscoveryFeedCache(): void {
   CACHE.clear();
 }
 
-export function discoveryFeedToWeeklyDigest(feed: DiscoveryFeed): WeeklyDigest {
+export function discoveryFeedItemToMediaItem(item: DiscoveryFeedItem): MediaItem {
+  const provider = item.source === 'trakt' ? 'trakt' : 'tvmaze';
+  return {
+    id: item.id,
+    canonicalTitle: item.title,
+    type: item.type,
+    year: item.year,
+    genres: [],
+    ratings: item.rating ? [{ provider: 'tvmaze', score: item.rating, votes: 0 }] : [],
+    providers: item.url
+      ? [{ provider, externalId: item.id, url: item.url }]
+      : [],
+    posterUrl: item.posterUrl || '',
+    overview: item.reason,
+  };
+}
+
+export async function discoveryFeedToWeeklyDigest(feed: DiscoveryFeed): Promise<WeeklyDigest> {
+  const items = feed.items.slice(0, 12);
+  await Promise.all(items.map((item) => putMediaItem(discoveryFeedItemToMediaItem(item))));
   return {
     generatedAt: feed.generatedAt,
     llmGenerated: false,
-    items: feed.items.slice(0, 12).map((item) => ({
+    items: items.map((item) => ({
       mediaId: item.id,
       title: item.title,
       year: item.year,

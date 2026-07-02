@@ -13,7 +13,29 @@ import { buildWatchProfile } from '../context';
 import { generateWeeklyDigest, isDigestStale } from '../digest';
 import { getDiscoveryFeed, discoveryFeedToWeeklyDigest } from '../discoveryFeed';
 import { getTraktTrending } from '../trakt';
-import { GetDiscoveryFeedRequest } from '@/shared/types';
+import { GetDiscoveryFeedRequest, UserPreferences, WeeklyDigest } from '@/shared/types';
+
+async function resolveWeeklyDigest(prefs: UserPreferences): Promise<WeeklyDigest> {
+  try {
+    const digest = await generateWeeklyDigest(prefs);
+    if (digest.items.length > 0) {
+      return digest;
+    }
+  } catch (err) {
+    logger.warn('[Subsume] Weekly digest generation failed, using discovery feed:', err);
+  }
+
+  try {
+    const feed = await getDiscoveryFeed();
+    if (feed.items.length > 0) {
+      return discoveryFeedToWeeklyDigest(feed);
+    }
+  } catch (err) {
+    logger.error('[Subsume] Discovery feed fallback for weekly digest failed:', err);
+  }
+
+  return { generatedAt: Date.now(), items: [], llmGenerated: false };
+}
 
 export const recommendationHandlers: MessageHandlerMap = {
   [MessageType.GET_RECOMMENDATIONS]: async (payload) => {
@@ -120,24 +142,14 @@ export const recommendationHandlers: MessageHandlerMap = {
     }
 
     const prefs = await getPreferences();
-    let digest = await generateWeeklyDigest(prefs);
-    if (digest.items.length === 0) {
-      try {
-        const feed = await getDiscoveryFeed();
-        if (feed.items.length > 0) {
-          digest = discoveryFeedToWeeklyDigest(feed);
-        }
-      } catch (err) {
-        logger.error('[Subsume] Discovery feed fallback for weekly digest failed:', err);
-      }
-    }
+    const digest = await resolveWeeklyDigest(prefs);
     await saveWeeklyDigest(digest);
     return digest;
   },
 
   [MessageType.REGENERATE_WEEKLY_DIGEST]: async () => {
     const prefs = await getPreferences();
-    const digest = await generateWeeklyDigest(prefs);
+    const digest = await resolveWeeklyDigest(prefs);
     await saveWeeklyDigest(digest);
     return digest;
   },

@@ -187,12 +187,29 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
     async function load() {
       setLoading(true);
       try {
-        const [prefsRes, digestRes, recsRes, feedRes] = await Promise.all([
+        const [prefsResult, digestResult, recsResult, feedResult] = await Promise.allSettled([
           sendMessage<{}, UserPreferences>(MessageType.GET_PREFERENCES, {}),
           sendMessage<{}, WeeklyDigest>(MessageType.GET_WEEKLY_DIGEST, {}),
           sendMessage<any, Recommendation[]>(MessageType.GET_RECOMMENDATIONS, {}),
           sendMessage<{ force?: boolean }, DiscoveryFeed>(MessageType.GET_DISCOVERY_FEED, {}),
         ]);
+
+        const prefsRes = prefsResult.status === 'fulfilled' ? prefsResult.value : null;
+        const digestRes = digestResult.status === 'fulfilled' ? digestResult.value : null;
+        const recsRes = recsResult.status === 'fulfilled' ? recsResult.value : null;
+        const feedRes = feedResult.status === 'fulfilled' ? feedResult.value : null;
+
+        if (digestResult.status === 'rejected') {
+          console.error('[Subsume] Weekly digest load failed', digestResult.reason);
+        }
+        if (feedResult.status === 'rejected') {
+          console.error('[Subsume] Discovery feed load failed', feedResult.reason);
+          setFeedError(
+            feedResult.reason instanceof Error
+              ? feedResult.reason.message
+              : 'Discovery feed failed to load.'
+          );
+        }
 
         let libraryRes = await sendMessage<{}, JoinedItem[]>(MessageType.GET_LIBRARY, {});
         if (libraryRes.success && libraryRes.data?.length === 0) {
@@ -204,7 +221,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
           }
         }
 
-        if (prefsRes.success && prefsRes.data) setPrefs(prefsRes.data);
+        if (prefsRes?.success && prefsRes.data) setPrefs(prefsRes.data);
 
         if (libraryRes.success && libraryRes.data) {
           setLibraryCount(libraryRes.data.length);
@@ -212,22 +229,22 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
           setToWatchCount(libraryRes.data.filter((i) => i.library.status === 'to-watch').length);
         }
 
-        if (feedRes.success && feedRes.data) {
+        if (feedRes?.success && feedRes.data) {
           setDiscoveryFeed(feedRes.data);
           setFeedCount(feedRes.data.items.length);
         }
 
-        if (digestRes.success && digestRes.data && digestRes.data.items.length > 0) {
+        if (digestRes?.success && digestRes.data && digestRes.data.items.length > 0) {
           setWeeklyDigest(digestRes.data);
           setUsingFreeFeed(false);
           await hydrateDigestPicks(digestRes.data);
-        } else if (feedRes.success && feedRes.data && feedRes.data.items.length > 0) {
+        } else if (feedRes?.success && feedRes.data && feedRes.data.items.length > 0) {
           applyDiscoveryFeedFallback(feedRes.data);
-        } else if (!feedRes.success || !feedRes.data?.items.length) {
+        } else if (!feedRes?.success || !feedRes.data?.items.length) {
           setFeedError('Discovery feed is empty. Refresh to pull trending titles from Trakt and TVmaze.');
         }
 
-        const recData = recsRes.data || [];
+        const recData = recsRes?.data || [];
         if (recData.length > 0 && !('seedTitle' in recData[0])) {
           const mediaIds = (recData as Recommendation[]).map((r) => r.mediaId).slice(0, 6);
           const mediaRes = await sendMessage<any, MediaItem[]>(MessageType.GET_MEDIA_ITEMS, { mediaIds });
@@ -316,6 +333,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
       }
     } catch (err) {
       console.error('[Subsume] Failed to refresh weekly digest', err);
+      setFeedError(err instanceof Error ? err.message : 'Failed to refresh programme.');
     } finally {
       setRefreshingDigest(false);
     }

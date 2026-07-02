@@ -82,7 +82,9 @@ export function Settings() {
     setSaving(true);
     try {
       await sendMessage(MessageType.SET_PREFERENCES, prefs);
-      applyThemePreference(prefs.theme ?? 'dark');
+      const theme = prefs.theme ?? 'dark';
+      applyThemePreference(theme);
+      watchSystemTheme(theme);
     } catch (err) {
       alert('Failed to save settings: ' + (err instanceof Error ? err.message : String(err)));
     } finally {
