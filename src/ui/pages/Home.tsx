@@ -114,6 +114,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [searchActive, setSearchActive] = useState(false);
+  const [feedError, setFeedError] = useState<string | null>(null);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const hydrateDigestPicks = async (digest: WeeklyDigest) => {
@@ -145,14 +146,24 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
   };
 
   const loadDiscoveryFeed = async (force = false) => {
-    const feedRes = await sendMessage<{ force?: boolean }, DiscoveryFeed>(
-      MessageType.GET_DISCOVERY_FEED,
-      { force }
-    );
-    if (feedRes.success && feedRes.data) {
-      setDiscoveryFeed(feedRes.data);
-      setFeedCount(feedRes.data.items.length);
-      return feedRes.data;
+    setFeedError(null);
+    try {
+      const feedRes = await sendMessage<{ force?: boolean }, DiscoveryFeed>(
+        MessageType.GET_DISCOVERY_FEED,
+        { force }
+      );
+      if (feedRes.success && feedRes.data) {
+        setDiscoveryFeed(feedRes.data);
+        setFeedCount(feedRes.data.items.length);
+        if (feedRes.data.items.length === 0) {
+          setFeedError('Discovery feed returned no items. Check your connection and try refreshing.');
+        }
+        return feedRes.data;
+      }
+      setFeedError('Could not load the discovery feed.');
+    } catch (err) {
+      console.error('[Subsume] Discovery feed failed', err);
+      setFeedError(err instanceof Error ? err.message : 'Discovery feed failed to load.');
     }
     return null;
   };
@@ -176,13 +187,22 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
     async function load() {
       setLoading(true);
       try {
-        const [prefsRes, libraryRes, digestRes, recsRes, feedRes] = await Promise.all([
+        const [prefsRes, digestRes, recsRes, feedRes] = await Promise.all([
           sendMessage<{}, UserPreferences>(MessageType.GET_PREFERENCES, {}),
-          sendMessage<{}, JoinedItem[]>(MessageType.GET_LIBRARY, {}),
           sendMessage<{}, WeeklyDigest>(MessageType.GET_WEEKLY_DIGEST, {}),
           sendMessage<any, Recommendation[]>(MessageType.GET_RECOMMENDATIONS, {}),
           sendMessage<{ force?: boolean }, DiscoveryFeed>(MessageType.GET_DISCOVERY_FEED, {}),
         ]);
+
+        let libraryRes = await sendMessage<{}, JoinedItem[]>(MessageType.GET_LIBRARY, {});
+        if (libraryRes.success && libraryRes.data?.length === 0) {
+          try {
+            await sendMessage(MessageType.RESTORE_DEMO_LIBRARY, {});
+            libraryRes = await sendMessage<{}, JoinedItem[]>(MessageType.GET_LIBRARY, {});
+          } catch {
+            // Best-effort demo seed
+          }
+        }
 
         if (prefsRes.success && prefsRes.data) setPrefs(prefsRes.data);
 
@@ -203,6 +223,8 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
           await hydrateDigestPicks(digestRes.data);
         } else if (feedRes.success && feedRes.data && feedRes.data.items.length > 0) {
           applyDiscoveryFeedFallback(feedRes.data);
+        } else if (!feedRes.success || !feedRes.data?.items.length) {
+          setFeedError('Discovery feed is empty. Refresh to pull trending titles from Trakt and TVmaze.');
         }
 
         const recData = recsRes.data || [];
@@ -477,6 +499,16 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
           </div>
         )}
       </section>
+
+      {!loading && feedError && (
+        <div className="sanctuary-empty-plaque home-empty-notice" style={{ margin: '0 2rem 2rem' }}>
+          <span className="sanctuary-plaque-index">Feed Notice</span>
+          <p className="sanctuary-plaque-text">{feedError}</p>
+          <button className="optical-button sm" style={{ marginTop: '1rem' }} onClick={() => loadDiscoveryFeed(true)}>
+            Retry Discovery Feed
+          </button>
+        </div>
+      )}
 
       {!loading && discoveryFeed && discoveryFeed.items.length > 0 && (
         <section className="discovery-feed-section">

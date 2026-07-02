@@ -15,7 +15,7 @@ import { PoeticCaptureCanvas } from './components/PoeticCaptureCanvas';
 import { sendMessage } from '../shared/messages';
 import { MessageType, UserPreferences, LibraryItem, MediaItem, PersonItem } from '../shared/types';
 import { usePrefetch, prefetchPage, prefetchProps, type Page } from './hooks/usePrefetch';
-import { applyThemePreference } from '../shared/theme';
+import { applyThemePreference, watchSystemTheme } from '../shared/theme';
 import './styles/sidebar.css';
 
 interface LibraryStats {
@@ -36,28 +36,28 @@ interface NavSection {
 
 const NAV_SECTIONS: NavSection[] = [
   {
-    label: 'Main',
+    label: 'Primary',
     items: [
-      { key: 'home', label: 'Home', icon: 'I' },
-      { key: 'library', label: 'Library', icon: 'II' },
-      { key: 'search', label: 'Search', icon: 'III' },
+      { key: 'library', label: 'Sanctuary', icon: 'I' },
+      { key: 'home', label: 'Discovery', icon: 'II' },
+      { key: 'settings', label: 'Settings', icon: 'III' },
     ],
   },
   {
-    label: 'Discover',
+    label: 'Explore',
     items: [
-      { key: 'recommendations', label: 'Recommendations', icon: 'IV' },
-      { key: 'new-releases', label: "What's New", icon: 'V' },
-      { key: 'people', label: 'Filmmakers', icon: 'VI' },
-      { key: 'stats', label: 'Stats', icon: 'VII' },
-      { key: 'alerts', label: 'Alerts', icon: 'VIII' },
+      { key: 'search', label: 'Search Archive', icon: 'IV' },
+      { key: 'recommendations', label: 'Recommendations', icon: 'V' },
+      { key: 'new-releases', label: "What's New", icon: 'VI' },
+      { key: 'people', label: 'Filmmakers', icon: 'VII' },
+      { key: 'stats', label: 'Stats', icon: 'VIII' },
+      { key: 'alerts', label: 'Alerts', icon: 'IX' },
     ],
   },
   {
-    label: 'App',
+    label: 'System',
     items: [
-      { key: 'settings', label: 'Settings', icon: 'IX' },
-      { key: 'logs', label: 'Logs', icon: 'X' }
+      { key: 'logs', label: 'Logs', icon: 'X' },
     ],
   },
 ];
@@ -116,12 +116,31 @@ export function App() {
     sendMessage<Record<string, unknown>, UserPreferences>(MessageType.GET_PREFERENCES, {}).then((res) => {
       if (res.success && res.data) {
         setPrefs(res.data);
-        applyThemePreference(res.data.theme ?? 'dark');
+        const theme = res.data.theme ?? 'dark';
+        applyThemePreference(theme);
+        watchSystemTheme(theme);
       }
     }).catch(() => {});
 
-    sendMessage<Record<string, unknown>, { library: LibraryItem; media: MediaItem }[]>(MessageType.GET_LIBRARY, {}).then((res) => {
+    sendMessage<Record<string, unknown>, { library: LibraryItem; media: MediaItem }[]>(MessageType.GET_LIBRARY, {}).then(async (res) => {
       if (res.success && res.data) {
+        if (res.data.length === 0) {
+          try {
+            await sendMessage(MessageType.RESTORE_DEMO_LIBRARY, {});
+            const refreshed = await sendMessage<Record<string, unknown>, { library: LibraryItem; media: MediaItem }[]>(
+              MessageType.GET_LIBRARY,
+              {}
+            );
+            if (refreshed.success && refreshed.data) {
+              const movieCount = refreshed.data.filter((item) => item.media?.type === 'movie').length;
+              const tvCount = refreshed.data.filter((item) => item.media?.type === 'tv').length;
+              setStats({ movieCount, tvCount });
+              return;
+            }
+          } catch {
+            // Demo seed is best-effort; empty library is still valid.
+          }
+        }
         const movieCount = res.data.filter((item) => item.media?.type === 'movie').length;
         const tvCount = res.data.filter((item) => item.media?.type === 'tv').length;
         setStats({ movieCount, tvCount });
@@ -276,7 +295,7 @@ export function App() {
       {/* Slide-out Navigation Menu */}
       <div id="side-menu-drawer" className={`side-menu-drawer ${isMenuOpen ? 'open' : ''}`}>
         <div className="side-menu-header">
-          <span className="side-menu-title">Catalogue Directory</span>
+          <span className="side-menu-title">Navigation</span>
           <button className="side-menu-close" onClick={closeMenu}>
             <span className="material-symbols-outlined">close</span>
           </button>
@@ -312,7 +331,7 @@ export function App() {
           ))}
         </div>
         <div className="side-menu-footer">
-          <span>v0.1.0</span>
+          <span>v0.1.3</span>
           <span>{stats.movieCount} M / {stats.tvCount} T</span>
         </div>
       </div>

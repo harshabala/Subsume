@@ -9,7 +9,7 @@ import {
   FreeDataSourceStatus,
   FreeDataSourceId,
 } from '@/shared/types';
-import { applyThemePreference } from '@/shared/theme';
+import { applyThemePreference, watchSystemTheme } from '@/shared/theme';
 import { THEME_LABELS } from '@/shared/themeLabels';
 import { AVAILABLE_PLATFORMS } from '@/shared/platforms';
 import { AVAILABLE_GENRES } from '@/shared/genres';
@@ -61,6 +61,11 @@ export function Settings() {
   const handleChange = (key: keyof UserPreferences, value: unknown) => {
     if (!prefs) return;
     setPrefs({ ...prefs, [key]: value as UserPreferences[keyof UserPreferences] });
+    if (key === 'theme') {
+      const theme = value as ThemePreference;
+      applyThemePreference(theme);
+      watchSystemTheme(theme);
+    }
   };
 
   const toggleArrayItem = (key: 'favoriteGenres' | 'platforms', id: string) => {
@@ -270,7 +275,7 @@ export function Settings() {
                 );
               })}
             </div>
-            <p className="settings-help-text-italic">Keeps popup and sanctuary visually consistent.</p>
+            <p className="settings-help-text-italic">Preview updates immediately. Engrave Settings to persist your choice.</p>
           </div>
         </div>
 

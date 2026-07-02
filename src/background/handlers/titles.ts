@@ -231,8 +231,15 @@ export const titleHandlers: MessageHandlerMap = {
 
   [MessageType.SEARCH_TITLES]: async (payload) => {
     const req = payload as SearchTitlesRequest;
-    const results = await searchTitles(req.query, req.type, req.year);
-    return results;
+    const prefs = await getPreferences();
+    if (prefs.tmdbApiKey?.trim()) {
+      try {
+        return await searchTitles(req.query, req.type, req.year);
+      } catch (err) {
+        logger.warn('[Subsume] TMDb search failed, falling back to free sources:', err);
+      }
+    }
+    return discoverySearch(req.query, req.type);
   },
 
   [MessageType.DISCOVERY_SEARCH]: async (payload) => {

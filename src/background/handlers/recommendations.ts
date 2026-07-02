@@ -11,7 +11,7 @@ import { generateRuleBasedRecommendations } from '../recommendations';
 import { generateLLMRecommendations, getPersonalizedRecommendations } from '../llm';
 import { buildWatchProfile } from '../context';
 import { generateWeeklyDigest, isDigestStale } from '../digest';
-import { getDiscoveryFeed } from '../discoveryFeed';
+import { getDiscoveryFeed, discoveryFeedToWeeklyDigest } from '../discoveryFeed';
 import { getTraktTrending } from '../trakt';
 import { GetDiscoveryFeedRequest } from '@/shared/types';
 
@@ -103,11 +103,11 @@ export const recommendationHandlers: MessageHandlerMap = {
 
   [MessageType.GET_WEEKLY_DIGEST]: async () => {
     const cached = await getWeeklyDigest();
-    if (cached && !isDigestStale(cached)) {
+    if (cached && !isDigestStale(cached) && cached.items.length > 0) {
       return cached;
     }
 
-    if (cached) {
+    if (cached && cached.items.length > 0) {
       const prefs = await getPreferences();
       generateWeeklyDigest(prefs)
         .then(async (digest) => {
@@ -120,7 +120,17 @@ export const recommendationHandlers: MessageHandlerMap = {
     }
 
     const prefs = await getPreferences();
-    const digest = await generateWeeklyDigest(prefs);
+    let digest = await generateWeeklyDigest(prefs);
+    if (digest.items.length === 0) {
+      try {
+        const feed = await getDiscoveryFeed();
+        if (feed.items.length > 0) {
+          digest = discoveryFeedToWeeklyDigest(feed);
+        }
+      } catch (err) {
+        logger.error('[Subsume] Discovery feed fallback for weekly digest failed:', err);
+      }
+    }
     await saveWeeklyDigest(digest);
     return digest;
   },

@@ -30,7 +30,7 @@ export function Search() {
       const res = await sendMessage<
         { query: string; type?: MediaType },
         MediaItem[]
-      >(MessageType.SEARCH_TITLES, { query: query.trim(), type: typeFilter || undefined });
+      >(MessageType.DISCOVERY_SEARCH, { query: query.trim(), type: typeFilter || undefined });
       setResults(res.data ?? []);
     } catch (err) {
       console.error('[Subsume] Search failed:', err);
@@ -72,7 +72,7 @@ export function Search() {
         </div>
         <h1 className="sanctuary-title">Search Archive</h1>
         <p className="sanctuary-description">
-          Query the global cinematic repository with archival precision and museum filters.
+          Query TVmaze, Trakt, and your local catalogue — no API keys required. Add a TMDb key in Settings for deeper sync.
         </p>
       </header>
 

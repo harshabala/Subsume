@@ -1,4 +1,4 @@
-import { DiscoveryFeed, DiscoveryFeedItem, MediaType } from '@/shared/types';
+import { DiscoveryFeed, DiscoveryFeedItem, MediaType, WeeklyDigest } from '@/shared/types';
 import { getTraktTrending } from './trakt';
 import { fetchTvMazePremieres } from './tvmaze';
 import { fetchWikipediaSummary } from './wikidata';
@@ -159,4 +159,19 @@ export async function getDiscoveryFeed(force = false): Promise<DiscoveryFeed> {
 
 export function __clearDiscoveryFeedCache(): void {
   CACHE.clear();
+}
+
+export function discoveryFeedToWeeklyDigest(feed: DiscoveryFeed): WeeklyDigest {
+  return {
+    generatedAt: feed.generatedAt,
+    llmGenerated: false,
+    items: feed.items.slice(0, 12).map((item) => ({
+      mediaId: item.id,
+      title: item.title,
+      year: item.year,
+      type: item.type,
+      reason: item.reason,
+      platforms: [],
+    })),
+  };
 }
