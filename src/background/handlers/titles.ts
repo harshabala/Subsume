@@ -6,9 +6,11 @@ import {
   GetTitleDetailsRequest,
   GetMediaItemsRequest,
   SearchTitlesRequest,
+  DiscoverySearchRequest,
   GetLatestReleasesRequest,
   PosterMatch,
 } from '@/shared/types';
+import { discoverySearch } from '../discoverySearch';
 import {
   searchTitle,
   searchTitles,
@@ -231,6 +233,12 @@ export const titleHandlers: MessageHandlerMap = {
     const req = payload as SearchTitlesRequest;
     const results = await searchTitles(req.query, req.type, req.year);
     return results;
+  },
+
+  [MessageType.DISCOVERY_SEARCH]: async (payload) => {
+    const req = payload as DiscoverySearchRequest;
+    logger.log('[Subsume] DISCOVERY_SEARCH:', req.query, req.type);
+    return discoverySearch(req.query, req.type);
   },
 
   [MessageType.GET_LATEST_RELEASES]: async (payload) => {

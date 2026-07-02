@@ -16,8 +16,8 @@
 }
 
 .media-card {
-  background: var(--color-surface-elevated);
-  border: 1px solid var(--color-border);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
   overflow: hidden;
   transition: all var(--transition-normal);
@@ -27,7 +27,7 @@
 .media-card:hover {
   border-color: var(--color-accent-border);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(10, 10, 11, 0.35);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .media-card:active {
@@ -37,11 +37,11 @@
 .media-card-poster {
   width: 100%;
   aspect-ratio: 2 / 3;
-  background: var(--color-surface);
+  background: var(--card-bg);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-muted);
+  color: var(--muted-fg);
   font-size: 32px;
 }
 
@@ -58,7 +58,7 @@
 .media-card-title {
   font-size: var(--font-size-sm);
   font-weight: 700;
-  color: #fff;
+  color: var(--card-fg);
   margin-bottom: var(--spacing-xs);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -70,14 +70,14 @@
   align-items: center;
   gap: var(--spacing-sm);
   font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
+  color: var(--muted-fg);
 }
 
 .media-card-rating {
   display: flex;
   align-items: center;
   gap: 3px;
-  color: #fbbf24;
+  color: var(--status-rating-fg);
 }
 
 /* Status badge */
@@ -93,27 +93,27 @@
 }
 
 .status-badge.to-watch {
-  background: rgba(96, 165, 250, 0.1);
-  color: #60a5fa;
-  border: 1px solid rgba(96, 165, 250, 0.2);
+  background: var(--status-to-watch-bg);
+  color: var(--status-to-watch-fg);
+  border: 1px solid var(--status-to-watch-border);
 }
 
 .status-badge.watching {
-  background: rgba(251, 191, 36, 0.1);
-  color: #fbbf24;
-  border: 1px solid rgba(251, 191, 36, 0.2);
+  background: var(--status-watching-bg);
+  color: var(--status-watching-fg);
+  border: 1px solid var(--status-watching-border);
 }
 
 .status-badge.watched {
-  background: rgba(52, 211, 153, 0.1);
-  color: #34d399;
-  border: 1px solid rgba(52, 211, 153, 0.2);
+  background: var(--status-watched-bg);
+  color: var(--status-watched-fg);
+  border: 1px solid var(--status-watched-border);
 }
 
 .status-badge.abandoned {
-  background: rgba(248, 113, 113, 0.1);
-  color: #f87171;
-  border: 1px solid rgba(248, 113, 113, 0.2);
+  background: var(--status-abandoned-bg);
+  color: var(--status-abandoned-fg);
+  border: 1px solid var(--status-abandoned-border);
 }
 
 /* ─── Library Loading Skeleton ───────────────────────────────────── */
@@ -141,12 +141,12 @@
   font-style: italic;
   font-weight: 400;
   font-size: 1.75rem;
-  color: var(--fg-base);
+  color: var(--app-fg);
 }
 
 .library-empty-state-description {
   font-family: 'Outfit', sans-serif;
-  color: var(--fg-muted);
+  color: var(--muted-fg);
   font-size: 0.95rem;
   margin-top: 0.5rem;
   max-width: 380px;

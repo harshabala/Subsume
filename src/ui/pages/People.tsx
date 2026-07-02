@@ -170,7 +170,7 @@ export function People() {
   }
 
   return (
-    <div className="page-container" style={{ background: 'var(--bg-sanctuary)', minHeight: '100vh', color: 'var(--text-artwork)', paddingBottom: 64 }}>
+    <div className="page-container sanctuary-page-shell">
       <header className="sanctuary-header">
         <div className="sanctuary-header-meta">
           <span className="sanctuary-subtitle">Auteur Archive</span>
@@ -179,41 +179,16 @@ export function People() {
         <p className="sanctuary-description">Follow directors, actors, and writers to track their entire body of work across cinematic history.</p>
       </header>
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: 24, borderBottom: '1px solid var(--border-restraint)', paddingBottom: 1, marginBottom: 36 }}>
+      <div className="people-sanctuary-tabs">
         <button
           onClick={() => setActiveView('following')}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeView === 'following' ? '2px solid var(--border-hero)' : '2px solid transparent',
-            color: activeView === 'following' ? 'var(--border-hero)' : 'var(--text-meta)',
-            fontFamily: 'var(--font-ui)',
-            fontSize: 11,
-            textTransform: 'uppercase',
-            letterSpacing: '0.15em',
-            padding: '12px 4px',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease'
-          }}
+          className={`people-sanctuary-tab${activeView === 'following' ? ' active' : ''}`}
         >
           Enrolled Auteurs ({following.length})
         </button>
         <button
           onClick={() => setActiveView('search')}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeView === 'search' ? '2px solid var(--border-hero)' : '2px solid transparent',
-            color: activeView === 'search' ? 'var(--border-hero)' : 'var(--text-meta)',
-            fontFamily: 'var(--font-ui)',
-            fontSize: 11,
-            textTransform: 'uppercase',
-            letterSpacing: '0.15em',
-            padding: '12px 4px',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease'
-          }}
+          className={`people-sanctuary-tab${activeView === 'search' ? ' active' : ''}`}
         >
           Catalogue Enquiry
         </button>
@@ -223,7 +198,7 @@ export function People() {
         {activeView === 'following' ? (
           <div>
             {loadingFollowing && following.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 48, fontFamily: 'var(--font-editorial)', fontStyle: 'italic', fontSize: 18, color: 'var(--text-meta)' }}>
+              <div className="sanctuary-loading-text">
                 Consulting auteur registry...
               </div>
             ) : following.length === 0 ? (
@@ -235,7 +210,7 @@ export function People() {
                 </p>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 20 }}>
+              <div className="people-sanctuary-grid">
                 {following.map((person) => {
                   const initials = person.name
                     .split(' ')
@@ -248,85 +223,42 @@ export function People() {
                     <div
                       key={person.id}
                       onClick={() => setSelectedPerson(person)}
-                      style={{
-                        background: 'var(--bg-plaque)',
-                        border: '1px solid var(--border-restraint)',
-                        borderRadius: 4,
-                        padding: 20,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        position: 'relative',
-                        backdropFilter: 'var(--blur-hero)',
-                        transition: 'border-color 0.2s ease'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--border-hero)'}
-                      onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-restraint)'}
+                      className="people-sanctuary-card"
                     >
-                      {/* Unfollow button */}
                       <button
                         onClick={(e) => handleUnfollow(person.id, e)}
-                        style={{
-                          position: 'absolute',
-                          top: 10,
-                          right: 10,
-                          background: 'transparent',
-                          border: 'none',
-                          color: 'var(--text-meta)',
-                          fontSize: 16,
-                          cursor: 'pointer',
-                          fontFamily: 'var(--font-ui)',
-                          lineHeight: 1
-                        }}
+                        className="people-sanctuary-unfollow"
                         title="Rescind enrollment"
                       >
                         ×
                       </button>
 
-                      {/* Photo */}
                       {person.profileImageUrl ? (
                         <img
                           src={`https://image.tmdb.org/t/p/w185${person.profileImageUrl}`}
                           alt={person.name}
-                          style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border-restraint)', marginBottom: 16 }}
+                          className="people-sanctuary-avatar"
                         />
                       ) : (
-                        <div style={{
-                          width: 80,
-                          height: 80,
-                          borderRadius: '50%',
-                          background: 'hsla(0, 0%, 100%, 0.03)',
-                          border: '1px solid var(--border-restraint)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontFamily: 'var(--font-editorial)',
-                          fontStyle: 'italic',
-                          fontSize: 24,
-                          color: 'var(--border-hero)',
-                          marginBottom: 16
-                        }}>
+                        <div className="people-sanctuary-avatar-fallback">
                           {initials}
                         </div>
                       )}
 
-                      {/* Info */}
-                      <h3 style={{ fontFamily: 'var(--font-editorial)', fontStyle: 'italic', fontSize: 18, fontWeight: 400, color: 'var(--text-reflection)', margin: '0 0 6px 0' }}>
+                      <h3 className="people-sanctuary-name">
                         {person.name}
                       </h3>
 
-                      <span style={{ fontFamily: 'var(--font-ui)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-meta)', marginBottom: 12 }}>
+                      <span className="people-sanctuary-role">
                         {person.role}
                       </span>
 
-                      <span style={{ fontFamily: 'var(--font-editorial)', fontStyle: 'italic', fontSize: 13, color: 'var(--border-hero)' }}>
+                      <span className="people-sanctuary-count">
                         {person.filmographyIds.length} {person.filmographyIds.length === 1 ? 'archive record' : 'archive records'}
                       </span>
 
                       {person.lastSyncedAt === 0 && (
-                        <span style={{ fontFamily: 'var(--font-ui)', fontSize: 10, color: 'var(--text-meta)', marginTop: 8, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                        <span className="people-sanctuary-sync">
                           Synchronizing...
                         </span>
                       )}
@@ -337,9 +269,9 @@ export function People() {
             )}
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div className="people-search-stack">
             {!hasApiKey && (
-              <div style={{ background: 'hsla(43, 74%, 49%, 0.1)', border: '1px solid var(--border-hero)', padding: 16, borderRadius: 2, fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--border-hero)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              <div className="people-api-notice">
                 Provide TMDb archival credential in Settings to conduct global auteur enquiries.
               </div>
             )}
@@ -350,68 +282,29 @@ export function People() {
               value={query}
               onInput={(e) => setQuery(e.currentTarget.value)}
               disabled={!hasApiKey}
-              style={{
-                background: 'var(--bg-plaque)',
-                border: '1px solid var(--border-restraint)',
-                borderRadius: 2,
-                padding: '14px 18px',
-                fontFamily: 'var(--font-editorial)',
-                fontStyle: 'italic',
-                fontSize: 16,
-                color: 'var(--text-reflection)',
-                outline: 'none',
-                width: '100%',
-                boxSizing: 'border-box'
-              }}
+              className="people-sanctuary-search"
             />
 
             {searchLoading ? (
-              <div style={{ textAlign: 'center', padding: 32, fontFamily: 'var(--font-editorial)', fontStyle: 'italic', fontSize: 16, color: 'var(--text-meta)' }}>Enquiring archives...</div>
+              <div className="sanctuary-loading-text sm">Enquiring archives...</div>
             ) : searchResults.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div className="people-search-results">
                 {searchResults.map((person) => {
                   const defaultRole = getRoleFromDepartment(person.knownForDepartment);
                   const selectedRole = selectedRoles[person.id] || defaultRole;
                   const isFollowed = followingMap[person.id];
 
                   return (
-                    <div
-                      key={person.id}
-                      style={{
-                        background: 'var(--bg-plaque)',
-                        border: '1px solid var(--border-restraint)',
-                        borderRadius: 4,
-                        padding: 20,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        flexWrap: 'wrap',
-                        gap: 16,
-                        backdropFilter: 'var(--blur-hero)'
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <div key={person.id} className="people-search-result">
+                      <div className="people-search-result-info">
                         {person.profilePath ? (
                           <img
                             src={`https://image.tmdb.org/t/p/w185${person.profilePath}`}
                             alt={person.name}
-                            style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border-restraint)' }}
+                            className="people-search-avatar"
                           />
                         ) : (
-                          <div style={{
-                            width: 56,
-                            height: 56,
-                            borderRadius: '50%',
-                            background: 'hsla(0, 0%, 100%, 0.03)',
-                            border: '1px solid var(--border-restraint)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontFamily: 'var(--font-editorial)',
-                            fontStyle: 'italic',
-                            fontSize: 18,
-                            color: 'var(--border-hero)'
-                          }}>
+                          <div className="people-search-avatar-fallback">
                             {person.name
                               .split(' ')
                               .map((n: string) => n[0])
@@ -421,15 +314,15 @@ export function People() {
                           </div>
                         )}
                         <div>
-                          <h4 style={{ fontFamily: 'var(--font-editorial)', fontStyle: 'italic', fontSize: 18, fontWeight: 400, color: 'var(--text-reflection)', margin: '0 0 4px 0' }}>
+                          <h4 className="people-search-name">
                             {person.name}
                           </h4>
-                          <div style={{ fontFamily: 'var(--font-ui)', fontSize: 12 }}>
-                            <span style={{ color: 'var(--text-meta)', textTransform: 'uppercase', letterSpacing: '0.1em', marginRight: 12 }}>
+                          <div className="people-search-meta">
+                            <span className="people-search-dept">
                               {person.knownForDepartment}
                             </span>
                             {person.knownFor && person.knownFor.length > 0 && (
-                              <span style={{ color: 'var(--text-artwork)', fontStyle: 'italic', fontFamily: 'var(--font-editorial)' }}>
+                              <span className="people-search-known">
                                 Known for: {person.knownFor.map((k: { title?: string; name?: string }) => k.title || k.name).join(', ')}
                               </span>
                             )}
@@ -437,47 +330,24 @@ export function People() {
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        {/* Role select */}
+                      <div className="people-search-actions">
                         <select
                           value={selectedRole}
                           onChange={(e) => setSelectedRoles((prev) => ({ ...prev, [person.id]: (e.target as HTMLSelectElement).value as CrewRole }))}
                           disabled={isFollowed}
-                          style={{
-                            background: 'hsla(0, 0%, 100%, 0.03)',
-                            border: '1px solid var(--border-restraint)',
-                            color: 'var(--text-sanctuary)',
-                            borderRadius: 2,
-                            padding: '8px 12px',
-                            fontFamily: 'var(--font-ui)',
-                            fontSize: 12,
-                            outline: 'none'
-                          }}
+                          className="people-role-select"
                         >
                           {ROLE_OPTIONS.map((opt) => (
-                            <option value={opt.value} key={opt.value} style={{ background: 'hsl(240, 18%, 8%)' }}>
+                            <option value={opt.value} key={opt.value}>
                               {opt.label}
                             </option>
                           ))}
                         </select>
 
-                        {/* Follow btn */}
                         <button
                           onClick={() => handleFollow(person)}
                           disabled={isFollowed}
-                          style={{
-                            background: isFollowed ? 'transparent' : 'var(--border-hero)',
-                            border: isFollowed ? '1px solid var(--border-restraint)' : 'none',
-                            color: isFollowed ? 'var(--text-meta)' : 'hsl(240, 18%, 5%)',
-                            padding: '10px 20px',
-                            borderRadius: 2,
-                            fontFamily: 'var(--font-ui)',
-                            fontSize: 11,
-                            fontWeight: 600,
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.15em',
-                            cursor: isFollowed ? 'default' : 'pointer'
-                          }}
+                          className={`people-enroll-btn${isFollowed ? ' enrolled' : ' active'}`}
                         >
                           {isFollowed ? 'Enrolled ✓' : 'Enroll Auteur'}
                         </button>

@@ -260,7 +260,7 @@
 
 .recommendations-generate-button {
   background: var(--gold);
-  color: #121212;
+  color: var(--badge-on-gold-fg);
   border: none;
   border-radius: var(--radius-md);
   padding: 10px 24px;

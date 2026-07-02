@@ -1,18 +1,22 @@
 import { h } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { sendMessage } from '@/shared/messages';
 import {
   MessageType,
   MediaItem,
+  MediaType,
   LibraryItem,
   Recommendation,
   UserPreferences,
   WeeklyDigest,
   WeeklyDigestItem,
+  DiscoveryFeed,
+  DiscoveryFeedItem,
 } from '@/shared/types';
 import { DetailModal } from '../components/DetailModal';
 import { PlatformChips } from '../components/PlatformChips';
 import { getPlatformNameById } from '@/shared/platforms';
+import '../styles/discovery-search.css';
 
 interface JoinedItem {
   library: LibraryItem;
@@ -40,6 +44,49 @@ function platformsToAvailability(platforms: string[]) {
   return platforms.map((platform) => ({ region: '', platform }));
 }
 
+function feedItemToDigestPick(item: DiscoveryFeedItem): DigestPick {
+  return {
+    mediaId: item.id,
+    title: item.title,
+    year: item.year,
+    type: item.type,
+    reason: item.reason,
+    platforms: [],
+    media: {
+      id: item.id,
+      canonicalTitle: item.title,
+      type: item.type,
+      year: item.year,
+      genres: [],
+      ratings: item.rating ? [{ provider: 'tvmaze', score: item.rating, votes: 0 }] : [],
+      providers: item.url ? [{ provider: item.source === 'trakt' ? 'trakt' : 'tvmaze', externalId: item.id, url: item.url }] : [],
+      posterUrl: item.posterUrl || '',
+      overview: item.reason,
+    },
+  };
+}
+
+function sourceLabel(source: DiscoveryFeedItem['source']): string {
+  switch (source) {
+    case 'trakt':
+      return 'Trending';
+    case 'tvmaze':
+      return 'Premiere';
+    case 'wikidata':
+      return 'Spotlight';
+    default:
+      return 'Discovery';
+  }
+}
+
+const DISCOVERY_TYPE_FILTERS: { value: MediaType | ''; label: string }[] = [
+  { value: '', label: 'All' },
+  { value: 'movie', label: 'Films' },
+  { value: 'tv', label: 'Series' },
+];
+
+const SEARCH_DEBOUNCE_MS = 350;
+
 const SIMULATED_POSTS = [
   { title: "The Elegance of Wong Kar-wai's Frames", excerpt: "Time is a recurring motif in the cinema of Wong Kar-wai. It is felt in the ticking clocks of Hong Kong, in the slow-motion glances across narrow corridors..." },
   { title: "Neon Melancholy and Nostalgia", excerpt: "What is it about neon lighting that evokes such deep nostalgia? Perhaps it is the way it cuts through the obsidian night, illuminating faces but leaving eyes in shadow..." },
@@ -54,10 +101,20 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
   const [toWatchCount, setToWatchCount] = useState(0);
   const [weeklyDigest, setWeeklyDigest] = useState<WeeklyDigest | null>(null);
   const [weeklyPicks, setWeeklyPicks] = useState<DigestPick[]>([]);
+  const [usingFreeFeed, setUsingFreeFeed] = useState(false);
+  const [discoveryFeed, setDiscoveryFeed] = useState<DiscoveryFeed | null>(null);
+  const [feedCount, setFeedCount] = useState(0);
   const [picks, setPicks] = useState<(Recommendation & { media: MediaItem })[]>([]);
   const [prefs, setPrefs] = useState<UserPreferences | null>(null);
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchType, setSearchType] = useState<MediaType | ''>('');
+  const [searchResults, setSearchResults] = useState<MediaItem[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [searchActive, setSearchActive] = useState(false);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const hydrateDigestPicks = async (digest: WeeklyDigest) => {
     const items = digest.items.slice(0, 12);
@@ -79,11 +136,39 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
     );
   };
 
+  const applyDiscoveryFeedFallback = (feed: DiscoveryFeed) => {
+    setDiscoveryFeed(feed);
+    setFeedCount(feed.items.length);
+    setUsingFreeFeed(true);
+    setWeeklyDigest(null);
+    setWeeklyPicks(feed.items.slice(0, 12).map(feedItemToDigestPick));
+  };
+
+  const loadDiscoveryFeed = async (force = false) => {
+    const feedRes = await sendMessage<{ force?: boolean }, DiscoveryFeed>(
+      MessageType.GET_DISCOVERY_FEED,
+      { force }
+    );
+    if (feedRes.success && feedRes.data) {
+      setDiscoveryFeed(feedRes.data);
+      setFeedCount(feedRes.data.items.length);
+      return feedRes.data;
+    }
+    return null;
+  };
+
   const loadWeeklyDigest = async () => {
     const digestRes = await sendMessage<{}, WeeklyDigest>(MessageType.GET_WEEKLY_DIGEST, {});
-    if (digestRes.success && digestRes.data) {
+    if (digestRes.success && digestRes.data && digestRes.data.items.length > 0) {
       setWeeklyDigest(digestRes.data);
+      setUsingFreeFeed(false);
       await hydrateDigestPicks(digestRes.data);
+      return;
+    }
+
+    const feed = await loadDiscoveryFeed();
+    if (feed && feed.items.length > 0) {
+      applyDiscoveryFeedFallback(feed);
     }
   };
 
@@ -91,11 +176,12 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
     async function load() {
       setLoading(true);
       try {
-        const [prefsRes, libraryRes, digestRes, recsRes] = await Promise.all([
+        const [prefsRes, libraryRes, digestRes, recsRes, feedRes] = await Promise.all([
           sendMessage<{}, UserPreferences>(MessageType.GET_PREFERENCES, {}),
           sendMessage<{}, JoinedItem[]>(MessageType.GET_LIBRARY, {}),
           sendMessage<{}, WeeklyDigest>(MessageType.GET_WEEKLY_DIGEST, {}),
           sendMessage<any, Recommendation[]>(MessageType.GET_RECOMMENDATIONS, {}),
+          sendMessage<{ force?: boolean }, DiscoveryFeed>(MessageType.GET_DISCOVERY_FEED, {}),
         ]);
 
         if (prefsRes.success && prefsRes.data) setPrefs(prefsRes.data);
@@ -106,9 +192,17 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
           setToWatchCount(libraryRes.data.filter((i) => i.library.status === 'to-watch').length);
         }
 
-        if (digestRes.success && digestRes.data) {
+        if (feedRes.success && feedRes.data) {
+          setDiscoveryFeed(feedRes.data);
+          setFeedCount(feedRes.data.items.length);
+        }
+
+        if (digestRes.success && digestRes.data && digestRes.data.items.length > 0) {
           setWeeklyDigest(digestRes.data);
+          setUsingFreeFeed(false);
           await hydrateDigestPicks(digestRes.data);
+        } else if (feedRes.success && feedRes.data && feedRes.data.items.length > 0) {
+          applyDiscoveryFeedFallback(feedRes.data);
         }
 
         const recData = recsRes.data || [];
@@ -134,13 +228,69 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
     load();
   }, []);
 
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+    if (!trimmed) {
+      setSearchResults([]);
+      setSearchLoading(false);
+      setSearchError(null);
+      setSearchActive(false);
+      return;
+    }
+
+    setSearchActive(true);
+    setSearchLoading(true);
+    setSearchError(null);
+
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+
+    searchDebounceRef.current = setTimeout(async () => {
+      try {
+        const res = await sendMessage<
+          { query: string; type?: MediaType },
+          MediaItem[]
+        >(MessageType.DISCOVERY_SEARCH, {
+          query: trimmed,
+          type: searchType || undefined,
+        });
+        setSearchResults(res.data ?? []);
+      } catch (err) {
+        console.error('[Subsume] Discovery search failed', err);
+        setSearchResults([]);
+        setSearchError(err instanceof Error ? err.message : 'Search failed. Please try again.');
+      } finally {
+        setSearchLoading(false);
+      }
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+    };
+  }, [searchQuery, searchType]);
+
   const handleRefreshDigest = async () => {
     setRefreshingDigest(true);
     try {
-      const digestRes = await sendMessage<{}, WeeklyDigest>(MessageType.REGENERATE_WEEKLY_DIGEST, {});
-      if (digestRes.success && digestRes.data) {
+      const [digestRes, feedRes] = await Promise.all([
+        sendMessage<{}, WeeklyDigest>(MessageType.REGENERATE_WEEKLY_DIGEST, {}),
+        sendMessage<{ force?: boolean }, DiscoveryFeed>(MessageType.GET_DISCOVERY_FEED, { force: true }),
+      ]);
+
+      if (feedRes.success && feedRes.data) {
+        setDiscoveryFeed(feedRes.data);
+        setFeedCount(feedRes.data.items.length);
+      }
+
+      if (digestRes.success && digestRes.data && digestRes.data.items.length > 0) {
         setWeeklyDigest(digestRes.data);
+        setUsingFreeFeed(false);
         await hydrateDigestPicks(digestRes.data);
+      } else if (feedRes.success && feedRes.data && feedRes.data.items.length > 0) {
+        applyDiscoveryFeedFallback(feedRes.data);
       }
     } catch (err) {
       console.error('[Subsume] Failed to refresh weekly digest', err);
@@ -233,10 +383,154 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
         </div>
       </div>
 
+      <section className="discovery-search-section" aria-label="Discover films and series">
+        <div className="discovery-search-bar">
+          <input
+            type="search"
+            className="discovery-search-input"
+            placeholder="Discover films & series..."
+            value={searchQuery}
+            onInput={(e) => setSearchQuery(e.currentTarget.value)}
+            aria-label="Search films and series"
+          />
+        </div>
+
+        <div className="discovery-search-filters" role="group" aria-label="Filter by media type">
+          {DISCOVERY_TYPE_FILTERS.map((filter) => (
+            <button
+              key={filter.value}
+              type="button"
+              className={`discovery-search-filter${searchType === filter.value ? ' active' : ''}`}
+              onClick={() => setSearchType(filter.value)}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
+
+        {searchLoading && (
+          <p className="discovery-search-status" role="status">Searching catalogue…</p>
+        )}
+
+        {searchError && (
+          <p className="discovery-search-status error" role="alert">{searchError}</p>
+        )}
+
+        {searchActive && !searchLoading && !searchError && searchResults.length === 0 && (
+          <div className="sanctuary-empty-plaque discovery-search-empty">
+            <span className="sanctuary-plaque-index">No Matches</span>
+            <p className="sanctuary-plaque-text">
+              No titles matched your query across TVmaze, Trakt, or your local catalogue.
+            </p>
+          </div>
+        )}
+
+        {searchResults.length > 0 && (
+          <div className="discovery-search-results">
+            <div className="discovery-search-results-grid">
+              {searchResults.map((media) => (
+                <div
+                  key={media.id}
+                  className="sanctuary-media-card clickable"
+                  onClick={() => setSelectedMedia(media)}
+                >
+                  <div className="sanctuary-card-poster">
+                    {media.posterUrl ? (
+                      <img
+                        src={media.posterUrl}
+                        alt={media.canonicalTitle}
+                        className="sanctuary-poster-img"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="sanctuary-poster-placeholder">
+                        <span className="sanctuary-placeholder-title">{media.canonicalTitle}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="sanctuary-card-content">
+                    <h4 className="sanctuary-card-title">{media.canonicalTitle}</h4>
+                    <div className="sanctuary-card-meta">
+                      <span>{media.year || '—'}</span>
+                      <span>{media.type === 'tv' ? 'Series' : 'Film'}</span>
+                    </div>
+                    {media.overview && (
+                      <p className="sanctuary-card-synopsis">
+                        {media.overview.length > 100
+                          ? `${media.overview.slice(0, 97)}…`
+                          : media.overview}
+                      </p>
+                    )}
+                    <div className="sanctuary-card-actions">
+                      <button
+                        className="sanctuary-acquire-btn"
+                        disabled={addedIds.has(media.id)}
+                        onClick={(e) => { e.stopPropagation(); handleAdd(media); }}
+                      >
+                        {addedIds.has(media.id) ? 'Acquired' : '+ Acquire'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
+
+      {!loading && discoveryFeed && discoveryFeed.items.length > 0 && (
+        <section className="discovery-feed-section">
+          <div className="discovery-feed-header">
+            <div>
+              <span className="discovery-feed-kicker">Live Wire</span>
+              <h3 className="discovery-feed-title">Discovery Feed</h3>
+              <p className="discovery-feed-desc">
+                Trending on Trakt and premieres from TVmaze — no API keys required
+              </p>
+            </div>
+            <div className="discovery-feed-meta">
+              <span>{discoveryFeed.trendingCount} trending</span>
+              <span>{discoveryFeed.premiereCount} premieres</span>
+            </div>
+          </div>
+          <div className="discovery-feed-list">
+            {discoveryFeed.items.slice(0, 8).map((item) => (
+              <article
+                key={item.id}
+                className="discovery-feed-card"
+                onClick={() => {
+                  const pick = feedItemToDigestPick(item);
+                  if (pick.media) setSelectedMedia(pick.media);
+                }}
+              >
+                <div className="discovery-feed-card-poster">
+                  {item.posterUrl ? (
+                    <img src={item.posterUrl} alt={item.title} loading="lazy" />
+                  ) : (
+                    <div className="discovery-feed-card-placeholder">{item.type === 'tv' ? 'TV' : 'Film'}</div>
+                  )}
+                </div>
+                <div className="discovery-feed-card-body">
+                  <div className="discovery-feed-card-top">
+                    <span className={`discovery-feed-source ${item.source}`}>{sourceLabel(item.source)}</span>
+                    <span className="discovery-feed-year">{item.year || '—'}</span>
+                  </div>
+                  <h4 className="discovery-feed-card-title">{item.title}</h4>
+                  <p className="discovery-feed-card-reason">{item.reason}</p>
+                  {item.rating != null && (
+                    <span className="discovery-feed-rating">★ {item.rating.toFixed(1)}</span>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
       {loading ? (
         <div className="home-main-content" style={{ marginTop: '4rem' }}>
           <div className="home-stat-grid">
-            {[0, 1, 2].map((i) => (
+            {[0, 1, 2, 3].map((i) => (
               <div key={i} className="skeleton skeleton-stat" style={{ animationDelay: `${i * 40}ms` }} />
             ))}
           </div>
@@ -253,6 +547,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
               { label: 'In Sanctuary', value: libraryCount, action: () => onNavigate('library') },
               { label: 'Anticipated', value: toWatchCount, action: () => onNavigate('library') },
               { label: 'Reflected', value: watchedCount, action: () => onNavigate('library') },
+              { label: 'In Feed', value: feedCount, action: () => {} },
             ].map((stat) => (
               <button
                 key={stat.label}
@@ -322,7 +617,11 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
                   )}
                 </div>
                 <p className="home-section-desc">
-                  {platformNames ? `Programme arrivals on ${platformNames}` : 'Curated programme releases'}
+                  {usingFreeFeed
+                    ? 'Free discovery feed — Trakt trending and TV premieres'
+                    : platformNames
+                      ? `Programme arrivals on ${platformNames}`
+                      : 'Curated programme releases'}
                 </p>
               </div>
               <div className="home-btn-group">
@@ -342,7 +641,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
             {weeklyPicks.length === 0 ? (
               <div className="sanctuary-empty-plaque home-empty-notice">
                 <span className="sanctuary-plaque-index">Programme Notice</span>
-                <p className="sanctuary-plaque-text">No weekly programme yet. Add your exhibition credentials in Settings, or refresh the programme.</p>
+                <p className="sanctuary-plaque-text">No programme items yet. Refresh to pull the latest free discovery feed.</p>
               </div>
             ) : (
               <div className="home-weekly-grid">

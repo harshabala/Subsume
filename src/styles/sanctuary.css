@@ -94,8 +94,8 @@
 }
 
 .sanctuary-action-button:hover {
-  background: hsla(240, 15%, 16%, 0.95);
-  border-color: hsla(45, 90%, 75%, 0.7);
+  background: var(--plaque-bg-hover);
+  border-color: var(--accent-gold-border-strong);
 }
 
 .sanctuary-acquire-btn {
@@ -117,7 +117,7 @@
 .sanctuary-acquire-btn:hover:not(:disabled) {
   border-color: var(--border-hero);
   color: var(--text-reflection);
-  background: hsla(240, 15%, 15%, 0.9);
+  background: var(--plaque-bg-hover);
 }
 
 .sanctuary-acquire-btn:disabled {
@@ -142,9 +142,9 @@
 .optical-input {
   flex: 1;
   padding: 12px 16px;
-  background: var(--bg-plaque);
-  border: 1px solid var(--border-restraint);
-  color: var(--text-reflection);
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--input-fg);
   border-radius: 4px;
   font-family: var(--font-ui);
   font-size: 15px;
@@ -162,7 +162,7 @@
 
 .optical-input:focus {
   border-color: var(--border-hero);
-  background: hsla(240, 15%, 14%, 0.9);
+  background: var(--input-bg-focus);
 }
 
 .optical-button {
@@ -224,7 +224,7 @@
 
 .optical-filter-tab:hover:not(.active) {
   color: var(--text-artwork);
-  border-color: hsla(0, 0%, 100%, 0.18);
+  border-color: var(--filter-hover-border);
 }
 
 /* ── Historic Theatre Programme (New Releases) ── */
@@ -286,7 +286,7 @@
 .sanctuary-card-poster {
   position: relative;
   aspect-ratio: 2/3;
-  background: hsl(240, 18%, 3%);
+  background: var(--surface-inset);
   overflow: hidden;
 }
 
@@ -474,7 +474,7 @@
 .sanctuary-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(5, 5, 8, 0.88);
+  background: var(--overlay-scrim);
   backdrop-filter: var(--blur-hero);
   display: flex;
   align-items: center;
@@ -574,7 +574,7 @@
   border-radius: 2px;
   overflow: hidden;
   border: 1px solid var(--border-restraint);
-  background: hsl(240, 18%, 6%);
+  background: var(--surface-sunken);
 }
 
 .sanctuary-detail-poster-img {
@@ -632,7 +632,7 @@
 }
 
 .sanctuary-detail-rating-chip {
-  background: hsla(0, 0%, 100%, 0.04);
+  background: var(--surface-subtle);
   padding: 3px 8px;
   border-radius: 2px;
   border: 1px solid var(--border-restraint);
@@ -704,7 +704,7 @@
 }
 
 .sanctuary-detail-provider-btn:hover {
-  background: hsla(0, 0%, 100%, 0.05);
+  background: var(--surface-hover-subtle);
   border-color: var(--border-hero);
 }
 
@@ -737,7 +737,7 @@
 .sanctuary-detail-input {
   width: 100%;
   padding: 8px 12px;
-  background: hsla(0, 0%, 100%, 0.03);
+  background: var(--input-bg);
   border: 1px solid var(--border-restraint);
   color: var(--text-sanctuary);
   border-radius: 2px;
@@ -757,7 +757,7 @@
 }
 
 .sanctuary-detail-select option {
-  background: hsl(240, 18%, 8%);
+  background: var(--surface-select);
 }
 
 .sanctuary-detail-range {
@@ -801,7 +801,7 @@
   font-size: 11px;
   letter-spacing: 0.1em;
   padding: var(--spacing-xs) var(--spacing-md);
-  background: hsla(43, 74%, 49%, 0.1);
+  background: var(--chip-active-bg);
   border: 1px solid var(--border-hero);
   border-radius: 2px;
   color: var(--border-hero);
@@ -937,7 +937,7 @@
 .sanctuary-detail-btn-inscribe {
   background: var(--border-hero);
   border: none;
-  color: hsl(240, 18%, 5%);
+  color: var(--on-primary-fg);
   padding: var(--spacing-md) calc(var(--spacing-xl) + var(--spacing-xs));
   border-radius: 2px;
   font-family: var(--font-ui);
@@ -951,7 +951,7 @@
 }
 
 .sanctuary-detail-btn-inscribe:hover {
-  background: hsla(45, 90%, 75%, 0.8);
+  background: var(--primary-hover-bg);
 }
 
 /* ── Extracted Sanctuary UI Utility & Component Classes ── */
@@ -975,19 +975,19 @@
 .sanctuary-btn-restraint:hover {
   border-color: var(--border-hero);
   color: var(--text-reflection);
-  background: hsla(0, 0%, 100%, 0.04);
+  background: var(--surface-subtle);
 }
 .sanctuary-btn-danger {
-  color: hsl(0, 60%, 65%);
+  color: var(--danger-fg);
 }
 .sanctuary-btn-danger:hover {
-  border-color: hsl(0, 60%, 65%);
+  border-color: var(--danger-fg);
 }
 
 .sanctuary-btn-gold {
   background: var(--border-hero);
   border: none;
-  color: hsl(240, 18%, 5%);
+  color: var(--on-primary-fg);
   padding: var(--spacing-md) var(--spacing-xl);
   border-radius: 2px;
   font-family: var(--font-ui);
@@ -1002,13 +1002,13 @@
   justify-content: center;
 }
 .sanctuary-btn-gold:hover {
-  background: hsla(45, 90%, 75%, 0.8);
+  background: var(--primary-hover-bg);
 }
 
 .sanctuary-input {
-  background: hsla(0, 0%, 100%, 0.03);
-  border: 1px solid var(--border-restraint);
-  color: var(--text-sanctuary);
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--input-fg);
   border-radius: 2px;
   padding: var(--spacing-md);
   font-family: var(--font-ui);
@@ -1022,7 +1022,7 @@
   border-color: var(--border-hero);
 }
 select.sanctuary-input option {
-  background: hsl(240, 18%, 8%);
+  background: var(--surface-select);
 }
 
 .sanctuary-page {
@@ -1058,7 +1058,7 @@ select.sanctuary-input option {
   border-radius: 2px;
   overflow: hidden;
   border: 1px solid var(--border-restraint);
-  background: hsl(240, 18%, 6%);
+  background: var(--surface-sunken);
 }
 .filmography-avatar-img {
   width: 100%;
@@ -1162,7 +1162,7 @@ select.sanctuary-input option {
 .filmography-add-all-btn {
   background: var(--border-hero);
   border: none;
-  color: hsl(240, 18%, 5%);
+  color: var(--on-primary-fg);
   padding: var(--spacing-md) var(--spacing-xl);
   border-radius: 2px;
   font-family: var(--font-ui);
@@ -1212,13 +1212,13 @@ select.sanctuary-input option {
   border-color: var(--border-hero);
 }
 .filmography-filter-btn.rescind {
-  color: hsl(0, 60%, 65%);
+  color: var(--danger-fg);
 }
 .filmography-filter-btn.rescind:hover {
-  border-color: hsl(0, 60%, 65%);
+  border-color: var(--danger-fg);
 }
 .filmography-filter-btn.active {
-  background: hsla(43, 74%, 49%, 0.1);
+  background: var(--chip-active-bg);
   border-color: var(--border-hero);
   color: var(--border-hero);
 }
@@ -1233,7 +1233,7 @@ select.sanctuary-input option {
   color: var(--text-meta);
 }
 .filmography-sort-select {
-  background: hsla(0, 0%, 100%, 0.03);
+  background: var(--input-bg);
   border: 1px solid var(--border-restraint);
   color: var(--text-sanctuary);
   padding: var(--spacing-sm) var(--spacing-md);
@@ -1244,7 +1244,7 @@ select.sanctuary-input option {
   cursor: pointer;
 }
 .filmography-sort-select option {
-  background: hsl(240, 18%, 8%);
+  background: var(--surface-select);
 }
 .filmography-grid-empty {
   text-align: center;
@@ -1268,7 +1268,7 @@ select.sanctuary-input option {
   display: flex;
   flex-direction: column;
   position: relative;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  box-shadow: var(--shadow-card);
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
 .filmography-card:hover {
@@ -1295,14 +1295,14 @@ select.sanctuary-input option {
   border-radius: 2px;
   overflow: hidden;
   aspect-ratio: 2/3;
-  background: hsl(240, 18%, 6%);
+  background: var(--surface-sunken);
 }
 .filmography-badge-imdb {
   position: absolute;
   top: 6px;
   left: 6px;
   z-index: 2;
-  background: rgba(5,5,8,0.85);
+  background: var(--badge-overlay-bg);
   border: 1px solid var(--border-restraint);
   color: var(--text-sanctuary);
   font-family: var(--font-ui);
@@ -1316,7 +1316,7 @@ select.sanctuary-input option {
   top: 6px;
   right: 6px;
   z-index: 2;
-  background: rgba(5,5,8,0.85);
+  background: var(--badge-overlay-bg);
   border: 1px solid var(--border-hero);
   color: var(--border-hero);
   font-family: var(--font-ui);
@@ -1351,14 +1351,14 @@ select.sanctuary-input option {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: hsl(0, 0%, 80%);
+  background: var(--status-dot-default);
   box-shadow: 0 0 6px var(--border-hero);
 }
 .filmography-status-dot.watched {
   background: var(--border-hero);
 }
 .filmography-status-dot.watching {
-  background: hsl(140, 60%, 50%);
+  background: var(--status-dot-watching);
 }
 .filmography-card-meta {
   padding: 0 4px 4px;
@@ -1505,8 +1505,8 @@ select.sanctuary-input option {
   text-transform: uppercase;
 }
 .home-digest-badge.ai {
-  background: hsla(45, 90%, 65%, 0.12);
-  color: hsl(45, 90%, 75%);
+  background: var(--digest-badge-ai-bg);
+  color: var(--digest-badge-ai-fg);
   border: 1px solid var(--border-hero);
 }
 .home-digest-badge.algo {
@@ -1600,7 +1600,7 @@ select.sanctuary-input option {
 }
 .settings-chip.active {
   border-color: var(--border-hero);
-  background: hsla(43, 74%, 49%, 0.1);
+  background: var(--chip-active-bg);
   color: var(--border-hero);
 }
 .hidden-input {
@@ -1610,7 +1610,7 @@ select.sanctuary-input option {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: hsla(0,0%,100%,0.2);
+  background: var(--chip-dot-inactive);
 }
 .settings-chip.active .settings-chip-dot {
   background: var(--border-hero);
@@ -1866,7 +1866,7 @@ select.sanctuary-input option {
 }
 .sidebar-nav-people-badge {
   background: var(--border-hero);
-  color: hsl(240, 18%, 5%);
+  color: var(--on-primary-fg);
   border-radius: 10px;
   padding: 1px var(--spacing-sm);
   font-size: 10px;
@@ -1929,38 +1929,17 @@ select.sanctuary-input option {
   align-items: center;
 }
 
-.archive-search-input {
+.archive-filter-search {
   flex: 1;
   min-width: 200px;
-  padding: 8px 12px;
-  background: var(--bg-plaque);
-  border: 1px solid var(--border-restraint);
-  color: var(--text-reflection);
-  border-radius: 4px;
-  font-family: var(--font-ui);
+  width: auto;
   font-size: 14px;
-  outline: none;
-  transition: border-color 0.3s ease;
 }
 
-.archive-search-input:focus {
-  border-color: var(--border-hero);
-}
-
-.archive-select {
-  padding: 8px 12px;
-  background: var(--bg-plaque);
-  border: 1px solid var(--border-restraint);
-  color: var(--text-reflection);
-  border-radius: 4px;
-  font-family: var(--font-ui);
+.archive-filter-select {
+  width: auto;
   font-size: 14px;
   cursor: pointer;
-  outline: none;
-}
-
-.archive-select option {
-  background: hsl(240, 18%, 8%);
 }
 
 .tag-filter-bar {
@@ -1993,7 +1972,7 @@ select.sanctuary-input option {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   padding: 4px 12px;
-  background: hsla(0, 0%, 100%, 0.03);
+  background: var(--input-bg);
   border: 1px solid var(--border-restraint);
   border-radius: 12px;
   cursor: pointer;
@@ -2006,7 +1985,7 @@ select.sanctuary-input option {
 .tag-filter-chip.active {
   background: var(--border-hero);
   border-color: var(--border-hero);
-  color: hsl(240, 18%, 5%);
+  color: var(--on-primary-fg);
   font-weight: 600;
 }
 
@@ -2018,7 +1997,7 @@ select.sanctuary-input option {
 .media-card-poster img,
 .media-card-poster .empty-poster {
   border-radius: 4px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  box-shadow: var(--shadow-poster);
 }
 
 .media-card-title {
@@ -2076,13 +2055,13 @@ select.sanctuary-input option {
 }
 
 .intent-chip[data-intent="keep_memory"] {
-  color: hsl(45, 80%, 62%);
-  border-color: hsla(45, 80%, 62%, 0.3);
+  color: var(--intent-memory-fg);
+  border-color: var(--intent-memory-border);
 }
 
 .intent-chip[data-intent="revisit_this_month"] {
-  color: hsl(200, 70%, 65%);
-  border-color: hsla(200, 70%, 65%, 0.3);
+  color: var(--intent-revisit-fg);
+  border-color: var(--intent-revisit-border);
 }
 
 .intent-chip[data-intent="wishlist"] {
@@ -2187,18 +2166,340 @@ select.sanctuary-input option {
 }
 
 .hardcover-remove-btn:hover {
-  color: hsl(0, 70%, 65%);
-  border-color: hsl(0, 70%, 65%);
+  color: var(--danger-fg-strong);
+  border-color: var(--danger-fg-strong);
 }
 
 .hardcover-confirm-btn {
   padding: var(--spacing-xs) var(--spacing-md);
   font-size: 11px;
   font-family: var(--font-ui);
-  background: hsl(0, 70%, 50%);
-  color: white;
+  background: var(--danger-bg-solid);
+  color: var(--danger-on-fg);
   border: none;
   border-radius: 2px;
   cursor: pointer;
+}
+
+/* ── Sanctuary Page Shell (Stats, Logs, People) ── */
+.sanctuary-page-shell {
+  background: var(--hero-bg);
+  min-height: 100vh;
+  color: var(--text-artwork);
+  padding-bottom: 64px;
+}
+
+.sanctuary-page-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.sanctuary-btn-row {
+  display: flex;
+  gap: 16px;
+}
+
+.sanctuary-plaque-panel {
+  background: var(--plaque-bg);
+  border: 1px solid var(--border-restraint);
+  border-radius: 4px;
+  padding: 28px;
+  backdrop-filter: var(--blur-hero);
+}
+
+.sanctuary-loading-text {
+  text-align: center;
+  padding: 36px;
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-size: 18px;
+  color: var(--text-meta);
+}
+
+.sanctuary-loading-text.sm {
+  padding: 32px;
+  font-size: 16px;
+}
+
+.sanctuary-spinner-centered {
+  margin: 0 auto;
+}
+
+.sanctuary-plaque-text-spaced {
+  margin-top: 16px;
+}
+
+/* ── Stats Page ── */
+.stats-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.stats-plaque-card {
+  background: var(--plaque-bg);
+  border: 1px solid var(--border-restraint);
+  border-radius: 4px;
+  padding: 28px 24px;
+  text-align: center;
+  backdrop-filter: var(--blur-hero);
+}
+
+.stats-plaque-index {
+  margin-bottom: 16px;
+}
+
+.stats-plaque-value {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-size: 42px;
+  font-weight: 400;
+  color: var(--text-reflection);
+  display: block;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.stats-plaque-value.accent {
+  color: var(--border-hero);
+}
+
+.stats-plaque-label {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text-meta);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.stats-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.stats-chart-panel {
+  background: var(--plaque-bg);
+  border: 1px solid var(--border-restraint);
+  border-radius: 4px;
+  padding: 28px;
+  backdrop-filter: var(--blur-hero);
+}
+
+.stats-chart-panel.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.stats-chart-title {
+  font-family: var(--font-editorial);
+  font-size: 20px;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--text-reflection);
+  margin: 0 0 24px 0;
+  border-bottom: 1px solid var(--border-restraint);
+  padding-bottom: 12px;
+}
+
+.stats-genre-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.stats-genre-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stats-genre-header {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+
+.stats-genre-name {
+  color: var(--text-reflection);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+.stats-genre-count {
+  color: var(--text-meta);
+  font-style: italic;
+  font-family: var(--font-editorial);
+}
+
+.stats-progress-track {
+  width: 100%;
+  height: 6px;
+  background: var(--progress-track);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.stats-progress-fill {
+  height: 100%;
+  background: var(--border-hero);
+  border-radius: 2px;
+}
+
+.stats-mix-center {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.stats-mix-bar {
+  width: 100%;
+  height: 18px;
+  background: var(--progress-track);
+  border-radius: 2px;
+  overflow: hidden;
+  display: flex;
+  border: 1px solid var(--border-restraint);
+}
+
+.stats-mix-segment {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+
+.stats-mix-segment.cinema {
+  background: var(--border-hero);
+  color: var(--on-primary-fg);
+}
+
+.stats-mix-segment.series {
+  background: var(--progress-fill-alt);
+  color: var(--text-reflection);
+}
+
+.stats-legend {
+  display: flex;
+  gap: 36px;
+  justify-content: center;
+  font-family: var(--font-ui);
+}
+
+.stats-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stats-legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.stats-legend-swatch.cinema {
+  background: var(--border-hero);
+}
+
+.stats-legend-swatch.series {
+  background: var(--progress-fill-alt);
+}
+
+.stats-legend-label {
+  font-size: 12px;
+  color: var(--text-artwork);
+  letter-spacing: 0.04em;
+}
+
+/* ── Logs Page ── */
+.logs-table-wrap {
+  overflow-x: auto;
+}
+
+.logs-table {
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+
+.logs-table thead tr {
+  border-bottom: 1px solid var(--border-hero);
+  color: var(--text-meta);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.logs-table th {
+  padding: 12px 16px;
+  font-weight: 600;
+}
+
+.logs-table tbody tr {
+  border-bottom: 1px solid var(--border-restraint);
+  color: var(--text-reflection);
+}
+
+.logs-table tbody tr.error {
+  color: var(--error-fg-soft);
+}
+
+.logs-table td {
+  padding: 14px 16px;
+}
+
+.logs-table td.time {
+  white-space: nowrap;
+  color: var(--text-meta);
+  font-size: 12px;
+}
+
+.logs-table td.message {
+  word-break: break-word;
+  line-height: 1.5;
+}
+
+.log-level-badge {
+  padding: 4px 10px;
+  border-radius: 2px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+}
+
+.log-level-badge.error {
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  color: var(--error-fg);
+}
+
+.log-level-badge.warn {
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  color: var(--warning-fg);
+}
+
+.log-level-badge.info {
+  background: var(--info-bg);
+  border: 1px solid var(--border-restraint);
+  color: var(--info-fg);
 }
 

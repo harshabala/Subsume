@@ -152,6 +152,7 @@ export enum MessageType {
   // Media
   GET_MEDIA_ITEMS = 'GET_MEDIA_ITEMS',
   SEARCH_TITLES = 'SEARCH_TITLES',
+  DISCOVERY_SEARCH = 'DISCOVERY_SEARCH',
 
   // Recommendations
   GET_RECOMMENDATIONS = 'GET_RECOMMENDATIONS',
@@ -187,11 +188,25 @@ export enum MessageType {
   GET_WEEKLY_DIGEST = 'GET_WEEKLY_DIGEST',
   REGENERATE_WEEKLY_DIGEST = 'REGENERATE_WEEKLY_DIGEST',
 
+  // Discovery Feed (free APIs)
+  GET_DISCOVERY_FEED = 'GET_DISCOVERY_FEED',
+
   // Watch Alerts
   CREATE_WATCH_ALERT = 'CREATE_WATCH_ALERT',
   GET_WATCH_ALERTS = 'GET_WATCH_ALERTS',
   DELETE_WATCH_ALERT = 'DELETE_WATCH_ALERT',
   UPDATE_WATCH_ALERT = 'UPDATE_WATCH_ALERT',
+
+  // Data Sources
+  GET_FREE_DATA_SOURCE_STATUS = 'GET_FREE_DATA_SOURCE_STATUS',
+}
+
+export type FreeDataSourceId = 'trakt' | 'tvmaze' | 'wikidata';
+
+export interface FreeDataSourceStatus {
+  id: FreeDataSourceId;
+  configured: boolean;
+  working: boolean;
 }
 
 // ─── Message Payloads ────────────────────────────────────────────────
@@ -266,6 +281,11 @@ export interface SearchTitlesRequest {
   query: string;
   type?: MediaType;
   year?: number;
+}
+
+export interface DiscoverySearchRequest {
+  query: string;
+  type?: MediaType;
 }
 
 export interface GetRecommendationsRequest {
@@ -377,6 +397,33 @@ export interface WeeklyDigest {
   generatedAt: number;
   items: WeeklyDigestItem[];
   llmGenerated: boolean;
+}
+
+// ─── Discovery Feed Types ────────────────────────────────────────────
+
+export type DiscoveryFeedSource = 'trakt' | 'tvmaze' | 'wikidata';
+
+export interface DiscoveryFeedItem {
+  id: string;
+  title: string;
+  year: number;
+  type: MediaType;
+  source: DiscoveryFeedSource;
+  reason: string;
+  posterUrl?: string;
+  rating?: number;
+  url?: string;
+}
+
+export interface DiscoveryFeed {
+  generatedAt: number;
+  items: DiscoveryFeedItem[];
+  trendingCount: number;
+  premiereCount: number;
+}
+
+export interface GetDiscoveryFeedRequest {
+  force?: boolean;
 }
 
 // ─── Watch Alert Types ─────────────────────────────────────────────────

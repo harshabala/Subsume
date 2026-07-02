@@ -63,9 +63,9 @@
 /* ── Input / Select / Textarea ──────────────────────────────────────────── */
 
 .settings-input {
-  background: hsla(0, 0%, 100%, 0.03);
-  border: 1px solid var(--border-restraint);
-  color: var(--text-sanctuary);
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--input-fg);
   border-radius: 2px;
   padding: 10px 14px;
   font-family: var(--font-ui);
@@ -143,7 +143,7 @@
 
 .settings-chip.active {
   border: 1px solid var(--border-hero);
-  background: hsla(43, 74%, 49%, 0.1);
+  background: var(--chip-active-bg);
   color: var(--border-hero);
 }
 
@@ -155,7 +155,7 @@
 }
 
 .settings-chip-dot.inactive {
-  background: hsla(0, 0%, 100%, 0.2);
+  background: var(--chip-dot-inactive);
 }
 
 .settings-chip-dot.active {
@@ -219,7 +219,7 @@
 .btn-sanctuary-gold {
   background: var(--border-hero);
   border: none;
-  color: hsl(240, 18%, 5%);
+  color: var(--on-primary-fg);
   padding: 12px 28px;
   border-radius: 2px;
   font-family: var(--font-ui);
@@ -261,7 +261,7 @@
 .btn-sanctuary-danger {
   background: transparent;
   border: 1px solid var(--border-restraint);
-  color: hsl(0, 60%, 65%);
+  color: var(--danger-fg);
   border-radius: 2px;
   padding: 6px 14px;
   cursor: pointer;
@@ -310,7 +310,163 @@
 
 /* ── Select Option (dark background for popover) ────────────────────────── */
 .sanctuary-select-option {
-  background: hsl(240, 18%, 8%);
+  background: var(--surface-select);
+}
+
+/* ── Discovery Section ─────────────────────────────────────────────────── */
+
+.settings-discovery-intro {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text-meta);
+  line-height: 1.55;
+  margin: 0 0 20px;
+}
+
+.settings-discovery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.settings-discovery-card {
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-restraint);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+}
+
+.settings-discovery-badge {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 2px;
+  margin-bottom: 12px;
+}
+
+.settings-discovery-badge.free {
+  background: var(--status-watched-bg);
+  color: var(--status-watched-fg);
+  border: 1px solid var(--status-watched-border);
+}
+
+.settings-discovery-badge.key {
+  background: var(--gold-soft-bg);
+  color: var(--gold-text);
+  border: 1px solid var(--accent-gold-border);
+}
+
+.settings-discovery-title {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--text-reflection);
+  margin: 0 0 12px;
+}
+
+.settings-discovery-list {
+  margin: 0;
+  padding-left: 18px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text-artwork);
+  line-height: 1.6;
+}
+
+.settings-discovery-list li + li {
+  margin-top: 8px;
+}
+
+/* ── Data Source Status ──────────────────────────────────────────────────── */
+
+.settings-source-intro {
+  margin-bottom: 16px;
+}
+
+.settings-source-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settings-source-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-restraint);
+  border-radius: var(--radius-sm);
+}
+
+.settings-source-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.settings-source-name {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-reflection);
+}
+
+.settings-source-desc {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text-meta);
+}
+
+.settings-source-dots {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.settings-source-dot-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.settings-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.settings-status-dot.configured,
+.settings-status-dot.working {
+  background: var(--status-active);
+  box-shadow: 0 0 6px var(--status-active-glow);
+}
+
+.settings-status-dot.pending {
+  background: var(--status-watching-fg);
+  opacity: 0.7;
+}
+
+.settings-status-dot.inactive {
+  background: var(--status-dot-default);
+  opacity: 0.5;
+}
+
+.settings-status-label {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-meta);
 }
 
 /* ── Alerts Page ─────────────────────────────────────────────────────────── */
@@ -388,7 +544,7 @@
 }
 
 .alerts-chip.active {
-  background: hsla(43, 74%, 49%, 0.1);
+  background: var(--chip-active-bg);
   border: 1px solid var(--border-hero);
   color: var(--border-hero);
 }
@@ -401,7 +557,7 @@
 }
 
 .alerts-chip-dot.inactive {
-  background: hsla(0, 0%, 100%, 0.2);
+  background: var(--chip-dot-inactive);
 }
 
 .alerts-chip-dot.active {
@@ -528,6 +684,189 @@
   gap: 12px;
 }
 
+.discovery-feed-section {
+  margin-top: 3rem;
+  padding: 28px 0 0;
+  border-top: 1px solid var(--border-restraint);
+}
+
+.discovery-feed-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.discovery-feed-kicker {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-meta);
+  margin-bottom: 8px;
+}
+
+.discovery-feed-title {
+  font-family: var(--font-editorial);
+  font-size: 28px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--text-reflection);
+  margin: 0 0 6px;
+}
+
+.discovery-feed-desc {
+  font-family: var(--font-ui);
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-meta);
+}
+
+.discovery-feed-meta {
+  display: flex;
+  gap: 12px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-meta);
+}
+
+.discovery-feed-meta span {
+  padding: 6px 10px;
+  border: 1px solid var(--border-restraint);
+  border-radius: 2px;
+  background: var(--bg-plaque);
+}
+
+.discovery-feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.discovery-feed-card {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 16px;
+  padding: 16px;
+  background: var(--bg-plaque);
+  border: 1px solid var(--border-restraint);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 250ms ease, background 250ms ease;
+}
+
+.discovery-feed-card:hover {
+  border-color: var(--border-hero);
+  background: var(--bg-plaque-hover);
+}
+
+.discovery-feed-card-poster {
+  width: 72px;
+  height: 108px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--surface-subtle);
+}
+
+.discovery-feed-card-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.discovery-feed-card-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-meta);
+}
+
+.discovery-feed-card-body {
+  min-width: 0;
+}
+
+.discovery-feed-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.discovery-feed-source {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 2px;
+}
+
+.discovery-feed-source.trakt {
+  color: var(--intent-revisit-fg);
+  background: var(--status-to-watch-bg);
+  border: 1px solid var(--status-to-watch-border);
+}
+
+.discovery-feed-source.tvmaze {
+  color: var(--status-watched-fg);
+  background: var(--status-watched-bg);
+  border: 1px solid var(--status-watched-border);
+}
+
+.discovery-feed-source.wikidata {
+  color: var(--digest-badge-ai-fg);
+  background: var(--digest-badge-ai-bg);
+  border: 1px solid var(--border-hero);
+}
+
+.discovery-feed-year {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text-meta);
+}
+
+.discovery-feed-card-title {
+  font-family: var(--font-editorial);
+  font-size: 20px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--text-reflection);
+  margin: 0 0 8px;
+}
+
+.discovery-feed-card-reason {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-meta);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.discovery-feed-rating {
+  display: inline-block;
+  margin-top: 8px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text-meta);
+}
+
 .home-skeleton-card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -619,8 +958,8 @@
 }
 
 .home-digest-badge.ai {
-  background: hsla(45, 90%, 65%, 0.12);
-  color: hsl(45, 90%, 75%);
+  background: var(--digest-badge-ai-bg);
+  color: var(--digest-badge-ai-fg);
   border: 1px solid var(--border-hero);
 }
 

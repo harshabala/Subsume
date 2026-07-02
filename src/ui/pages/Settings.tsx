@@ -1,8 +1,16 @@
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { sendMessage } from '@/shared/messages';
-import { MessageType, UserPreferences, ImportLibraryData, ThemePreference } from '@/shared/types';
+import {
+  MessageType,
+  UserPreferences,
+  ImportLibraryData,
+  ThemePreference,
+  FreeDataSourceStatus,
+  FreeDataSourceId,
+} from '@/shared/types';
 import { applyThemePreference } from '@/shared/theme';
+import { THEME_LABELS } from '@/shared/themeLabels';
 import { AVAILABLE_PLATFORMS } from '@/shared/platforms';
 import { AVAILABLE_GENRES } from '@/shared/genres';
 import { validateImportData } from '@/shared/validation';
@@ -14,6 +22,8 @@ export function Settings() {
   const [updateStatus, setUpdateStatus] = useState<string | null>(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [sourceStatuses, setSourceStatuses] = useState<FreeDataSourceStatus[] | null>(null);
+  const [sourceStatusLoading, setSourceStatusLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
@@ -28,6 +38,24 @@ export function Settings() {
       }
     }
     load();
+  }, []);
+
+  useEffect(() => {
+    async function loadSourceStatuses() {
+      setSourceStatusLoading(true);
+      try {
+        const res = await sendMessage<Record<string, never>, FreeDataSourceStatus[]>(
+          MessageType.GET_FREE_DATA_SOURCE_STATUS,
+          {}
+        );
+        setSourceStatuses(res.data ?? []);
+      } catch {
+        setSourceStatuses([]);
+      } finally {
+        setSourceStatusLoading(false);
+      }
+    }
+    loadSourceStatuses();
   }, []);
 
   const handleChange = (key: keyof UserPreferences, value: unknown) => {
@@ -49,12 +77,70 @@ export function Settings() {
     setSaving(true);
     try {
       await sendMessage(MessageType.SET_PREFERENCES, prefs);
+      applyThemePreference(prefs.theme ?? 'dark');
     } catch (err) {
       alert('Failed to save settings: ' + (err instanceof Error ? err.message : String(err)));
     } finally {
       setSaving(false);
     }
   };
+
+  const FREE_SOURCE_META: Record<
+    FreeDataSourceId,
+    { name: string; description: string }
+  > = {
+    tvmaze: {
+      name: 'TVmaze',
+      description: 'TV show metadata, cast, and schedules',
+    },
+    trakt: {
+      name: 'Trakt',
+      description: 'Ratings, trending, and recommendations',
+    },
+    wikidata: {
+      name: 'Wikidata / Wikipedia',
+      description: 'Director bios and plot summaries',
+    },
+  };
+
+  function renderSourceStatus(id: FreeDataSourceId) {
+    const meta = FREE_SOURCE_META[id];
+    const status = sourceStatuses?.find((s) => s.id === id);
+    const configured = status?.configured ?? true;
+    const working = status?.working ?? false;
+
+    return (
+      <div key={id} className="settings-source-row">
+        <div className="settings-source-info">
+          <span className="settings-source-name">{meta.name}</span>
+          <span className="settings-source-desc">{meta.description}</span>
+        </div>
+        <div className="settings-source-dots">
+          <span className="settings-source-dot-group" title={configured ? 'Configured' : 'Not configured'}>
+            <span className={`settings-status-dot ${configured ? 'configured' : 'inactive'}`} />
+            <span className="settings-status-label">Configured</span>
+          </span>
+          <span
+            className="settings-source-dot-group"
+            title={
+              sourceStatusLoading
+                ? 'Checking connection…'
+                : working
+                  ? 'Reachable'
+                  : 'Unreachable'
+            }
+          >
+            <span
+              className={`settings-status-dot ${
+                sourceStatusLoading ? 'pending' : working ? 'working' : 'inactive'
+              }`}
+            />
+            <span className="settings-status-label">Working</span>
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   const handleExport = async () => {
     try {
@@ -175,14 +261,11 @@ export function Settings() {
                       type="radio"
                       name="theme"
                       checked={active}
-                      onChange={() => {
-                        handleChange('theme', theme);
-                        applyThemePreference(theme);
-                      }}
+                      onChange={() => handleChange('theme', theme)}
                       className="settings-chip-hidden-input"
                     />
                     <span className={`settings-chip-dot ${active ? 'active' : 'inactive'}`} />
-                    {theme === 'dark' ? 'Gilded Night' : theme === 'light' ? 'Parchment' : 'System'}
+                    {THEME_LABELS[theme]}
                   </label>
                 );
               })}
@@ -239,13 +322,42 @@ export function Settings() {
           </div>
         </div>
 
+        {/* Discovery */}
+        <div className="settings-panel">
+          <h3 className="settings-panel-heading">Discovery</h3>
+          <p className="settings-discovery-intro">
+            Subsume layers multiple data sources so discovery works out of the box, with optional keys for deeper catalogue sync.
+          </p>
+          <div className="settings-discovery-grid">
+            <div className="settings-discovery-card">
+              <span className="settings-discovery-badge free">Free</span>
+              <h4 className="settings-discovery-title">No key required</h4>
+              <ul className="settings-discovery-list">
+                <li><strong>TVmaze</strong> — TV metadata when TMDb is unavailable</li>
+                <li><strong>Trakt</strong> — Ratings and trending recommendations</li>
+                <li><strong>Wikidata / Wikipedia</strong> — Plot summaries and director bios</li>
+              </ul>
+            </div>
+            <div className="settings-discovery-card">
+              <span className="settings-discovery-badge key">Key required</span>
+              <h4 className="settings-discovery-title">Your credentials</h4>
+              <ul className="settings-discovery-list">
+                <li><strong>TMDb</strong> — Full movie &amp; TV catalogue sync (recommended)</li>
+                <li><strong>OMDb</strong> — Optional reception and ratings enrichment</li>
+                <li><strong>LLM provider</strong> — Personalized recommendations when enabled</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
         {/* Free API Status */}
         <div className="settings-panel">
           <h3 className="settings-panel-heading">Free Data Sources (No Key Required)</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.8125rem', opacity: 0.65 }}>
-            <span>✓ TVmaze — TV show metadata, cast, schedules</span>
-            <span>✓ Trakt — Ratings, trending, recommendations</span>
-            <span>✓ Wikidata / Wikipedia — Director bios, plot summaries</span>
+          <p className="settings-help-text settings-source-intro">
+            Live status for bundled integrations. Green dots confirm each source is configured and reachable.
+          </p>
+          <div className="settings-source-list">
+            {(['tvmaze', 'trakt', 'wikidata'] as FreeDataSourceId[]).map(renderSourceStatus)}
           </div>
         </div>
 

@@ -11,7 +11,9 @@ import { generateRuleBasedRecommendations } from '../recommendations';
 import { generateLLMRecommendations, getPersonalizedRecommendations } from '../llm';
 import { buildWatchProfile } from '../context';
 import { generateWeeklyDigest, isDigestStale } from '../digest';
+import { getDiscoveryFeed } from '../discoveryFeed';
 import { getTraktTrending } from '../trakt';
+import { GetDiscoveryFeedRequest } from '@/shared/types';
 
 export const recommendationHandlers: MessageHandlerMap = {
   [MessageType.GET_RECOMMENDATIONS]: async (payload) => {
@@ -128,5 +130,11 @@ export const recommendationHandlers: MessageHandlerMap = {
     const digest = await generateWeeklyDigest(prefs);
     await saveWeeklyDigest(digest);
     return digest;
+  },
+
+  [MessageType.GET_DISCOVERY_FEED]: async (payload) => {
+    const req = (payload || {}) as GetDiscoveryFeedRequest;
+    logger.log('[Subsume] GET_DISCOVERY_FEED', { force: !!req.force });
+    return getDiscoveryFeed(!!req.force);
   },
 };

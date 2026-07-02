@@ -73,7 +73,7 @@
   font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: hsl(0, 0%, 82%);
+  color: var(--poetic-film-title-fg);
   margin: 0;
 }
 
@@ -81,7 +81,7 @@
   font-family: 'Newsreader', Georgia, serif;
   font-size: 1rem;
   font-style: italic;
-  color: hsl(240, 10%, 50%);
+  color: var(--poetic-film-director-fg);
   margin: 0;
 }
 
@@ -130,7 +130,7 @@
   font-family: 'Newsreader', Georgia, serif;
   font-style: italic;
   font-size: 1.1rem;
-  color: hsl(240, 10%, 50%);
+  color: var(--poetic-film-director-fg);
   margin: 0;
 }
 
@@ -163,7 +163,7 @@
 .poetic-textarea {
   width: 100%;
   min-height: 180px;
-  background: rgba(5, 5, 8, 0.4);
+  background: var(--poetic-input-bg);
   border: 1px solid var(--border-restraint);
   color: var(--text-sanctuary);
   font-family: inherit;
@@ -222,7 +222,7 @@
 
 .intent-selectors button.active {
   background: var(--border-hero);
-  color: hsl(240, 20%, 6%);
+  color: var(--on-accent-fg);
   border-color: var(--border-hero);
   font-weight: 600;
 }
@@ -250,7 +250,7 @@
 
 .rating-control button.active {
   background: var(--border-hero);
-  color: hsl(240, 20%, 6%);
+  color: var(--on-accent-fg);
   border-color: var(--border-hero);
   font-weight: 600;
 }
@@ -275,7 +275,7 @@
 
 .save-btn {
   background: var(--border-hero);
-  color: hsl(240, 20%, 6%);
+  color: var(--on-accent-fg);
   border: none;
   font-weight: 600;
 }
@@ -308,7 +308,7 @@
 }
 
 .poetic-input {
-  background: rgba(5, 5, 8, 0.4);
+  background: var(--poetic-input-bg);
   border: 1px solid var(--border-restraint);
   color: var(--text-sanctuary);
   font-family: inherit;

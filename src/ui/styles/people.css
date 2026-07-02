@@ -161,11 +161,11 @@
 }
 
 .api-key-warning {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
   border-radius: 8px;
   padding: 12px;
-  color: #f87171;
+  color: var(--status-abandoned-fg);
   font-size: 14px;
   margin-bottom: 16px;
 }
@@ -174,9 +174,9 @@
   width: 100%;
   max-width: 480px;
   padding: var(--spacing-md);
-  background: var(--color-surface-hover);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
+  background: var(--input-bg);
+  border: 1px solid var(--search-input-border);
+  color: var(--input-fg);
   border-radius: 8px;
   font-size: 15px;
   margin-bottom: 24px;
@@ -240,7 +240,7 @@
 
 .search-result-dept {
   font-size: 11px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--search-dept-bg);
   padding: 1px var(--spacing-sm);
   border-radius: 4px;
   color: var(--color-text-secondary);
@@ -304,10 +304,10 @@
 }
 
 .filmography-unfollow-btn {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
   border-radius: 6px;
-  color: #f87171;
+  color: var(--status-abandoned-fg);
   padding: 0 12px;
   min-height: 32px;
   font-size: 13px;
@@ -470,7 +470,7 @@
 }
 
 .filmography-filter-chip.active {
-  background: rgba(201, 168, 76, 0.15);
+  background: var(--chip-active-bg);
   color: var(--gold);
   border-color: var(--gold);
 }
@@ -499,7 +499,7 @@
   aspect-ratio: 2/3;
   border-radius: 8px;
   overflow: hidden;
-  background: #18181b;
+  background: var(--filmography-poster-bg);
   border: 1px solid var(--color-border);
 }
 
@@ -508,7 +508,7 @@
   top: 8px;
   left: 8px;
   background: var(--gold);
-  color: #121212;
+  color: var(--badge-on-gold-fg);
   font-size: 10px;
   font-weight: 700;
   padding: 3px 6px;
@@ -520,14 +520,14 @@
   position: absolute;
   top: 8px;
   right: 8px;
-  background: rgba(0, 0, 0, 0.75);
-  color: white;
+  background: var(--badge-overlay-bg);
+  color: var(--card-fg);
   font-size: 10px;
   font-weight: 600;
   padding: 3px 6px;
   border-radius: 4px;
   z-index: 2;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--card-border);
 }
 
 .filmography-poster-img {
@@ -557,13 +557,13 @@
   height: 10px;
   border-radius: 50%;
   z-index: 2;
-  box-shadow: 0 0 4px rgba(0,0,0,0.5);
+  box-shadow: 0 0 4px var(--overlay-bg);
 }
 
 .filmography-poster-dot.status-to-watch { background: var(--gold); }
-.filmography-poster-dot.status-watching { background: #60a5fa; }
-.filmography-poster-dot.status-watched { background: #4ade80; }
-.filmography-poster-dot.status-abandoned { background: #f87171; }
+.filmography-poster-dot.status-watching { background: var(--status-to-watch-fg); }
+.filmography-poster-dot.status-watched { background: var(--status-watched-fg); }
+.filmography-poster-dot.status-abandoned { background: var(--status-abandoned-fg); }
 
 .filmography-poster-title {
   font-size: 13px;
@@ -590,4 +590,282 @@
   font-size: 11px;
   color: var(--gold);
   font-weight: 600;
+}
+
+/* ─── Sanctuary People Page (inline style extraction) ───────────── */
+
+.people-sanctuary-tabs {
+  display: flex;
+  gap: 24px;
+  border-bottom: 1px solid var(--border-restraint);
+  padding-bottom: 1px;
+  margin-bottom: 36px;
+}
+
+.people-sanctuary-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-meta);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: 12px 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.people-sanctuary-tab.active {
+  border-bottom-color: var(--border-hero);
+  color: var(--border-hero);
+}
+
+.people-sanctuary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.people-sanctuary-card {
+  background: var(--plaque-bg);
+  border: 1px solid var(--border-restraint);
+  border-radius: 4px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  backdrop-filter: var(--blur-hero);
+  transition: border-color 0.2s ease;
+}
+
+.people-sanctuary-card:hover {
+  border-color: var(--border-hero);
+}
+
+.people-sanctuary-unfollow {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  color: var(--text-meta);
+  font-size: 16px;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  line-height: 1;
+}
+
+.people-sanctuary-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border-restraint);
+  margin-bottom: 16px;
+}
+
+.people-sanctuary-avatar-fallback {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--input-bg);
+  border: 1px solid var(--border-restraint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-size: 24px;
+  color: var(--border-hero);
+  margin-bottom: 16px;
+}
+
+.people-sanctuary-name {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--text-reflection);
+  margin: 0 0 6px 0;
+}
+
+.people-sanctuary-role {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--text-meta);
+  margin-bottom: 12px;
+}
+
+.people-sanctuary-count {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--border-hero);
+}
+
+.people-sanctuary-sync {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--text-meta);
+  margin-top: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.people-search-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.people-api-notice {
+  background: var(--chip-active-bg);
+  border: 1px solid var(--border-hero);
+  padding: 16px;
+  border-radius: 2px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--border-hero);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.people-sanctuary-search {
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 2px;
+  padding: 14px 18px;
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--input-fg);
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.people-search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.people-search-result {
+  background: var(--plaque-bg);
+  border: 1px solid var(--border-restraint);
+  border-radius: 4px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  backdrop-filter: var(--blur-hero);
+}
+
+.people-search-result-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.people-search-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border-restraint);
+}
+
+.people-search-avatar-fallback {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--input-bg);
+  border: 1px solid var(--border-restraint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-size: 18px;
+  color: var(--border-hero);
+}
+
+.people-search-name {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--text-reflection);
+  margin: 0 0 4px 0;
+}
+
+.people-search-meta {
+  font-family: var(--font-ui);
+  font-size: 12px;
+}
+
+.people-search-dept {
+  color: var(--text-meta);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-right: 12px;
+}
+
+.people-search-known {
+  color: var(--text-artwork);
+  font-style: italic;
+  font-family: var(--font-editorial);
+}
+
+.people-search-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.people-role-select {
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--input-fg);
+  border-radius: 2px;
+  padding: 8px 12px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  outline: none;
+}
+
+.people-role-select option {
+  background: var(--surface-select);
+}
+
+.people-enroll-btn {
+  padding: 10px 20px;
+  border-radius: 2px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.people-enroll-btn.active {
+  background: var(--border-hero);
+  border: none;
+  color: var(--on-primary-fg);
+  cursor: pointer;
+}
+
+.people-enroll-btn.enrolled {
+  background: transparent;
+  border: 1px solid var(--border-restraint);
+  color: var(--text-meta);
+  cursor: default;
 }

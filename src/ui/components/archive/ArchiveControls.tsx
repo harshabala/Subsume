@@ -27,12 +27,12 @@ export function ArchiveControls({
         placeholder="Search your sanctuary..."
         value={searchQuery}
         onInput={(e) => setSearchQuery(e.currentTarget.value)}
-        className="archive-search-input"
+        className="sanctuary-input archive-filter-search"
       />
       <select
         value={statusFilter}
         onChange={(e) => setStatusFilter((e.target as HTMLSelectElement).value as LibraryStatus | '')}
-        className="archive-select"
+        className="sanctuary-input archive-filter-select"
       >
         <option value="">All Statuses</option>
         {STATUS_OPTIONS.map((opt) => (
@@ -42,7 +42,7 @@ export function ArchiveControls({
       <select
         value={sortBy}
         onChange={(e) => setSortBy((e.target as HTMLSelectElement).value as SortOption)}
-        className="archive-select"
+        className="sanctuary-input archive-filter-select"
       >
         <option value="added">Date Added</option>
         <option value="rating">Your Rating</option>

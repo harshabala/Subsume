@@ -160,10 +160,10 @@ describe('Logger Stability & Polish', () => {
     expect(warnBadge).toBeDefined();
     expect(infoBadge).toBeDefined();
 
-    expect(errorBadge!.style.color).toBe('rgb(255, 68, 68)'); // #ff4444
-    expect(warnBadge!.style.color).toBe('rgb(255, 153, 0)'); // #ff9900
-    expect(infoBadge!.style.color).not.toBe('rgb(255, 153, 0)');
-    expect(infoBadge!.style.color).toBe('rgb(74, 144, 226)'); // #4a90e2 (blue/gray)
+    expect(errorBadge!.classList.contains('log-level-badge')).toBe(true);
+    expect(errorBadge!.classList.contains('error')).toBe(true);
+    expect(warnBadge!.classList.contains('warn')).toBe(true);
+    expect(infoBadge!.classList.contains('info')).toBe(true);
 
     document.body.removeChild(container);
   });

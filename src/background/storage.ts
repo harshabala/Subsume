@@ -1,6 +1,7 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 import {
   MediaItem,
+  MediaType,
   LibraryItem,
   UserPreferences,
   PersonItem,
@@ -172,6 +173,28 @@ export async function findMediaByTitle(title: string, year?: number): Promise<Me
     cursor = await cursor.continue();
   }
   return undefined;
+}
+
+/** Fuzzy title search across IndexedDB media and seed catalogue data. */
+export async function searchMediaByQuery(
+  query: string,
+  type?: MediaType,
+  limit = 10
+): Promise<MediaItem[]> {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return [];
+
+  const db = await getDb();
+  const allMedia = await db.getAll('media');
+  const seenIds = new Set(allMedia.map((item) => item.id));
+  const combined = [...allMedia, ...SEED_MEDIA.filter((item) => !seenIds.has(item.id))];
+
+  return combined
+    .filter((item) => {
+      if (type && item.type !== type) return false;
+      return item.canonicalTitle.toLowerCase().includes(normalized);
+    })
+    .slice(0, limit);
 }
 
 export async function getAllMediaMap(ids: string[]): Promise<Record<string, MediaItem>> {

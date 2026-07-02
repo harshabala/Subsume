@@ -4,6 +4,7 @@ import { getPreferences, savePreferences } from '../storage';
 import { setTmdbApiKey } from '../tmdb';
 import { setOmdbApiKey } from '../omdb';
 import { buildContentPrefs } from '../contentPrefs';
+import { getFreeDataSourceStatuses } from '../dataSources';
 
 const API_KEY_FIELDS: (keyof UserPreferences)[] = [
   'tmdbApiKey',
@@ -124,5 +125,9 @@ export const settingHandlers: MessageHandlerMap = {
     const req = payload as { hostname: string };
     const prefs = await getPreferences();
     return buildContentPrefs(prefs, req.hostname);
+  },
+
+  [MessageType.GET_FREE_DATA_SOURCE_STATUS]: async () => {
+    return getFreeDataSourceStatuses();
   },
 };
