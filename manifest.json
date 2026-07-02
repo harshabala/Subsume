@@ -27,7 +27,6 @@
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],
-      "exclude_matches": ["chrome://*/*", "chrome-extension://*/*"],
       "js": ["content.js"],
       "css": ["content.css"],
       "run_at": "document_idle"
