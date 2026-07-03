@@ -178,6 +178,10 @@ describe('PoeticCaptureCanvas', () => {
       emotionalRecall: longProse,
       atmosphere: 'Melancholic, Warm Amber',
       lingeringThought: 'The beauty of fleeting moments.',
+      awe: 50,
+      melancholy: 50,
+      tension: 50,
+      warmth: 50,
     });
 
     const statusCall = sendMessageCalls.find(c => (c[0] as any).type === MessageType.UPDATE_STATUS);

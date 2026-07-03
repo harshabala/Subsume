@@ -254,6 +254,14 @@
   --btn-primary-fg: #0a0a0b;
   --digest-badge-ai-bg: hsla(45, 90%, 65%, 0.12);
   --digest-badge-ai-fg: hsl(45, 90%, 75%);
+
+  /* ─── Emotional Aura Dimensions ─────────────────────────────── */
+  --color-awe: oklch(65% 0.18 290);
+  --color-melancholy: oklch(62% 0.14 230);
+  --color-tension: oklch(58% 0.19 25);
+  --color-warmth: oklch(74% 0.15 65);
+  --grain-opacity-popup: 0.06;
+  --grain-opacity-app: 0.04;
 }
 
 .dark {
@@ -557,4 +565,32 @@
     --status-rating-fg: #b45309;
     --btn-primary-fg: #ffffff;
   }
+}
+
+/* ─── Cinema Atmosphere Presets ─────────────────────────────────── */
+[data-atmosphere="sunset"] {
+  --app-bg: oklch(12% 0.015 45);
+  --card-bg: oklch(16% 0.02 45);
+  --card-border: rgba(255, 180, 100, 0.08);
+  --primary: oklch(74% 0.16 55);
+  --gold: var(--primary);
+  --primary-hover: oklch(80% 0.18 55);
+}
+
+[data-atmosphere="emerald"] {
+  --app-bg: oklch(9% 0.008 165);
+  --card-bg: oklch(13% 0.012 165);
+  --card-border: rgba(100, 255, 180, 0.08);
+  --primary: oklch(76% 0.12 160);
+  --gold: var(--primary);
+  --primary-hover: oklch(82% 0.14 160);
+}
+
+[data-atmosphere="french"] {
+  --app-bg: oklch(10% 0.01 285);
+  --card-bg: oklch(14% 0.015 285);
+  --card-border: rgba(180, 150, 255, 0.08);
+  --primary: oklch(70% 0.22 340);
+  --gold: var(--primary);
+  --primary-hover: oklch(75% 0.24 340);
 }

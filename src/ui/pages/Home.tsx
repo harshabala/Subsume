@@ -15,6 +15,8 @@ import {
 } from '@/shared/types';
 import { DetailModal } from '../components/DetailModal';
 import { PlatformChips } from '../components/PlatformChips';
+import { EmotionalWeatherChart } from '../components/EmotionalWeatherChart';
+import { getEmotionalSpectrum, hasEmotionalData } from '@/shared/emotions';
 import { getPlatformNameById } from '@/shared/platforms';
 import '../styles/discovery-search.css';
 import { ensureDemoLibraryIfEmpty } from '../lib/ensureDemoLibrary';
@@ -116,6 +118,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
   const [searchError, setSearchError] = useState<string | null>(null);
   const [searchActive, setSearchActive] = useState(false);
   const [feedError, setFeedError] = useState<string | null>(null);
+  const [libraryItems, setLibraryItems] = useState<JoinedItem[]>([]);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const hydrateDigestPicks = async (digest: WeeklyDigest) => {
@@ -216,6 +219,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
 
         if (prefsRes?.success && prefsRes.data) setPrefs(prefsRes.data);
 
+        setLibraryItems(libraryItems);
         setLibraryCount(libraryItems.length);
         setWatchedCount(libraryItems.filter((i) => i.library.status === 'watched').length);
         setToWatchCount(libraryItems.filter((i) => i.library.status === 'to-watch').length);
@@ -366,6 +370,11 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
     heroMedia?.posterUrl ||
     'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=600&q=80';
   const canReflect = Boolean(heroMedia);
+
+  const recentlyReflected = libraryItems
+    .filter(({ library }) => hasEmotionalData(library))
+    .sort((a, b) => b.library.updatedAt - a.library.updatedAt)
+    .slice(0, 6);
 
   return (
     <div className="page-container sanctuary-page focus-pull-active">
@@ -596,6 +605,54 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
         </div>
       ) : (
         <div className="home-main-content" style={{ marginTop: '4rem' }}>
+          <section style={{ marginBottom: '2rem' }}>
+            <EmotionalWeatherChart items={libraryItems.map((item) => item.library)} />
+          </section>
+
+          {recentlyReflected.length > 0 && (
+            <section style={{ marginBottom: '2rem' }}>
+              <div className="home-section-header">
+                <div>
+                  <h3 className="home-section-title">Recently Reflected</h3>
+                  <p className="home-section-desc">Your latest emotional projections from the sanctuary</p>
+                </div>
+              </div>
+              <div className="recently-reflected-strip">
+                {recentlyReflected.map(({ library, media }) => {
+                  const spectrum = getEmotionalSpectrum(library);
+                  return (
+                    <button
+                      key={library.mediaId}
+                      type="button"
+                      className="recently-reflected-card"
+                      onClick={() => setSelectedMedia(media)}
+                    >
+                      {media.posterUrl ? (
+                        <img
+                          src={media.posterUrl}
+                          alt={media.canonicalTitle}
+                          className="recently-reflected-poster"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="recently-reflected-poster" />
+                      )}
+                      <div className="recently-reflected-meta">
+                        <div className="recently-reflected-title">{media.canonicalTitle}</div>
+                        <div className="recently-reflected-aura" aria-hidden="true">
+                          <span style={{ background: 'var(--color-awe)', flex: spectrum.awe }} />
+                          <span style={{ background: 'var(--color-melancholy)', flex: spectrum.melancholy }} />
+                          <span style={{ background: 'var(--color-tension)', flex: spectrum.tension }} />
+                          <span style={{ background: 'var(--color-warmth)', flex: spectrum.warmth }} />
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
           <div className="home-stat-grid">
             {[
               { label: 'In Sanctuary', value: libraryCount, action: () => onNavigate('library') },

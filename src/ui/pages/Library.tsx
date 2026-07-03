@@ -14,6 +14,8 @@ import {
   TagFilterBar,
   HardcoverSpineCard,
 } from '../components/archive';
+import { EmptyStateProjection } from '../components/EmptyStateProjection';
+import type { EmotionalSpectrum } from '@/shared/emotions';
 
 export function Library() {
   const [activeTab, setActiveTab] = useState<'movies' | 'tv'>('movies');
@@ -147,7 +149,13 @@ export function Library() {
     }
   }
 
-  async function updateNotes(mediaId: string, notes: string, atmosphere?: string, lingeringThought?: string) {
+  async function updateNotes(
+    mediaId: string,
+    notes: string,
+    atmosphere?: string,
+    lingeringThought?: string,
+    emotions?: EmotionalSpectrum,
+  ) {
     setActionError(null);
     try {
       await sendMessage(MessageType.SET_USER_NOTES, {
@@ -155,12 +163,20 @@ export function Library() {
         notes,
         atmosphere: atmosphere || undefined,
         lingeringThought: lingeringThought || undefined,
+        awe: emotions?.awe,
+        melancholy: emotions?.melancholy,
+        tension: emotions?.tension,
+        warmth: emotions?.warmth,
       });
       if (isMountedRef.current) {
         updateLibraryItem(mediaId, {
           notes: notes.trim() || undefined,
           atmosphere: atmosphere?.trim() || undefined,
           lingeringThought: lingeringThought?.trim() || undefined,
+          awe: emotions?.awe,
+          melancholy: emotions?.melancholy,
+          tension: emotions?.tension,
+          warmth: emotions?.warmth,
         });
       }
     } catch (err) {
@@ -287,19 +303,10 @@ export function Library() {
             </button>
           </div>
         ) : items.length === 0 ? (
-          <div className="empty-state library-empty-state">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" className="library-empty-state-icon">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <path d="M7 3v18M17 3v18M3 8h4M17 8h4M3 16h4M17 16h4M7 9h10v6H7z" />
-            </svg>
-            <h3 className="empty-state-title library-empty-state-title">Your archive is quiet</h3>
-            <p className="empty-state-description library-empty-state-description">
-              A blank canvas waiting for titles that leave an imprint on your memory.
-            </p>
-            <p className="library-empty-state-hint">
-              Hover over titles while browsing or capture moments to populate your collection.
-            </p>
-          </div>
+          <EmptyStateProjection
+            className="library-empty-state"
+            hint="Hover over titles while browsing or capture moments to populate your collection."
+          />
         ) : (
           <Fragment>
             <div className="card-grid">
@@ -341,7 +348,9 @@ export function Library() {
           onUpdateStatus={(status) => updateStatus(selectedItem.library.mediaId, status)}
           onUpdateRating={(rating) => updateRating(selectedItem.library.mediaId, rating)}
           onUpdateTags={(tags) => updateTags(selectedItem.library.mediaId, tags)}
-          onUpdateNotes={(notes, atmosphere, lingeringThought) => updateNotes(selectedItem.library.mediaId, notes, atmosphere, lingeringThought)}
+          onUpdateNotes={(notes, atmosphere, lingeringThought, emotions) =>
+            updateNotes(selectedItem.library.mediaId, notes, atmosphere, lingeringThought, emotions)
+          }
         />
       )}
     </div>

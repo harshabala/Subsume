@@ -13,6 +13,9 @@ import {
   LibraryItem,
 } from '@/shared/types';
 import { sendMessage } from '@/shared/messages';
+import { DEFAULT_EMOTIONS, type EmotionalSpectrum } from '@/shared/emotions';
+import { EmotionalSliders } from './EmotionalSliders';
+import { AuraVisualizer } from './AuraVisualizer';
 import '../styles/poetic-sanctuary.css';
 
 export interface PoeticCaptureCanvasProps {
@@ -33,6 +36,7 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
   const [rating, setRating] = useState<number>(0);
   const [atmosphere, setAtmosphere] = useState<string>('');
   const [lingeringThought, setLingeringThought] = useState<string>('');
+  const [emotions, setEmotions] = useState<EmotionalSpectrum>(DEFAULT_EMOTIONS);
   const [isWriting, setIsWriting] = useState<boolean>(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -151,7 +155,13 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
         status: statusMap[intent],
       });
       const hasNotes =
-        emotionalRecall.trim() || atmosphere.trim() || lingeringThought.trim();
+        emotionalRecall.trim() ||
+        atmosphere.trim() ||
+        lingeringThought.trim() ||
+        emotions.awe !== DEFAULT_EMOTIONS.awe ||
+        emotions.melancholy !== DEFAULT_EMOTIONS.melancholy ||
+        emotions.tension !== DEFAULT_EMOTIONS.tension ||
+        emotions.warmth !== DEFAULT_EMOTIONS.warmth;
       if (hasNotes) {
         await sendMessage<SetUserNotesRequest, Record<string, unknown>>(MessageType.SET_USER_NOTES, {
           mediaId,
@@ -159,6 +169,10 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
           emotionalRecall: emotionalRecall.trim() || undefined,
           atmosphere: atmosphere.trim() || undefined,
           lingeringThought: lingeringThought.trim() || undefined,
+          awe: emotions.awe,
+          melancholy: emotions.melancholy,
+          tension: emotions.tension,
+          warmth: emotions.warmth,
         });
       }
       if (rating > 0) {
@@ -236,6 +250,16 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
               onFocus={() => setIsWriting(true)}
               onBlur={() => setIsWriting(false)}
             />
+
+            <div class="poetic-emotions-panel" data-testid="poetic-emotions-panel">
+              <EmotionalSliders
+                values={emotions}
+                onChange={(key, value) => setEmotions((prev) => ({ ...prev, [key]: value }))}
+                variant="sanctuary"
+                idPrefix="poetic"
+              />
+              <AuraVisualizer values={emotions} variant="sanctuary" />
+            </div>
 
             {emotionalRecall.length >= 140 && (
               <div class="progressive-controls">

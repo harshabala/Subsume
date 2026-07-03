@@ -1,4 +1,4 @@
-import type { ThemePreference } from './types';
+import type { CinemaAtmosphere, ThemePreference } from './types';
 
 function resolvedColorScheme(theme: ThemePreference): 'light' | 'dark' {
   if (theme === 'light') return 'light';
@@ -19,6 +19,15 @@ export function applyThemePreference(theme: ThemePreference = 'dark'): void {
 let systemThemeListener: ((event: MediaQueryListEvent) => void) | null = null;
 
 /** Re-apply when OS theme changes while preference is "system". */
+export function applyCinemaAtmosphere(atmosphere: CinemaAtmosphere = 'default'): void {
+  const root = document.documentElement;
+  if (atmosphere === 'default') {
+    root.removeAttribute('data-atmosphere');
+  } else {
+    root.setAttribute('data-atmosphere', atmosphere);
+  }
+}
+
 export function watchSystemTheme(preference: ThemePreference): void {
   if (systemThemeListener) {
     window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', systemThemeListener);

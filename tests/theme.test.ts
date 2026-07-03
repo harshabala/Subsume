@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { applyThemePreference, watchSystemTheme } from '@/shared/theme';
+import { applyThemePreference, applyCinemaAtmosphere, watchSystemTheme } from '@/shared/theme';
 
 function mockMatchMedia(matchesDark = true) {
   const listeners = new Map<string, (event: MediaQueryListEvent) => void>();
@@ -43,6 +43,23 @@ describe('applyThemePreference', () => {
     applyThemePreference('system');
     expect(document.documentElement.hasAttribute('data-theme')).toBe(false);
     expect(['light', 'dark']).toContain(document.documentElement.style.colorScheme);
+  });
+});
+
+describe('applyCinemaAtmosphere', () => {
+  beforeEach(() => {
+    document.documentElement.removeAttribute('data-atmosphere');
+  });
+
+  it('sets data-atmosphere for preset palettes', () => {
+    applyCinemaAtmosphere('sunset');
+    expect(document.documentElement.getAttribute('data-atmosphere')).toBe('sunset');
+  });
+
+  it('removes data-atmosphere for default palette', () => {
+    document.documentElement.setAttribute('data-atmosphere', 'french');
+    applyCinemaAtmosphere('default');
+    expect(document.documentElement.hasAttribute('data-atmosphere')).toBe(false);
   });
 });
 

@@ -6,10 +6,11 @@ import {
   UserPreferences,
   ImportLibraryData,
   ThemePreference,
+  CinemaAtmosphere,
   FreeDataSourceStatus,
   FreeDataSourceId,
 } from '@/shared/types';
-import { applyThemePreference, watchSystemTheme } from '@/shared/theme';
+import { applyThemePreference, applyCinemaAtmosphere, watchSystemTheme } from '@/shared/theme';
 import { THEME_LABELS } from '@/shared/themeLabels';
 import { AVAILABLE_PLATFORMS } from '@/shared/platforms';
 import { AVAILABLE_GENRES } from '@/shared/genres';
@@ -32,7 +33,9 @@ export function Settings() {
           MessageType.GET_FULL_PREFERENCES,
           { revealKeys: true }
         );
-        setPrefs(res.data!);
+        const loaded = res.data!;
+        setPrefs(loaded);
+        applyCinemaAtmosphere(loaded.cinemaAtmosphere ?? 'default');
       } catch (err) {
         setLoadError(err instanceof Error ? err.message : 'Failed to load settings.');
       }
@@ -66,6 +69,9 @@ export function Settings() {
       applyThemePreference(theme);
       watchSystemTheme(theme);
     }
+    if (key === 'cinemaAtmosphere') {
+      applyCinemaAtmosphere(value as CinemaAtmosphere);
+    }
   };
 
   const toggleArrayItem = (key: 'favoriteGenres' | 'platforms', id: string) => {
@@ -85,6 +91,7 @@ export function Settings() {
       const theme = prefs.theme ?? 'dark';
       applyThemePreference(theme);
       watchSystemTheme(theme);
+      applyCinemaAtmosphere(prefs.cinemaAtmosphere ?? 'default');
     } catch (err) {
       alert('Failed to save settings: ' + (err instanceof Error ? err.message : String(err)));
     } finally {
@@ -278,6 +285,36 @@ export function Settings() {
               })}
             </div>
             <p className="settings-help-text-italic">Preview updates immediately. Engrave Settings to persist your choice.</p>
+          </div>
+
+          <div className="settings-field-group">
+            <span className="settings-field-label">Cinema Atmosphere</span>
+            <div className="settings-chip-grid">
+              {([
+                { value: 'default', label: 'Gilded Obsidian' },
+                { value: 'sunset', label: 'Sunset Boulevard' },
+                { value: 'emerald', label: 'Cannes Emerald' },
+                { value: 'french', label: 'Midnight French' },
+              ] as { value: CinemaAtmosphere; label: string }[]).map((option) => {
+                const active = (prefs.cinemaAtmosphere ?? 'default') === option.value;
+                return (
+                  <label key={option.value} className={`settings-chip ${active ? 'active' : 'inactive'}`}>
+                    <input
+                      type="radio"
+                      name="cinemaAtmosphere"
+                      checked={active}
+                      onChange={() => handleChange('cinemaAtmosphere', option.value)}
+                      className="settings-chip-hidden-input"
+                    />
+                    <span className={`settings-chip-dot ${active ? 'active' : 'inactive'}`} />
+                    {option.label}
+                  </label>
+                );
+              })}
+            </div>
+            <p className="settings-help-text-italic">
+              Atmosphere presets tint the sanctuary palette without changing your light/dark theme.
+            </p>
           </div>
         </div>
 

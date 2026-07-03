@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Subsume",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Track movies & TV shows you discover while browsing. Get smart recommendations powered by AI.",
   "permissions": ["storage", "activeTab", "notifications", "alarms", "identity"],
   "oauth2": {

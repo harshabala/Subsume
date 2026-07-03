@@ -2,9 +2,14 @@ import { render, h } from 'preact';
 import { useEffect, useState, useRef } from 'preact/hooks';
 import { sendMessage } from '../shared/messages';
 import { MessageType, UserPreferences, LibraryItem, MediaItem, SanctuaryIntent, LibraryStatus } from '../shared/types';
-import { applyThemePreference, watchSystemTheme } from '../shared/theme';
+import { applyThemePreference, applyCinemaAtmosphere, watchSystemTheme } from '../shared/theme';
+import { DEFAULT_EMOTIONS, type EmotionalSpectrum } from '../shared/emotions';
+import { EmotionalSliders } from './components/EmotionalSliders';
+import { AuraVisualizer } from './components/AuraVisualizer';
+import { FilmGrain } from './components/FilmGrain';
 import '../shared/tokens.css';
 import './styles/popup.css';
+import './styles/emotional-components.css';
 
 interface JoinedItem {
   library: LibraryItem;
@@ -92,11 +97,7 @@ function Popup() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
-  // Emotional sliders states
-  const [sliderAwe, setSliderAwe] = useState(50);
-  const [sliderMelancholy, setSliderMelancholy] = useState(50);
-  const [sliderTension, setSliderTension] = useState(50);
-  const [sliderWarmth, setSliderWarmth] = useState(50);
+  const [emotions, setEmotions] = useState<EmotionalSpectrum>(DEFAULT_EMOTIONS);
 
   // Notes & Intent states
   const [logNotes, setLogNotes] = useState('');
@@ -130,6 +131,7 @@ function Popup() {
       const theme = p.theme ?? 'dark';
       applyThemePreference(theme);
       watchSystemTheme(theme);
+      applyCinemaAtmosphere(p.cinemaAtmosphere ?? 'default');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load library data');
       applyThemePreference('system');
@@ -197,14 +199,8 @@ function Popup() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Sync sliders to generate dynamic oklch aura glow background gradient
-  const auraGlowStyle = {
-    background: `
-      radial-gradient(circle at 10% 20%, var(--color-awe, oklch(68% 0.16 280)) 0%, transparent ${sliderAwe}%),
-      radial-gradient(circle at 90% 10%, var(--color-melancholy, oklch(64% 0.15 220)) 0%, transparent ${sliderMelancholy}%),
-      radial-gradient(circle at 20% 90%, var(--color-tension, oklch(60% 0.18 20)) 0%, transparent ${sliderTension}%),
-      radial-gradient(circle at 80% 80%, var(--color-warmth, oklch(76% 0.16 55)) 0%, transparent ${sliderWarmth}%)
-    `
+  const handleEmotionChange = (key: keyof EmotionalSpectrum, value: number) => {
+    setEmotions((prev) => ({ ...prev, [key]: value }));
   };
 
   // Select movie from search list
@@ -220,10 +216,12 @@ function Popup() {
         const matchingItem = (res.data as JoinedItem[]).find(j => j.library.mediaId === movie.id);
         if (matchingItem?.library) {
           const lib = matchingItem.library;
-          if (lib.awe !== undefined) setSliderAwe(lib.awe);
-          if (lib.melancholy !== undefined) setSliderMelancholy(lib.melancholy);
-          if (lib.tension !== undefined) setSliderTension(lib.tension);
-          if (lib.warmth !== undefined) setSliderWarmth(lib.warmth);
+          setEmotions({
+            awe: lib.awe ?? DEFAULT_EMOTIONS.awe,
+            melancholy: lib.melancholy ?? DEFAULT_EMOTIONS.melancholy,
+            tension: lib.tension ?? DEFAULT_EMOTIONS.tension,
+            warmth: lib.warmth ?? DEFAULT_EMOTIONS.warmth,
+          });
           if (lib.notes) setLogNotes(lib.notes);
           if (lib.sanctuaryIntent) setSanctuaryIntent(lib.sanctuaryIntent);
         }
@@ -260,10 +258,10 @@ function Popup() {
           mediaId: selectedMovie.id,
           notes: logNotes.trim(),
           emotionalRecall: logNotes.trim() || undefined,
-          awe: sliderAwe,
-          melancholy: sliderMelancholy,
-          tension: sliderTension,
-          warmth: sliderWarmth,
+          awe: emotions.awe,
+          melancholy: emotions.melancholy,
+          tension: emotions.tension,
+          warmth: emotions.warmth,
         }
       );
       if (!notesRes.data?.updated) {
@@ -278,10 +276,7 @@ function Popup() {
         setSelectedMovie(null);
         setSearchQuery('');
         setLogNotes('');
-        setSliderAwe(50);
-        setSliderMelancholy(50);
-        setSliderTension(50);
-        setSliderWarmth(50);
+        setEmotions(DEFAULT_EMOTIONS);
         setSanctuaryIntent('keep_memory');
         setActiveView('overview');
         loadLibraryData();
@@ -328,6 +323,7 @@ function Popup() {
 
   return (
     <div className="popup-shell">
+      <FilmGrain variant="popup" />
       {/* Success Animation overlay */}
       <div className={`log-success-overlay ${showSuccess ? 'active' : ''}`}>
         <div className="success-icon-circle">
@@ -564,86 +560,14 @@ function Popup() {
             </div>
           )}
 
-          {/* Step 2: Emotional Sliders */}
-          <div className="sliders-container">
-            <div className="slider-group">
-              <div className="slider-header">
-                <span>Awe / Grandeur</span>
-                <span className="slider-value">{sliderAwe}</span>
-              </div>
-              <div className="slider-row">
-                <input
-                  type="range"
-                  className="slider-input"
-                  id="slider-awe"
-                  min="0"
-                  max="100"
-                  value={sliderAwe}
-                  onInput={(e) => setSliderAwe(parseInt((e.target as HTMLInputElement).value, 10))}
-                />
-              </div>
-            </div>
+          <EmotionalSliders
+            values={emotions}
+            onChange={handleEmotionChange}
+            variant="popup"
+            idPrefix="popup"
+          />
 
-            <div className="slider-group">
-              <div className="slider-header">
-                <span>Melancholy / Sorrow</span>
-                <span className="slider-value">{sliderMelancholy}</span>
-              </div>
-              <div className="slider-row">
-                <input
-                  type="range"
-                  className="slider-input"
-                  id="slider-melancholy"
-                  min="0"
-                  max="100"
-                  value={sliderMelancholy}
-                  onInput={(e) => setSliderMelancholy(parseInt((e.target as HTMLInputElement).value, 10))}
-                />
-              </div>
-            </div>
-
-            <div className="slider-group">
-              <div className="slider-header">
-                <span>Tension / Suspense</span>
-                <span className="slider-value">{sliderTension}</span>
-              </div>
-              <div className="slider-row">
-                <input
-                  type="range"
-                  className="slider-input"
-                  id="slider-tension"
-                  min="0"
-                  max="100"
-                  value={sliderTension}
-                  onInput={(e) => setSliderTension(parseInt((e.target as HTMLInputElement).value, 10))}
-                />
-              </div>
-            </div>
-
-            <div className="slider-group">
-              <div className="slider-header">
-                <span>Warmth / Nostalgia</span>
-                <span className="slider-value">{sliderWarmth}</span>
-              </div>
-              <div className="slider-row">
-                <input
-                  type="range"
-                  className="slider-input"
-                  id="slider-warmth"
-                  min="0"
-                  max="100"
-                  value={sliderWarmth}
-                  onInput={(e) => setSliderWarmth(parseInt((e.target as HTMLInputElement).value, 10))}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Step 3: Dynamic Canvas Visualizer */}
-          <div className="vibe-visualizer">
-            <div className="vibe-glow-layer" style={auraGlowStyle}></div>
-            <span className="vibe-label">Generated Aura Spectrum</span>
-          </div>
+          <AuraVisualizer values={emotions} variant="popup" />
 
           {/* Journal Notes */}
           <textarea

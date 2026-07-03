@@ -104,6 +104,9 @@ export interface PersonItem {
 
 export type LLMProvider = 'openai' | 'anthropic' | 'gemini' | 'local';
 export type ThemePreference = 'dark' | 'light' | 'system';
+export type CinemaAtmosphere = 'default' | 'sunset' | 'emerald' | 'french';
+
+export type { EmotionalSpectrum } from './emotions';
 
 export interface LLMConfig {
   provider: LLMProvider;
@@ -128,6 +131,7 @@ export interface UserPreferences {
   disabledDomains: string[];
   detectionSensitivity: 'low' | 'medium' | 'high';
   theme?: ThemePreference;
+  cinemaAtmosphere?: CinemaAtmosphere;
   onboardingComplete: boolean;
 }
 

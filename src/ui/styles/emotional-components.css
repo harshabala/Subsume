@@ -1,0 +1,329 @@
+/* ─── Shared Emotional Components ─────────────────────────────── */
+
+.emotional-sliders-sanctuary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.emotional-slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.emotional-slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--font-size-sm);
+  color: var(--muted-fg);
+}
+
+.emotional-slider-value {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--primary);
+}
+
+.emotional-slider-input {
+  width: 100%;
+  height: 4px;
+  appearance: none;
+  background: var(--progress-track);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.emotional-slider-input::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 8px color-mix(in oklch, var(--primary) 40%, transparent);
+  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.2s ease;
+}
+
+.emotional-slider-input:active::-webkit-slider-thumb {
+  transform: scale(1.25);
+}
+
+.emotional-slider-input:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.aura-visualizer-sanctuary {
+  position: relative;
+  height: 88px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--card-border);
+  overflow: hidden;
+  background: var(--surface-subtle);
+}
+
+.aura-visualizer-glow {
+  position: absolute;
+  inset: 0;
+  transition: background 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.aura-visualizer-label {
+  position: absolute;
+  bottom: 8px;
+  left: 12px;
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted-fg);
+}
+
+.emotional-weather-chart {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.4s ease;
+}
+
+.emotional-weather-chart.empty {
+  text-align: center;
+  padding: var(--spacing-2xl);
+}
+
+.emotional-weather-empty-text {
+  color: var(--muted-fg);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.emotional-weather-kicker {
+  display: block;
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.emotional-weather-title {
+  font-family: var(--font-editorial);
+  font-size: 1.25rem;
+  margin-bottom: var(--spacing-xs);
+}
+
+.emotional-weather-desc {
+  color: var(--muted-fg);
+  font-size: var(--font-size-sm);
+}
+
+.emotional-weather-svg-wrap {
+  margin: var(--spacing-lg) 0;
+  border-radius: var(--radius-md);
+  background: var(--surface-subtle);
+  padding: var(--spacing-md);
+}
+
+.emotional-weather-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.emotional-weather-legend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-sm) var(--spacing-lg);
+}
+
+@media (min-width: 600px) {
+  .emotional-weather-legend {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.emotional-weather-legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+}
+
+.emotional-weather-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.emotional-weather-legend-label {
+  color: var(--muted-fg);
+  flex: 1;
+}
+
+.emotional-weather-legend-value {
+  font-family: var(--font-mono);
+  color: var(--fg-base);
+}
+
+.empty-state-projection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--spacing-2xl) var(--spacing-xl);
+  color: var(--muted-fg);
+}
+
+.empty-state-projection-frame {
+  color: var(--primary);
+  margin-bottom: var(--spacing-lg);
+}
+
+.empty-state-projection-title {
+  font-family: var(--font-editorial);
+  font-size: 1.125rem;
+  color: var(--fg-base);
+  margin-bottom: var(--spacing-sm);
+}
+
+.empty-state-projection-message {
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  max-width: 36ch;
+}
+
+.empty-state-projection-hint {
+  margin-top: var(--spacing-md);
+  font-size: var(--font-size-xs);
+  opacity: 0.8;
+}
+
+.emotion-dots {
+  display: flex;
+  gap: 6px;
+  margin-top: var(--spacing-sm);
+}
+
+.emotion-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  opacity: 0.35;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.sanctuary-media-card:hover .emotion-dot,
+.sanctuary-media-card:focus-within .emotion-dot {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.emotion-dot[data-emotion='awe'] {
+  background: var(--color-awe);
+}
+
+.emotion-dot[data-emotion='melancholy'] {
+  background: var(--color-melancholy);
+}
+
+.emotion-dot[data-emotion='tension'] {
+  background: var(--color-tension);
+}
+
+.emotion-dot[data-emotion='warmth'] {
+  background: var(--color-warmth);
+}
+
+.film-grain {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.film-grain-app {
+  opacity: var(--grain-opacity-app);
+}
+
+.film-grain-popup {
+  opacity: var(--grain-opacity-popup);
+}
+
+.recently-reflected-strip {
+  display: flex;
+  gap: var(--spacing-md);
+  overflow-x: auto;
+  padding-bottom: var(--spacing-sm);
+  scrollbar-width: thin;
+}
+
+.recently-reflected-card {
+  flex: 0 0 140px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color var(--transition-base), transform var(--transition-fast);
+}
+
+.recently-reflected-card:hover {
+  border-color: var(--accent-gold-border);
+  transform: translateY(-2px);
+}
+
+.recently-reflected-poster {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  display: block;
+  background: var(--surface-inset);
+}
+
+.recently-reflected-meta {
+  padding: var(--spacing-sm);
+}
+
+.recently-reflected-title {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recently-reflected-aura {
+  display: flex;
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.recently-reflected-aura span {
+  height: 3px;
+  flex: 1;
+  border-radius: 2px;
+  opacity: 0.7;
+}
+
+.sanctuary-detail-emotions {
+  margin-top: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.poetic-emotions-panel {
+  margin-top: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.stats-weather-chart {
+  margin-bottom: var(--spacing-xl);
+}

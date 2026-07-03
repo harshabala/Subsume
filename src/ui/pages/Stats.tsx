@@ -2,6 +2,7 @@ import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { sendMessage } from '@/shared/messages';
 import { MessageType, LibraryItem, MediaItem } from '@/shared/types';
+import { EmotionalWeatherChart } from '../components/EmotionalWeatherChart';
 
 interface JoinedItem {
   library: LibraryItem;
@@ -83,6 +84,11 @@ export function Stats() {
         </div>
       ) : (
         <div className="stats-stack">
+          <EmotionalWeatherChart
+            items={items.map((item) => item.library)}
+            className="stats-weather-chart"
+          />
+
           <div className="stats-grid">
             <div className="stats-plaque-card">
               <span className="sanctuary-plaque-index stats-plaque-index">Plate I</span>

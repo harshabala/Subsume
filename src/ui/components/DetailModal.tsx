@@ -1,7 +1,10 @@
 import { h } from 'preact';
 import { useEffect, useState, useRef } from 'preact/hooks';
 import { MediaItem, LibraryItem, LibraryStatus } from '@/shared/types';
+import { DEFAULT_EMOTIONS, getEmotionalSpectrum, type EmotionalSpectrum } from '@/shared/emotions';
 import { PlatformChips } from './PlatformChips';
+import { EmotionalSliders } from './EmotionalSliders';
+import { AuraVisualizer } from './AuraVisualizer';
 import { STATUS_OPTIONS, getReflectionExcerpt } from './archive/constants';
 
 interface DetailModalProps {
@@ -11,7 +14,12 @@ interface DetailModalProps {
   onUpdateStatus?: (status: LibraryStatus) => void;
   onUpdateRating?: (rating: number) => void;
   onUpdateTags?: (tags: string[]) => void;
-  onUpdateNotes?: (notes: string, atmosphere?: string, lingeringThought?: string) => void;
+  onUpdateNotes?: (
+    notes: string,
+    atmosphere?: string,
+    lingeringThought?: string,
+    emotions?: EmotionalSpectrum,
+  ) => void;
   onAddToLibrary?: () => void;
 }
 
@@ -31,6 +39,9 @@ export function DetailModal({
   const [notes, setNotes] = useState(libraryItem?.notes || '');
   const [atmosphere, setAtmosphere] = useState(libraryItem?.atmosphere || '');
   const [lingeringThought, setLingeringThought] = useState(libraryItem?.lingeringThought || '');
+  const [emotions, setEmotions] = useState<EmotionalSpectrum>(
+    libraryItem ? getEmotionalSpectrum(libraryItem) : DEFAULT_EMOTIONS,
+  );
   const [detailsExpanded, setDetailsExpanded] = useState(false);
   const notesDebounceRef = useRef<ReturnType<typeof setTimeout>>();
 
@@ -40,7 +51,16 @@ export function DetailModal({
     setNotes(libraryItem?.notes || '');
     setAtmosphere(libraryItem?.atmosphere || '');
     setLingeringThought(libraryItem?.lingeringThought || '');
-  }, [libraryItem?.notes, libraryItem?.atmosphere, libraryItem?.lingeringThought]);
+    setEmotions(libraryItem ? getEmotionalSpectrum(libraryItem) : DEFAULT_EMOTIONS);
+  }, [
+    libraryItem?.notes,
+    libraryItem?.atmosphere,
+    libraryItem?.lingeringThought,
+    libraryItem?.awe,
+    libraryItem?.melancholy,
+    libraryItem?.tension,
+    libraryItem?.warmth,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -50,41 +70,46 @@ export function DetailModal({
     };
   }, []);
 
-  const handleNotesChange = (value: string) => {
-    setNotes(value);
+  const scheduleNotesSave = (
+    nextNotes: string,
+    nextAtmosphere: string,
+    nextLingering: string,
+    nextEmotions: EmotionalSpectrum,
+  ) => {
     if (notesDebounceRef.current) {
       clearTimeout(notesDebounceRef.current);
     }
     notesDebounceRef.current = setTimeout(() => {
-      onUpdateNotes?.(value, atmosphere, lingeringThought);
+      onUpdateNotes?.(nextNotes, nextAtmosphere, nextLingering, nextEmotions);
     }, 500);
+  };
+
+  const handleNotesChange = (value: string) => {
+    setNotes(value);
+    scheduleNotesSave(value, atmosphere, lingeringThought, emotions);
   };
 
   const handleAtmosphereChange = (value: string) => {
     setAtmosphere(value);
-    if (notesDebounceRef.current) {
-      clearTimeout(notesDebounceRef.current);
-    }
-    notesDebounceRef.current = setTimeout(() => {
-      onUpdateNotes?.(notes, value, lingeringThought);
-    }, 500);
+    scheduleNotesSave(notes, value, lingeringThought, emotions);
   };
 
   const handleLingeringChange = (value: string) => {
     setLingeringThought(value);
-    if (notesDebounceRef.current) {
-      clearTimeout(notesDebounceRef.current);
-    }
-    notesDebounceRef.current = setTimeout(() => {
-      onUpdateNotes?.(notes, atmosphere, value);
-    }, 500);
+    scheduleNotesSave(notes, atmosphere, value, emotions);
+  };
+
+  const handleEmotionChange = (key: keyof EmotionalSpectrum, value: number) => {
+    const nextEmotions = { ...emotions, [key]: value };
+    setEmotions(nextEmotions);
+    scheduleNotesSave(notes, atmosphere, lingeringThought, nextEmotions);
   };
 
   const flushNotes = () => {
     if (notesDebounceRef.current) {
       clearTimeout(notesDebounceRef.current);
       notesDebounceRef.current = undefined;
-      onUpdateNotes?.(notes, atmosphere, lingeringThought);
+      onUpdateNotes?.(notes, atmosphere, lingeringThought, emotions);
     }
   };
 
@@ -349,6 +374,17 @@ export function DetailModal({
                           className="sanctuary-detail-input"
                         />
                       </div>
+                    </div>
+
+                    <div className="sanctuary-detail-emotions" data-testid="detail-emotions-panel">
+                      <span className="sanctuary-detail-control-label">Emotional Spectrum:</span>
+                      <EmotionalSliders
+                        values={emotions}
+                        onChange={handleEmotionChange}
+                        variant="sanctuary"
+                        idPrefix="detail"
+                      />
+                      <AuraVisualizer values={emotions} variant="sanctuary" />
                     </div>
                   </div>
                 </div>

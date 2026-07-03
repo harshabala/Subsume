@@ -7,6 +7,7 @@ import {
   resolveSanctuaryIntent,
   getReflectionExcerpt,
 } from './constants';
+import { hasEmotionalData, getEmotionalSpectrum, EMOTION_KEYS } from '@/shared/emotions';
 
 export interface HardcoverSpineCardProps {
   library: LibraryItem;
@@ -88,6 +89,23 @@ export function HardcoverSpineCard({
         <span className="intent-chip" data-intent={intent}>
           {INTENT_CHIP_LABELS[intent]}
         </span>
+
+        {hasEmotionalData(library) && (
+          <div className="emotion-dots" data-testid="emotion-dots" aria-label="Emotional spectrum">
+            {EMOTION_KEYS.map((key) => {
+              const value = getEmotionalSpectrum(library)[key];
+              return (
+                <span
+                  key={key}
+                  className="emotion-dot"
+                  data-emotion={key}
+                  title={`${key}: ${value}`}
+                  style={{ opacity: 0.35 + (value / 100) * 0.65 }}
+                />
+              );
+            })}
+          </div>
+        )}
 
         <div className="hardcover-controls">
           <button

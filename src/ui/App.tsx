@@ -15,7 +15,8 @@ import { PoeticCaptureCanvas } from './components/PoeticCaptureCanvas';
 import { sendMessage } from '../shared/messages';
 import { MessageType, UserPreferences, LibraryItem, MediaItem, PersonItem } from '../shared/types';
 import { usePrefetch, prefetchPage, prefetchProps, type Page } from './hooks/usePrefetch';
-import { applyThemePreference, watchSystemTheme } from '../shared/theme';
+import { applyThemePreference, applyCinemaAtmosphere, watchSystemTheme } from '../shared/theme';
+import { FilmGrain } from './components/FilmGrain';
 import { ensureDemoLibraryIfEmpty } from './lib/ensureDemoLibrary';
 import './styles/sidebar.css';
 
@@ -120,6 +121,7 @@ export function App() {
         const theme = res.data.theme ?? 'dark';
         applyThemePreference(theme);
         watchSystemTheme(theme);
+        applyCinemaAtmosphere(res.data.cinemaAtmosphere ?? 'default');
       }
     }).catch(() => {});
 
@@ -225,6 +227,7 @@ export function App() {
 
   return (
     <div className="app-layout">
+      <FilmGrain variant="app" />
       {/* Top Navigation Bar */}
       <nav className="fixed-top-nav">
         <div className="nav-logo">Subsume</div>
@@ -313,7 +316,7 @@ export function App() {
           ))}
         </div>
         <div className="side-menu-footer">
-          <span>v0.1.5</span>
+          <span>v0.1.6</span>
           <span>{stats.movieCount} M / {stats.tvCount} T</span>
         </div>
       </div>
