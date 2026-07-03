@@ -370,6 +370,48 @@ describe('SET_USER_NOTES and SET_USER_TAGS', () => {
       })
     );
   });
+
+  it('persists emotional spectrum metrics (awe, melancholy, tension, warmth)', async () => {
+    const existingItem = {
+      mediaId: 'tmdb_movie_1',
+      notes: 'Old notes',
+    };
+    vi.mocked(getLibraryItem).mockResolvedValue(existingItem as any);
+
+    const handler = handlers[MessageType.SET_USER_NOTES]!;
+    const result = await handler(
+      {
+        mediaId: 'tmdb_movie_1',
+        notes: 'La La Land reflection',
+        awe: 82,
+        melancholy: 45,
+        tension: 12,
+        warmth: 91,
+      },
+      sender
+    );
+
+    expect(result).toEqual({ updated: true });
+    expect(putLibraryItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        awe: 82,
+        melancholy: 45,
+        tension: 12,
+        warmth: 91,
+      })
+    );
+  });
+
+  it('rejects out-of-range emotional metrics', async () => {
+    const handler = handlers[MessageType.SET_USER_NOTES]!;
+    const result = await handler(
+      { mediaId: 'tmdb_movie_1', notes: 'Bad', awe: 150 },
+      sender
+    );
+
+    expect(result).toEqual({ updated: false });
+    expect(putLibraryItem).not.toHaveBeenCalled();
+  });
 });
 
 describe('GET_PREFERENCES sanitization', () => {

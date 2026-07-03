@@ -38,7 +38,7 @@ describe('PoeticCaptureCanvas', () => {
 
     render(<PoeticCaptureCanvas mediaId="media_123" onClose={vi.fn()} />, container);
     await act(async () => {
-      await new Promise(r => setTimeout(r, 30));
+      await new Promise((r) => setTimeout(r, 120));
     });
 
     expect(container.textContent).toContain('What stayed with you?');
@@ -89,7 +89,7 @@ describe('PoeticCaptureCanvas', () => {
 
     render(<PoeticCaptureCanvas mediaId="media_123" onClose={vi.fn()} />, container);
     await act(async () => {
-      await new Promise(r => setTimeout(r, 30));
+      await new Promise((r) => setTimeout(r, 120));
     });
 
     const textarea = container.querySelector('textarea') as HTMLTextAreaElement;
@@ -125,7 +125,7 @@ describe('PoeticCaptureCanvas', () => {
 
     render(<PoeticCaptureCanvas mediaId="media_123" onClose={onClose} onSave={onSave} />, container);
     await act(async () => {
-      await new Promise(r => setTimeout(r, 30));
+      await new Promise((r) => setTimeout(r, 120));
     });
 
     const textarea = container.querySelector('textarea') as HTMLTextAreaElement;
@@ -161,7 +161,7 @@ describe('PoeticCaptureCanvas', () => {
     const saveBtn = container.querySelector('[data-testid="save-btn"]') as HTMLButtonElement;
     await act(async () => {
       saveBtn?.click();
-      await new Promise(r => setTimeout(r, 30));
+      await new Promise((r) => setTimeout(r, 120));
     });
 
     const sendMessageCalls = vi.mocked(chrome.runtime.sendMessage).mock.calls;

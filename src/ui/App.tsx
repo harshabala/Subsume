@@ -313,7 +313,7 @@ export function App() {
           ))}
         </div>
         <div className="side-menu-footer">
-          <span>v0.1.4</span>
+          <span>v0.1.5</span>
           <span>{stats.movieCount} M / {stats.tvCount} T</span>
         </div>
       </div>

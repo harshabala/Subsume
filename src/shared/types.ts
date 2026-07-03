@@ -71,6 +71,12 @@ export interface LibraryItem {
   contemplatedAt?: number;
   atmosphere?: string;
   lingeringThought?: string;
+
+  // Emotional spectrum metrics (0-100)
+  awe?: number;
+  melancholy?: number;
+  tension?: number;
+  warmth?: number;
 }
 
 export interface LibraryMediaPair {
@@ -243,6 +249,10 @@ export interface SetUserNotesRequest {
   emotionalRecall?: string;
   atmosphere?: string;
   lingeringThought?: string;
+  awe?: number;
+  melancholy?: number;
+  tension?: number;
+  warmth?: number;
 }
 
 export interface GetLibraryRequest {

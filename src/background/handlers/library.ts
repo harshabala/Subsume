@@ -145,6 +145,10 @@ export const libraryHandlers: MessageHandlerMap = {
     existing.notes = req.notes?.trim() || undefined;
     existing.atmosphere = req.atmosphere?.trim() || undefined;
     existing.lingeringThought = req.lingeringThought?.trim() || undefined;
+    existing.awe = req.awe !== undefined ? req.awe : existing.awe;
+    existing.melancholy = req.melancholy !== undefined ? req.melancholy : existing.melancholy;
+    existing.tension = req.tension !== undefined ? req.tension : existing.tension;
+    existing.warmth = req.warmth !== undefined ? req.warmth : existing.warmth;
     existing.updatedAt = Date.now();
     await putLibraryItem(existing);
     invalidateProfileCache();

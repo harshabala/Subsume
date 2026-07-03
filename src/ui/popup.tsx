@@ -1,8 +1,7 @@
-import { render } from 'preact';
-import { h } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { render, h } from 'preact';
+import { useEffect, useState, useRef } from 'preact/hooks';
 import { sendMessage } from '../shared/messages';
-import { MessageType, UserPreferences, LibraryItem, MediaItem } from '../shared/types';
+import { MessageType, UserPreferences, LibraryItem, MediaItem, SanctuaryIntent, LibraryStatus } from '../shared/types';
 import { applyThemePreference, watchSystemTheme } from '../shared/theme';
 import '../shared/tokens.css';
 import './styles/popup.css';
@@ -17,63 +16,309 @@ function openSanctuary(page?: string) {
   chrome.tabs.create({ url });
 }
 
+// Extract movie title from browser tab title
+function extractMovieTitle(pageTitle: string, url?: string): { query: string; year?: number } | null {
+  if (!pageTitle) return null;
+
+  let query = '';
+  let year: number | undefined;
+
+  const yearMatch = pageTitle.match(/\((\d{4})\)/);
+  if (yearMatch) {
+    year = parseInt(yearMatch[1], 10);
+  }
+
+  const lowercaseTitle = pageTitle.toLowerCase();
+  
+  // Skip obvious landing/non-film pages
+  if (
+    lowercaseTitle.includes('search') ||
+    lowercaseTitle.includes('results') ||
+    lowercaseTitle.includes('my list') ||
+    lowercaseTitle.includes('watchlist') ||
+    lowercaseTitle.includes('dashboard') ||
+    lowercaseTitle.includes('sign in') ||
+    lowercaseTitle.includes('login')
+  ) {
+    return null;
+  }
+
+  if (url && url.includes('letterboxd.com')) {
+    // e.g. "La La Land (2016) directed by Damien Chazelle..."
+    const match = pageTitle.match(/^(.*?)\s*\((\d{4})\)?/);
+    if (match) query = match[1].trim();
+  } else if (url && url.includes('imdb.com')) {
+    // e.g. "La La Land (2016) - IMDb" or "Past Lives (2023) - Reference View - IMDb"
+    const match = pageTitle.match(/^(.*?)\s*\((\d{4})\)?/);
+    if (match) query = match[1].trim();
+  } else if (pageTitle.includes('Wikipedia')) {
+    const match = pageTitle.match(/^(.*?)\s*\(.*film.*\)/);
+    if (match) query = match[1].trim();
+  } else if (pageTitle.includes('Netflix')) {
+    const match = pageTitle.match(/Watch\s+(.*?)\s*\|/i);
+    if (match) query = match[1].trim();
+  } else {
+    // Fallback: match first segment before brackets/delimiters
+    const match = pageTitle.match(/^(.*?)\s*\((\d{4})\)/);
+    if (match) {
+      query = match[1].trim();
+    } else {
+      const delMatch = pageTitle.match(/^(.*?)\s*[-|•]/);
+      if (delMatch) {
+        query = delMatch[1].trim();
+      }
+    }
+  }
+
+  // Clear queries that are too short or just garbage
+  if (!query || query.length < 2 || query.length > 80) return null;
+
+  return { query, year };
+}
+
 function Popup() {
   const [loading, setLoading] = useState(true);
+  const [activeView, setActiveView] = useState<'overview' | 'log'>('overview');
   const [items, setItems] = useState<JoinedItem[]>([]);
   const [stats, setStats] = useState({ total: 0, watched: 0, toWatch: 0 });
   const [prefs, setPrefs] = useState<UserPreferences | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const [libRes, prefsRes] = await Promise.all([
-          sendMessage(MessageType.GET_LIBRARY, { sortBy: 'addedAt' }),
-          sendMessage<{ revealKeys?: boolean }, UserPreferences>(
-            MessageType.GET_FULL_PREFERENCES,
-            { revealKeys: false }
-          ),
-        ]);
+  // Search and log states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<MediaItem[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [selectedMovie, setSelectedMovie] = useState<MediaItem | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
-        const joined = (libRes.data || []) as JoinedItem[];
-        setItems(joined.slice(0, 4));
-        setStats({
-          total: joined.length,
-          watched: joined.filter((j) => j.library.status === 'watched').length,
-          toWatch: joined.filter((j) => j.library.status === 'to-watch').length,
-        });
+  // Emotional sliders states
+  const [sliderAwe, setSliderAwe] = useState(50);
+  const [sliderMelancholy, setSliderMelancholy] = useState(50);
+  const [sliderTension, setSliderTension] = useState(50);
+  const [sliderWarmth, setSliderWarmth] = useState(50);
 
-        const p = prefsRes.data!;
-        setPrefs(p);
-        const theme = p.theme ?? 'dark';
-        applyThemePreference(theme);
-        watchSystemTheme(theme);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load');
-        applyThemePreference('system');
-        watchSystemTheme('system');
-      } finally {
-        setLoading(false);
-      }
+  // Notes & Intent states
+  const [logNotes, setLogNotes] = useState('');
+  const [sanctuaryIntent, setSanctuaryIntent] = useState<SanctuaryIntent>('keep_memory');
+  const [isSaving, setIsSaving] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  // Fetch library items and preferences
+  async function loadLibraryData() {
+    try {
+      const [libRes, prefsRes] = await Promise.all([
+        sendMessage(MessageType.GET_LIBRARY, { sortBy: 'addedAt' }),
+        sendMessage<{ revealKeys?: boolean }, UserPreferences>(
+          MessageType.GET_FULL_PREFERENCES,
+          { revealKeys: false }
+        ),
+      ]);
+
+      const joined = (libRes.data || []) as JoinedItem[];
+      setItems(joined.slice(0, 4));
+      setStats({
+        total: joined.length,
+        watched: joined.filter((j) => j.library.status === 'watched').length,
+        toWatch: joined.filter((j) => j.library.status === 'to-watch').length,
+      });
+
+      const p = prefsRes.data!;
+      setPrefs(p);
+      const theme = p.theme ?? 'dark';
+      applyThemePreference(theme);
+      watchSystemTheme(theme);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load library data');
+      applyThemePreference('system');
+      watchSystemTheme('system');
     }
-    load();
+  }
+
+  // Initial load + active tab context scanning
+  useEffect(() => {
+    async function init() {
+      setLoading(true);
+      await loadLibraryData();
+
+      // Check current tab to prepopulate search query
+      if (typeof chrome !== 'undefined' && chrome.tabs) {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          const activeTab = tabs[0];
+          if (activeTab && activeTab.title) {
+            const detected = extractMovieTitle(activeTab.title, activeTab.url);
+            if (detected) {
+              setSearchQuery(detected.query);
+              setActiveView('log');
+            }
+          }
+        });
+      }
+      setLoading(false);
+    }
+    init();
   }, []);
 
+  // Suggestions search query handler
+  useEffect(() => {
+    if (searchQuery.trim().length === 0) {
+      setSuggestions([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setSearchLoading(true);
+      try {
+        const res = await sendMessage<any, MediaItem[]>(MessageType.DISCOVERY_SEARCH, {
+          query: searchQuery,
+        });
+        if (res.success && res.data) {
+          setSuggestions(res.data.slice(0, 5));
+          setHighlightedIndex(-1);
+        }
+      } catch (err) {
+        console.error('[Subsume Popup] Title search failed:', err);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Click outside suggestions dropdown handler
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Sync sliders to generate dynamic oklch aura glow background gradient
+  const auraGlowStyle = {
+    background: `
+      radial-gradient(circle at 10% 20%, var(--color-awe, oklch(68% 0.16 280)) 0%, transparent ${sliderAwe}%),
+      radial-gradient(circle at 90% 10%, var(--color-melancholy, oklch(64% 0.15 220)) 0%, transparent ${sliderMelancholy}%),
+      radial-gradient(circle at 20% 90%, var(--color-tension, oklch(60% 0.18 20)) 0%, transparent ${sliderTension}%),
+      radial-gradient(circle at 80% 80%, var(--color-warmth, oklch(76% 0.16 55)) 0%, transparent ${sliderWarmth}%)
+    `
+  };
+
+  // Select movie from search list
+  const handleSelectMovie = (movie: MediaItem) => {
+    setSelectedMovie(movie);
+    setSearchQuery(movie.canonicalTitle);
+    setShowSuggestions(false);
+    setHighlightedIndex(-1);
+
+    // Populate sliders with existing emotional values if already logged
+    sendMessage(MessageType.GET_LIBRARY, { sortBy: 'addedAt' }).then((res) => {
+      if (res.success && res.data) {
+        const matchingItem = (res.data as JoinedItem[]).find(j => j.library.mediaId === movie.id);
+        if (matchingItem?.library) {
+          const lib = matchingItem.library;
+          if (lib.awe !== undefined) setSliderAwe(lib.awe);
+          if (lib.melancholy !== undefined) setSliderMelancholy(lib.melancholy);
+          if (lib.tension !== undefined) setSliderTension(lib.tension);
+          if (lib.warmth !== undefined) setSliderWarmth(lib.warmth);
+          if (lib.notes) setLogNotes(lib.notes);
+          if (lib.sanctuaryIntent) setSanctuaryIntent(lib.sanctuaryIntent);
+        }
+      }
+    }).catch(() => {});
+  };
+
+  // Submit Reflection log
+  const handleSaveLog = async () => {
+    if (!selectedMovie) return;
+    setIsSaving(true);
+    try {
+      // 1. Add movie to catalog database
+      await sendMessage(MessageType.ADD_TO_LIST, {
+        mediaItem: selectedMovie,
+        type: selectedMovie.type,
+      });
+
+      // 2. Map sanctuary intent to library status
+      const statusMap: Record<SanctuaryIntent, LibraryStatus> = {
+        keep_memory: 'watched',
+        revisit_this_month: 'watching',
+        wishlist: 'to-watch',
+      };
+      await sendMessage(MessageType.UPDATE_STATUS, {
+        mediaId: selectedMovie.id,
+        status: statusMap[sanctuaryIntent],
+      });
+
+      // 3. Save notes and emotional spectrum ratings
+      const notesRes = await sendMessage<{ updated?: boolean }, { updated: boolean }>(
+        MessageType.SET_USER_NOTES,
+        {
+          mediaId: selectedMovie.id,
+          notes: logNotes.trim(),
+          emotionalRecall: logNotes.trim() || undefined,
+          awe: sliderAwe,
+          melancholy: sliderMelancholy,
+          tension: sliderTension,
+          warmth: sliderWarmth,
+        }
+      );
+      if (!notesRes.data?.updated) {
+        throw new Error('Failed to persist emotional reflection to library.');
+      }
+
+      // Display success feedback
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        // Reset states and reload library counts
+        setSelectedMovie(null);
+        setSearchQuery('');
+        setLogNotes('');
+        setSliderAwe(50);
+        setSliderMelancholy(50);
+        setSliderTension(50);
+        setSliderWarmth(50);
+        setSanctuaryIntent('keep_memory');
+        setActiveView('overview');
+        loadLibraryData();
+      }, 1500);
+
+    } catch (err) {
+      console.error('[Subsume Popup] Failed to log movie:', err);
+      alert('Failed to log movie: ' + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (loading) {
-    return h('div', { className: 'popup-shell' }, h('div', { className: 'popup-loading' }, 'Opening sanctuary…'));
+    return (
+      <div className="popup-shell">
+        <div className="popup-loading">Opening sanctuary…</div>
+      </div>
+    );
   }
 
   if (error) {
-    return h('div', { className: 'popup-shell' }, [
-      h('div', { className: 'popup-header' }, [
-        h('div', { className: 'popup-brand' }, 'Subsume'),
-        h('div', { className: 'popup-tagline' }, 'Your cinematic journal'),
-      ]),
-      h('div', { className: 'popup-empty' }, error),
-      h('div', { className: 'popup-actions' }, [
-        h('button', { className: 'popup-btn popup-btn-primary', onClick: () => openSanctuary() }, 'Open Sanctuary'),
-      ]),
-    ]);
+    return (
+      <div className="popup-shell">
+        <header className="popup-header">
+          <div className="popup-brand">
+            <span className="popup-brand-mark"></span>
+            Subsume
+          </div>
+          <div className="popup-tagline">Cinematic Sanctuary</div>
+        </header>
+        <div className="popup-empty">
+          <p>{error}</p>
+          <button className="popup-btn popup-btn-primary" onClick={() => openSanctuary()}>Open Sanctuary</button>
+        </div>
+      </div>
+    );
   }
 
   const overlaysOn = prefs?.posterOverlaysEnabled !== false;
@@ -81,89 +326,381 @@ function Popup() {
   const hasTmdb = Boolean(prefs?.tmdbApiKey?.trim());
   const hasOmdb = Boolean(prefs?.omdbApiKey?.trim());
 
-  return h('div', { className: 'popup-shell' }, [
-    h('div', { className: 'popup-header' }, [
-      h('div', { className: 'popup-brand' }, 'Subsume'),
-      h('div', { className: 'popup-tagline' }, 'Track films as you browse'),
-    ]),
+  return (
+    <div className="popup-shell">
+      {/* Success Animation overlay */}
+      <div className={`log-success-overlay ${showSuccess ? 'active' : ''}`}>
+        <div className="success-icon-circle">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <h4 className="success-title">Reflection Saved</h4>
+        <p className="success-message">Appended to your Cinematic Sanctuary.</p>
+      </div>
 
-    h('div', { className: 'popup-stats' }, [
-      h('div', { className: 'popup-stat' }, [
-        h('div', { className: 'popup-stat-value' }, String(stats.total)),
-        h('div', { className: 'popup-stat-label' }, 'In Library'),
-      ]),
-      h('div', { className: 'popup-stat' }, [
-        h('div', { className: 'popup-stat-value' }, String(stats.watched)),
-        h('div', { className: 'popup-stat-label' }, 'Watched'),
-      ]),
-      h('div', { className: 'popup-stat' }, [
-        h('div', { className: 'popup-stat-value' }, String(stats.toWatch)),
-        h('div', { className: 'popup-stat-label' }, 'To Watch'),
-      ]),
-    ]),
+      {/* VIEW 1: Overview and Recent log history */}
+      <div className={`popup-view ${activeView === 'overview' ? 'active' : ''}`}>
+        <header className="popup-header">
+          <div className="popup-brand-area">
+            <div className="popup-brand">
+              <span className="popup-brand-mark"></span>
+              Subsume
+            </div>
+            <div className="popup-tagline">Track films as you browse</div>
+          </div>
+          <button className="popup-close-btn" onClick={() => window.close()} title="Close popup">×</button>
+        </header>
 
-    h('div', { className: 'popup-status' }, [
-      h('div', null, [
-        'Browsing overlays: ',
-        h('strong', { className: overlaysOn && hoverOn ? 'popup-status-ok' : 'popup-status-warn' },
-          overlaysOn && hoverOn ? 'Active' : 'Partially off'),
-      ]),
-      h('div', null, [
-        'Ratings API: ',
-        hasTmdb || hasOmdb
-          ? h('strong', { className: 'popup-status-ok' }, hasTmdb && hasOmdb ? 'TMDb + OMDb' : hasTmdb ? 'TMDb' : 'OMDb')
-          : h('strong', { className: 'popup-status-warn' }, 'Free sources (add keys for IMDb)'),
-      ]),
-    ]),
+        <div className="popup-stats">
+          <div className="popup-stat">
+            <div className="popup-stat-value">{stats.total}</div>
+            <div className="popup-stat-label">Archive</div>
+          </div>
+          <div className="popup-stat">
+            <div className="popup-stat-value">{stats.watched}</div>
+            <div className="popup-stat-label">Watched</div>
+          </div>
+          <div className="popup-stat">
+            <div className="popup-stat-value">{stats.toWatch}</div>
+            <div className="popup-stat-label">To Watch</div>
+          </div>
+        </div>
 
-    h('div', { className: 'popup-section' }, [
-      h('div', { className: 'popup-section-title' }, 'Recent in Sanctuary'),
-      items.length === 0
-        ? h('div', { className: 'popup-empty' }, [
-            h('p', null, 'Your archive is empty.'),
-            h('button', {
-              className: 'popup-btn',
-              style: { marginTop: '10px' },
-              onClick: async () => {
-                try {
-                  await sendMessage(MessageType.RESTORE_DEMO_LIBRARY, {});
-                  window.location.reload();
-                } catch {
-                  /* ignore */
+        <div className="popup-status">
+          <div>
+            Browsing overlays:{' '}
+            <strong className={overlaysOn && hoverOn ? 'popup-status-ok' : 'popup-status-warn'}>
+              {overlaysOn && hoverOn ? 'Active' : 'Partially off'}
+            </strong>
+          </div>
+          <div>
+            Ratings sources:{' '}
+            <strong className={hasTmdb || hasOmdb ? 'popup-status-ok' : 'popup-status-warn'}>
+              {hasTmdb || hasOmdb ? (hasTmdb && hasOmdb ? 'TMDb + OMDb' : hasTmdb ? 'TMDb' : 'OMDb') : 'Free Sources (trakt)'}
+            </strong>
+          </div>
+        </div>
+
+        <div className="popup-section">
+          <div className="popup-section-title">Recent In Sanctuary</div>
+          {items.length === 0 ? (
+            <div className="popup-empty">
+              <p>Your archive is empty.</p>
+              <button
+                className="popup-btn"
+                style={{ marginTop: '4px' }}
+                onClick={async () => {
+                  try {
+                    await sendMessage(MessageType.RESTORE_DEMO_LIBRARY, {});
+                    loadLibraryData();
+                  } catch {
+                    /* ignore */
+                  }
+                }}
+              >
+                Load Demo Sanctuary
+              </button>
+            </div>
+          ) : (
+            <div className="popup-recent">
+              {items.map((item) => (
+                <button
+                  key={item.library.mediaId}
+                  type="button"
+                  className="popup-recent-item"
+                  onClick={() => openSanctuary('library')}
+                >
+                  {item.media.posterUrl ? (
+                    <img className="popup-recent-poster" src={item.media.posterUrl} alt="" />
+                  ) : (
+                    <div className="popup-recent-poster" />
+                  )}
+                  <div className="popup-recent-meta">
+                    <div className="popup-recent-title">{item.media.canonicalTitle}</div>
+                    <div className="popup-recent-sub">
+                      <span>{item.media.year || '—'}</span>
+                      <span>·</span>
+                      <span className={`popup-status-badge ${item.library.status}`}>
+                        {item.library.status.replace('-', ' ')}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="popup-actions">
+          <button className="popup-btn popup-btn-primary" onClick={() => setActiveView('log')}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Log a Movie / Show
+          </button>
+          <div className="popup-actions-row">
+            <button className="popup-btn" onClick={() => openSanctuary('settings')} title="Sanctuary Settings">Settings</button>
+            <button className="popup-btn" onClick={() => openSanctuary()}>Open Sanctuary App</button>
+          </div>
+        </div>
+      </div>
+
+      {/* VIEW 2: Interactive Log Movie Form */}
+      <div className={`popup-view ${activeView === 'log' ? 'active' : ''}`}>
+        <header className="popup-header">
+          <div className="popup-brand-area">
+            <div className="popup-brand">
+              <span className="popup-brand-mark"></span>
+              Log Movie
+            </div>
+            <div className="popup-tagline">Capture cinema emotions</div>
+          </div>
+          <button className="popup-close-btn" onClick={() => {
+            setSelectedMovie(null);
+            setSearchQuery('');
+            setActiveView('overview');
+          }} title="Back to overview">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+          </button>
+        </header>
+
+        <div className="ext-body">
+          {/* Step 1: Search movie */}
+          <div className="search-wrapper" ref={searchContainerRef}>
+            <input
+              type="text"
+              className="search-input"
+              role="combobox"
+              aria-expanded={showSuggestions && (suggestions.length > 0 || searchLoading)}
+              aria-controls="popup-suggestions-list"
+              aria-autocomplete="list"
+              value={searchQuery}
+              onInput={(e) => {
+                setSearchQuery((e.target as HTMLInputElement).value);
+                setShowSuggestions(true);
+                setHighlightedIndex(-1);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              onKeyDown={(e) => {
+                if (!showSuggestions || suggestions.length === 0) {
+                  if (e.key === 'Escape') setShowSuggestions(false);
+                  return;
                 }
-              },
-            }, 'Load Demo Sanctuary'),
-          ])
-        : h('div', { className: 'popup-recent' },
-            items.map((item) =>
-              h('button', {
-                key: item.library.mediaId,
-                type: 'button',
-                className: 'popup-recent-item',
-                onClick: () => openSanctuary('library'),
-              }, [
-                item.media.posterUrl
-                  ? h('img', { className: 'popup-recent-poster', src: item.media.posterUrl, alt: '' })
-                  : h('div', { className: 'popup-recent-poster' }),
-                h('div', { className: 'popup-recent-meta' }, [
-                  h('div', { className: 'popup-recent-title' }, item.media.canonicalTitle),
-                  h('div', { className: 'popup-recent-sub' },
-                    `${item.media.year || '—'} · ${item.library.status.replace('-', ' ')}`),
-                ]),
-              ])
-            )
-          ),
-    ]),
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  setHighlightedIndex((i) => (i + 1) % suggestions.length);
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  setHighlightedIndex((i) => (i <= 0 ? suggestions.length - 1 : i - 1));
+                } else if (e.key === 'Enter' && highlightedIndex >= 0) {
+                  e.preventDefault();
+                  handleSelectMovie(suggestions[highlightedIndex]);
+                } else if (e.key === 'Escape') {
+                  setShowSuggestions(false);
+                  setHighlightedIndex(-1);
+                }
+              }}
+              placeholder="Search movie or series..."
+              autoComplete="off"
+            />
+            
+            {showSuggestions && (suggestions.length > 0 || searchLoading) && (
+              <ul id="popup-suggestions-list" className="suggestions-list" role="listbox">
+                {searchLoading ? (
+                  <li className="suggestion-item" role="option" style={{ fontStyle: 'italic', justifyContent: 'center' }}>Searching titles…</li>
+                ) : (
+                  suggestions.map((movie, index) => (
+                    <li
+                      key={movie.id}
+                      role="option"
+                      aria-selected={highlightedIndex === index}
+                      className={`suggestion-item${highlightedIndex === index ? ' highlighted' : ''}`}
+                      onClick={() => handleSelectMovie(movie)}
+                      onMouseEnter={() => setHighlightedIndex(index)}
+                    >
+                      <div className="suggestion-item-main">
+                        <span className="suggestion-title">{movie.canonicalTitle}</span>
+                        <span className="suggestion-meta">{movie.type === 'tv' ? 'TV Series' : 'Movie'}</span>
+                      </div>
+                      <span className="suggestion-year">{movie.year || '—'}</span>
+                    </li>
+                  ))
+                )}
+              </ul>
+            )}
+          </div>
 
-    h('div', { className: 'popup-actions' }, [
-      h('button', { className: 'popup-btn popup-btn-primary', onClick: () => openSanctuary() }, 'Open Sanctuary'),
-      h('button', { className: 'popup-btn', onClick: () => openSanctuary('library') }, 'View Library'),
-      h('button', { className: 'popup-btn', onClick: () => openSanctuary('settings') }, 'Settings & API Keys'),
-    ]),
-  ]);
+          {/* Selected Movie Preview Card */}
+          {selectedMovie && (
+            <div className="selected-movie-preview">
+              <div className="selected-movie-preview-poster">
+                {selectedMovie.posterUrl ? (
+                  <img src={selectedMovie.posterUrl} alt={selectedMovie.canonicalTitle} />
+                ) : (
+                  <svg width="18" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                  </svg>
+                )}
+              </div>
+              <div className="selected-movie-preview-details">
+                <h4>{selectedMovie.canonicalTitle}</h4>
+                <p>{selectedMovie.year || '—'} · {selectedMovie.type === 'tv' ? 'TV Series' : 'Movie'}</p>
+              </div>
+              <button
+                className="selected-movie-deselect-btn"
+                onClick={() => {
+                  setSelectedMovie(null);
+                  setSearchQuery('');
+                }}
+                title="Deselect movie"
+              >
+                ×
+              </button>
+            </div>
+          )}
+
+          {/* Step 2: Emotional Sliders */}
+          <div className="sliders-container">
+            <div className="slider-group">
+              <div className="slider-header">
+                <span>Awe / Grandeur</span>
+                <span className="slider-value">{sliderAwe}</span>
+              </div>
+              <div className="slider-row">
+                <input
+                  type="range"
+                  className="slider-input"
+                  id="slider-awe"
+                  min="0"
+                  max="100"
+                  value={sliderAwe}
+                  onInput={(e) => setSliderAwe(parseInt((e.target as HTMLInputElement).value, 10))}
+                />
+              </div>
+            </div>
+
+            <div className="slider-group">
+              <div className="slider-header">
+                <span>Melancholy / Sorrow</span>
+                <span className="slider-value">{sliderMelancholy}</span>
+              </div>
+              <div className="slider-row">
+                <input
+                  type="range"
+                  className="slider-input"
+                  id="slider-melancholy"
+                  min="0"
+                  max="100"
+                  value={sliderMelancholy}
+                  onInput={(e) => setSliderMelancholy(parseInt((e.target as HTMLInputElement).value, 10))}
+                />
+              </div>
+            </div>
+
+            <div className="slider-group">
+              <div className="slider-header">
+                <span>Tension / Suspense</span>
+                <span className="slider-value">{sliderTension}</span>
+              </div>
+              <div className="slider-row">
+                <input
+                  type="range"
+                  className="slider-input"
+                  id="slider-tension"
+                  min="0"
+                  max="100"
+                  value={sliderTension}
+                  onInput={(e) => setSliderTension(parseInt((e.target as HTMLInputElement).value, 10))}
+                />
+              </div>
+            </div>
+
+            <div className="slider-group">
+              <div className="slider-header">
+                <span>Warmth / Nostalgia</span>
+                <span className="slider-value">{sliderWarmth}</span>
+              </div>
+              <div className="slider-row">
+                <input
+                  type="range"
+                  className="slider-input"
+                  id="slider-warmth"
+                  min="0"
+                  max="100"
+                  value={sliderWarmth}
+                  onInput={(e) => setSliderWarmth(parseInt((e.target as HTMLInputElement).value, 10))}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Step 3: Dynamic Canvas Visualizer */}
+          <div className="vibe-visualizer">
+            <div className="vibe-glow-layer" style={auraGlowStyle}></div>
+            <span className="vibe-label">Generated Aura Spectrum</span>
+          </div>
+
+          {/* Journal Notes */}
+          <textarea
+            className="ext-notes-textarea"
+            value={logNotes}
+            onInput={(e) => setLogNotes((e.target as HTMLTextAreaElement).value)}
+            placeholder="Write a reflection or memory on how this film left you feeling..."
+          />
+
+          {/* Sanctuary Status Intent Selector */}
+          <div className="intent-selector-group">
+            <span className="intent-selector-label">Sanctuary Intent</span>
+            <div className="intent-pills" role="group" aria-label="Sanctuary intent">
+              <button
+                type="button"
+                className={`intent-pill ${sanctuaryIntent === 'keep_memory' ? 'active' : ''}`}
+                onClick={() => setSanctuaryIntent('keep_memory')}
+              >
+                Watched
+              </button>
+              <button
+                type="button"
+                className={`intent-pill ${sanctuaryIntent === 'revisit_this_month' ? 'active' : ''}`}
+                onClick={() => setSanctuaryIntent('revisit_this_month')}
+              >
+                Watching
+              </button>
+              <button
+                type="button"
+                className={`intent-pill ${sanctuaryIntent === 'wishlist' ? 'active' : ''}`}
+                onClick={() => setSanctuaryIntent('wishlist')}
+              >
+                To Watch
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="popup-actions" style={{ paddingTop: '8px' }}>
+          <button
+            className="popup-btn popup-btn-primary"
+            onClick={handleSaveLog}
+            disabled={!selectedMovie || isSaving}
+          >
+            {isSaving ? 'Logging Reflection…' : 'Log to Cinematic Archive'}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 const root = document.getElementById('popup-root');
 if (root) {
-  render(h(Popup), root);
+  render(<Popup />, root);
 }
