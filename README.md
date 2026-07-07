@@ -2,63 +2,79 @@
 
 > A Chrome extension for cinephiles who want to own their taste — not just consume it.
 
----
-
-## 🌟 The Philosophy: A Private Cinematic Sanctuary
-
-Modern content discovery is fundamentally broken. Giant streaming conglomerates design algorithms to maximize aggregate runtime and passive viewer retention rather than authentic, idiosyncratic taste. Recommendations are flattened into generic demographic clusters ("People who watched X also watched Y").
-
-**Subsume** is not a movie tracker. It is not a note-taking application. It is not a productivity tool.
-
-Subsume is a **private cinematic sanctuary**.
-
-The application evokes the emotional experience of entering a beautiful historic theatre: anticipation, immersion, reflection, and memory. Every interaction reinforces this feeling. The objective is not to maximize feature usage or data entry — it is to maximize **quality of reflection**.
-
-> *If users leave with a deeper emotional connection to what they watched, the product has succeeded.*
+<!-- Add a screenshot or short GIF here of the Poetic Capture Canvas or the museum plaque hover reveal.
+     This is the single highest-leverage addition to this README — a portfolio reader decides
+     whether to keep reading in about 3 seconds, and a visual does that work instantly. -->
 
 ---
 
-## 🔥 What Makes Subsume Unique
+## Table of Contents
 
-1. **Auteur-First Discovery:** Traditional apps categorize film by superficial genre tags (Drama, Action). Subsume treats **filmmakers and key crew** (directors, cinematographers, writers, actors) as primary artistic entities. You can track Roger Deakins' lighting arc or Charlie Kaufman's thematic progression with your personal scores overlaid across their entire historical body of work.
-
-2. **Omnipresent Museum Plaque Overlays (Shadow DOM Encapsulation):** Discovery happens everywhere. Subsume scans posters across any webpage and injects **museum catalogue plaques** — quiet, typographically refined rating badges with a smooth spring-expansion hover reveal (`★ 8.4 │ Reflect`). Everything is encapsulated inside isolated **Shadow DOM containers**, guaranteeing zero CSS pollution or layout breakage regardless of host site styling.
-
-3. **Poetic Capture Canvas (Emotion Before Metadata):** When you add something to your sanctuary, you are first asked: *"What stayed with you?"* Only after writing does the interface progressively reveal intent buckets and ratings. Your emotional recall is the primary artifact — not the IMDb score.
-
-4. **Hardcover Library Archive with Living Intent Buckets:** Your library isn't a grid of database rows. It is an editorial hardcover archive grouped by your cinematic intent: **Keep This Memory**, **Revisit This Month**, and **Wishlist**. Each spine card surfaces your personal `emotionalRecall` as an italicised excerpt.
-
-5. **Auteur Screenplay Dock:** A floating, Shadow DOM-isolated reflection dock persists in the corner of any page, letting you record screenplay concepts, narrative parallels, and cinematic observations in the moment — saved directly to your personal sanctuary.
-
-6. **Zero-IPC Watchlist Acceleration:** Content scripts maintain a synchronous, in-memory O(1) Set of your watchlist. Hover cards and badge statuses resolve instantly without expensive IPC message passing or IndexedDB overhead.
-
-7. **Two-Stage Contextual AI Prompting:** A 6.5 on IMDb might be a 10 for you. Subsume constructs a rich taste profile from your highest-rated qualitative notes, queries LLMs (OpenAI, Anthropic, Gemini) to retrieve meaningful matches, and conditionally makes a secondary call to group recommendations by loved reference seeds.
-
-8. **Decoupled MV3 SOLID Architecture:** Built on strict Clean Code principles (Robert C. Martin). Background workflows are partitioned into single-responsibility domain handler maps. AI engines are abstracted behind a polymorphic adapter pattern. Every boundary is defensive and typed.
+- [The Philosophy](#the-philosophy-a-private-cinematic-sanctuary)
+- [What Makes Subsume Unique](#what-makes-subsume-unique)
+- [Three Acts of Interaction](#three-acts-of-interaction)
+- [Feature Overview](#comprehensive-feature-overview)
+- [Architecture](#architecture--engineering-blueprints)
+- [Security](#security)
+- [Setup & Local Run](#setup--local-run-guide)
+- [Attribution](#attribution--acknowledgements)
+- [License](#license)
 
 ---
 
-## 🏛️ Three Acts of Interaction
+## The Philosophy: A Private Cinematic Sanctuary
+
+Modern content discovery is built to maximize aggregate runtime, not authentic taste. Recommendations get flattened into demographic clusters — "people who watched X also watched Y" — and the individual eye that noticed the lighting, the cut, the performance, gets lost.
+
+**Subsume** is not a tracker. It's not a notes app. It's a **private cinematic sanctuary** — built to feel like stepping into a theatre lobby: anticipation, immersion, reflection, memory.
+
+The goal isn't feature usage or data entry. It's quality of reflection.
+
+> *If you leave a film with a deeper emotional connection to it than when you walked in, Subsume did its job.*
+
+---
+
+## What Makes Subsume Unique
+
+1. **Auteur-First Discovery** — Traditional apps sort by genre (Drama, Action). Subsume treats filmmakers and key crew — directors, cinematographers, writers, actors — as the primary artistic unit. Track Roger Deakins' lighting arc or Charlie Kaufman's thematic throughline, with your own scores layered across their full body of work.
+
+2. **Museum Catalogue Plaques** — Discovery happens everywhere you already browse. Subsume scans posters on any webpage and injects a quiet, typographically refined rating badge (`★ 8.4 │ Reflect`) with a spring-expansion hover reveal. Every injection lives in its own isolated Shadow DOM container, so it never touches or breaks host-site CSS.
+
+3. **Poetic Capture Canvas** — Adding something to your sanctuary starts with one question: *"What stayed with you?"* Only after you write does the interface reveal intent buckets and a rating scale. Your emotional recall is the primary artifact here — not the IMDb score.
+
+4. **Hardcover Library Archive** — Your library isn't a grid of rows. It's an editorial archive grouped by living intent — **Keep This Memory**, **Revisit This Month**, **Wishlist** — with your own `emotionalRecall` surfaced as an italicised excerpt on each spine.
+
+5. **Auteur Screenplay Dock** — A floating reflection notepad, isolated the same way as the plaques, that stays with you on any page for recording narrative parallels and screenplay ideas in the moment they occur to you.
+
+6. **Zero-IPC Watchlist Acceleration** — Your watchlist lives as a synchronous, in-memory O(1) Set inside the content script, so hover cards and badge states resolve instantly — no IPC round-trip, no IndexedDB read on every hover.
+
+7. **Two-Stage Contextual AI Prompting** — A 6.5 on IMDb might be a 10 for you. Subsume builds a taste profile from your highest-rated qualitative notes, queries an LLM of your choice (OpenAI, Anthropic, Gemini) for matches, and optionally makes a second pass to cluster results by the reference seeds you loved most.
+
+8. **Decoupled, SOLID-First Architecture** — Background logic is split into single-responsibility domain handler maps. AI providers sit behind a polymorphic adapter interface. Every boundary is typed and defensive — built the way I'd want to hand this off to another engineer, not just the way that gets a demo working.
+
+---
+
+## Three Acts of Interaction
 
 ### Act I — Discovery
-Subsume scans any webpage for visual content. When it finds a poster, it injects a museum catalogue plaque: a quiet Shadow DOM card showing the title, rating, and a `Reflect` trigger. Hovering any detected movie title reveals an instant hover card — no tab switching, no friction.
+Subsume scans any webpage for posters and injects a museum catalogue plaque: title, rating, and a `Reflect` trigger. Hover any detected title for an instant card — no tab switching.
 
 ### Act II — Capture
-Clicking `Reflect` opens the **Poetic Capture Canvas** — a full-screen, focus-pull experience. Your poster artwork blurs softly into the background. A single prompt — *"What stayed with you?"* — occupies the centre. Only after you begin writing does the canvas reveal intent selectors and a 1–10 rating scale. Emotion precedes metadata, always.
+`Reflect` opens the **Poetic Capture Canvas** — full-screen, the poster art blurred softly behind a single centred prompt: *"What stayed with you?"* Only once you start writing does the canvas reveal intent selectors and a 1–10 scale. Emotion before metadata, always.
 
 ### Act III — Archive
-Your **Hardcover Library Archive** organises everything you've captured. Each title is a spine in a quiet editorial collection grouped by living intent. Search, filter by auteur-tagged crews, sort by recency or resonance. Click any spine to enter the full `DetailModal` — your complete record of that cinematic encounter.
+The **Hardcover Library Archive** organizes everything you've captured — each title a spine in an editorial collection, searchable and filterable by auteur-tagged crew, sortable by recency or resonance. Click a spine for the full `DetailModal` — your complete record of that encounter.
 
 ---
 
-## 🛠️ Comprehensive Feature Overview
+## Comprehensive Feature Overview
 
 | Feature | What It Accomplishes | Technical Implementation |
 | :--- | :--- | :--- |
 | **Museum Catalogue Plaques** | Rating badges with hover expansion on any webpage poster | Open Shadow DOM, MutationObserver, spring CSS transitions |
 | **Poetic Capture Canvas** | Emotion-first capture with progressive disclosure | Preact, URL param routing (`?act=capture`), focus-pull blur keyframes |
 | **Hardcover Library Archive** | Editorial archive grouped by `sanctuaryIntent` with `emotionalRecall` excerpts | Preact, `useMemo` intent filtering, `isMountedRef` async safety |
-| **Auteur Screenplay Dock** | Floating reflection notepad on any page | Open Shadow DOM, toggle collapse/expand, `destroy()` lifecycle |
+| **Auteur Screenplay Dock** | Floating reflection notepad on any page | Shadow DOM, toggle collapse/expand, `destroy()` lifecycle |
 | **Chronological Filmography Tracking** | Follow directors, DPs, actors, writers across their full body of work | TMDb Person API, IndexedDB people store |
 | **Cross-Site Hover Cards** | Instant synopsis and status on any movie title | Isolated DOM injection, debounced pointer controllers, O(1) cache |
 | **Contextual LLM Recommendations** | AI discovery from your actual taste profile and notes | Two-stage prompting pipeline, OpenAI / Anthropic / Gemini adapters |
@@ -67,41 +83,42 @@ Your **Hardcover Library Archive** organises everything you've captured. Each ti
 
 ---
 
-## 📐 Architecture & Engineering Blueprints
+## Architecture & Engineering Blueprints
 
 > **Design authority:** UI implementation follows `CINEMATIC_JOURNAL_DESIGN_SPEC.md` and `src/shared/tokens.css`. Those sources supersede `brand.md` on conflicts (typography, tokens, motion).
 
 ```text
   ┌────────────────────────────────────────────────────────┐
   │              Any Website (Content Layer)               │
-  │  MutationObserver → Image Scanner & Title Matcher      │
-  │  Shadow DOM: Museum Plaques · Hover Cards · Dock       │
+  │  MutationObserver → Image Scanner & Title Matcher       │
+  │  Shadow DOM: Museum Plaques · Hover Cards · Dock        │
   └──────────────────────────┬─────────────────────────────┘
                              │ O(1) Sync Cache / IPC Message
   ┌──────────────────────────▼─────────────────────────────┐
-  │               Background Service Worker                │
-  │  Domain Handler Maps (Library · LLM · Prefs · Sync)    │
-  │  Polymorphic AI Adapters (OpenAI · Anthropic · Gemini) │
+  │               Background Service Worker                 │
+  │  Domain Handler Maps (Library · LLM · Prefs · Sync)     │
+  │  Polymorphic AI Adapters (OpenAI · Anthropic · Gemini)  │
   └──────────────────────────┬─────────────────────────────┘
                              │ Atomic Transactions
   ┌──────────────────────────▼─────────────────────────────┐
-  │             Persistent Storage (IndexedDB)             │
-  │   media · library · people · tmdbCache · alerts        │
-  │   v2 schema: sanctuaryIntent · emotionalRecall         │
+  │             Persistent Storage (IndexedDB)              │
+  │   media · library · people · tmdbCache · alerts         │
+  │   v2 schema: sanctuaryIntent · emotionalRecall          │
   │              scriptParallels · originalScreenplaySparks │
   └────────────────────────────────────────────────────────┘
 ```
 
-### 🔹 Clean Code & SOLID Standards Enforced
-- **Single Responsibility (SRP):** Domain handler registries (`libraryHandlers`, `llmHandlers`, `syncHandlers`, `settingsHandlers`) replace monolithic switch statements. Background `index.ts` is 41 lines.
-- **Open/Closed (OCP):** AI providers implement a common adapter interface. Adding Ollama or DeepSeek requires zero changes to the core pipeline.
-- **Strict TypeScript:** Zero `any` types across the production codebase. All `unknown` inputs are narrowed at boundaries.
-- **Memory Safety:** All Shadow DOM managers (`MuseumPlaqueManager`, `AuteurScreenplayDock`) implement explicit `destroy()` lifecycles. All async hooks use `isMountedRef` cancellation flags.
-- **Structured Telemetry:** 100% of diagnostic messaging is routed through a typed `logger` utility.
+### Clean Code & SOLID Standards
+- **Single Responsibility (SRP):** Domain handler registries (`libraryHandlers`, `llmHandlers`, `syncHandlers`, `settingsHandlers`) replace monolithic switch statements. Background `index.ts` stays at 41 lines by design.
+- **Open/Closed (OCP):** AI providers implement a common adapter interface — adding Ollama or DeepSeek requires zero changes to the core pipeline.
+- **Strict TypeScript:** No `any` types in production code. All `unknown` inputs are narrowed at boundaries.
+- **Memory Safety:** Every Shadow DOM manager (`MuseumPlaqueManager`, `AuteurScreenplayDock`) implements an explicit `destroy()` lifecycle. Every async hook uses an `isMountedRef` cancellation flag.
+- **Structured Telemetry:** All diagnostic messaging routes through a typed `logger` utility.
+- **Test Coverage:** 96 tests across 18 suites (Vitest).
 
 ---
 
-## 🔐 Security
+## Security
 
 Subsume is a client-side Chrome extension. There is no backend proxy — API keys and library data stay on your machine. Understand these tradeoffs before enabling LLM features or distributing a fork.
 
@@ -118,10 +135,9 @@ Subsume is a client-side Chrome extension. There is no backend proxy — API key
 
 LLM calls (OpenAI, Anthropic, Gemini) are made **directly from the background service worker** using **your** API keys. Prompts are built from your local library — not from arbitrary page DOM — but short note excerpts (≤100 chars) may be included in taste-profile prompts.
 
-**Anthropic browser header:** When using Anthropic, the extension sends `anthropic-dangerous-direct-browser-access: true`. Anthropic requires this header for API requests originating in a browser context (MV3 service worker). Without it, direct client calls fail. The tradeoff is that your API key is used client-side and is visible to anyone with access to the extension bundle or your browser profile.
+**Anthropic browser header:** When using Anthropic, the extension sends `anthropic-dangerous-direct-browser-access: true`, which Anthropic requires for API requests originating from a browser context (MV3 service worker). Without it, direct client calls fail. The tradeoff: your API key is used client-side and is visible to anyone with access to the extension bundle or your browser profile.
 
 **Recommendations:**
-
 - Use **personal API keys** for solo or portfolio use.
 - Do **not** ship a public Chrome Web Store build that embeds shared or enterprise keys.
 - For team or enterprise distribution, route LLM calls through a **server-side proxy** that holds keys and enforces rate limits — do not rely on client-side key storage.
@@ -149,7 +165,7 @@ You can blacklist domains in **Settings → Disabled Domains** to disable all co
 
 ---
 
-## ⚙️ Setup & Local Run Guide
+## Setup & Local Run Guide
 
 ### Prerequisites
 - Node.js 18+ & npm
@@ -161,11 +177,9 @@ You can blacklist domains in **Settings → Disabled Domains** to disable all co
 ### Installation
 
 ```bash
-# Clone the repository
 git clone https://github.com/harshabalakrishnan16/subsume.git
 cd subsume
 
-# Install dependencies & build production bundle
 npm install
 npm run build
 ```
@@ -179,32 +193,49 @@ Replace `YOUR_CLIENT_ID_HERE` in `manifest.json` with a real **Chrome extension 
 ### Loading into Chrome / Brave
 
 1. Navigate to `chrome://extensions` (or `brave://extensions`).
-2. Enable **Developer mode** via the toggle in the top right corner.
+2. Enable **Developer mode** (toggle, top right).
 3. Click **Load unpacked**.
 4. Select the `dist/` folder inside your project directory.
-5. Click the Subsume icon → Open **Settings** → Paste your TMDb API key.
+5. Click the Subsume icon → **Settings** → paste your TMDb API key.
 
 ---
 
-## 🏆 Attribution & Acknowledgements
+## Contributing
+
+<!-- Fill this in — even a couple lines. Reviewers scanning a portfolio README often check
+     for this to gauge whether the project is meant to be a living tool or a closed showcase. -->
+
+Issues and PRs are welcome. Please open an issue before submitting larger changes so we can align on approach first.
+
+---
+
+## Attribution & Acknowledgements
 
 Subsume stands on the shoulders of incredible open-source tools and open data providers:
 
 - **[TMDb (The Movie Database)](https://www.themoviedb.org/):** For comprehensive cinematic metadata, cast/crew hierarchies, and high-resolution poster imagery. *(Notice: This product uses the TMDb API but is not endorsed or certified by TMDb.)*
 - **[OMDb API](https://www.omdbapi.com/):** For supplementary IMDb score aggregation.
-- **[Preact](https://preactjs.com/) & [Vite](https://vitejs.dev/):** For ultra-fast, lightweight UI rendering and lightning-fast bundle optimisation.
+- **[Preact](https://preactjs.com/) & [Vite](https://vitejs.dev/):** For ultra-fast, lightweight UI rendering and bundle optimisation.
 - **[idb](https://github.com/jakearchibald/idb):** For robust Promise-based IndexedDB transaction wrapping.
 - **[Lucide Icons](https://lucide.dev/):** For crisp, modern UI iconography.
 - **[Newsreader](https://fonts.google.com/specimen/Newsreader) & [Outfit](https://fonts.google.com/specimen/Outfit) (Google Fonts):** For the editorial typographic identity of the sanctuary.
-- **[Vitest](https://vitest.dev/):** For the blazing-fast unit test suite (96 tests across 18 suites).
+- **[Vitest](https://vitest.dev/):** For the unit test suite (96 tests across 18 suites).
 
 ---
 
-## ✍️ Developer Signature & Contact
+## License
+
+MIT — see [`LICENSE`](./LICENSE) for the full text.
+
+---
+
+## Developer Signature & Contact
 
 **Subsume** was conceived, architected, and directed by **Harsha Balakrishnan**.
 
-> *"Built through rigorous AI-assisted pair programming and advanced orchestration across cutting-edge autonomous coding agents — Antigravity (Google DeepMind), Claude (Anthropic), and Gemini Pro. Every architectural pattern, SOLID abstraction, defensive exception boundary, Shadow DOM interaction, and cinematic sanctuary philosophy was meticulously directed, evaluated, and refined. A demonstration of what a single developer equipped with agentic superpowers can architect and ship."*
+I made this because I wanted it to exist. Not for a market, not for a metric — for me, and as my thanks to cinema for keeping the park alive inside of me.
+
+Every architectural pattern, SOLID abstraction, defensive boundary, and Shadow DOM interaction was directed, reviewed, and refined by hand — AI-assisted development was the hands on the keyboard, not the eye behind the decisions.
 
 - **GitHub:** [@harshabalakrishnan16](https://github.com/harshabalakrishnan16)
 - **Email:** [harsha16balakrishnan@proton.me](mailto:harsha16balakrishnan@proton.me)
