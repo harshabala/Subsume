@@ -4,9 +4,11 @@ import { LibraryItem, MediaItem, LibraryStatus } from '@/shared/types';
 import {
   STATUS_OPTIONS,
   INTENT_CHIP_LABELS,
+  STATUS_CHIP_LABELS,
   resolveSanctuaryIntent,
   getReflectionExcerpt,
 } from './constants';
+import { ExpandableReflection } from '../ExpandableReflection';
 import { hasEmotionalData, getEmotionalSpectrum, EMOTION_KEYS } from '@/shared/emotions';
 
 export interface HardcoverSpineCardProps {
@@ -61,21 +63,13 @@ export function HardcoverSpineCard({
           />
         ) : (
           <div className="sanctuary-poster-placeholder">
-            <span className="sanctuary-placeholder-title">No Archival Plate</span>
+            <span className="sanctuary-placeholder-title">No poster</span>
           </div>
         )}
       </div>
       <div className="sanctuary-card-content">
-        {reflectionExcerpt ? (
-          <p className="hardcover-snippet hardcover-snippet-lead">
-            "{reflectionExcerpt}"
-          </p>
-        ) : (
-          <p className="hardcover-snippet-placeholder">A reflection yet to be inscribed…</p>
-        )}
-
         <h4 className="media-card-title">
-          {media?.canonicalTitle || 'Untitled Archive'}
+          {media?.canonicalTitle || 'Untitled'}
         </h4>
         <div className="media-card-meta">
           <span>{media?.year}</span>
@@ -86,9 +80,27 @@ export function HardcoverSpineCard({
           )}
         </div>
 
-        <span className="intent-chip" data-intent={intent}>
-          {INTENT_CHIP_LABELS[intent]}
+        {reflectionExcerpt ? (
+          <ExpandableReflection text={reflectionExcerpt} />
+        ) : (
+          <p className="hardcover-snippet-placeholder">No reflection yet</p>
+        )}
+
+        <span className="status-chip" data-status={library.status}>
+          {STATUS_CHIP_LABELS[library.status]}
         </span>
+
+        {library.status === 'watched' && library.sanctuaryIntent && (
+          <span className="intent-chip intent-chip-secondary" data-intent={library.sanctuaryIntent}>
+            {INTENT_CHIP_LABELS[library.sanctuaryIntent]}
+          </span>
+        )}
+
+        {library.status !== 'watched' && (
+          <span className="intent-chip" data-intent={intent}>
+            {INTENT_CHIP_LABELS[intent]}
+          </span>
+        )}
 
         {hasEmotionalData(library) && (
           <div className="emotion-dots" data-testid="emotion-dots" aria-label="Emotional spectrum">
@@ -153,7 +165,7 @@ export function HardcoverSpineCard({
 
               {removeConfirmId === library.mediaId ? (
                 <div className="hardcover-remove-row">
-                  <span className="hardcover-rating-label">Confirm Purge?</span>
+                  <span className="hardcover-rating-label">Remove from library?</span>
                   <button
                     className="hardcover-confirm-btn"
                     onClick={(e) => { e.stopPropagation(); onRemoveItem(library.mediaId); }}
@@ -164,7 +176,7 @@ export function HardcoverSpineCard({
                     className="hardcover-remove-btn"
                     onClick={(e) => { e.stopPropagation(); setRemoveConfirmId(null); }}
                   >
-                    Retain
+                    Cancel
                   </button>
                 </div>
               ) : (
@@ -172,7 +184,7 @@ export function HardcoverSpineCard({
                   className="hardcover-remove-btn"
                   onClick={(e) => { e.stopPropagation(); setRemoveConfirmId(library.mediaId); }}
                 >
-                  Purge from Sanctuary
+                  Remove
                 </button>
               )}
             </div>

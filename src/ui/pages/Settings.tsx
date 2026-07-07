@@ -15,7 +15,11 @@ import { THEME_LABELS } from '@/shared/themeLabels';
 import { AVAILABLE_PLATFORMS } from '@/shared/platforms';
 import { AVAILABLE_GENRES } from '@/shared/genres';
 import { validateImportData } from '@/shared/validation';
+import { CURATOR_JOURNEY_COPY, DEFAULT_PROMPTS } from '@/shared/prompts';
+import { SETTINGS_SECTIONS, type SettingsSectionId } from '@/shared/settingsCatalog';
 import '../styles/settings.css';
+import '../styles/curator-settings.css';
+import '../styles/settings-nav.css';
 
 export function Settings() {
   const [prefs, setPrefs] = useState<UserPreferences | null>(null);
@@ -25,6 +29,9 @@ export function Settings() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [sourceStatuses, setSourceStatuses] = useState<FreeDataSourceStatus[] | null>(null);
   const [sourceStatusLoading, setSourceStatusLoading] = useState(true);
+  const [curatorPreview, setCuratorPreview] = useState<string | null>(null);
+  const [curatorPreviewLoading, setCuratorPreviewLoading] = useState(false);
+  const [activeSection, setActiveSection] = useState<SettingsSectionId>('appearance');
 
   useEffect(() => {
     async function load() {
@@ -42,6 +49,15 @@ export function Settings() {
     }
     load();
   }, []);
+
+  useEffect(() => {
+    if (window.location.hash === '#ai-curator') {
+      setActiveSection('ai');
+      requestAnimationFrame(() => {
+        document.getElementById('ai-curator')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+  }, [prefs]);
 
   useEffect(() => {
     async function loadSourceStatuses() {
@@ -171,6 +187,39 @@ export function Settings() {
     }
   };
 
+  function resetCuratorPrompt(field: keyof Pick<
+    UserPreferences,
+    'llmCuratorSystemPrompt' | 'llmPromptRecommendation' | 'llmPromptDigest' | 'llmPromptGrouping'
+  >) {
+    handleChange(field, '');
+    setCuratorPreview(null);
+  }
+
+  async function loadCuratorPreview() {
+    setCuratorPreviewLoading(true);
+    try {
+      const preview = await sendMessage<{
+        systemPrompt: string;
+        userPrompt: string;
+        tasteProfileJson: string;
+        taskPrompt: string;
+      }>(MessageType.GET_CURATOR_PROMPT_PREVIEW, {});
+      const assembled = [
+        '── SYSTEM (persona) ──',
+        preview.systemPrompt,
+        '',
+        '── USER MESSAGE (assembled each run) ──',
+        preview.userPrompt,
+      ].join('\n');
+      setCuratorPreview(assembled);
+    } catch (err) {
+      console.error('[Subsume] Curator preview failed:', err);
+      setCuratorPreview('Could not assemble preview. Save settings and try again.');
+    } finally {
+      setCuratorPreviewLoading(false);
+    }
+  }
+
   const handleCheckUpdate = () => {
     setCheckingUpdate(true);
     setUpdateStatus(null);
@@ -245,7 +294,7 @@ export function Settings() {
   if (!prefs) {
     return (
       <div className="page-container settings-loading">
-        {loadError ? `Failed to load settings: ${loadError}` : 'Warming sanctuary instruments...'}
+        {loadError ? `Failed to load settings: ${loadError}` : 'Loading settings…'}
       </div>
     );
   }
@@ -254,18 +303,39 @@ export function Settings() {
     <div className="page-container settings-page">
       <header className="sanctuary-header">
         <div className="sanctuary-header-meta">
-          <span className="sanctuary-subtitle">Sanctuary Configuration</span>
+          <span className="sanctuary-subtitle">Settings</span>
         </div>
-        <h2 className="sanctuary-title">Instrument Settings</h2>
-        <p className="sanctuary-description">Configure the acoustic and visual restraints of your private cinematic sanctuary.</p>
+        <h2 className="sanctuary-title">Settings</h2>
+        <p className="sanctuary-description">
+          Choose a category below. Each section explains what it controls — no jargon without a plain description.
+        </p>
       </header>
+
+      <nav className="settings-section-nav" aria-label="Settings categories">
+        {SETTINGS_SECTIONS.map((section) => (
+          <button
+            key={section.id}
+            type="button"
+            className={`settings-section-nav-btn ${activeSection === section.id ? 'active' : ''}`}
+            aria-current={activeSection === section.id ? 'true' : undefined}
+            onClick={() => setActiveSection(section.id)}
+          >
+            {section.title}
+          </button>
+        ))}
+      </nav>
+
+      <p className="settings-section-lead">
+        {SETTINGS_SECTIONS.find((s) => s.id === activeSection)?.description}
+      </p>
 
       <div className="settings-section-stack">
         {/* Appearance */}
+        {activeSection === 'appearance' && (
         <div className="settings-panel">
-          <h3 className="settings-panel-heading">Appearance</h3>
+          <h3 className="settings-panel-heading">Look &amp; atmosphere</h3>
           <div className="settings-field-group">
-            <span className="settings-field-label">Sanctuary Theme</span>
+            <span className="settings-field-label">Theme</span>
             <div className="settings-chip-grid">
               {(['dark', 'light', 'system'] as ThemePreference[]).map((theme) => {
                 const active = (prefs.theme ?? 'dark') === theme;
@@ -284,14 +354,14 @@ export function Settings() {
                 );
               })}
             </div>
-            <p className="settings-help-text-italic">Preview updates immediately. Engrave Settings to persist your choice.</p>
+            <p className="settings-help-text-italic">Preview updates immediately. Save settings to keep your choice.</p>
           </div>
 
           <div className="settings-field-group">
-            <span className="settings-field-label">Cinema Atmosphere</span>
+            <span className="settings-field-label">Color accent</span>
             <div className="settings-chip-grid">
               {([
-                { value: 'default', label: 'Gilded Obsidian' },
+                { value: 'default', label: 'Default (dark)' },
                 { value: 'sunset', label: 'Sunset Boulevard' },
                 { value: 'emerald', label: 'Cannes Emerald' },
                 { value: 'french', label: 'Midnight French' },
@@ -317,13 +387,17 @@ export function Settings() {
             </p>
           </div>
         </div>
+        )}
 
-        {/* Content Preferences */}
+        {activeSection === 'taste' && (
         <div className="settings-panel">
-          <h3 className="settings-panel-heading">Taxonomy &amp; Curation Preferences</h3>
+          <h3 className="settings-panel-heading">Taste &amp; platforms</h3>
+          <p className="settings-panel-description">
+            Genres and platforms influence discovery and digests. They do not change what is stored in your sanctuary.
+          </p>
 
           <div className="settings-field-group">
-            <span className="settings-field-label">Archival Genres</span>
+            <span className="settings-field-label">Favorite genres</span>
             <div className="settings-chip-grid">
               {AVAILABLE_GENRES.map(g => {
                 const active = prefs.favoriteGenres.includes(g.id);
@@ -344,7 +418,7 @@ export function Settings() {
           </div>
 
           <div>
-            <span className="settings-field-label">Sanctuary Platforms</span>
+            <span className="settings-field-label">Streaming services</span>
             <div className="settings-chip-grid">
               {AVAILABLE_PLATFORMS.map(p => {
                 const active = prefs.platforms.includes(p.id);
@@ -365,10 +439,12 @@ export function Settings() {
             <p className="settings-help-text-italic">Used to tailor your private curation feed.</p>
           </div>
         </div>
+        )}
 
-        {/* Discovery */}
+        {activeSection === 'discovery' && (
+        <>
         <div className="settings-panel">
-          <h3 className="settings-panel-heading">Discovery</h3>
+          <h3 className="settings-panel-heading">Discovery sources</h3>
           <p className="settings-discovery-intro">
             Subsume layers multiple data sources so discovery works out of the box, with optional keys for deeper catalogue sync.
           </p>
@@ -394,9 +470,8 @@ export function Settings() {
           </div>
         </div>
 
-        {/* Free API Status */}
         <div className="settings-panel">
-          <h3 className="settings-panel-heading">Free Data Sources (No Key Required)</h3>
+          <h3 className="settings-panel-heading">Free source health</h3>
           <p className="settings-help-text settings-source-intro">
             Live status for bundled integrations. Green dots confirm each source is configured and reachable.
           </p>
@@ -404,17 +479,22 @@ export function Settings() {
             {(['tvmaze', 'trakt', 'wikidata'] as FreeDataSourceId[]).map(renderSourceStatus)}
           </div>
         </div>
+        </>
+        )}
 
-        {/* API Configuration */}
+        {activeSection === 'credentials' && (
         <div className="settings-panel">
-          <h3 className="settings-panel-heading">Archive Credentials (API)</h3>
+          <h3 className="settings-panel-heading">API keys</h3>
+          <p className="settings-panel-description">
+            Keys stay in your browser. TMDb is recommended for posters and full catalogue sync.
+          </p>
 
           <div className="settings-field-stack">
             <div>
-              <label className="settings-field-label">TMDb Archival Key</label>
+              <label className="settings-field-label">TMDb API key</label>
               <input
                 type="password"
-                placeholder="Enter TMDb v3 credential"
+                placeholder="Paste your TMDb API key"
                 value={prefs.tmdbApiKey || ''}
                 onChange={(e) => handleChange('tmdbApiKey', e.currentTarget.value)}
                 className="settings-input"
@@ -426,7 +506,7 @@ export function Settings() {
             </div>
 
             <div>
-              <label className="settings-field-label">OMDb Archival Key (Optional)</label>
+              <label className="settings-field-label">OMDb API key (optional) (Optional)</label>
               <input
                 type="password"
                 placeholder="Enter OMDb credential"
@@ -441,10 +521,15 @@ export function Settings() {
             </div>
           </div>
         </div>
+        )}
 
-        {/* AI Recommendations */}
+        {activeSection === 'ai' && (
+        <>
         <div className="settings-panel">
-          <h3 className="settings-panel-heading">Cognitive Reflection Engine</h3>
+          <h3 className="settings-panel-heading">AI recommendations</h3>
+          <p className="settings-panel-description">
+            Turn on an LLM you trust. Subsume sends a taste profile JSON plus your instructions — not your whole hard drive.
+          </p>
 
           <div className="settings-field-group">
             <label className="settings-toggle-label">
@@ -454,30 +539,30 @@ export function Settings() {
                 onChange={(e) => handleChange('llmEnabled', e.currentTarget.checked)}
                 className="settings-toggle-checkbox"
               />
-              <span className="settings-toggle-text-lg">Engage cognitive synthesis for recommendations</span>
+              <span className="settings-toggle-text-lg">Enable AI-powered recommendations</span>
             </label>
             <p className="settings-toggle-help">
-              Invokes neural evaluation to assemble resonant cinematic pathways matching your private reflections.
+              Uses your ratings, reflections, and wishlist to suggest films via your chosen provider.
             </p>
           </div>
 
           {prefs.llmEnabled && (
             <div className="settings-sub-panel">
               <div>
-                <label className="settings-field-label">Neural Architecture</label>
+                <label className="settings-field-label">Provider</label>
                 <select
                   value={prefs.llmProvider || 'openai'}
                   onChange={(e) => handleChange('llmProvider', e.currentTarget.value)}
                   className="settings-input"
                 >
-                  <option value="openai" className="sanctuary-select-option">OpenAI (GPT-4 Sanctuary)</option>
-                  <option value="anthropic" className="sanctuary-select-option">Anthropic (Claude Obscura)</option>
-                  <option value="gemini" className="sanctuary-select-option">Google (Gemini Synthesis)</option>
+                  <option value="openai" className="sanctuary-select-option">OpenAI</option>
+                  <option value="anthropic" className="sanctuary-select-option">Anthropic</option>
+                  <option value="gemini" className="sanctuary-select-option">Google Gemini</option>
                 </select>
               </div>
 
               <div>
-                <label className="settings-field-label">Primary Neural Credential</label>
+                <label className="settings-field-label">API key</label>
                 <input
                   type="password"
                   placeholder="sk-..."
@@ -488,7 +573,7 @@ export function Settings() {
               </div>
 
               <div>
-                <label className="settings-field-label">Fallback Credential</label>
+                <label className="settings-field-label">Fallback API key (optional)</label>
                 <input
                   type="password"
                   placeholder="sk-..."
@@ -501,9 +586,120 @@ export function Settings() {
           )}
         </div>
 
-        {/* Page Scanning */}
+        {/* AI Curator — journey + editable prompts */}
+        <div className="settings-panel" id="ai-curator">
+          <h3 className="settings-panel-heading">AI curator</h3>
+          <p className="settings-panel-description">
+            {CURATOR_JOURNEY_COPY.headline}
+          </p>
+          <ol className="curator-journey-steps">
+            {CURATOR_JOURNEY_COPY.steps.map((step) => (
+              <li key={step.slice(0, 40)}>{step}</li>
+            ))}
+          </ol>
+
+          <div className="settings-field-stack">
+            <div>
+              <label className="settings-field-label">Curator persona (system)</label>
+              <textarea
+                value={prefs.llmCuratorSystemPrompt ?? ''}
+                onChange={(e) => handleChange('llmCuratorSystemPrompt', e.currentTarget.value)}
+                placeholder={DEFAULT_PROMPTS.curatorSystem}
+                rows={3}
+                className="settings-input resize-v font-mono-sm"
+              />
+              <button
+                type="button"
+                className="btn-sanctuary-restraint curator-reset-btn"
+                onClick={() => resetCuratorPrompt('llmCuratorSystemPrompt')}
+              >
+                Restore default persona
+              </button>
+            </div>
+
+            <div>
+              <label className="settings-field-label">Recommendations task (after taste JSON)</label>
+              <textarea
+                value={prefs.llmPromptRecommendation ?? ''}
+                onChange={(e) => handleChange('llmPromptRecommendation', e.currentTarget.value)}
+                placeholder={DEFAULT_PROMPTS.recommendation}
+                rows={10}
+                className="settings-input resize-v font-mono-sm"
+              />
+              <button
+                type="button"
+                className="btn-sanctuary-restraint curator-reset-btn"
+                onClick={() => resetCuratorPrompt('llmPromptRecommendation')}
+              >
+                Restore default recommendations task
+              </button>
+            </div>
+
+            <div>
+              <label className="settings-field-label">Weekly digest task (new releases)</label>
+              <textarea
+                value={prefs.llmPromptDigest ?? ''}
+                onChange={(e) => handleChange('llmPromptDigest', e.currentTarget.value)}
+                placeholder={DEFAULT_PROMPTS.digest}
+                rows={8}
+                className="settings-input resize-v font-mono-sm"
+              />
+              <button
+                type="button"
+                className="btn-sanctuary-restraint curator-reset-btn"
+                onClick={() => resetCuratorPrompt('llmPromptDigest')}
+              >
+                Restore default digest task
+              </button>
+            </div>
+
+            <div>
+              <label className="settings-field-label">Grouping task (“Because you experienced…”)</label>
+              <textarea
+                value={prefs.llmPromptGrouping ?? ''}
+                onChange={(e) => handleChange('llmPromptGrouping', e.currentTarget.value)}
+                placeholder={DEFAULT_PROMPTS.grouping}
+                rows={6}
+                className="settings-input resize-v font-mono-sm"
+              />
+              <button
+                type="button"
+                className="btn-sanctuary-restraint curator-reset-btn"
+                onClick={() => resetCuratorPrompt('llmPromptGrouping')}
+              >
+                Restore default grouping task
+              </button>
+            </div>
+
+            <div className="curator-preview-block">
+              <div className="settings-btn-row">
+                <button
+                  type="button"
+                  className="btn-sanctuary-restraint"
+                  onClick={loadCuratorPreview}
+                  disabled={curatorPreviewLoading}
+                >
+                  {curatorPreviewLoading ? 'Assembling…' : 'Preview assembled prompt (live taste profile)'}
+                </button>
+              </div>
+              <p className="settings-panel-description">
+                Taste profile is built from your sanctuary (watched, ratings, emotional recall, notes, wishlist, filmmakers, genres) and injected as JSON — not edited by hand.
+              </p>
+              {curatorPreview && (
+                <pre className="curator-preview-pre">{curatorPreview}</pre>
+              )}
+            </div>
+          </div>
+        </div>
+        </>
+        )}
+
+        {activeSection === 'browsing' && (
         <div className="settings-panel">
-          <h3 className="settings-panel-heading">Surface Inspection Instruments</h3>
+          <h3 className="settings-panel-heading">Browsing &amp; overlays</h3>
+          <p className="settings-panel-description">
+            Controls how Subsume appears on other websites when you browse Netflix, Letterboxd, and similar pages.
+          </p>
 
           <div className="settings-field-stack">
             <label className="settings-toggle-label">
@@ -513,7 +709,7 @@ export function Settings() {
                 onChange={(e) => handleChange('hoverCardsEnabled', e.currentTarget.checked)}
                 className="settings-toggle-checkbox"
               />
-              <span className="settings-toggle-text-sm">Project Hover Inspection Cards</span>
+              <span className="settings-toggle-text-sm">Show hover cards on titles</span>
             </label>
 
             <label className="settings-toggle-label">
@@ -523,7 +719,7 @@ export function Settings() {
                 onChange={(e) => handleChange('posterOverlaysEnabled', e.currentTarget.checked)}
                 className="settings-toggle-checkbox"
               />
-              <span className="settings-toggle-text-sm">Superimpose Archival Badges on Posters</span>
+              <span className="settings-toggle-text-sm">Show poster badges</span>
             </label>
 
             <label className="settings-toggle-label">
@@ -533,24 +729,24 @@ export function Settings() {
                 onChange={(e) => handleChange('screenplayDockEnabled', e.currentTarget.checked)}
                 className="settings-toggle-checkbox"
               />
-              <span className="settings-toggle-text-sm">Enable Auteur Screenplay Dock</span>
+              <span className="settings-toggle-text-sm">Screenplay dock on supported sites</span>
             </label>
 
             <div>
-              <label className="settings-field-label">Inspection Sensitivity</label>
+              <label className="settings-field-label">Title detection on websites</label>
               <select
                 value={prefs.detectionSensitivity || 'medium'}
                 onChange={(e) => handleChange('detectionSensitivity', (e.target as HTMLSelectElement).value)}
                 className="settings-input"
               >
                 <option value="low" className="sanctuary-select-option">Restrained — CDN exact matching</option>
-                <option value="medium" className="sanctuary-select-option">Standard — Archival balance</option>
-                <option value="high" className="sanctuary-select-option">Omnipresent — Aggressive scanning</option>
+                <option value="medium" className="sanctuary-select-option">Standard — Balanced</option>
+                <option value="high" className="sanctuary-select-option">Aggressive — match more pages</option>
               </select>
             </div>
 
             <div>
-              <label className="settings-field-label">Sanctuary Silenced Domains</label>
+              <label className="settings-field-label">Sites where Subsume is off (one domain per line)</label>
               <textarea
                 value={prefs.disabledDomains?.join('\n') || ''}
                 onChange={(e) => handleChange('disabledDomains', e.currentTarget.value.split('\n').map(d => d.trim()).filter(Boolean))}
@@ -561,35 +757,39 @@ export function Settings() {
             </div>
           </div>
         </div>
+        )}
 
-        {/* Cloud Sync & Data Management */}
+        {activeSection === 'data' && (
         <div className="settings-panel">
-          <h3 className="settings-panel-heading">Preservation &amp; Sync Colophon</h3>
+          <h3 className="settings-panel-heading">Backup &amp; sync</h3>
+          <p className="settings-panel-description">
+            Export a portable JSON of your sanctuary, optionally mirror to Google Drive, or restore from a previous backup.
+          </p>
 
           <div className="settings-field-stack">
             <div>
               <span className="settings-field-label">Remote Storage</span>
               <div className="settings-btn-row">
                 <button className="btn-sanctuary-restraint" onClick={handleConnectDrive}>
-                  Engage Google Drive
+                  Connect Google Drive
                 </button>
                 <button className="btn-sanctuary-restraint" onClick={handleBackupNow}>
-                  Execute Vault Backup
+                  Back up now
                 </button>
                 <button className="btn-sanctuary-restraint" onClick={handleRestoreBackup}>
-                  Restore from Vault
+                  Restore from Drive
                 </button>
               </div>
             </div>
 
             <div className="settings-section-divider">
-              <span className="settings-field-label">Local Archive Portability</span>
+              <span className="settings-field-label">Export and import</span>
               <div className="settings-btn-row">
                 <button className="btn-sanctuary-restraint" onClick={handleExport}>
-                  Export Ledger (JSON)
+                  Export JSON
                 </button>
                 <label className="btn-sanctuary-restraint" style={{ margin: 0 }}>
-                  Import Ledger (JSON)
+                  Import JSON
                   <input
                     type="file"
                     accept=".json"
@@ -599,21 +799,22 @@ export function Settings() {
                 </label>
               </div>
             </div>
-
-            <div className="settings-footer-row">
-              <div className="settings-footer-left">
-                <button className="btn-sanctuary-restraint" onClick={handleCheckUpdate} disabled={checkingUpdate}>
-                  {checkingUpdate ? 'Inspecting...' : 'Check Instrument Version'}
-                </button>
-                {updateStatus && <span className="settings-update-status">{updateStatus}</span>}
-              </div>
-
-              <button className="btn-sanctuary-gold" onClick={save} disabled={saving}>
-                {saving ? 'Engraving...' : 'Engrave Settings'}
-              </button>
-            </div>
           </div>
         </div>
+        )}
+      </div>
+
+      <div className="settings-footer-row settings-footer-sticky">
+        <div className="settings-footer-left">
+          <button className="btn-sanctuary-restraint" onClick={handleCheckUpdate} disabled={checkingUpdate}>
+            {checkingUpdate ? 'Checking…' : 'Check for updates'}
+          </button>
+          {updateStatus && <span className="settings-update-status">{updateStatus}</span>}
+        </div>
+
+        <button className="btn-sanctuary-gold" onClick={save} disabled={saving}>
+          {saving ? 'Saving…' : 'Save settings'}
+        </button>
       </div>
     </div>
   );

@@ -19,6 +19,7 @@ import { applyThemePreference, applyCinemaAtmosphere, watchSystemTheme } from '.
 import { FilmGrain } from './components/FilmGrain';
 import { ensureDemoLibraryIfEmpty } from './lib/ensureDemoLibrary';
 import './styles/sidebar.css';
+import './styles/app-nav.css';
 
 interface LibraryStats {
   movieCount: number;
@@ -31,37 +32,20 @@ interface NavItem {
   icon: string;
 }
 
-interface NavSection {
-  label: string;
-  items: NavItem[];
-}
+const EXPLORE_NAV: NavItem[] = [
+  { key: 'search', label: 'Search', icon: 'search' },
+  { key: 'recommendations', label: 'Recommendations', icon: 'auto_awesome' },
+  { key: 'new-releases', label: "What's New", icon: 'new_releases' },
+  { key: 'people', label: 'Filmmakers', icon: 'movie' },
+  { key: 'stats', label: 'Stats', icon: 'bar_chart' },
+  { key: 'alerts', label: 'Alerts', icon: 'notifications' },
+  { key: 'logs', label: 'Logs', icon: 'description' },
+];
 
-const NAV_SECTIONS: NavSection[] = [
-  {
-    label: 'Primary',
-    items: [
-      { key: 'library', label: 'Sanctuary', icon: 'I' },
-      { key: 'home', label: 'Discovery', icon: 'II' },
-      { key: 'settings', label: 'Settings', icon: 'III' },
-    ],
-  },
-  {
-    label: 'Explore',
-    items: [
-      { key: 'search', label: 'Search Archive', icon: 'IV' },
-      { key: 'recommendations', label: 'Recommendations', icon: 'V' },
-      { key: 'new-releases', label: "What's New", icon: 'VI' },
-      { key: 'people', label: 'Filmmakers', icon: 'VII' },
-      { key: 'stats', label: 'Stats', icon: 'VIII' },
-      { key: 'alerts', label: 'Alerts', icon: 'IX' },
-    ],
-  },
-  {
-    label: 'System',
-    items: [
-      { key: 'logs', label: 'Logs', icon: 'X' },
-    ],
-  },
+const PRIMARY_NAV: NavItem[] = [
+  { key: 'library', label: 'Library', icon: 'I' },
+  { key: 'home', label: 'Discovery', icon: 'II' },
+  { key: 'settings', label: 'Settings', icon: 'III' },
 ];
 
 function getInitialPage(): Page {
@@ -91,27 +75,11 @@ export function App() {
   const [prefs, setPrefs] = useState<UserPreferences | null>(null);
   const [stats, setStats] = useState<LibraryStats>({ movieCount: 0, tvCount: 0 });
   const [peopleCount, setPeopleCount] = useState(0);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isBackdropVisible, setIsBackdropVisible] = useState(false);
-  const [isBackdropClosing, setIsBackdropClosing] = useState(false);
   const initialPrefetchDone = useRef(false);
 
-  const openMenu = () => {
-    setIsBackdropVisible(true);
-    setIsBackdropClosing(false);
-    setIsMenuOpen(true);
-  };
-
-  const closeMenu = () => {
-    setIsMenuOpen(false);
-    setIsBackdropClosing(true);
-  };
-
-  const handleBackdropAnimationEnd = (e: AnimationEvent) => {
-    if (isBackdropClosing && e.animationName === 'fadeOutBackdrop') {
-      setIsBackdropVisible(false);
-      setIsBackdropClosing(false);
-    }
+  const goToPage = (page: Page) => {
+    setCurrentPage(page);
+    prefetchPage(page);
   };
 
   useEffect(() => {
@@ -213,7 +181,10 @@ export function App() {
       case 'stats':
         return <Stats />;
       case 'recommendations':
-        return <Recommendations />;
+        return <Recommendations onOpenCuratorSettings={() => {
+          window.location.hash = 'ai-curator';
+          setCurrentPage('settings');
+        }} />;
       case 'new-releases':
         return <NewReleases />;
       case 'alerts':
@@ -228,100 +199,40 @@ export function App() {
   return (
     <div className="app-layout">
       <FilmGrain variant="app" />
-      {/* Top Navigation Bar */}
-      <nav className="fixed-top-nav">
-        <div className="nav-logo">Subsume</div>
-        <div className="nav-tabs">
-          <button
-            onClick={() => setCurrentPage('library')}
-            className={`nav-tab-btn ${currentPage === 'library' ? 'active' : ''}`}
-            aria-current={currentPage === 'library' ? 'page' : undefined}
-            {...prefetchProps('library')}
-          >
-            Sanctuary
-          </button>
-          <button
-            onClick={() => setCurrentPage('home')}
-            className={`nav-tab-btn ${currentPage === 'home' ? 'active' : ''}`}
-            aria-current={currentPage === 'home' ? 'page' : undefined}
-            {...prefetchProps('home')}
-          >
-            Discovery
-          </button>
-          <button
-            onClick={() => setCurrentPage('settings')}
-            className={`nav-tab-btn ${currentPage === 'settings' ? 'active' : ''}`}
-            aria-current={currentPage === 'settings' ? 'page' : undefined}
-            {...prefetchProps('settings')}
-          >
-            Settings
-          </button>
-        </div>
-        <button
-          className="nav-menu-toggle"
-          onClick={openMenu}
-          aria-expanded={isMenuOpen}
-          aria-controls="side-menu-drawer"
-          aria-label="Open navigation menu"
-        >
-          <span className="material-symbols-outlined">menu</span>
-        </button>
-      </nav>
-
-      {/* Backdrop for Slide-out Navigation */}
-      {isBackdropVisible && (
-        <div
-          className={`side-nav-backdrop ${isBackdropClosing ? 'closing' : ''}`}
-          onClick={closeMenu}
-          onAnimationEnd={handleBackdropAnimationEnd}
-        />
-      )}
-
-      {/* Slide-out Navigation Menu */}
-      <div id="side-menu-drawer" className={`side-menu-drawer ${isMenuOpen ? 'open' : ''}`}>
-        <div className="side-menu-header">
-          <span className="side-menu-title">Navigation</span>
-          <button className="side-menu-close" onClick={closeMenu}>
-            <span className="material-symbols-outlined">close</span>
-          </button>
-        </div>
-        <div className="side-menu-content">
-          {NAV_SECTIONS.map((section) => (
-            <div key={section.label} className="side-menu-section">
-              <span className="side-menu-section-label">{section.label}</span>
-              {section.items.map((item) => (
-                <button
-                  key={item.key}
-                  className={`side-menu-item ${currentPage === item.key ? 'active' : ''}`}
-                  aria-current={currentPage === item.key ? 'page' : undefined}
-                  onClick={() => {
-                    setCurrentPage(item.key);
-                    prefetchPage(item.key);
-                    closeMenu();
-                  }}
-                  {...prefetchProps(item.key)}
-                >
-                  <span className="side-menu-roman">{item.icon}</span>
-                  <span className="side-menu-label">
-                    <span>{item.label}</span>
-                    {item.key === 'people' && peopleCount > 0 && (
-                      <span className="sidebar-nav-badge stat-value">
-                        {peopleCount}
-                      </span>
-                    )}
-                  </span>
-                </button>
-              ))}
-            </div>
+      <header className="app-nav-shell">
+        <nav className="fixed-top-nav" aria-label="Primary">
+          <div className="nav-logo">Subsume</div>
+          <div className="nav-tabs">
+            {PRIMARY_NAV.map((item) => (
+              <button
+                key={item.key}
+                onClick={() => goToPage(item.key)}
+                className={`nav-tab-btn ${currentPage === item.key ? 'active' : ''}`}
+                aria-current={currentPage === item.key ? 'page' : undefined}
+                {...prefetchProps(item.key)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </nav>
+        <nav className="app-subnav" aria-label="Explore">
+          {EXPLORE_NAV.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => goToPage(item.key)}
+              className={`app-subnav-link ${currentPage === item.key ? 'active' : ''}`}
+              aria-current={currentPage === item.key ? 'page' : undefined}
+              {...prefetchProps(item.key)}
+            >
+              <span className="material-symbols-outlined app-subnav-icon">{item.icon}</span>
+              <span className="app-subnav-label-full">{item.label}</span>
+            </button>
           ))}
-        </div>
-        <div className="side-menu-footer">
-          <span>v0.1.6</span>
-          <span>{stats.movieCount} M / {stats.tvCount} T</span>
-        </div>
-      </div>
+        </nav>
+      </header>
 
-      {/* Main Content Area */}
       <main className="main-content">
         {renderPage()}
         {captureMediaId && (

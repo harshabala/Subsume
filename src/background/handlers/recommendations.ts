@@ -8,7 +8,7 @@ import {
 } from '@/shared/types';
 import { getPreferences, getWeeklyDigest, saveWeeklyDigest } from '../storage';
 import { generateRuleBasedRecommendations } from '../recommendations';
-import { generateLLMRecommendations, getPersonalizedRecommendations } from '../llm';
+import { generateLLMRecommendations, getPersonalizedRecommendations, buildCuratorPromptPreview } from '../llm';
 import { buildWatchProfile } from '../context';
 import { generateWeeklyDigest, isDigestStale } from '../digest';
 import { getDiscoveryFeed, discoveryFeedToWeeklyDigest } from '../discoveryFeed';
@@ -121,6 +121,11 @@ export const recommendationHandlers: MessageHandlerMap = {
       logger.error('[Subsume] GET_PERSONALIZED_RECS failed:', err);
       return { error: 'llm_failed', flat: [], grouped: null };
     }
+  },
+
+  [MessageType.GET_CURATOR_PROMPT_PREVIEW]: async () => {
+    const prefs = await getPreferences();
+    return buildCuratorPromptPreview(prefs);
   },
 
   [MessageType.GET_WEEKLY_DIGEST]: async () => {

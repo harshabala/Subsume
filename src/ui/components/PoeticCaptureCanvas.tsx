@@ -341,7 +341,7 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
                 Close
               </button>
               <button type="button" class="save-btn" data-testid="save-btn" onClick={handleSave} disabled={!media}>
-                Commit to Sanctuary
+                Save
               </button>
             </div>
           </>

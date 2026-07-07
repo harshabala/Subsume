@@ -33,8 +33,8 @@
   --text-reflection: hsl(0, 0%, 96%);
   --text-artwork: hsl(0, 0%, 82%);
   --text-title: hsl(240, 10%, 70%);
-  --text-meta: hsl(240, 10%, 50%);
-  --text-control: hsl(240, 10%, 32%);
+  --text-meta: hsl(240, 10%, 58%);
+  --text-control: hsl(240, 10%, 45%);
   --text-sanctuary: var(--text-reflection);
   --outline: var(--text-meta);
 

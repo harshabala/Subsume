@@ -1,7 +1,20 @@
-import { UserPreferences, LibraryItem, MediaItem, Recommendation, GroupedRecommendation, WatchProfile, PersonalizedRecommendation, RecommendationGroup, LibraryMediaPair } from '@/shared/types';
+import {
+  UserPreferences,
+  Recommendation,
+  GroupedRecommendation,
+  WatchProfile,
+  PersonalizedRecommendation,
+  RecommendationGroup,
+  LibraryMediaPair,
+} from '@/shared/types';
 import { getAllLibraryItems, getAllMediaMap, getPreferences, putMediaItem, findMediaByTitle } from './storage';
 import { searchTitle } from './tmdb';
 import { buildWatchProfile } from './context';
+import {
+  DEFAULT_PROMPTS,
+  getEffectivePrompt,
+  buildTasteProfilePayload,
+} from '@/shared/prompts';
 import { showRateLimitNotification, showAuthErrorNotification } from './notifications';
 import { logger } from '@/shared/logger';
 
@@ -397,72 +410,16 @@ export async function generateLLMRecommendations(): Promise<Recommendation[] | G
  * Builds a structured prompt string from the user's WatchProfile.
  * Pure function — no side effects, no network calls.
  */
-function buildPersonalizedPrompt(profile: WatchProfile): string {
-  const tasteProfile = {
-    highlyRated: profile.topRated.map(e => ({
-      title: e.title,
-      year: e.year,
-      genres: e.genres
-    })),
-    liked: profile.liked.map(e => ({
-      title: e.title,
-      year: e.year
-    })),
-    dislikedOrAbandoned: profile.disliked.map(e => ({
-      title: e.title
-    })),
-    watchedButUnrated: profile.unrated.map(e => ({
-      title: e.title,
-      year: e.year
-    })),
-    followedFilmmakers: profile.followedCreators.map(c => ({
-      name: c.name,
-      role: c.role
-    })),
-    preferredGenres: profile.favoriteGenres,
-    totalFilmsWatched: profile.totalWatched
-  };
+function buildPersonalizedPrompt(profile: WatchProfile, prefs: UserPreferences): string {
+  const tasteProfile = buildTasteProfilePayload(profile);
 
-  const lines: string[] = [
+  return [
     'TASTE PROFILE (JSON):',
     JSON.stringify(tasteProfile, null, 2),
     '',
     'TASK:',
-    'Recommend exactly 8 titles this person would rate 8 or higher based on their taste profile above.',
-    '',
-    'Rules:',
-    '- Prioritize craft, cinematography, thematic depth, and writing quality over general audience popularity',
-    '- A low IMDb or TMDb score does NOT disqualify a title if it matches their taste signals'
-  ];
-
-  const alreadySeen = [
-    ...profile.topRated.map(e => e.title),
-    ...profile.liked.map(e => e.title),
-    ...profile.disliked.map(e => e.title),
-  ];
-
-  if (alreadySeen.length > 0) {
-    lines.push(`- Never recommend titles already in their lists: ${JSON.stringify(alreadySeen)}`);
-  } else {
-    lines.push('- Never recommend titles already in their lists');
-  }
-
-  lines.push('- For each recommendation identify the single title from their highly-rated list it most connects to (seedTitle)');
-  lines.push('- Vary across decades and countries — do not cluster recommendations in one era or language');
-  lines.push('');
-  lines.push('Respond with ONLY a valid JSON array, no markdown, no preamble, no trailing text:');
-  lines.push(`[
-  {
-    "title": "exact title",
-    "year": 1999,
-    "type": "movie or tv",
-    "reason": "max 30 words explaining the specific connection to their taste",
-    "seedTitle": "title from their highly-rated list",
-    "confidenceSignal": "high, medium, or low"
-  }
-]`);
-
-  return lines.join('\n');
+    getEffectivePrompt('recommendation', prefs),
+  ].join('\n');
 }
 
 /**
@@ -472,7 +429,8 @@ function buildPersonalizedPrompt(profile: WatchProfile): string {
  */
 function buildGroupingPrompt(
   profile: WatchProfile,
-  recs: PersonalizedRecommendation[]
+  recs: PersonalizedRecommendation[],
+  prefs: UserPreferences
 ): string {
   const recSummary = JSON.stringify(recs.map(r => ({
     title: r.title,
@@ -492,17 +450,25 @@ function buildGroupingPrompt(
     "And this viewer's top-rated films (JSON):",
     topRatedSummary,
     '',
-    'Group the 8 recommendations under the top-rated film they most connect to. Use at most 3 seed groups.',
-    'Some recommendations may share a seed group.',
-    '',
-    'Respond with ONLY valid JSON, no markdown:',
-    `[
-  {
-    "seedTitle": "title from top-rated list",
-    "recommendationTitles": ["Title1", "Title2"]
-  }
-]`,
+    'TASK:',
+    getEffectivePrompt('grouping', prefs),
   ].join('\n');
+}
+
+/** Exported for Settings preview — shows how the curator assembles context. */
+export async function buildCuratorPromptPreview(prefs: UserPreferences): Promise<{
+  systemPrompt: string;
+  userPrompt: string;
+  tasteProfileJson: string;
+  taskPrompt: string;
+}> {
+  const profile = await buildWatchProfile();
+  const tasteProfile = buildTasteProfilePayload(profile);
+  const tasteProfileJson = JSON.stringify(tasteProfile, null, 2);
+  const taskPrompt = getEffectivePrompt('recommendation', prefs);
+  const userPrompt = buildPersonalizedPrompt(profile, prefs);
+  const systemPrompt = getEffectivePrompt('curatorSystem', prefs);
+  return { systemPrompt, userPrompt, tasteProfileJson, taskPrompt };
 }
 
 /**
@@ -526,10 +492,9 @@ export async function getPersonalizedRecommendations(
   }
 
   // Step 2 — Build prompt
-  const prompt = buildPersonalizedPrompt(profile);
+  const prompt = buildPersonalizedPrompt(profile, prefs);
 
-  // Step 3 — Call LLM provider (reuses existing callLLMProvider)
-  const systemMessage = 'You are a personal film curator with deep knowledge of world cinema. You respond only with valid JSON.';
+  const systemMessage = getEffectivePrompt('curatorSystem', prefs);
   const fullPrompt = `${systemMessage}\n\n${prompt}`;
 
   let rawText: string;
@@ -616,7 +581,7 @@ export async function getPersonalizedRecommendations(
 
   if (profile.topRated.length >= 3 && resolvedRecs.length >= 4) {
     try {
-      const groupingPrompt = buildGroupingPrompt(profile, resolvedRecs);
+      const groupingPrompt = buildGroupingPrompt(profile, resolvedRecs, prefs);
       const groupingText = await callLLMProvider(groupingPrompt, prefs);
       const groupingCleaned = groupingText.replace(/```json|```/g, '').trim();
 

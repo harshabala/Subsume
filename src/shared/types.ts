@@ -133,6 +133,14 @@ export interface UserPreferences {
   theme?: ThemePreference;
   cinemaAtmosphere?: CinemaAtmosphere;
   onboardingComplete: boolean;
+  /** Persona sent before taste profile on every LLM curator call. */
+  llmCuratorSystemPrompt?: string;
+  /** Task block after TASTE PROFILE on Recommendations. Empty = built-in default. */
+  llmPromptRecommendation?: string;
+  /** Task block for weekly digest LLM curation. Empty = built-in default. */
+  llmPromptDigest?: string;
+  /** Second-pass grouping instructions (Because you experienced…). */
+  llmPromptGrouping?: string;
 }
 
 // ─── Message Types ───────────────────────────────────────────────────
@@ -193,6 +201,7 @@ export enum MessageType {
   // Personalized Discovery (Phase 4)
   BUILD_WATCH_PROFILE = 'BUILD_WATCH_PROFILE',
   GET_PERSONALIZED_RECS = 'GET_PERSONALIZED_RECS',
+  GET_CURATOR_PROMPT_PREVIEW = 'GET_CURATOR_PROMPT_PREVIEW',
 
   // Weekly Digest
   GET_WEEKLY_DIGEST = 'GET_WEEKLY_DIGEST',
@@ -367,6 +376,8 @@ export interface WatchProfileEntry {
   genres: string[];
   userRating: number;
   noteExcerpt?: string;  // first 100 chars of notes if set
+  emotionalRecall?: string;
+  qualitativeExcerpt?: string;
 }
 
 export interface WatchProfile {
@@ -377,6 +388,8 @@ export interface WatchProfile {
   followedCreators: Array<{ name: string; role: CrewRole }>;
   favoriteGenres: string[];
   totalWatched: number;
+  /** Titles marked to-watch / wishlist — signals intent without implying taste yet. */
+  wishlist?: WatchProfileEntry[];
 }
 
 export interface PersonalizedRecommendation {

@@ -547,8 +547,10 @@
   background: transparent;
   border: 1px solid var(--border-restraint);
   color: var(--text-meta);
-  width: 32px;
-  height: 32px;
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
   border-radius: 2px;
   display: flex;
   align-items: center;
@@ -601,7 +603,7 @@
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  color: var(--border-hero);
+  color: var(--text-meta);
   margin-bottom: var(--spacing-sm);
 }
 
@@ -845,7 +847,7 @@
   font-family: var(--font-ui);
   font-size: 10px;
   letter-spacing: 0.05em;
-  padding: 3px 8px;
+  padding: 8px 12px;
   background: transparent;
   border: 1px solid var(--border-restraint);
   border-radius: 2px;
@@ -2030,6 +2032,108 @@ select.sanctuary-input option {
   font-size: 14px;
   margin: 0 0 var(--spacing-md) 0;
   line-height: 1.5;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+
+.reflection-excerpt-expanded .hardcover-snippet-lead,
+.reflection-excerpt-expanded .sanctuary-detail-reflection-lead {
+  max-height: 12rem;
+  overflow-y: auto;
+}
+
+.reflection-excerpt-block {
+  margin-bottom: var(--spacing-md);
+}
+
+.reflection-excerpt-clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.reflection-excerpt-toggle {
+  display: inline-block;
+  min-height: 44px;
+  margin: 0;
+  padding: 8px 0;
+  border: none;
+  background: none;
+  color: var(--text-meta);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.reflection-excerpt-toggle:hover {
+  color: var(--text-artwork);
+}
+
+.collection-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 32px 12px;
+}
+
+.collection-tab-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--border-restraint, var(--border));
+  border-radius: 2px;
+  background: transparent;
+  color: var(--text-meta);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.collection-tab-btn.active {
+  color: var(--text-reflection);
+  border-color: var(--border-hero, var(--border));
+  background: hsla(0, 0%, 100%, 0.06);
+}
+
+.intent-filter-hint {
+  padding: 0 32px 8px;
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-control, var(--text-meta));
+  font-family: var(--font-ui);
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 2px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-right: 6px;
+  color: var(--text-meta);
+  border: 1px solid var(--border-restraint, var(--border));
+}
+
+.status-chip[data-status='watched'] {
+  color: var(--text-artwork);
+}
+
+.intent-chip-secondary {
+  opacity: 0.75;
+  font-size: 9px;
+}
+
+.sanctuary-card-content {
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .hardcover-snippet-placeholder {

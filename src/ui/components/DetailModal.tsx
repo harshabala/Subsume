@@ -5,6 +5,7 @@ import { DEFAULT_EMOTIONS, getEmotionalSpectrum, type EmotionalSpectrum } from '
 import { PlatformChips } from './PlatformChips';
 import { EmotionalSliders } from './EmotionalSliders';
 import { AuraVisualizer } from './AuraVisualizer';
+import { ExpandableReflection } from './ExpandableReflection';
 import { STATUS_OPTIONS, getReflectionExcerpt } from './archive/constants';
 
 interface DetailModalProps {
@@ -44,6 +45,8 @@ export function DetailModal({
   );
   const [detailsExpanded, setDetailsExpanded] = useState(false);
   const notesDebounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const modalRef = useRef<HTMLDivElement>(null);
+  const titleId = `detail-title-${media.id}`;
 
   const reflectionExcerpt = libraryItem ? getReflectionExcerpt(libraryItem) : undefined;
 
@@ -118,6 +121,7 @@ export function DetailModal({
       if (e.key === 'Escape') onClose();
     };
     document.addEventListener('keydown', handleEsc);
+    modalRef.current?.focus();
     return () => document.removeEventListener('keydown', handleEsc);
   }, [onClose]);
 
@@ -132,8 +136,15 @@ export function DetailModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="sanctuary-modal-content">
-        <button onClick={onClose} className="sanctuary-modal-close">
+      <div
+        className="sanctuary-modal-content"
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+      >
+        <button type="button" onClick={onClose} className="sanctuary-modal-close" aria-label="Close details">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
@@ -141,9 +152,10 @@ export function DetailModal({
         </button>
 
         {libraryItem && reflectionExcerpt && (
-          <blockquote className="sanctuary-detail-reflection-lead" data-testid="detail-reflection-lead">
-            &ldquo;{reflectionExcerpt}&rdquo;
-          </blockquote>
+          <ExpandableReflection
+            text={reflectionExcerpt}
+            className="sanctuary-detail-reflection-lead hardcover-snippet-lead"
+          />
         )}
 
         <div className="sanctuary-detail-header">
@@ -162,9 +174,9 @@ export function DetailModal({
 
           <div className="sanctuary-detail-main">
             <div className="sanctuary-detail-inscription">
-              {media.type === 'tv' ? 'Series Sanctuary Inscription' : 'Cinematic Sanctuary Inscription'}
+              {media.type === 'tv' ? 'TV series' : 'Film'}
             </div>
-            <h2 className="sanctuary-detail-title">
+            <h2 id={titleId} className="sanctuary-detail-title">
               {media.canonicalTitle}
             </h2>
 
@@ -202,21 +214,21 @@ export function DetailModal({
 
         {media.overview && (
           <div className="sanctuary-detail-section">
-            <h3 className="sanctuary-detail-section-title">Sanctuary Synopsis</h3>
+            <h3 className="sanctuary-detail-section-title">Synopsis</h3>
             <p className="sanctuary-detail-synopsis">{media.overview}</p>
           </div>
         )}
 
         {media.streamingAvailability && media.streamingAvailability.length > 0 && (
           <div className="sanctuary-detail-section">
-            <h3 className="sanctuary-detail-section-title">Exhibition Availability</h3>
+            <h3 className="sanctuary-detail-section-title">Where to watch</h3>
             <PlatformChips availability={media.streamingAvailability} />
           </div>
         )}
 
         {media.providers.length > 0 && (
           <div className="sanctuary-detail-section">
-            <h3 className="sanctuary-detail-section-title">Archival Catalog Links</h3>
+            <h3 className="sanctuary-detail-section-title">Links</h3>
             <div className="sanctuary-detail-providers">
               {media.providers.map((p) => (
                 <a
@@ -249,7 +261,7 @@ export function DetailModal({
               {detailsExpanded && (
                 <div className="sanctuary-detail-details-panel">
                   <div className="sanctuary-detail-control-row">
-                    <span className="sanctuary-detail-control-label">Sanctuary State:</span>
+                    <span className="sanctuary-detail-control-label">Status:</span>
                     <select
                       value={libraryItem.status}
                       onChange={(e) => onUpdateStatus?.((e.target as HTMLSelectElement).value as LibraryStatus)}
@@ -263,7 +275,7 @@ export function DetailModal({
 
                   {libraryItem.status === 'watched' && (
                     <div className="sanctuary-detail-control-row">
-                      <span className="sanctuary-detail-control-label">Resonance Rating:</span>
+                      <span className="sanctuary-detail-control-label">Your rating:</span>
                       <input
                         type="range"
                         min={1}
@@ -274,19 +286,21 @@ export function DetailModal({
                         className="sanctuary-detail-range"
                       />
                       <span className="sanctuary-detail-rating-display">
-                        {libraryItem.userRating || 5} <span className="sanctuary-detail-rating-max">/ X</span>
+                        {libraryItem.userRating || 5} <span className="sanctuary-detail-rating-max">/ 10</span>
                       </span>
                     </div>
                   )}
 
                   <div className="sanctuary-detail-tags-section">
-                    <span className="sanctuary-detail-control-label">Sanctuary Tags:</span>
+                    <span className="sanctuary-detail-control-label">Tags:</span>
 
                     <div className="sanctuary-detail-tags-list">
                       {(libraryItem.userTags || []).map((tag) => (
                         <span key={tag} className="sanctuary-detail-tag-chip">
                           {tag}
-                          <span
+                          <button
+                            type="button"
+                            aria-label={`Remove tag ${tag}`}
                             onClick={() => {
                               const newTags = (libraryItem.userTags || []).filter(t => t !== tag);
                               onUpdateTags?.(newTags);
@@ -294,14 +308,14 @@ export function DetailModal({
                             className="sanctuary-detail-tag-remove"
                           >
                             ×
-                          </span>
+                          </button>
                         </span>
                       ))}
                     </div>
 
                     <input
                       type="text"
-                      placeholder="Inscribe custom tag and press Enter..."
+                      placeholder="Add a tag and press Enter"
                       className="sanctuary-detail-input"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
@@ -320,12 +334,13 @@ export function DetailModal({
                     />
 
                     <div className="sanctuary-detail-suggestions">
-                      <span className="sanctuary-detail-suggestions-label">Archival Suggestions:</span>
+                      <span className="sanctuary-detail-suggestions-label">Suggested tags:</span>
                       {SUGGESTED_TAGS.map((tag) => {
                         const isAdded = (libraryItem.userTags || []).includes(tag);
                         if (isAdded) return null;
                         return (
-                          <span
+                          <button
+                            type="button"
                             key={tag}
                             onClick={() => {
                               const currentTags = libraryItem.userTags || [];
@@ -334,17 +349,17 @@ export function DetailModal({
                             className="sanctuary-detail-suggestion-chip"
                           >
                             + {tag}
-                          </span>
+                          </button>
                         );
                       })}
                     </div>
                   </div>
 
                   <div className="sanctuary-detail-notes-section">
-                    <span className="sanctuary-detail-control-label">Private Reflections & Notes:</span>
+                    <span className="sanctuary-detail-control-label">Notes:</span>
                     <textarea
                       value={notes}
-                      placeholder="Record private thoughts, directorial motifs, or memorable sequences..."
+                      placeholder="Your notes about this title"
                       onChange={(e) => handleNotesChange(e.currentTarget.value)}
                       onBlur={flushNotes}
                       rows={4}
@@ -392,7 +407,7 @@ export function DetailModal({
             </div>
           ) : (
             <button className="sanctuary-detail-btn-inscribe" onClick={onAddToLibrary}>
-              Inscribe into Sanctuary Library
+              Add to library
             </button>
           )}
         </div>

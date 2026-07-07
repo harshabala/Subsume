@@ -273,7 +273,7 @@ export function FilmographyView({ person: initialPerson, onBack, onUnfollow }: F
                 onClick={() => setBioExpanded(!bioExpanded)}
                 className="filmography-text-btn"
               >
-                {bioExpanded ? 'Fold Inscription' : 'Expand Inscription'}
+                {bioExpanded ? 'Fold Message' : 'Expand Message'}
               </button>
             </div>
           ) : (
@@ -323,7 +323,7 @@ export function FilmographyView({ person: initialPerson, onBack, onUnfollow }: F
             <option value="year-desc">Chronological (Latest)</option>
             <option value="year-asc">Chronological (Earliest)</option>
             <option value="rating">Critical Resonance</option>
-            <option value="title">Inscription A–Z</option>
+            <option value="title">Message A–Z</option>
           </select>
         </div>
       </div>

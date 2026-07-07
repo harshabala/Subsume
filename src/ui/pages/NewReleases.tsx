@@ -124,14 +124,14 @@ export function NewReleases() {
                     </div>
                   )}
                   {addedIds.has(media.id) ? (
-                    <span style={{ color: 'var(--text-meta)', fontSize: '10px' }}>Archived</span>
+                    <span style={{ color: 'var(--text-meta)', fontSize: '10px' }}>In library</span>
                   ) : (
                     <button
                       className="optical-button"
                       style={{ padding: '6px 12px', fontSize: '9px' }}
                       onClick={() => handleAddToLibrary(media)}
                     >
-                      + Acquire
+                      Add to library
                     </button>
                   )}
                 </div>

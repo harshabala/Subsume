@@ -68,7 +68,7 @@ export function Search() {
     <div className="page-container">
       <header className="sanctuary-header">
         <div className="sanctuary-header-meta">
-          <span className="sanctuary-subtitle">Catalogue No. 02 — Precision Archival Query</span>
+          <span className="sanctuary-subtitle">Search</span>
         </div>
         <h1 className="sanctuary-title">Search Archive</h1>
         <p className="sanctuary-description">
@@ -124,7 +124,7 @@ export function Search() {
       {searched && !loading && results.length === 0 && (
         <div className="sanctuary-empty-plaque" style={{ maxWidth: 500, margin: '48px auto' }}>
           <span className="sanctuary-plaque-index">REF. NULL-RESULT</span>
-          <h3 className="sanctuary-plaque-title">No Archival Matches Found</h3>
+          <h3 className="sanctuary-plaque-title">No results</h3>
           <p className="sanctuary-plaque-text">
             The global repository yielded no works corresponding to your optical query. Refine search parameters or verify provider configuration.
           </p>
@@ -177,7 +177,7 @@ export function Search() {
                 <div style={{ marginTop: 'auto', paddingTop: 12 }}>
                   {addedIds.has(item.id) ? (
                     <span style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', letterSpacing: '0.05em', color: 'var(--text-meta)' }}>
-                      Archived in Sanctuary
+                      In your library
                     </span>
                   ) : (
                     <button
@@ -186,7 +186,7 @@ export function Search() {
                       disabled={addingId === item.id}
                       style={{ width: '100%', padding: '8px', fontSize: '11px' }}
                     >
-                      {addingId === item.id ? 'Acquiring...' : '+ Acquire'}
+                      {addingId === item.id ? 'Acquiring...' : 'Add to library'}
                     </button>
                   )}
                 </div>

@@ -34,6 +34,11 @@ export async function buildWatchProfile(): Promise<WatchProfile> {
     .sort((a, b) => b.updatedAt - a.updatedAt)
     .slice(0, 100);
 
+  const wishlistItems = allLibraryItems
+    .filter(l => l.status === 'to-watch' || l.status === 'watching')
+    .sort((a, b) => b.addedAt - a.addedAt)
+    .slice(0, 15);
+
   const totalWatched = allLibraryItems.filter(l => l.status === 'watched').length;
 
   // Resolve MediaItems for all watched library items
@@ -45,19 +50,43 @@ export async function buildWatchProfile(): Promise<WatchProfile> {
     })
   );
 
+  const wishlistPairs = await Promise.all(
+    wishlistItems.map(async (libraryItem) => {
+      const media = await getMediaItem(libraryItem.mediaId);
+      if (!media) return null;
+      return { libraryItem, media };
+    })
+  );
+
   const validPairs = resolvedPairs.filter(
     (p): p is { libraryItem: NonNullable<typeof watchedItems[0]>; media: NonNullable<Awaited<ReturnType<typeof getMediaItem>>> } => p !== null
+  );
+
+  const validWishlist = wishlistPairs.filter(
+    (p): p is { libraryItem: NonNullable<typeof wishlistItems[0]>; media: NonNullable<Awaited<ReturnType<typeof getMediaItem>>> } => p !== null
   );
 
   // Build WatchProfileEntry from each pair
   function toEntry(pair: typeof validPairs[0]): WatchProfileEntry {
     const { libraryItem, media } = pair;
+    const noteSource =
+      libraryItem.emotionalRecall ||
+      libraryItem.qualitativeNotes ||
+      libraryItem.notes ||
+      '';
+    const excerpt = noteSource ? noteSource.slice(0, 100) : undefined;
     return {
       title: media.canonicalTitle,
       year: media.year,
       genres: media.genres,
       userRating: libraryItem.userRating ?? 0,
-      noteExcerpt: libraryItem.notes ? libraryItem.notes.slice(0, 100) : undefined,
+      noteExcerpt: libraryItem.notes ? libraryItem.notes.slice(0, 100) : excerpt,
+      emotionalRecall: libraryItem.emotionalRecall
+        ? libraryItem.emotionalRecall.slice(0, 200)
+        : undefined,
+      qualitativeExcerpt: libraryItem.qualitativeNotes
+        ? libraryItem.qualitativeNotes.slice(0, 150)
+        : undefined,
     };
   }
 
@@ -88,6 +117,14 @@ export async function buildWatchProfile(): Promise<WatchProfile> {
   const disliked = dislikedRaw.map(toEntry);
   const unrated = unratedRaw.map(toEntry);
 
+  const wishlist = validWishlist.map((pair) => ({
+    title: pair.media.canonicalTitle,
+    year: pair.media.year,
+    genres: pair.media.genres,
+    userRating: pair.libraryItem.userRating ?? 0,
+    noteExcerpt: pair.libraryItem.emotionalRecall?.slice(0, 100),
+  }));
+
   // Followed creators — cap at 10
   const followedCreators = allPeople
     .slice(0, 10)
@@ -116,6 +153,7 @@ export async function buildWatchProfile(): Promise<WatchProfile> {
     followedCreators,
     favoriteGenres,
     totalWatched,
+    wishlist,
   };
 
   profileCache = profile;

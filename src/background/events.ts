@@ -55,12 +55,12 @@ async function notifyWeeklyDigestReady(digest: WeeklyDigest) {
   chrome.notifications.create('weekly-digest', {
     type: 'basic',
     iconUrl: 'icons/icon128.png',
-    title: 'Your weekly watchlist is ready',
+    title: 'Subsume — weekly curator digest',
     message:
       digest.items.length +
       ' personalized pick' +
       (digest.items.length === 1 ? '' : 's') +
-      ' curated for you',
+      ' from your background curator — open Recommendations in Subsume',
     priority: 1,
   });
 }

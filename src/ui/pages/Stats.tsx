@@ -63,7 +63,7 @@ export function Stats() {
     <div className="page-container sanctuary-page-shell">
       <header className="sanctuary-header">
         <div className="sanctuary-header-meta">
-          <span className="sanctuary-subtitle">Archival Colophon</span>
+          <span className="sanctuary-subtitle">Diagnostics</span>
         </div>
         <h2 className="sanctuary-title">Personal Statistics</h2>
         <p className="sanctuary-description">An archival breakdown of your sanctuary reflections and auteur engagement.</p>
@@ -72,11 +72,11 @@ export function Stats() {
       {loading ? (
         <div className="sanctuary-empty-plaque">
            <div className="subsume-spinner sanctuary-spinner-centered" />
-           <p className="sanctuary-plaque-text sanctuary-plaque-text-spaced">Compiling archival plates...</p>
+           <p className="sanctuary-plaque-text sanctuary-plaque-text-spaced">Loading stats…</p>
         </div>
       ) : totalWatched === 0 ? (
         <div className="sanctuary-empty-plaque">
-          <span className="sanctuary-plaque-index">Plate Index 00</span>
+          <span className="sanctuary-plaque-index">1ndex 00</span>
           <h3 className="sanctuary-plaque-title">No reflections recorded</h3>
           <p className="sanctuary-plaque-text">
             Mark titles in your sanctuary as "Watched" and provide reflections to assemble your archival scientific museum plates.
@@ -91,21 +91,21 @@ export function Stats() {
 
           <div className="stats-grid">
             <div className="stats-plaque-card">
-              <span className="sanctuary-plaque-index stats-plaque-index">Plate I</span>
+              <span className="sanctuary-plaque-index stats-plaque-index">1</span>
               <span className="stat-value stats-plaque-value">{totalWatched}</span>
               <span className="stats-plaque-label">Reflected Titles</span>
             </div>
 
             <div className="stats-plaque-card">
-              <span className="sanctuary-plaque-index stats-plaque-index">Plate II</span>
+              <span className="sanctuary-plaque-index stats-plaque-index">1I</span>
               <span className="stat-value stats-plaque-value">{totalHours}</span>
-              <span className="stats-plaque-label">Hours Sanctuary</span>
+              <span className="stats-plaque-label">Hours watched</span>
             </div>
 
             <div className="stats-plaque-card">
-              <span className="sanctuary-plaque-index stats-plaque-index">Plate III</span>
+              <span className="sanctuary-plaque-index stats-plaque-index">1II</span>
               <span className="stat-value stats-plaque-value accent">{avgRating}</span>
-              <span className="stats-plaque-label">Mean Resonance</span>
+              <span className="stats-plaque-label">Average rating</span>
             </div>
           </div>
 

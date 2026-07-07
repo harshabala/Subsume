@@ -1,13 +1,9 @@
 import { h } from 'preact';
-import { LibraryStatus } from '@/shared/types';
-import { STATUS_OPTIONS } from './constants';
 import { SortOption } from './types';
 
 export interface ArchiveControlsProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  statusFilter: LibraryStatus | '';
-  setStatusFilter: (status: LibraryStatus | '') => void;
   sortBy: SortOption;
   setSortBy: (sort: SortOption) => void;
 }
@@ -15,8 +11,6 @@ export interface ArchiveControlsProps {
 export function ArchiveControls({
   searchQuery,
   setSearchQuery,
-  statusFilter,
-  setStatusFilter,
   sortBy,
   setSortBy,
 }: ArchiveControlsProps) {
@@ -29,16 +23,6 @@ export function ArchiveControls({
         onInput={(e) => setSearchQuery(e.currentTarget.value)}
         className="sanctuary-input archive-filter-search"
       />
-      <select
-        value={statusFilter}
-        onChange={(e) => setStatusFilter((e.target as HTMLSelectElement).value as LibraryStatus | '')}
-        className="sanctuary-input archive-filter-select"
-      >
-        <option value="">All Statuses</option>
-        {STATUS_OPTIONS.map((opt) => (
-          <option value={opt.value} key={opt.value}>{opt.label}</option>
-        ))}
-      </select>
       <select
         value={sortBy}
         onChange={(e) => setSortBy((e.target as HTMLSelectElement).value as SortOption)}

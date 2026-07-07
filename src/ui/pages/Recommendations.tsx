@@ -15,7 +15,11 @@ import { RecommendationMediaCard } from '../components/RecommendationMediaCard';
 import { RecommendationAiCard } from '../components/RecommendationAiCard';
 import '../styles/recommendations.css';
 
-export function Recommendations() {
+interface RecommendationsProps {
+  onOpenCuratorSettings?: () => void;
+}
+
+export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps = {}) {
   // ── Existing rule-based state ─────────────────────────────────────────
   const [recs, setRecs] = useState<(Recommendation & { media: MediaItem })[]>([]);
   const [groupedRecs, setGroupedRecs] = useState<{ seedTitle: string; recommendations: (Recommendation & { media: MediaItem })[] }[]>([]);
@@ -255,7 +259,7 @@ export function Recommendations() {
 
       <header className="sanctuary-header">
         <div className="sanctuary-header-meta">
-          <span className="sanctuary-subtitle">Catalogue No. 01 — Curated Discovery</span>
+          <span className="sanctuary-subtitle">Recommendations</span>
         </div>
         <h1 className="sanctuary-title">Recommendations</h1>
         <p className="sanctuary-description">
@@ -267,12 +271,12 @@ export function Recommendations() {
       {loading ? (
         <div className="sanctuary-empty-plaque">
            <div className="subsume-spinner" style={{ margin: '0 auto 16px' }} />
-           <p className="sanctuary-plaque-text">Inspecting archival library...</p>
+           <p className="sanctuary-plaque-text">Loading recommendations…</p>
         </div>
       ) : hasNoRecs ? (
         <div className="sanctuary-empty-plaque">
-          <span className="sanctuary-plaque-index">REF. 404-REC</span>
-          <h3 className="sanctuary-plaque-title">Insufficient Archival Data</h3>
+          <span className="sanctuary-plaque-index">Not enough data</span>
+          <h3 className="sanctuary-plaque-title">Not enough data</h3>
           <p className="sanctuary-plaque-text">
             Catalogue curation requires a broader foundation. Add further works to your sanctuary or mark existing acquisitions as watched.
           </p>
@@ -333,10 +337,23 @@ export function Recommendations() {
           </p>
         )}
 
+        <p className="recommendations-curator-explainer">
+          Your private curator reads ratings, emotional recall, notes, wishlist, and filmmakers from your sanctuary,
+          then asks your LLM provider for matches — nothing is sent except what you configure in{' '}
+          {onOpenCuratorSettings ? (
+            <button type="button" className="recommendations-curator-link" onClick={onOpenCuratorSettings}>
+              Settings → AI curator
+            </button>
+          ) : (
+            <span>Settings → AI curator</span>
+          )}
+          .
+        </p>
+
         {/* EMPTY STATE */}
         {!hasEnoughHistory && !recsLoading && personalizedRecs.length === 0 && (
           <div className="sanctuary-empty-plaque">
-            <span className="sanctuary-plaque-index">AI EXHIBITION LOCKED</span>
+            <span className="sanctuary-plaque-index">Unlock AI picks</span>
             <h3 className="sanctuary-plaque-title">Personalized Exhibition Portfolio</h3>
             <p className="sanctuary-plaque-text">Rate at least 3 cinematic works to help Subsume map your aesthetic sensibility.</p>
           </div>
@@ -349,7 +366,7 @@ export function Recommendations() {
               onClick={generatePersonalized}
               className="sanctuary-action-button"
             >
-              Request AI Curated Exhibition
+              Generate recommendations
             </button>
           </div>
         )}
@@ -367,7 +384,7 @@ export function Recommendations() {
               className="optical-button"
               style={{ padding: '8px 20px' }}
             >
-              RETRY CURATION
+              Try again
             </button>
           </div>
         )}
@@ -385,7 +402,7 @@ export function Recommendations() {
               className="optical-button"
               style={{ padding: '8px 20px' }}
             >
-              RETRY CURATION
+              Try again
             </button>
           </div>
         )}
@@ -409,7 +426,7 @@ export function Recommendations() {
           <div>
             {/* Header row */}
             <div className="recommendations-results-header">
-              <span className="sanctuary-plaque-title" style={{ margin: 0, fontSize: '20px' }}>Curated Exhibition</span>
+              <span className="sanctuary-plaque-title" style={{ margin: 0, fontSize: '20px' }}>AI recommendations</span>
               <div className="recommendations-results-actions">
                 {recGroups !== null && (
                   <div className="recommendations-view-mode-toggle">
@@ -419,7 +436,7 @@ export function Recommendations() {
                         onClick={() => setViewMode(mode)}
                         className={`recommendations-view-mode-btn ${viewMode === mode ? 'recommendations-view-mode-btn-active' : 'recommendations-view-mode-btn-inactive'}`}
                       >
-                        {mode === 'grouped' ? 'By Theme' : 'Complete Catalogue'}
+                        {mode === 'grouped' ? 'By Theme' : 'All titles'}
                       </button>
                     ))}
                   </div>
@@ -477,7 +494,7 @@ export function Recommendations() {
                 ))}
                 {ungroupedRecs.length > 0 && (
                   <div>
-                    <div className="sanctuary-plaque-title" style={{ fontSize: '18px', marginTop: '24px' }}>Further Acquisitions</div>
+                    <div className="sanctuary-plaque-title" style={{ fontSize: '18px', marginTop: '24px' }}>More picks</div>
                     <div className="recommendations-flat-grid">
                       {ungroupedRecs.map(rec => (
                         <RecommendationAiCard

@@ -520,7 +520,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
                         disabled={addedIds.has(media.id)}
                         onClick={(e) => { e.stopPropagation(); handleAdd(media); }}
                       >
-                        {addedIds.has(media.id) ? 'Acquired' : '+ Acquire'}
+                        {addedIds.has(media.id) ? 'Acquired' : 'Add to library'}
                       </button>
                     </div>
                   </div>
@@ -795,7 +795,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
                               disabled={addedIds.has(media.id)}
                               onClick={(e) => { e.stopPropagation(); handleAdd(media); }}
                             >
-                              {addedIds.has(media.id) ? 'Acquired' : '+ Acquire'}
+                              {addedIds.has(media.id) ? 'Acquired' : 'Add to library'}
                             </button>
                           </div>
                         )}

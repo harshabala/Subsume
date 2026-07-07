@@ -61,7 +61,7 @@ export function EmotionalWeatherChart({
       <div className="emotional-weather-header">
         <div>
           <span className="emotional-weather-kicker">Emotional Weather</span>
-          <h3 className="emotional-weather-title">Sanctuary Soundwave</h3>
+          <h3 className="emotional-weather-title">Mood over time</h3>
           <p className="emotional-weather-desc">
             Average mood vectors across your last {recentLogs.length} reflection
             {recentLogs.length === 1 ? '' : 's'}

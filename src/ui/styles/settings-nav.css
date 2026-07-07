@@ -1,0 +1,57 @@
+.settings-section-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0 4px;
+}
+
+.settings-section-nav-btn {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-meta);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.settings-section-nav-btn:focus-visible {
+  outline: 2px solid color-mix(in oklch, var(--accent-gold, #c9a84c) 65%, white);
+  outline-offset: 2px;
+}
+
+.settings-section-nav-btn:hover {
+  color: var(--text-artwork);
+  border-color: var(--text-meta);
+}
+
+.settings-section-nav-btn.active {
+  color: var(--text-reflection);
+  border-color: var(--accent-gold, var(--border-hero));
+  background: hsla(0, 0%, 100%, 0.06);
+}
+
+.settings-section-lead {
+  max-width: 640px;
+  margin: 0 0 24px;
+  color: var(--text-meta);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.settings-panel-description {
+  margin: 0 0 20px;
+  color: var(--text-meta);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.settings-footer-sticky {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}

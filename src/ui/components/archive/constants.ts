@@ -21,5 +21,18 @@ export function resolveSanctuaryIntent(library: LibraryItem): SanctuaryIntent {
 }
 
 export function getReflectionExcerpt(library: LibraryItem): string | undefined {
-  return library.emotionalRecall?.trim() || library.notes?.trim() || undefined;
+  const combined =
+    library.emotionalRecall?.trim() ||
+    library.qualitativeNotes?.trim() ||
+    library.lingeringThought?.trim() ||
+    library.notes?.trim() ||
+    '';
+  return combined.length > 0 ? combined : undefined;
 }
+
+export const STATUS_CHIP_LABELS: Record<LibraryStatus, string> = {
+  'to-watch': 'Want to watch',
+  watching: 'Watching',
+  watched: 'Watched',
+  abandoned: 'Abandoned',
+};

@@ -1,0 +1,47 @@
+
+/* ── AI Curator panel ───────────────────────────────────────────────────── */
+
+.curator-journey-steps {
+  margin: 0 0 20px 1.1rem;
+  padding: 0;
+  color: var(--text-meta);
+  font-family: var(--font-editorial);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.curator-journey-steps li {
+  margin-bottom: 10px;
+}
+
+.font-mono-sm {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.curator-reset-btn {
+  margin-top: 8px;
+}
+
+.curator-preview-block {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-restraint);
+}
+
+.curator-preview-pre {
+  margin-top: 12px;
+  max-height: 320px;
+  overflow: auto;
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-restraint);
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text-artwork);
+}

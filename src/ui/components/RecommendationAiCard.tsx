@@ -73,7 +73,7 @@ export function RecommendationAiCard({ rec, showSeedPill, isAdded, onCardClick, 
             onClick={e => { e.stopPropagation(); onAddClick(rec); }}
             className={`sanctuary-acquire-btn recommendation-ai-card-acquire-btn ${isAdded ? 'recommendation-ai-card-add-button-added' : 'recommendation-ai-card-add-button-unadded'}`}
           >
-            {isAdded ? 'Archived' : '+ Acquire'}
+            {isAdded ? 'In library' : 'Add to library'}
           </button>
         )}
       </div>

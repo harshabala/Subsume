@@ -1,0 +1,84 @@
+/* Unified app navigation — primary + explore in one bar */
+
+.app-nav-shell {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg-sanctuary, var(--bg-primary));
+  border-bottom: 1px solid var(--border-restraint, var(--border));
+}
+
+.fixed-top-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px 8px;
+  flex-wrap: wrap;
+}
+
+.app-subnav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 12px 10px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.app-subnav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-meta);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, background 0.15s;
+}
+
+.app-subnav-link:focus-visible {
+  outline: 2px solid color-mix(in oklch, var(--accent-gold, #c9a84c) 65%, white);
+  outline-offset: 2px;
+}
+
+.app-subnav-link:hover {
+  color: var(--text-artwork);
+  background: hsla(0, 0%, 100%, 0.04);
+}
+
+.app-subnav-link.active {
+  color: var(--text-reflection);
+  background: hsla(0, 0%, 100%, 0.08);
+}
+
+.app-subnav-icon {
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.nav-menu-toggle {
+  display: none !important;
+}
+
+.side-nav-backdrop,
+.side-menu-drawer {
+  display: none !important;
+}
+
+@media (max-width: 720px) {
+  .app-subnav-link span.app-subnav-label-full {
+    display: none;
+  }
+  .app-subnav-link {
+    padding: 8px 10px;
+  }
+}

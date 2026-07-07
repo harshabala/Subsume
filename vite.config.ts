@@ -9,6 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 export default defineConfig(({ command }) => ({
+  base: './',
   plugins: [
     preact(),
     viteStaticCopy({
@@ -27,6 +28,13 @@ export default defineConfig(({ command }) => ({
           const destHtml = resolve(__dirname, `dist/ui/${name}.html`);
           if (fs.existsSync(srcHtml)) {
             fs.renameSync(srcHtml, destHtml);
+          }
+          if (fs.existsSync(destHtml)) {
+            let html = fs.readFileSync(destHtml, 'utf8');
+            html = html
+              .replace(/\.\.\/\.\.\/ui\/assets\//g, './assets/')
+              .replace(/\/ui\/assets\//g, './assets/');
+            fs.writeFileSync(destHtml, html);
           }
         }
         const distSrc = resolve(__dirname, 'dist/src');

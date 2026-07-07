@@ -173,7 +173,7 @@ export function People() {
     <div className="page-container sanctuary-page-shell">
       <header className="sanctuary-header">
         <div className="sanctuary-header-meta">
-          <span className="sanctuary-subtitle">Auteur Archive</span>
+          <span className="sanctuary-subtitle">Filmmakers</span>
         </div>
         <h2 className="sanctuary-title">Filmmakers</h2>
         <p className="sanctuary-description">Follow directors, actors, and writers to track their entire body of work across cinematic history.</p>
@@ -184,7 +184,7 @@ export function People() {
           onClick={() => setActiveView('following')}
           className={`people-sanctuary-tab${activeView === 'following' ? ' active' : ''}`}
         >
-          Enrolled Auteurs ({following.length})
+          Following ({following.length})
         </button>
         <button
           onClick={() => setActiveView('search')}
@@ -349,7 +349,7 @@ export function People() {
                           disabled={isFollowed}
                           className={`people-enroll-btn${isFollowed ? ' enrolled' : ' active'}`}
                         >
-                          {isFollowed ? 'Enrolled ✓' : 'Enroll Auteur'}
+                          {isFollowed ? 'Enrolled ✓' : 'Follow'}
                         </button>
                       </div>
                     </div>

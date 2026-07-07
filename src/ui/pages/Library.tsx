@@ -14,18 +14,20 @@ import {
   TagFilterBar,
   HardcoverSpineCard,
 } from '../components/archive';
+import type { CollectionFilter } from '../components/archive/IntentNavigation';
+import { resolveSanctuaryIntent } from '../components/archive/constants';
 import { EmptyStateProjection } from '../components/EmptyStateProjection';
 import type { EmotionalSpectrum } from '@/shared/emotions';
 
 export function Library() {
   const [activeTab, setActiveTab] = useState<'movies' | 'tv'>('movies');
   const [intentFilter, setIntentFilter] = useState<IntentFilterOption>('all');
+  const [collectionFilter, setCollectionFilter] = useState<CollectionFilter>('all');
   const [items, setItems] = useState<JoinedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [removeConfirmId, setRemoveConfirmId] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<JoinedItem | null>(null);
-  const [statusFilter, setStatusFilter] = useState<LibraryStatus | ''>('');
   const [sortBy, setSortBy] = useState<SortOption>('added');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTagFilter, setActiveTagFilter] = useState<string>('');
@@ -225,14 +227,15 @@ export function Library() {
   const filteredAndSortedItems = useMemo(() => {
     return items
       .filter(({ library, media }) => {
-        const matchesStatus = !statusFilter || library.status === statusFilter;
+        const matchesCollection =
+          collectionFilter === 'all' || library.status === collectionFilter;
         const matchesTag = !activeTagFilter || (library.userTags && library.userTags.includes(activeTagFilter));
-        const itemIntent = library.sanctuaryIntent || 'wishlist';
+        const itemIntent = resolveSanctuaryIntent(library);
         const matchesIntent = intentFilter === 'all' || itemIntent === intentFilter;
         const matchesSearch = !searchQuery ||
           (media?.canonicalTitle || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
           (media?.genres || []).some((g) => g.toLowerCase().includes(searchQuery.toLowerCase()));
-        return matchesStatus && matchesSearch && matchesTag && matchesIntent;
+        return matchesCollection && matchesSearch && matchesTag && matchesIntent;
       })
       .sort((a, b) => {
         switch (sortBy) {
@@ -247,7 +250,7 @@ export function Library() {
             return b.library.addedAt - a.library.addedAt;
         }
       });
-  }, [items, statusFilter, activeTagFilter, searchQuery, sortBy, intentFilter]);
+  }, [items, collectionFilter, activeTagFilter, searchQuery, sortBy, intentFilter]);
 
   return (
     <div className="page-container">
@@ -264,13 +267,13 @@ export function Library() {
         setActiveTab={setActiveTab}
         intentFilter={intentFilter}
         setIntentFilter={setIntentFilter}
+        collectionFilter={collectionFilter}
+        setCollectionFilter={setCollectionFilter}
       />
 
       <ArchiveControls
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
-        statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
         sortBy={sortBy}
         setSortBy={setSortBy}
       />

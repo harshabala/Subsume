@@ -10,6 +10,7 @@ import { getLatestReleases } from './tmdb';
 import { buildWatchProfile } from './context';
 import { getAllLibraryItems } from './storage';
 import { callLLMProvider } from './llm';
+import { getEffectivePrompt, buildTasteProfilePayload } from '@/shared/prompts';
 
 const DIGEST_STALE_MS = 7 * 24 * 60 * 60 * 1000;
 const RULE_BASED_COUNT = 12;
@@ -36,7 +37,7 @@ function mediaToDigestItem(item: MediaItem, reason: string): WeeklyDigestItem {
   };
 }
 
-function buildDigestPrompt(profile: WatchProfile, releases: MediaItem[]): string {
+function buildDigestPrompt(profile: WatchProfile, releases: MediaItem[], prefs: UserPreferences): string {
   const releaseLines = releases
     .slice(0, 40)
     .map(
@@ -45,60 +46,19 @@ function buildDigestPrompt(profile: WatchProfile, releases: MediaItem[]): string
     )
     .join('\n');
 
-  const profileLines: string[] = [];
-
-  if (profile.topRated.length > 0) {
-    profileLines.push('Top-rated titles:');
-    profile.topRated.slice(0, 8).forEach((e) => {
-      profileLines.push(`- ${e.title} (${e.year}) [${e.genres.join(', ')}] rated ${e.userRating}/10`);
-    });
-  }
-
-  if (profile.liked.length > 0) {
-    profileLines.push('Liked titles:');
-    profile.liked.slice(0, 5).forEach((e) => {
-      profileLines.push(`- ${e.title} (${e.year}) [${e.genres.join(', ')}]`);
-    });
-  }
-
-  if (profile.disliked.length > 0) {
-    profileLines.push('Disliked titles (avoid similar):');
-    profile.disliked.slice(0, 5).forEach((e) => {
-      profileLines.push(`- ${e.title} (${e.year}) [${e.genres.join(', ')}]`);
-    });
-  }
-
-  if (profile.followedCreators.length > 0) {
-    profileLines.push(
-      `Followed creators: ${profile.followedCreators.map((c) => c.name).join(', ')}`
-    );
-  }
-
-  if (profile.favoriteGenres.length > 0) {
-    profileLines.push(`Favorite genres: ${profile.favoriteGenres.join(', ')}`);
-  }
+  const tasteJson = JSON.stringify(buildTasteProfilePayload(profile), null, 2);
 
   return [
-    'You are curating a weekly digest of new streaming releases for this viewer.',
+    getEffectivePrompt('curatorSystem', prefs),
     '',
-    'Viewer profile:',
-    ...profileLines,
+    'TASTE PROFILE (JSON):',
+    tasteJson,
     '',
     'New releases from the past 7 days (pick ONLY from this list):',
     releaseLines,
     '',
-    `Select the best ${LLM_MIN_COUNT}-${LLM_MAX_COUNT} titles for this viewer.`,
-    'Write a concise, personalized one-sentence reason for each pick based on their taste.',
-    '',
-    'Respond with ONLY valid JSON, no markdown:',
-    `[
-  {
-    "title": "Movie or Show Title",
-    "year": 2024,
-    "type": "movie",
-    "reason": "Personalized reason tied to their watch history."
-  }
-]`,
+    'TASK:',
+    getEffectivePrompt('digest', prefs),
   ].join('\n');
 }
 
@@ -138,7 +98,7 @@ async function generateLLMDigest(
   releases: MediaItem[]
 ): Promise<WeeklyDigestItem[]> {
   const profile = await buildWatchProfile();
-  const prompt = buildDigestPrompt(profile, releases);
+  const prompt = buildDigestPrompt(profile, releases, prefs);
   const rawText = await callLLMProvider(prompt, prefs);
   const cleaned = rawText.replace(/```json|```/g, '').trim();
 

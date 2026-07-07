@@ -41,35 +41,35 @@ export function Logs() {
     <div className="page-container sanctuary-page-shell">
       <header className="sanctuary-header">
         <div className="sanctuary-header-meta">
-          <span className="sanctuary-subtitle">Archival Colophon</span>
+          <span className="sanctuary-subtitle">Diagnostics</span>
         </div>
-        <h2 className="sanctuary-title">System Inscriptions</h2>
+        <h2 className="sanctuary-title">System Messages</h2>
         <p className="sanctuary-description">Telegraphic colophon recording internal projection warnings and mechanism anomalies.</p>
       </header>
 
       <div className="sanctuary-page-stack">
         <div className="sanctuary-btn-row">
           <button className="sanctuary-btn-gold" onClick={copyToClipboard}>
-            Transcribe Colophon (Copy)
+            Copy logs
           </button>
           <button className="sanctuary-btn-restraint" onClick={clearLogs}>
-            Expunge Ledger
+            Clear logs
           </button>
         </div>
 
         <div className="sanctuary-plaque-panel">
           {logs.length === 0 ? (
             <div className="sanctuary-loading-text">
-              No system inscriptions recorded in the sanctuary ledger.
+              No system inscriptions recorded in the log.
             </div>
           ) : (
             <div className="logs-table-wrap">
               <table className="logs-table">
                 <thead>
                   <tr>
-                    <th>Chronicle</th>
-                    <th>Designation</th>
-                    <th>Inscription</th>
+                    <th>Time</th>
+                    <th>Level</th>
+                    <th>Message</th>
                   </tr>
                 </thead>
                 <tbody>

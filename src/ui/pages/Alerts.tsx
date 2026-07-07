@@ -148,7 +148,7 @@ export function Alerts() {
     <div className="page-container alerts-page">
       <header className="sanctuary-header">
         <div className="sanctuary-header-meta">
-          <span className="sanctuary-subtitle">Archival Dispatch</span>
+          <span className="sanctuary-subtitle">Alerts</span>
         </div>
         <h2 className="sanctuary-title">Watch Alerts</h2>
         <p className="sanctuary-description">Configure telegraphic surveillance criteria for forthcoming sanctuary releases.</p>
@@ -166,7 +166,7 @@ export function Alerts() {
             onClick={() => setShowForm((value) => !value)}
             className={showForm ? 'btn-sanctuary-restraint sm' : 'btn-sanctuary-gold sm'}
           >
-            {showForm ? 'Cancel Dispatch' : 'Assemble Surveillance Alert'}
+            {showForm ? 'Cancel Dispatch' : 'Create alert'}
           </button>
         </div>
 
@@ -179,7 +179,7 @@ export function Alerts() {
             <div className="alerts-form-fields">
               <div>
                 <label className="alerts-field-label">
-                  Surveillance Title / Designation
+                  Surveillance Title / Level
                 </label>
                 <input
                   type="text"
@@ -266,7 +266,7 @@ export function Alerts() {
 
               <div>
                 <label className="alerts-field-label">
-                  Inscription Keyword Filter (Optional)
+                  Message Keyword Filter (Optional)
                 </label>
                 <input
                   type="text"

@@ -54,7 +54,7 @@ describe('EmotionalWeatherChart', () => {
 
     render(<EmotionalWeatherChart items={[item]} />, container);
     expect(container.querySelector('.emotional-weather-svg')).toBeTruthy();
-    expect(container.textContent).toContain('Sanctuary Soundwave');
+    expect(container.textContent).toContain('Mood over time');
   });
 });
 
