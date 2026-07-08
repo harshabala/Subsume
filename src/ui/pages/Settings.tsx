@@ -378,7 +378,7 @@ export function Settings() {
         </div>
         <h2 className="sanctuary-title">Settings</h2>
         <p className="sanctuary-description">
-          Choose a category below. Each section explains what it controls — no jargon without a plain description.
+          Choose a category below. Each section explains what it controls, with no jargon without a plain description.
         </p>
       </header>
 
@@ -524,18 +524,18 @@ export function Settings() {
               <span className="settings-discovery-badge free">Free</span>
               <h4 className="settings-discovery-title">No key required</h4>
               <ul className="settings-discovery-list">
-                <li><strong>TVmaze</strong> — TV series metadata, cast, and schedules</li>
-                <li><strong>Trakt</strong> — Film &amp; TV search, ratings, and trending</li>
-                <li><strong>Wikidata / Wikipedia</strong> — Plot summaries and director bios</li>
+                <li><strong>TVmaze</strong> · TV series metadata, cast, and schedules</li>
+                <li><strong>Trakt</strong> · Film &amp; TV search, ratings, and trending</li>
+                <li><strong>Wikidata / Wikipedia</strong> · Plot summaries and director bios</li>
               </ul>
             </div>
             <div className="settings-discovery-card">
               <span className="settings-discovery-badge key">Key required</span>
               <h4 className="settings-discovery-title">Your credentials</h4>
               <ul className="settings-discovery-list">
-                <li><strong>TMDb</strong> — Full movie &amp; TV catalogue sync (recommended)</li>
-                <li><strong>OMDb</strong> — Optional reception and ratings enrichment</li>
-                <li><strong>LLM provider</strong> — Personalized recommendations when enabled</li>
+                <li><strong>TMDb</strong> · Full movie &amp; TV catalogue sync (recommended)</li>
+                <li><strong>OMDb</strong> · Optional reception and ratings enrichment</li>
+                <li><strong>LLM provider</strong> · Personalized recommendations when enabled</li>
               </ul>
             </div>
           </div>
@@ -599,7 +599,7 @@ export function Settings() {
         <div className="settings-panel">
           <h3 className="settings-panel-heading">AI recommendations</h3>
           <p className="settings-panel-description">
-            Turn on an LLM you trust. Subsume sends a taste profile JSON plus your instructions — not your whole hard drive.
+            Turn on an LLM you trust. Subsume sends a taste profile JSON plus your instructions, not your whole hard drive.
           </p>
 
           <div className="settings-field-group">
@@ -754,7 +754,7 @@ export function Settings() {
                 </button>
               </div>
               <p className="settings-panel-description">
-                Taste profile is built from your sanctuary (watched, ratings, emotional recall, notes, wishlist, filmmakers, genres) and injected as JSON — not edited by hand.
+                Taste profile is built from your sanctuary (watched, ratings, emotional recall, notes, wishlist, filmmakers, genres) and injected as JSON, not edited by hand.
               </p>
               {curatorPreview && (
                 <pre className="curator-preview-pre">{curatorPreview}</pre>
@@ -810,9 +810,9 @@ export function Settings() {
                 onChange={(e) => handleChange('detectionSensitivity', (e.target as HTMLSelectElement).value)}
                 className="settings-input"
               >
-                <option value="low" className="sanctuary-select-option">Restrained — CDN exact matching</option>
-                <option value="medium" className="sanctuary-select-option">Standard — Balanced</option>
-                <option value="high" className="sanctuary-select-option">Aggressive — match more pages</option>
+                <option value="low" className="sanctuary-select-option">Restrained · CDN exact matching</option>
+                <option value="medium" className="sanctuary-select-option">Standard · Balanced</option>
+                <option value="high" className="sanctuary-select-option">Aggressive · match more pages</option>
               </select>
             </div>
 
@@ -842,7 +842,7 @@ export function Settings() {
               <span className="settings-field-label">Remote Storage</span>
               <div className="settings-btn-row">
                 <p className="settings-panel-hint">
-                  Saves a private backup in your Google account (app data only — not visible in Drive’s main file list).
+                  Saves a private backup in your Google account (app data only, not visible in Drive’s main file list).
                   Sign in with your Google account when prompted.
                 </p>
                 {oauthRedirectUri && (
@@ -876,7 +876,7 @@ export function Settings() {
             <div className="settings-section-divider">
               <span className="settings-field-label">Indian cinema highlight catalogue</span>
               <p className="settings-panel-hint">
-                Adds Kamal Haasan, Mammootty, Mohanlal, and Tamil picks (Indian, Mudhalvan, Enthiran, Padayappa, etc.) with sample reflections — without wiping your library.
+                Adds Kamal Haasan, Mammootty, Mohanlal, and Tamil picks (Indian, Mudhalvan, Enthiran, Padayappa, etc.) with sample reflections, without wiping your library.
               </p>
               <button type="button" className="btn-sanctuary-restraint" onClick={handleMergeHighlightCatalogue}>
                 Merge highlight catalogue

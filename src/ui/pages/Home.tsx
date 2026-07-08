@@ -599,7 +599,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
                 Discovery Feed
               </h3>
               <p className="discovery-feed-desc">
-                Trending on Trakt and premieres from TVmaze — no API keys required
+                Trending on Trakt and premieres from TVmaze, no API keys required
               </p>
             </div>
             <div className="discovery-feed-meta">
@@ -726,7 +726,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
                 </div>
                 <p className="home-section-desc">
                   {usingFreeFeed
-                    ? 'Free discovery feed — Trakt trending and TV premieres'
+                    ? 'Free discovery feed · Trakt trending and TV premieres'
                     : platformNames
                       ? `Programme arrivals on ${platformNames}`
                       : 'Curated programme releases'}

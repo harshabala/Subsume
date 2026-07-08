@@ -339,7 +339,7 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
 
         <p className="recommendations-curator-explainer">
           Your private curator reads ratings, emotional recall, notes, wishlist, and filmmakers from your sanctuary,
-          then asks your LLM provider for matches — nothing is sent except what you configure in{' '}
+          then asks your LLM provider for matches. Nothing is sent except what you configure in{' '}
           {onOpenCuratorSettings ? (
             <button type="button" className="recommendations-curator-link" onClick={onOpenCuratorSettings}>
               Settings → AI curator

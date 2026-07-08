@@ -53,7 +53,7 @@ export function NewReleases() {
     <div className="page-container">
       <header className="sanctuary-header">
         <div className="sanctuary-header-meta">
-          <span className="sanctuary-subtitle">Catalogue No. 03 — Historic Theatre Programme</span>
+          <span className="sanctuary-subtitle">Catalogue No. 03 · Historic Theatre Programme</span>
         </div>
         <h1 className="sanctuary-title">Cinematic Programme</h1>
         <p className="sanctuary-description">

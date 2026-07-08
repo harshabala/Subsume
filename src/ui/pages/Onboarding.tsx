@@ -22,15 +22,15 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         <div className="onboarding-divider" />
 
         <p className="onboarding-body">
-          Not a tracker. Not a list. A place to reflect on what you watch —
+          Not a tracker. Not a list. A place to reflect on what you watch,
           where your emotional recall matters more than any algorithm's opinion.
         </p>
 
         <div className="onboarding-pillars">
           {[
-            { label: 'Discover', description: 'Museum plaques appear on any page you browse — ratings, without breaking your flow.' },
+            { label: 'Discover', description: 'Museum plaques appear on any page you browse, with ratings, without breaking your flow.' },
             { label: 'Capture', description: 'A quiet canvas asks what stayed with you. Emotion before metadata, always.' },
-            { label: 'Archive', description: 'An editorial library of your taste — organised by intent, not date added.' },
+            { label: 'Archive', description: 'An editorial library of your taste, organised by intent, not date added.' },
           ].map((item, i) => (
             <div key={i} className="onboarding-pillar">
               <span className="onboarding-pillar-label">{item.label}</span>

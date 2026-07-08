@@ -161,7 +161,7 @@ export function SettingsDiagnosticsPanel() {
       setCopyFeedback(`${label} copied`);
       setTimeout(() => setCopyFeedback(null), 2500);
     } catch {
-      setCopyFeedback('Copy failed — use Select all in the detail area');
+      setCopyFeedback('Copy failed. Use Select all in the detail area');
     }
   };
 
@@ -359,7 +359,7 @@ export function SettingsDiagnosticsPanel() {
 
       <section className="diagnostics-detail-panel" aria-labelledby="diagnostics-detail-heading">
         <h4 id="diagnostics-detail-heading" className="diagnostics-detail-heading">
-          Selected entry — full text
+          Selected entry · full text
         </h4>
         {selected ? (
           <dl className="diagnostics-detail-dl">
