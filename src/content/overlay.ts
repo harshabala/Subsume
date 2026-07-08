@@ -69,13 +69,13 @@ function MuseumPlaqueOverlay({ match, onReflect }: PlaqueProps) {
           e.stopPropagation();
           onReflect();
         },
-        title: 'Open programme notes for this title',
+        title: 'Inscribe what stayed with you after this screening',
       },
       [
         h('span', { className: 'plaque-score' }, `★ ${baselineScore}`),
         h('span', { className: 'plaque-reveal' }, [
           h('span', { className: 'plaque-separator' }, '│'),
-          h('span', { className: 'plaque-action' }, 'Programme'),
+          h('span', { className: 'plaque-action' }, 'Reflect'),
         ]),
       ]
     )
