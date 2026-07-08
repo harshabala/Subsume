@@ -188,14 +188,14 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
         setDiscoveryFeed(feedRes.data);
         setFeedCount(feedRes.data.items.length);
         if (feedRes.data.items.length === 0) {
-          setFeedError('Discovery feed returned no items. Check your connection and try refreshing.');
+          setFeedError('The wire returned no titles. Check your connection and try again.');
         }
         return feedRes.data;
       }
-      setFeedError('Could not load the discovery feed.');
+      setFeedError('Could not load the discovery wire.');
     } catch (err) {
       console.error('[Subsume] Discovery feed failed', err);
-      setFeedError(err instanceof Error ? err.message : 'Discovery feed failed to load.');
+      setFeedError(err instanceof Error ? err.message : 'Discovery wire failed to load.');
     }
     return null;
   };
@@ -239,7 +239,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
           setFeedError(
             feedResult.reason instanceof Error
               ? feedResult.reason.message
-              : 'Discovery feed failed to load.'
+              : 'Discovery wire failed to load.'
           );
         }
 
@@ -264,7 +264,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
         } else if (feedRes?.success && feedRes.data && feedRes.data.items.length > 0) {
           applyDiscoveryFeedFallback(feedRes.data);
         } else if (!feedRes?.success || !feedRes.data?.items.length) {
-          setFeedError('Discovery feed is empty. Refresh to pull trending titles from Trakt and TVmaze.');
+          setFeedError('The wire is quiet for now. Refresh to pull trending titles from Trakt and TVmaze.');
         }
 
         const recData = recsRes?.data || [];
@@ -321,7 +321,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
       } catch (err) {
         console.error('[Subsume] Discovery search failed', err);
         setSearchResults([]);
-        setSearchError(err instanceof Error ? err.message : 'Search failed. Please try again.');
+        setSearchError(err instanceof Error ? err.message : 'Search could not complete. Please try again.');
       } finally {
         setSearchLoading(false);
       }
@@ -378,7 +378,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
     .filter(Boolean)
     .join(', ');
 
-  const digestBadge = weeklyDigest?.llmGenerated ? 'Personally Curated' : 'Editorial Selection';
+  const digestBadge = weeklyDigest?.llmGenerated ? 'House Curated' : 'Editorial Selection';
 
   const heroFromFeed = discoveryFeed?.items[0]
     ? feedItemToDigestPick(discoveryFeed.items[0]).media
@@ -388,8 +388,8 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
     picks[0]?.media ||
     heroFromFeed ||
     null;
-  const heroTitle = heroMedia?.canonicalTitle || 'Your cinematic sanctuary awaits';
-  const heroDirector = heroMedia?.wikidataDirectorBio || 'Acquire a title to begin reflecting';
+  const heroTitle = heroMedia?.canonicalTitle || 'Your marquee awaits';
+  const heroDirector = heroMedia?.wikidataDirectorBio || 'Add a title to begin reflecting';
   const heroRating = heroMedia ? pickRating(heroMedia) : null;
   const heroLibraryMatch = libraryItems.find(({ media }) => media.id === heroMedia?.id);
   const heroReflection = heroLibraryMatch
@@ -400,7 +400,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
     ? truncateForExcerpt(heroReflection)
     : heroMedia?.overview
       ? truncateForExcerpt(heroMedia.overview)
-      : 'Browse the discovery feed or search the archive below to find your first title.';
+      : 'Browse the wire below or search the repertoire to find your first title.';
   const heroPoster =
     heroMedia?.posterUrl ||
     'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=600&q=80';
@@ -414,7 +414,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
   const pulseItems: CataloguePulseItem[] = [
     {
       id: 'sanctuary',
-      label: 'In sanctuary',
+      label: 'In the vault',
       value: loading ? '—' : libraryCount,
       onClick: () => onNavigate('library'),
     },
@@ -426,7 +426,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
     },
     {
       id: 'reflected',
-      label: 'Reflected',
+      label: 'Inscribed',
       value: loading ? '—' : watchedCount,
       onClick: () => onNavigate('library'),
     },
@@ -435,7 +435,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
   if (!loading && feedCount > 0) {
     pulseItems.push({
       id: 'feed',
-      label: 'Live feed items',
+      label: 'On the wire',
       value: feedCount,
       onClick: () => feedSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
     });
@@ -475,7 +475,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
                 <button
                   className="plaque-btn reflect"
                   disabled={!canReflect}
-                  title={canReflect ? 'Open reflection canvas' : 'Acquire a title first'}
+                  title={canReflect ? 'Open reflection canvas' : 'Add a title first'}
                   onClick={() => heroMedia && onOpenCapture?.(heroMedia.id)}
                 >
                   Reflect
@@ -495,7 +495,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
           <span className="lobby-act">Act I</span>
           <h2 className="lobby-heading">Discovery</h2>
           <p className="lobby-desc">
-            Welcome to the entry hall of your sanctuary. Search the archive, follow the live wire, and return to titles you have already reflected on.
+            The lobby of your picture palace. Search the vault, follow what is moving on the wire, and return to titles whose afterglow you have already inscribed.
           </p>
           <DiscoveryCataloguePulse items={pulseItems} />
         </div>
@@ -506,7 +506,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
           <input
             type="search"
             className="discovery-search-input"
-            placeholder="Discover films & series..."
+            placeholder="Search films and series in the repertoire..."
             value={searchQuery}
             onInput={(e) => setSearchQuery(e.currentTarget.value)}
             aria-label="Search films and series"
@@ -527,7 +527,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
         </div>
 
         {searchLoading && (
-          <p className="discovery-search-status" role="status">Searching catalogue…</p>
+          <p className="discovery-search-status" role="status">Searching the repertoire…</p>
         )}
 
         {searchError && (
@@ -538,7 +538,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
           <div className="sanctuary-empty-plaque discovery-search-empty">
             <span className="sanctuary-plaque-index">No Matches</span>
             <p className="sanctuary-plaque-text">
-              No titles matched your query. Films are searched via Trakt; series via TVmaze and Trakt.
+              No titles matched your query. Films via Trakt; series via TVmaze and Trakt.
             </p>
           </div>
         )}
@@ -560,8 +560,8 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
                   onOpen={setSelectedMedia}
                   onAdd={handleAdd}
                   added={addedIds.has(media.id)}
-                  addLabel="Add to library"
-                  addedLabel="Acquired"
+                  addLabel="Add to archive"
+                  addedLabel="Inscribed"
                   meta={
                     <div className="sanctuary-card-meta">
                       <span>{media.year || '—'}</span>
@@ -580,7 +580,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
           <span className="sanctuary-plaque-index">Feed Notice</span>
           <p className="sanctuary-plaque-text">{feedError}</p>
           <button className="optical-button sm" onClick={() => loadDiscoveryFeed(true)}>
-            Retry Discovery Feed
+            Retry the wire
           </button>
         </div>
       )}
@@ -594,9 +594,9 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
         >
           <div className="discovery-feed-header">
             <div>
-              <span className="discovery-feed-kicker">Live Wire</span>
+              <span className="discovery-feed-kicker">Now Showing</span>
               <h3 id="discovery-feed-heading" className="discovery-feed-title">
-                Discovery Feed
+                The Wire
               </h3>
               <p className="discovery-feed-desc">
                 Trending on Trakt and premieres from TVmaze, no API keys required
@@ -641,8 +641,8 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
             <section className="home-discovery-section">
               <div className="home-section-header">
                 <div>
-                  <h3 className="home-section-title">Recently Reflected</h3>
-                  <p className="home-section-desc">Your latest emotional projections from the sanctuary</p>
+                  <h3 className="home-section-title">Recently Inscribed</h3>
+                  <p className="home-section-desc">Your latest emotional projections from the house</p>
                 </div>
               </div>
               <div className="recently-reflected-strip">
@@ -687,7 +687,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
               <div>
                 <h3 className="home-section-title">Picked For You</h3>
                 <p className="home-section-desc">
-                  {watchedCount >= 3 ? 'Curated from your sanctuary reflections' : 'Reflect on 3+ watched titles to unlock AI picks'}
+                  {watchedCount >= 3 ? 'Curated from your inscriptions and afterglow' : 'Inscribe 3 or more projected titles to unlock curated picks'}
                 </p>
               </div>
               <button className="optical-button sm" onClick={() => onNavigate('recommendations')}>
@@ -697,8 +697,8 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
 
             {picks.length === 0 ? (
               <div className="sanctuary-empty-plaque home-empty-notice">
-                <span className="sanctuary-plaque-index">Sanctuary Notice</span>
-                <p className="sanctuary-plaque-text">Add a few titles and mark some as watched to unlock personalized reflections.</p>
+                <span className="sanctuary-plaque-index">House Notice</span>
+                <p className="sanctuary-plaque-text">Add a few titles and mark some as projected to unlock personalized picks.</p>
               </div>
             ) : (
               <div className="home-picks-grid">
@@ -727,10 +727,10 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
                 </div>
                 <p className="home-section-desc">
                   {usingFreeFeed
-                    ? 'Free discovery feed · Trakt trending and TV premieres'
+                    ? 'Free wire · Trakt trending and TV premieres'
                     : platformNames
                       ? `Programme arrivals on ${platformNames}`
-                      : 'Curated programme releases'}
+                      : 'Curated programme for the week'}
                 </p>
               </div>
               <div className="home-btn-group">
@@ -750,7 +750,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
             {weeklyPicks.length === 0 ? (
               <div className="sanctuary-empty-plaque home-empty-notice">
                 <span className="sanctuary-plaque-index">Programme Notice</span>
-                <p className="sanctuary-plaque-text">No programme items yet. Refresh to pull the latest free discovery feed.</p>
+                <p className="sanctuary-plaque-text">No programme items yet. Refresh to pull the latest from the wire.</p>
               </div>
             ) : (
               <div className="home-weekly-grid">

@@ -137,7 +137,7 @@ function Popup() {
       watchSystemTheme(theme);
       applyCinemaAtmosphere(p.cinemaAtmosphere ?? 'default');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load library data');
+      setError(err instanceof Error ? err.message : 'Could not load archive data');
       applyThemePreference('system');
       watchSystemTheme('system');
     }
@@ -288,7 +288,7 @@ function Popup() {
 
     } catch (err) {
       console.error('[Subsume Popup] Failed to log movie:', err);
-      setLogActionError(`Failed to log movie: ${formatUserError(err)}`);
+      setLogActionError(`Could not save reflection: ${formatUserError(err)}`);
     } finally {
       setIsSaving(false);
     }
@@ -310,11 +310,11 @@ function Popup() {
             <span className="popup-brand-mark"></span>
             Subsume
           </div>
-          <div className="popup-tagline">Cinematic Sanctuary</div>
+          <div className="popup-tagline">Your picture palace</div>
         </header>
         <div className="popup-empty">
           <p>{error}</p>
-          <button className="popup-btn popup-btn-primary" onClick={() => openSanctuary()}>Open app</button>
+          <button className="popup-btn popup-btn-primary" onClick={() => openSanctuary()}>Open the house</button>
         </div>
       </div>
     );
@@ -342,8 +342,8 @@ function Popup() {
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
         </div>
-        <h4 className="success-title">Saved</h4>
-        <p className="success-message">Added to your library.</p>
+        <h4 className="success-title">Reflection saved</h4>
+        <p className="success-message">Added to your archive.</p>
       </div>
 
       {/* VIEW 1: Overview and Recent log history */}
@@ -354,7 +354,7 @@ function Popup() {
               <span className="popup-brand-mark"></span>
               Subsume
             </div>
-            <div className="popup-tagline">Capture what you watch</div>
+            <div className="popup-tagline">Capture what stayed with you</div>
           </div>
           <div className="popup-header-actions">
             <button
@@ -375,27 +375,27 @@ function Popup() {
         <div className="popup-stats">
           <div className="popup-stat">
             <div className="popup-stat-value">{stats.total}</div>
-            <div className="popup-stat-label">In library</div>
+            <div className="popup-stat-label">In archive</div>
           </div>
           <div className="popup-stat">
             <div className="popup-stat-value">{stats.watched}</div>
-            <div className="popup-stat-label">Watched</div>
+            <div className="popup-stat-label">Projected</div>
           </div>
           <div className="popup-stat">
             <div className="popup-stat-value">{stats.toWatch}</div>
-            <div className="popup-stat-label">To Watch</div>
+            <div className="popup-stat-label">Anticipated</div>
           </div>
         </div>
 
         <div className="popup-status">
           <div>
-            Browsing overlays:{' '}
+            Marquee overlays:{' '}
             <strong className={overlaysOn && hoverOn ? 'popup-status-ok' : 'popup-status-warn'}>
-              {overlaysOn && hoverOn ? 'Active' : 'Partially off'}
+              {overlaysOn && hoverOn ? 'On' : 'Partially off'}
             </strong>
           </div>
           <div>
-            Ratings sources:{' '}
+            Rating sources:{' '}
             <strong className={hasTmdb || hasOmdb ? 'popup-status-ok' : 'popup-status-warn'}>
               {hasTmdb || hasOmdb ? (hasTmdb && hasOmdb ? 'TMDb + OMDb' : hasTmdb ? 'TMDb' : 'OMDb') : 'Free Sources (trakt)'}
             </strong>
@@ -403,10 +403,10 @@ function Popup() {
         </div>
 
         <div className="popup-section">
-          <div className="popup-section-title">Recently added</div>
+          <div className="popup-section-title">Recently inscribed</div>
           {items.length === 0 ? (
             <div className="popup-empty">
-              <p>Your archive is empty.</p>
+              <p>Your vault is empty. The first inscription is yours to make.</p>
               <button
                 className="popup-btn"
                 style={{ marginTop: '4px' }}
@@ -419,7 +419,7 @@ function Popup() {
                   }
                 }}
               >
-                Load highlight catalogue
+                Load the highlight reel
               </button>
             </div>
           ) : (
@@ -455,11 +455,11 @@ function Popup() {
         <div className="popup-actions">
           <button className="popup-btn popup-btn-primary" onClick={() => setActiveView('log')}>
             <span className="material-symbols-outlined popup-btn-icon" aria-hidden="true">videocam</span>
-            Capture title
+            Inscribe a title
           </button>
           <button className="popup-btn popup-btn-secondary" onClick={() => openSanctuary()} type="button">
             <span className="material-symbols-outlined popup-btn-icon" aria-hidden="true">open_in_new</span>
-            Open full app
+            Open the house
           </button>
         </div>
       </div>
@@ -470,9 +470,9 @@ function Popup() {
           <div className="popup-brand-area">
             <div className="popup-brand">
               <span className="material-symbols-outlined popup-brand-capture-icon" aria-hidden="true">videocam</span>
-              Capture title
+              Inscribe a title
             </div>
-            <div className="popup-tagline">From this page or search</div>
+            <div className="popup-tagline">From this page or the catalogue</div>
           </div>
           <div className="popup-header-actions">
             <button
@@ -538,14 +538,14 @@ function Popup() {
                   setHighlightedIndex(-1);
                 }
               }}
-              placeholder="Search movie or series..."
+              placeholder="Search the repertoire..."
               autoComplete="off"
             />
             
             {showSuggestions && (suggestions.length > 0 || searchLoading) && (
               <ul id="popup-suggestions-list" className="suggestions-list" role="listbox">
                 {searchLoading ? (
-                  <li className="suggestion-item" role="option" style={{ fontStyle: 'italic', justifyContent: 'center' }}>Searching titles…</li>
+                  <li className="suggestion-item" role="option" style={{ fontStyle: 'italic', justifyContent: 'center' }}>Searching the repertoire…</li>
                 ) : (
                   suggestions.map((movie, index) => (
                     <li
@@ -611,12 +611,12 @@ function Popup() {
             className="ext-notes-textarea"
             value={logNotes}
             onInput={(e) => setLogNotes((e.target as HTMLTextAreaElement).value)}
-            placeholder="Write a reflection or memory on how this film left you feeling..."
+            placeholder="What resonance did this screening leave? A line, a scene, an afterglow..."
           />
 
           {/* Sanctuary Status Intent Selector */}
           <div className="intent-selector-group">
-            <span className="intent-selector-label">Status</span>
+            <span className="intent-selector-label">Screening status</span>
             <div className="intent-pills" role="group" aria-label="Sanctuary intent">
               <button
                 type="button"
@@ -649,7 +649,7 @@ function Popup() {
             onClick={handleSaveLog}
             disabled={!selectedMovie || isSaving}
           >
-            {isSaving ? 'Logging Reflection…' : 'Save to library'}
+            {isSaving ? 'Saving reflection…' : 'Save reflection'}
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <line x1="22" y1="2" x2="11" y2="13"></line>
               <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>

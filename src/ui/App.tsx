@@ -36,14 +36,14 @@ interface NavItem {
 const EXPLORE_NAV: NavItem[] = [
   { key: 'search', label: 'Search', icon: 'search' },
   { key: 'recommendations', label: 'Recommendations', icon: 'auto_awesome' },
-  { key: 'new-releases', label: "What's New", icon: 'new_releases' },
+  { key: 'new-releases', label: 'Now Showing', icon: 'new_releases' },
   { key: 'people', label: 'Filmmakers', icon: 'movie' },
-  { key: 'stats', label: 'Stats', icon: 'bar_chart' },
-  { key: 'alerts', label: 'Alerts', icon: 'notifications' },
+  { key: 'stats', label: 'House Stats', icon: 'bar_chart' },
+  { key: 'alerts', label: 'Premiere Alerts', icon: 'notifications' },
 ];
 
 const PRIMARY_NAV: NavItem[] = [
-  { key: 'library', label: 'Library', icon: 'I' },
+  { key: 'library', label: 'Archive', icon: 'I' },
   { key: 'home', label: 'Discovery', icon: 'II' },
   { key: 'settings', label: 'Settings', icon: 'III' },
 ];
@@ -159,7 +159,7 @@ export function App() {
       setPrefs(newPrefs);
     } catch (err) {
       console.error('[Subsume] Failed to save onboarding completion:', err);
-      showNotice(`Failed to complete onboarding: ${formatUserError(err)}`, 'error');
+      showNotice(`Onboarding could not be saved: ${formatUserError(err)}`, 'error');
     }
   };
 
@@ -278,7 +278,7 @@ export function App() {
         aria-hidden={!navMenuOpen}
       >
         <div className="side-menu-header">
-          <span className="side-menu-title">Navigate</span>
+          <span className="side-menu-title">Browse the house</span>
           <button
             type="button"
             className="side-menu-close"
@@ -290,7 +290,7 @@ export function App() {
         </div>
         <div className="side-menu-content">
           <div className="side-menu-section">
-            <div className="side-menu-section-label">Primary</div>
+            <div className="side-menu-section-label">The house</div>
             {PRIMARY_NAV.map((item) => (
               <button
                 key={item.key}
@@ -305,7 +305,7 @@ export function App() {
             ))}
           </div>
           <div className="side-menu-section">
-            <div className="side-menu-section-label">Explore</div>
+            <div className="side-menu-section-label">Further out</div>
             {EXPLORE_NAV.map((item) => (
               <button
                 key={item.key}
