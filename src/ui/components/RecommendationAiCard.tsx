@@ -48,7 +48,7 @@ export function RecommendationAiCard({ rec, showSeedPill, isAdded, onCardClick, 
       </div>
       <div className="recommendation-ai-card-reason">{rec.reason}</div>
       {showSeedPill && rec.seedTitle && (
-        <div className="recommendation-ai-card-seed-pill">REF. {rec.seedTitle}</div>
+        <div className="recommendation-ai-card-seed-pill">Because you screened {rec.seedTitle}</div>
       )}
     </>
   );

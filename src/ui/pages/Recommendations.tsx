@@ -112,7 +112,7 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
           const traktHydrated: (Recommendation & { media: MediaItem })[] = mediaItems.map(item => ({
             mediaId: item.id,
             media: item,
-            explanation: 'Trending on Trakt',
+            explanation: 'Now showing on Trakt',
           }));
 
           if (mediaIds.length === 0) {
@@ -259,11 +259,11 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
 
       <header className="sanctuary-header">
         <div className="sanctuary-header-meta">
-          <span className="sanctuary-subtitle">Recommendations</span>
+          <span className="sanctuary-subtitle">Marquee Programme · Curated Selections</span>
         </div>
         <h1 className="sanctuary-title">Recommendations</h1>
         <p className="sanctuary-description">
-          Archival suggestions curated from your personal viewing history and cinematic preferences.
+          Selections drawn from your viewing ledger, resonance notes, and favoured auteurs. A private programme, assembled for your picture palace.
         </p>
       </header>
 
@@ -271,14 +271,14 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
       {loading ? (
         <div className="sanctuary-empty-plaque">
            <div className="subsume-spinner sanctuary-spinner-centered" />
-           <p className="sanctuary-plaque-text">Loading recommendations…</p>
+           <p className="sanctuary-plaque-text">Reviewing your repertoire...</p>
         </div>
       ) : hasNoRecs ? (
         <div className="sanctuary-empty-plaque">
-          <span className="sanctuary-plaque-index">Not enough data</span>
-          <h3 className="sanctuary-plaque-title">Not enough data</h3>
+          <span className="sanctuary-plaque-index">Programme awaiting</span>
+          <h3 className="sanctuary-plaque-title">Your Ledger Needs More Reels</h3>
           <p className="sanctuary-plaque-text">
-            Catalogue curation requires a broader foundation. Add further works to your sanctuary or mark existing acquisitions as watched.
+            Curation grows with what you watch and remember. Add works to your archive, or mark screenings as complete.
           </p>
         </div>
       ) : isGrouped ? (
@@ -332,14 +332,14 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
         {/* Profile context strip */}
         {watchProfile && (
           <p className="sanctuary-subtitle" style={{ textAlign: 'center', marginBottom: '24px' }}>
-            Curated from {watchProfile.totalWatched} archival film{watchProfile.totalWatched === 1 ? '' : 's'}
-            {topGenres.length > 0 && ` · Top Sensibilities: ${topGenres.join(', ')}`}
+            Curated from {watchProfile.totalWatched} screening{watchProfile.totalWatched === 1 ? '' : 's'} in your ledger
+            {topGenres.length > 0 && ` · Favoured sensibilities: ${topGenres.join(', ')}`}
           </p>
         )}
 
         <p className="recommendations-curator-explainer">
-          Your private curator reads ratings, emotional recall, notes, wishlist, and filmmakers from your sanctuary,
-          then asks your LLM provider for matches. Nothing is sent except what you configure in{' '}
+          Your house curator reads ratings, emotional reflections, notes, wishlist entries, and favoured filmmakers from your archive,
+          then consults the programme service you configure in{' '}
           {onOpenCuratorSettings ? (
             <button type="button" className="recommendations-curator-link" onClick={onOpenCuratorSettings}>
               Settings → AI curator
@@ -353,9 +353,9 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
         {/* EMPTY STATE */}
         {!hasEnoughHistory && !recsLoading && personalizedRecs.length === 0 && (
           <div className="sanctuary-empty-plaque">
-            <span className="sanctuary-plaque-index">Unlock AI picks</span>
-            <h3 className="sanctuary-plaque-title">Personalized Exhibition Portfolio</h3>
-            <p className="sanctuary-plaque-text">Rate at least 3 cinematic works to help Subsume map your aesthetic sensibility.</p>
+            <span className="sanctuary-plaque-index">Three screenings to begin</span>
+            <h3 className="sanctuary-plaque-title">Personal Exhibition Portfolio</h3>
+            <p className="sanctuary-plaque-text">Rate at least three works so Subsume can sense your aesthetic inclinations.</p>
           </div>
         )}
 
@@ -366,7 +366,7 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
               onClick={generatePersonalized}
               className="sanctuary-action-button"
             >
-              Generate recommendations
+              Curate my programme
             </button>
           </div>
         )}
@@ -374,10 +374,10 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
         {/* NO KEY STATE */}
         {recsError === 'no_key' && (
           <div className="sanctuary-empty-plaque">
-            <span className="sanctuary-plaque-index">CONFIGURATION REQUIRED</span>
-            <h3 className="sanctuary-plaque-title">No Intelligence Provider Configured</h3>
+            <span className="sanctuary-plaque-index">Curator key needed</span>
+            <h3 className="sanctuary-plaque-title">House Curator Awaiting Keys</h3>
             <p className="sanctuary-plaque-text" style={{ marginBottom: '16px' }}>
-              Configure an API key within Settings to enable personalized AI curation.
+              Add an API key in Settings to enable personalised curation from your archive.
             </p>
             <button
               onClick={generatePersonalized}
@@ -392,10 +392,10 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
         {/* FAILED STATE */}
         {recsError === 'failed' && (
           <div className="sanctuary-empty-plaque">
-            <span className="sanctuary-plaque-index">SYSTEM ERROR</span>
-            <h3 className="sanctuary-plaque-title">Curation Interrupted</h3>
+            <span className="sanctuary-plaque-index">Projection interrupted</span>
+            <h3 className="sanctuary-plaque-title">Curation Could Not Complete</h3>
             <p className="sanctuary-plaque-text" style={{ marginBottom: '16px' }}>
-              The intelligence provider encountered an unexpected failure. Inspect your credentials or network connection.
+              The programme service returned an error. Check your credentials or connection, then try again.
             </p>
             <button
               onClick={generatePersonalized}
@@ -426,7 +426,7 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
           <div>
             {/* Header row */}
             <div className="recommendations-results-header">
-              <span className="sanctuary-plaque-title" style={{ margin: 0, fontSize: '20px' }}>AI recommendations</span>
+              <span className="sanctuary-plaque-title" style={{ margin: 0, fontSize: '20px' }}>Curator&apos;s programme</span>
               <div className="recommendations-results-actions">
                 {recGroups !== null && (
                   <div className="recommendations-view-mode-toggle">
@@ -436,7 +436,7 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
                         onClick={() => setViewMode(mode)}
                         className={`recommendations-view-mode-btn ${viewMode === mode ? 'recommendations-view-mode-btn-active' : 'recommendations-view-mode-btn-inactive'}`}
                       >
-                        {mode === 'grouped' ? 'By Theme' : 'All titles'}
+                        {mode === 'grouped' ? 'By programme' : 'Full marquee'}
                       </button>
                     ))}
                   </div>
@@ -446,7 +446,7 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
                   className="optical-button"
                   style={{ padding: '6px 14px', fontSize: '10px' }}
                 >
-                  REGENERATE
+                  Refresh programme
                 </button>
               </div>
             </div>
@@ -494,7 +494,7 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
                 ))}
                 {ungroupedRecs.length > 0 && (
                   <div>
-                    <div className="sanctuary-plaque-title" style={{ fontSize: '18px', marginTop: '24px' }}>More picks</div>
+                    <div className="sanctuary-plaque-title" style={{ fontSize: '18px', marginTop: '24px' }}>Further selections</div>
                     <div className="recommendations-flat-grid">
                       {ungroupedRecs.map(rec => (
                         <RecommendationAiCard

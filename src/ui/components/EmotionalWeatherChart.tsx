@@ -38,7 +38,7 @@ export function EmotionalWeatherChart({
     return (
       <div className={`emotional-weather-chart empty ${className}`.trim()} data-testid="emotional-weather-chart">
         <p className="emotional-weather-empty-text">
-          Log emotional reflections to reveal your sanctuary&apos;s mood soundwave.
+          Log emotional reflections to reveal the afterglow across your archive.
         </p>
       </div>
     );
@@ -60,10 +60,10 @@ export function EmotionalWeatherChart({
     <div className={`emotional-weather-chart ${className}`.trim()} data-testid="emotional-weather-chart">
       <div className="emotional-weather-header">
         <div>
-          <span className="emotional-weather-kicker">Emotional Weather</span>
-          <h3 className="emotional-weather-title">Mood over time</h3>
+          <span className="emotional-weather-kicker">Resonance ledger</span>
+          <h3 className="emotional-weather-title">Afterglow over time</h3>
           <p className="emotional-weather-desc">
-            Average mood vectors across your last {recentLogs.length} reflection
+            Average moods across your last {recentLogs.length} reflection
             {recentLogs.length === 1 ? '' : 's'}
           </p>
         </div>
@@ -74,7 +74,7 @@ export function EmotionalWeatherChart({
           viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
           className="emotional-weather-svg"
           role="img"
-          aria-label="Emotional weather soundwave chart"
+          aria-label="Afterglow resonance chart across recent reflections"
         >
           <defs>
             <linearGradient id="weather-grid-fade" x1="0" y1="0" x2="0" y2="1">

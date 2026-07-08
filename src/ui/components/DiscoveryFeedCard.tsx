@@ -4,7 +4,7 @@ import { DiscoveryFeedItem } from '@/shared/types';
 function sourceLabel(source: DiscoveryFeedItem['source']): string {
   switch (source) {
     case 'trakt':
-      return 'Trending';
+      return 'Now showing';
     case 'tvmaze':
       return 'Premiere';
     case 'wikidata':
@@ -47,7 +47,7 @@ export function DiscoveryFeedCard({ item, index = 0, onSelect }: DiscoveryFeedCa
       <div className="discovery-feed-card-body">
         <div className="discovery-feed-card-top">
           <span className={`discovery-feed-source ${item.source}`}>{sourceLabel(item.source)}</span>
-          <span className="discovery-feed-year">{item.year || '—'}</span>
+          <span className="discovery-feed-year">{item.year || 'TBC'}</span>
         </div>
         <span className="discovery-feed-card-title">{item.title}</span>
         <p className="discovery-feed-card-reason">{item.reason}</p>

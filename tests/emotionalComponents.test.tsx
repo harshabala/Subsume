@@ -36,7 +36,7 @@ describe('EmotionalWeatherChart', () => {
     };
 
     render(<EmotionalWeatherChart items={[item]} />, container);
-    expect(container.textContent).toContain('mood soundwave');
+    expect(container.textContent).toContain('afterglow across your archive');
   });
 
   it('renders chart legend when emotional data exists', () => {
@@ -54,7 +54,7 @@ describe('EmotionalWeatherChart', () => {
 
     render(<EmotionalWeatherChart items={[item]} />, container);
     expect(container.querySelector('.emotional-weather-svg')).toBeTruthy();
-    expect(container.textContent).toContain('Mood over time');
+    expect(container.textContent).toContain('Afterglow over time');
   });
 });
 

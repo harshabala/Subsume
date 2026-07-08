@@ -86,14 +86,14 @@ export function NewReleases() {
         {loading ? (
           <div className="sanctuary-empty-plaque">
             <div className="subsume-spinner sanctuary-spinner-centered" />
-            <p className="sanctuary-plaque-text">Inspecting auditorium programme...</p>
+            <p className="sanctuary-plaque-text">Assembling today&apos;s marquee...</p>
           </div>
         ) : items.length === 0 ? (
           <div className="sanctuary-empty-plaque">
-            <span className="sanctuary-plaque-index">REF. 503-PROG</span>
+            <span className="sanctuary-plaque-index">Programme note 503</span>
             <h3 className="sanctuary-plaque-title">Programme Currently Unavailable</h3>
             <p className="sanctuary-plaque-text">
-              We could not retrieve today's programme registry. Verify provider configuration or internet connectivity.
+              We could not reach today&apos;s release registry. Check your provider settings or connection.
             </p>
           </div>
         ) : (

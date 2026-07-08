@@ -69,11 +69,11 @@ export function Search() {
     <div className="page-container">
       <header className="sanctuary-header">
         <div className="sanctuary-header-meta">
-          <span className="sanctuary-subtitle">Search</span>
+          <span className="sanctuary-subtitle">Catalogue Discovery · Vault Index</span>
         </div>
         <h1 className="sanctuary-title">Search Archive</h1>
         <p className="sanctuary-description">
-          Films via Trakt, series via TVmaze and Trakt, plus your local catalogue, no API keys required. Add a TMDb key in Settings for deeper sync.
+          Search films and series across Trakt, TVmaze, and your local archive. No keys required for a first pass; add a TMDb key in Settings for richer posters and sync.
         </p>
       </header>
 
@@ -87,7 +87,7 @@ export function Search() {
         <div className="sanctuary-filter-row">
           <input
             type="text"
-            placeholder="ENTER TITLE OR CATALOGUE QUERY..."
+            placeholder="Title, director, or cast..."
             value={query}
             onInput={(e) => setQuery(e.currentTarget.value)}
             onKeyDown={handleKeyDown}
@@ -98,7 +98,7 @@ export function Search() {
             onClick={handleSearch}
             disabled={loading || !query.trim()}
           >
-            {loading ? 'INSPECTING...' : 'QUERY'}
+            {loading ? 'Searching catalogue...' : 'Search'}
           </button>
         </div>
 
@@ -124,10 +124,10 @@ export function Search() {
 
       {searched && !loading && results.length === 0 && (
         <div className="sanctuary-empty-plaque sanctuary-notice-plaque sanctuary-notice-plaque--centered">
-          <span className="sanctuary-plaque-index">REF. NULL-RESULT</span>
-          <h3 className="sanctuary-plaque-title">No results</h3>
+          <span className="sanctuary-plaque-index">No matches</span>
+          <h3 className="sanctuary-plaque-title">Nothing in the catalogue</h3>
           <p className="sanctuary-plaque-text">
-            The global repository yielded no works corresponding to your optical query. Refine search parameters or verify provider configuration.
+            No titles matched your search. Try a different spelling, a director&apos;s name, or broaden the format filter.
           </p>
         </div>
       )}

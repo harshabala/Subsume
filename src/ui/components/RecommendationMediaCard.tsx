@@ -46,7 +46,7 @@ export function RecommendationMediaCard({ media, explanation, onClick }: Recomme
 
        <div className="recommendation-media-card-explanation">
           <div className="recommendation-media-card-explanation-content">
-            <span className="sanctuary-subtitle curator-note-title">Why this pick</span>
+            <span className="sanctuary-subtitle curator-note-title">Curator&apos;s note</span>
             <span className="recommendation-media-card-explanation-text">
               {explanation}
             </span>
