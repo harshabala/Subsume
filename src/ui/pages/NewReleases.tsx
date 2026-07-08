@@ -61,33 +61,31 @@ export function NewReleases() {
         </p>
       </header>
 
-      <div className="recommendations-view-mode-toggle" style={{ margin: '0 auto 32px', maxWidth: 360 }}>
+      <div className="sanctuary-view-toggle recommendations-view-mode-toggle">
         <button
-          className={`recommendations-view-mode-btn ${activeTab === 'movie' ? 'recommendations-view-mode-btn-active' : 'recommendations-view-mode-btn-inactive'}`}
+          className={`sanctuary-view-toggle-btn recommendations-view-mode-btn ${activeTab === 'movie' ? 'recommendations-view-mode-btn-active' : 'recommendations-view-mode-btn-inactive'}`}
           onClick={() => setActiveTab('movie')}
-          style={{ flex: 1, padding: '8px 16px' }}
         >
           Feature Films
         </button>
         <button
-          className={`recommendations-view-mode-btn ${activeTab === 'tv' ? 'recommendations-view-mode-btn-active' : 'recommendations-view-mode-btn-inactive'}`}
+          className={`sanctuary-view-toggle-btn recommendations-view-mode-btn ${activeTab === 'tv' ? 'recommendations-view-mode-btn-active' : 'recommendations-view-mode-btn-inactive'}`}
           onClick={() => setActiveTab('tv')}
-          style={{ flex: 1, padding: '8px 16px' }}
         >
           Series & Repertoires
         </button>
       </div>
 
       {(loadError || actionError) && (
-        <div className="sanctuary-empty-plaque" style={{ maxWidth: 500, margin: '0 auto 24px', borderColor: 'var(--border-hero)' }}>
-          <p className="sanctuary-plaque-text" style={{ color: 'var(--text-reflection)' }}>{loadError || actionError}</p>
+        <div className="sanctuary-empty-plaque sanctuary-notice-plaque">
+          <p className="sanctuary-plaque-text sanctuary-notice-plaque-text">{loadError || actionError}</p>
         </div>
       )}
 
       <div className="programme-container">
         {loading ? (
           <div className="sanctuary-empty-plaque">
-            <div className="subsume-spinner" style={{ margin: '0 auto 16px' }} />
+            <div className="subsume-spinner sanctuary-spinner-centered" />
             <p className="sanctuary-plaque-text">Inspecting auditorium programme...</p>
           </div>
         ) : items.length === 0 ? (

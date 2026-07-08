@@ -1,0 +1,46 @@
+.sanctuary-notice-plaque {
+  max-width: 500px;
+  margin: 0 auto 24px;
+  border-color: var(--border-hero);
+}
+
+.sanctuary-notice-plaque-text {
+  color: var(--text-reflection);
+}
+
+.sanctuary-notice-plaque--centered {
+  margin: 48px auto;
+}
+
+.sanctuary-filter-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.sanctuary-filter-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sanctuary-view-toggle {
+  display: flex;
+  margin: 0 auto 32px;
+  max-width: 360px;
+}
+
+.sanctuary-view-toggle-btn {
+  flex: 1;
+  padding: 8px 16px;
+}
+
+.sanctuary-spinner-centered {
+  margin: 0 auto 16px;
+}
+
+.sanctuary-card-grid-padded {
+  padding: 0 32px;
+  max-width: 1200px;
+  margin: 0 auto 48px;
+}

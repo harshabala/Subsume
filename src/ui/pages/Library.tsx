@@ -257,8 +257,8 @@ export function Library() {
       <ArchiveHeader />
 
       {actionError && (
-        <div className="sanctuary-empty-plaque" style={{ maxWidth: 500, margin: '0 auto 24px', borderColor: 'var(--border-hero)' }}>
-          <p className="sanctuary-plaque-text" style={{ color: 'var(--text-reflection)' }}>{actionError}</p>
+        <div className="sanctuary-empty-plaque sanctuary-notice-plaque">
+          <p className="sanctuary-plaque-text sanctuary-notice-plaque-text">{actionError}</p>
         </div>
       )}
 

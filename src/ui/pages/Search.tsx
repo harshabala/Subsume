@@ -78,13 +78,13 @@ export function Search() {
       </header>
 
       {error && (
-        <div className="sanctuary-empty-plaque" style={{ maxWidth: 500, margin: '0 auto 24px', borderColor: 'var(--border-hero)' }}>
-          <p className="sanctuary-plaque-text" style={{ color: 'var(--text-reflection)' }}>{error}</p>
+        <div className="sanctuary-empty-plaque sanctuary-notice-plaque">
+          <p className="sanctuary-plaque-text sanctuary-notice-plaque-text">{error}</p>
         </div>
       )}
 
       <div className="optical-search-container">
-        <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+        <div className="sanctuary-filter-row">
           <input
             type="text"
             placeholder="ENTER TITLE OR CATALOGUE QUERY..."
@@ -102,7 +102,7 @@ export function Search() {
           </button>
         </div>
 
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div className="sanctuary-filter-chips">
           {TYPE_OPTIONS.map((opt) => (
             <button
               key={opt.value}
@@ -123,7 +123,7 @@ export function Search() {
       </div>
 
       {searched && !loading && results.length === 0 && (
-        <div className="sanctuary-empty-plaque" style={{ maxWidth: 500, margin: '48px auto' }}>
+        <div className="sanctuary-empty-plaque sanctuary-notice-plaque sanctuary-notice-plaque--centered">
           <span className="sanctuary-plaque-index">REF. NULL-RESULT</span>
           <h3 className="sanctuary-plaque-title">No results</h3>
           <p className="sanctuary-plaque-text">
@@ -133,7 +133,7 @@ export function Search() {
       )}
 
       {results.length > 0 && (
-        <div className="card-grid" style={{ padding: '0 32px', maxWidth: 1200, margin: '0 auto 48px' }}>
+        <div className="card-grid sanctuary-card-grid-padded">
           {results.map((item) => (
             <SanctuaryMediaCard
               key={item.id}
