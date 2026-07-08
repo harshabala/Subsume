@@ -3,20 +3,20 @@ import { LibraryStatus } from '@/shared/types';
 import { IntentFilterOption } from './types';
 
 const INTENT_TABS: { id: IntentFilterOption; label: string }[] = [
-  { id: 'all', label: 'All memories' },
-  { id: 'keep_memory', label: 'Keep this memory' },
-  { id: 'revisit_this_month', label: 'Revisit this month' },
-  { id: 'wishlist', label: 'Wishlist intent' },
+  { id: 'all', label: 'Full repertoire' },
+  { id: 'keep_memory', label: 'Keep This Memory' },
+  { id: 'revisit_this_month', label: 'Revisit This Month' },
+  { id: 'wishlist', label: 'Wishlist' },
 ];
 
 export type CollectionFilter = 'all' | LibraryStatus;
 
 const COLLECTION_TABS: { id: CollectionFilter; label: string }[] = [
-  { id: 'all', label: 'All titles' },
-  { id: 'watched', label: 'Watched' },
-  { id: 'to-watch', label: 'Want to watch' },
-  { id: 'watching', label: 'Watching' },
-  { id: 'abandoned', label: 'Abandoned' },
+  { id: 'all', label: 'Full programme' },
+  { id: 'watched', label: 'Screened' },
+  { id: 'to-watch', label: 'Anticipated' },
+  { id: 'watching', label: 'Now showing' },
+  { id: 'abandoned', label: 'Shelved' },
 ];
 
 export interface IntentNavigationProps {
@@ -67,7 +67,7 @@ export function IntentNavigation({
         ))}
       </div>
 
-      <p className="intent-filter-hint">Optional: filter watched items by how you want to remember them.</p>
+      <p className="intent-filter-hint">Optional: refine screened titles by how you want to remember them.</p>
       <div className="intent-filter-bar">
         {INTENT_TABS.map((tab) => (
           <button

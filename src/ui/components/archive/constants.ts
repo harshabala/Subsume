@@ -1,10 +1,10 @@
 import { LibraryStatus, SanctuaryIntent, LibraryItem } from '@/shared/types';
 
 export const STATUS_OPTIONS: { value: LibraryStatus; label: string }[] = [
-  { value: 'to-watch', label: 'Want to Watch' },
-  { value: 'watching', label: 'Watching' },
-  { value: 'watched', label: 'Watched' },
-  { value: 'abandoned', label: 'Abandoned' },
+  { value: 'to-watch', label: 'Anticipated' },
+  { value: 'watching', label: 'Now showing' },
+  { value: 'watched', label: 'Screened' },
+  { value: 'abandoned', label: 'Shelved' },
 ];
 
 export const INTENT_CHIP_LABELS: Record<SanctuaryIntent, string> = {
@@ -31,8 +31,8 @@ export function getReflectionExcerpt(library: LibraryItem): string | undefined {
 }
 
 export const STATUS_CHIP_LABELS: Record<LibraryStatus, string> = {
-  'to-watch': 'Want to watch',
-  watching: 'Watching',
-  watched: 'Watched',
-  abandoned: 'Abandoned',
+  'to-watch': 'Anticipated',
+  watching: 'Now showing',
+  watched: 'Screened',
+  abandoned: 'Shelved',
 };

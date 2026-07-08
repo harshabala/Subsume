@@ -293,10 +293,10 @@ export function Library() {
           </div>
         ) : loadError ? (
           <div className="sanctuary-empty-plaque library-error-plaque">
-            <span className="sanctuary-plaque-index">Archive Unreachable</span>
-            <h3 className="sanctuary-plaque-title">Could not open your sanctuary</h3>
+            <span className="sanctuary-plaque-index">Vault unreachable</span>
+            <h3 className="sanctuary-plaque-title">Could not open the archive</h3>
             <p className="sanctuary-plaque-text library-error-text">
-              The archive could not be reached. Check your connection and try again.
+              The vault could not be reached. Check your connection and try again.
             </p>
             <button
               onClick={() => fetchLibrary(0, false)}
@@ -308,7 +308,7 @@ export function Library() {
         ) : items.length === 0 ? (
           <EmptyStateProjection
             className="library-empty-state"
-            hint="Hover over titles while browsing or capture moments to populate your collection."
+            hint="Browse titles on the web or capture a moment to enrol your first frame."
           />
         ) : (
           <Fragment>
@@ -335,7 +335,7 @@ export function Library() {
                   onClick={loadNextPage}
                   style={{ padding: '10px 24px', fontSize: '14px', minWidth: '150px' }}
                 >
-                  Load more
+                  Load more titles
                 </button>
               </div>
             )}

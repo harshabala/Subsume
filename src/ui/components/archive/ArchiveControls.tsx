@@ -18,7 +18,7 @@ export function ArchiveControls({
     <div className="archive-controls-row">
       <input
         type="text"
-        placeholder="Search your sanctuary..."
+        placeholder="Search the vault..."
         value={searchQuery}
         onInput={(e) => setSearchQuery(e.currentTarget.value)}
         className="sanctuary-input archive-filter-search"
@@ -28,8 +28,8 @@ export function ArchiveControls({
         onChange={(e) => setSortBy((e.target as HTMLSelectElement).value as SortOption)}
         className="sanctuary-input archive-filter-select"
       >
-        <option value="added">Date Added</option>
-        <option value="rating">Your Rating</option>
+        <option value="added">Date added</option>
+        <option value="rating">Your rating</option>
         <option value="title">Title</option>
         <option value="year">Year</option>
       </select>
@@ -52,7 +52,7 @@ export function TagFilterBar({
 
   return (
     <div className="tag-filter-bar">
-      <span className="tag-filter-label">Filter:</span>
+      <span className="tag-filter-label">Tags:</span>
       <span
         onClick={() => setActiveTagFilter('')}
         className={`tag-filter-chip ${activeTagFilter === '' ? 'active' : ''}`}

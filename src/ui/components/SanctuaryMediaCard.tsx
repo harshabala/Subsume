@@ -27,8 +27,8 @@ export function SanctuaryMediaCard({
   onAdd,
   added = false,
   adding = false,
-  addLabel = 'Add to library',
-  addedLabel = 'Acquired',
+  addLabel = 'Add to archive',
+  addedLabel = 'In archive',
   afterSynopsis,
   meta,
 }: SanctuaryMediaCardProps) {

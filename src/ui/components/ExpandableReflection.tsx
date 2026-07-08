@@ -42,7 +42,7 @@ export function ExpandableReflection({
             onToggleExpand?.(next);
           }}
         >
-          {expanded ? 'Show less' : 'Read full reflection'}
+          {expanded ? 'Show less' : 'Read full inscription'}
         </button>
       )}
     </div>

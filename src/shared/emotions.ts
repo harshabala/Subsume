@@ -22,10 +22,10 @@ export const EMOTION_KEYS: (keyof EmotionalSpectrum)[] = [
 ];
 
 export const EMOTION_LABELS: Record<keyof EmotionalSpectrum, string> = {
-  awe: 'Awe / Grandeur',
-  melancholy: 'Melancholy / Sorrow',
-  tension: 'Tension / Suspense',
-  warmth: 'Warmth / Nostalgia',
+  awe: 'Awe · the sublime frame',
+  melancholy: 'Melancholy · sorrow in the cut',
+  tension: 'Tension · the held breath',
+  warmth: 'Warmth · afterglow and return',
 };
 
 export function hasEmotionalData(item: LibraryItem): boolean {

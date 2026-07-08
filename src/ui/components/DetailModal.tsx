@@ -181,7 +181,7 @@ export function DetailModal({
             </h2>
 
             <div className="sanctuary-detail-ratings">
-              <span className="sanctuary-detail-year">{media.year || '—'}</span>
+              <span className="sanctuary-detail-year">{media.year || '·'}</span>
               <span>·</span>
               {tmdbRating && (
                 <span className="sanctuary-detail-rating-chip">
@@ -214,14 +214,14 @@ export function DetailModal({
 
         {media.overview && (
           <div className="sanctuary-detail-section">
-            <h3 className="sanctuary-detail-section-title">Synopsis</h3>
+            <h3 className="sanctuary-detail-section-title">Programme notes</h3>
             <p className="sanctuary-detail-synopsis">{media.overview}</p>
           </div>
         )}
 
         {media.streamingAvailability && media.streamingAvailability.length > 0 && (
           <div className="sanctuary-detail-section">
-            <h3 className="sanctuary-detail-section-title">Where to watch</h3>
+            <h3 className="sanctuary-detail-section-title">Where to screen</h3>
             <PlatformChips availability={media.streamingAvailability} />
           </div>
         )}
@@ -254,7 +254,7 @@ export function DetailModal({
                 aria-expanded={detailsExpanded}
                 onClick={() => setDetailsExpanded((prev) => !prev)}
               >
-                Details
+                Dossier
                 <span className="sanctuary-detail-details-chevron">{detailsExpanded ? '▴' : '▾'}</span>
               </button>
 
@@ -275,7 +275,7 @@ export function DetailModal({
 
                   {libraryItem.status === 'watched' && (
                     <div className="sanctuary-detail-control-row">
-                      <span className="sanctuary-detail-control-label">Your rating:</span>
+                      <span className="sanctuary-detail-control-label">Your verdict:</span>
                       <input
                         type="range"
                         min={1}
@@ -315,7 +315,7 @@ export function DetailModal({
 
                     <input
                       type="text"
-                      placeholder="Add a tag and press Enter"
+                      placeholder="Tag this screening, press Enter"
                       className="sanctuary-detail-input"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
@@ -356,10 +356,10 @@ export function DetailModal({
                   </div>
 
                   <div className="sanctuary-detail-notes-section">
-                    <span className="sanctuary-detail-control-label">Notes:</span>
+                    <span className="sanctuary-detail-control-label">Reflection:</span>
                     <textarea
                       value={notes}
-                      placeholder="Your notes about this title"
+                      placeholder="What stayed with you after the credits?"
                       onChange={(e) => handleNotesChange(e.currentTarget.value)}
                       onBlur={flushNotes}
                       rows={4}
@@ -392,7 +392,7 @@ export function DetailModal({
                     </div>
 
                     <div className="sanctuary-detail-emotions" data-testid="detail-emotions-panel">
-                      <span className="sanctuary-detail-control-label">Emotional Spectrum:</span>
+                      <span className="sanctuary-detail-control-label">Afterglow · emotional spectrum</span>
                       <EmotionalSliders
                         values={emotions}
                         onChange={handleEmotionChange}
@@ -407,7 +407,7 @@ export function DetailModal({
             </div>
           ) : (
             <button className="sanctuary-detail-btn-inscribe" onClick={onAddToLibrary}>
-              Add to library
+              Add to archive
             </button>
           )}
         </div>

@@ -35,7 +35,7 @@ export function HardcoverSpineCard({
   const [detailsExpanded, setDetailsExpanded] = useState(false);
   const reflectionExcerpt = getReflectionExcerpt(library);
   const intent = resolveSanctuaryIntent(library);
-  const title = media?.canonicalTitle || 'Untitled Archive';
+  const title = media?.canonicalTitle || 'Untitled reel';
 
   const handleCardKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -64,7 +64,7 @@ export function HardcoverSpineCard({
           />
         ) : (
           <div className="sanctuary-poster-placeholder">
-            <span className="sanctuary-placeholder-title">No poster</span>
+            <span className="sanctuary-placeholder-title">No frame</span>
           </div>
         )}
       </div>
@@ -84,7 +84,7 @@ export function HardcoverSpineCard({
         {reflectionExcerpt ? (
           <ExpandableReflection text={reflectionExcerpt} />
         ) : (
-          <p className="hardcover-snippet-placeholder">No reflection yet</p>
+          <p className="hardcover-snippet-placeholder">No inscription yet</p>
         )}
 
         <span className="status-chip" data-status={library.status}>
@@ -104,7 +104,7 @@ export function HardcoverSpineCard({
         )}
 
         {hasEmotionalData(library) && (
-          <div className="emotion-dots" data-testid="emotion-dots" aria-label="Emotional spectrum">
+          <div className="emotion-dots" data-testid="emotion-dots" aria-label="Afterglow spectrum">
             {EMOTION_KEYS.map((key) => {
               const value = getEmotionalSpectrum(library)[key];
               return (
@@ -130,7 +130,7 @@ export function HardcoverSpineCard({
               setDetailsExpanded((prev) => !prev);
             }}
           >
-            Details
+            Dossier
             <span className="hardcover-details-chevron">{detailsExpanded ? '▴' : '▾'}</span>
           </button>
 
@@ -148,7 +148,7 @@ export function HardcoverSpineCard({
 
               {library.status === 'watched' && (
                 <div className="hardcover-rating-row">
-                  <span className="hardcover-rating-label">Rating:</span>
+                  <span className="hardcover-rating-label">Your verdict:</span>
                   <input
                     type="range"
                     min={1}
@@ -166,12 +166,12 @@ export function HardcoverSpineCard({
 
               {removeConfirmId === library.mediaId ? (
                 <div className="hardcover-remove-row">
-                  <span className="hardcover-rating-label">Remove from library?</span>
+                  <span className="hardcover-rating-label">Remove from archive?</span>
                   <button
                     className="hardcover-confirm-btn"
                     onClick={(e) => { e.stopPropagation(); onRemoveItem(library.mediaId); }}
                   >
-                    Purge
+                    Remove from archive
                   </button>
                   <button
                     className="hardcover-remove-btn"
@@ -185,7 +185,7 @@ export function HardcoverSpineCard({
                   className="hardcover-remove-btn"
                   onClick={(e) => { e.stopPropagation(); setRemoveConfirmId(library.mediaId); }}
                 >
-                  Remove
+                  Remove from archive
                 </button>
               )}
             </div>

@@ -14,6 +14,7 @@ import {
 } from '@/shared/types';
 import { sendMessage } from '@/shared/messages';
 import { DEFAULT_EMOTIONS, type EmotionalSpectrum } from '@/shared/emotions';
+import { INTENT_CHIP_LABELS } from './archive/constants';
 import { EmotionalSliders } from './EmotionalSliders';
 import { AuraVisualizer } from './AuraVisualizer';
 import '../styles/poetic-sanctuary.css';
@@ -218,7 +219,7 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
           </div>
         ) : loadError ? (
           <div class="poetic-error" data-testid="poetic-error">
-            <p class="poetic-error-text">This title could not be retrieved from the archive.</p>
+            <p class="poetic-error-text">This title could not be retrieved from the vault.</p>
             <button type="button" class="poetic-retry-btn" data-testid="poetic-retry-btn" onClick={handleRetry}>
               Try Again
             </button>
@@ -270,7 +271,7 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
                     class={intent === 'keep_memory' ? 'active' : ''}
                     onClick={() => setIntent('keep_memory')}
                   >
-                    Keep This Memory
+                    {INTENT_CHIP_LABELS.keep_memory}
                   </button>
                   <button
                     type="button"
@@ -278,7 +279,7 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
                     class={intent === 'revisit_this_month' ? 'active' : ''}
                     onClick={() => setIntent('revisit_this_month')}
                   >
-                    Revisit This Month
+                    {INTENT_CHIP_LABELS.revisit_this_month}
                   </button>
                   <button
                     type="button"
@@ -286,7 +287,7 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
                     class={intent === 'wishlist' ? 'active' : ''}
                     onClick={() => setIntent('wishlist')}
                   >
-                    Wishlist
+                    {INTENT_CHIP_LABELS.wishlist}
                   </button>
                 </div>
 
@@ -341,7 +342,7 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
                 Close
               </button>
               <button type="button" class="save-btn" data-testid="save-btn" onClick={handleSave} disabled={!media}>
-                Save
+                Save reflection
               </button>
             </div>
           </>

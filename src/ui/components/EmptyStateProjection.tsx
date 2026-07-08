@@ -9,7 +9,7 @@ export interface EmptyStateProjectionProps {
 
 export function EmptyStateProjection({
   title = 'No film logged in this atmosphere yet',
-  message = 'Open a movie page and log your first projection.',
+  message = 'Open any title page and log your first projection.',
   hint,
   className = '',
 }: EmptyStateProjectionProps) {
