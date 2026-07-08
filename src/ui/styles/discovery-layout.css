@@ -123,6 +123,59 @@
   margin-top: var(--discovery-gap-section);
   padding-top: var(--discovery-gap-section);
   padding-inline: clamp(16px, 4vw, 32px);
+  border-top: 1px solid var(--border-restraint);
+}
+
+.discovery-feed-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.discovery-feed-kicker {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-meta);
+  margin-bottom: 8px;
+}
+
+.discovery-feed-title {
+  font-family: var(--font-editorial);
+  font-size: 28px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--text-reflection);
+  margin: 0 0 6px;
+}
+
+.discovery-feed-desc {
+  font-family: var(--font-ui);
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-meta);
+}
+
+.discovery-feed-meta {
+  display: flex;
+  gap: 12px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-meta);
+}
+
+.discovery-feed-meta span {
+  padding: 6px 10px;
+  border: 1px solid var(--border-restraint);
+  border-radius: 2px;
+  background: var(--bg-plaque);
 }
 
 .discovery-feed-list {
@@ -143,8 +196,135 @@
 }
 
 .discovery-feed-card {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 16px;
+  padding: 16px;
+  background: var(--bg-plaque);
+  border: 1px solid var(--border-restraint);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 250ms ease, background 250ms ease;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  appearance: none;
   animation: discoveryFeedIn 0.45s var(--ease-focus-pull, cubic-bezier(0.25, 1, 0.5, 1)) both;
   animation-delay: calc(min(var(--feed-index, 0), 5) * 60ms);
+}
+
+.discovery-feed-card:focus-visible {
+  outline: 2px solid var(--border-hero);
+  outline-offset: 2px;
+}
+
+.discovery-feed-card:hover {
+  border-color: var(--border-hero);
+  background: var(--bg-plaque-hover);
+}
+
+.discovery-feed-card-poster {
+  width: 72px;
+  height: 108px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--surface-subtle);
+}
+
+.discovery-feed-card-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.discovery-feed-card-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-meta);
+}
+
+.discovery-feed-card-body {
+  min-width: 0;
+}
+
+.discovery-feed-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.discovery-feed-source {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 2px;
+}
+
+.discovery-feed-source.trakt {
+  color: var(--intent-revisit-fg);
+  background: var(--status-to-watch-bg);
+  border: 1px solid var(--status-to-watch-border);
+}
+
+.discovery-feed-source.tvmaze {
+  color: var(--status-watched-fg);
+  background: var(--status-watched-bg);
+  border: 1px solid var(--status-watched-border);
+}
+
+.discovery-feed-source.wikidata {
+  color: var(--digest-badge-ai-fg);
+  background: var(--digest-badge-ai-bg);
+  border: 1px solid var(--border-hero);
+}
+
+.discovery-feed-year {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text-meta);
+}
+
+.discovery-feed-card-title {
+  display: block;
+  font-family: var(--font-editorial);
+  font-size: 20px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--text-reflection);
+  margin: 0 0 8px;
+}
+
+.discovery-feed-card-reason {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-meta);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.discovery-feed-rating {
+  display: inline-block;
+  margin-top: 8px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text-meta);
 }
 
 @media (max-width: 640px) {
