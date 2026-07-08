@@ -168,3 +168,27 @@
 .home-feed-notice .optical-button.sm {
   margin-top: 1rem;
 }
+
+/* Plaque typography — serif reflections, sans meta */
+.plaque-quote {
+  font-family: var(--font-editorial);
+}
+
+.plaque-director,
+.plaque-rating,
+.plaque-index {
+  font-family: var(--font-ui);
+}
+
+.plaque-quote--reflection::before {
+  content: 'Your reflection';
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-meta, var(--muted-fg));
+  margin-bottom: 0.35rem;
+}

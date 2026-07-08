@@ -23,6 +23,8 @@ import { getPlatformNameById } from '@/shared/platforms';
 import '../styles/discovery-search.css';
 import '../styles/discovery-layout.css';
 import { ensureDemoLibraryIfEmpty } from '../lib/ensureDemoLibrary';
+import { getReflectionExcerpt } from '../components/archive/constants';
+import { truncateForExcerpt } from '@/shared/textTruncate';
 
 interface JoinedItem {
   library: LibraryItem;
@@ -48,6 +50,17 @@ function pickRating(media: MediaItem): string | null {
 
 function platformsToAvailability(platforms: string[]) {
   return platforms.map((platform) => ({ region: '', platform }));
+}
+
+function pickSynopsisForMedia(
+  media: MediaItem,
+  items: JoinedItem[],
+  fallback: string | undefined
+): string | undefined {
+  const match = items.find(({ media: m }) => m.id === media.id);
+  const reflection = match ? getReflectionExcerpt(match.library) : undefined;
+  if (reflection) return truncateForExcerpt(reflection);
+  return fallback;
 }
 
 function feedItemToDigestPick(item: DiscoveryFeedItem): DigestPick {
@@ -378,9 +391,16 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
   const heroTitle = heroMedia?.canonicalTitle || 'Your cinematic sanctuary awaits';
   const heroDirector = heroMedia?.wikidataDirectorBio || 'Acquire a title to begin reflecting';
   const heroRating = heroMedia ? pickRating(heroMedia) : null;
-  const heroQuote = heroMedia?.overview
-    ? (heroMedia.overview.length > 120 ? heroMedia.overview.slice(0, 117) + '...' : heroMedia.overview)
-    : 'Browse the discovery feed or search the archive below to find your first title.';
+  const heroLibraryMatch = libraryItems.find(({ media }) => media.id === heroMedia?.id);
+  const heroReflection = heroLibraryMatch
+    ? getReflectionExcerpt(heroLibraryMatch.library)
+    : undefined;
+  const heroIsReflection = Boolean(heroReflection);
+  const heroQuote = heroReflection
+    ? truncateForExcerpt(heroReflection)
+    : heroMedia?.overview
+      ? truncateForExcerpt(heroMedia.overview)
+      : 'Browse the discovery feed or search the archive below to find your first title.';
   const heroPoster =
     heroMedia?.posterUrl ||
     'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=600&q=80';
@@ -446,7 +466,11 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
               <p className="plaque-director">
                 {heroMedia?.wikidataDirectorBio ? `Directed by ${heroDirector}` : heroDirector}
               </p>
-              <blockquote className="plaque-quote">"{heroQuote}"</blockquote>
+              <blockquote
+                className={`plaque-quote${heroIsReflection ? ' plaque-quote--reflection' : ''}`}
+              >
+                "{heroQuote}"
+              </blockquote>
               <div className="plaque-actions">
                 <button
                   className="plaque-btn reflect"
@@ -739,7 +763,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
                       key={pick.mediaId}
                       media={media}
                       title={pick.title}
-                      synopsis={pick.reason}
+                      synopsis={pickSynopsisForMedia(media, libraryItems, pick.reason)}
                       onOpen={setSelectedMedia}
                       onAdd={handleAdd}
                       added={addedIds.has(media.id)}
