@@ -274,13 +274,18 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: border-color 0.3s ease;
+  transition:
+    transform 0.22s var(--ease-focus-pull),
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
   backdrop-filter: blur(16px);
   cursor: pointer;
 }
 
 .sanctuary-media-card:hover {
   border-color: var(--border-hero);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .sanctuary-card-poster {

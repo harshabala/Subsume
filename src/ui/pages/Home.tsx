@@ -608,10 +608,11 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
             </div>
           </div>
           <div className="discovery-feed-list">
-            {discoveryFeed.items.slice(0, 8).map((item) => (
+            {discoveryFeed.items.slice(0, 8).map((item, index) => (
               <DiscoveryFeedCard
                 key={item.id}
                 item={item}
+                index={index}
                 onSelect={(feedItem) => {
                   const pick = feedItemToDigestPick(feedItem);
                   if (pick.media) setSelectedMedia(pick.media);

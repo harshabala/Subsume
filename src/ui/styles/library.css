@@ -20,13 +20,16 @@
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  transition: all var(--transition-normal);
+  transition:
+    transform 0.22s var(--ease-focus-pull),
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
   cursor: pointer;
 }
 
 .media-card:hover {
   border-color: var(--color-accent-border);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   box-shadow: var(--shadow-card-hover);
 }
 

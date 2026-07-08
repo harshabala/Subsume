@@ -16,16 +16,19 @@ function sourceLabel(source: DiscoveryFeedItem['source']): string {
 
 export interface DiscoveryFeedCardProps {
   item: DiscoveryFeedItem;
+  index?: number;
   onSelect: (item: DiscoveryFeedItem) => void;
 }
 
-export function DiscoveryFeedCard({ item, onSelect }: DiscoveryFeedCardProps) {
+export function DiscoveryFeedCard({ item, index = 0, onSelect }: DiscoveryFeedCardProps) {
   const ratingSuffix = item.rating != null ? `, rated ${item.rating.toFixed(1)}` : '';
+  const staggerIndex = Math.min(index, 5);
 
   return (
     <button
       type="button"
       className="discovery-feed-card"
+      style={{ '--feed-index': staggerIndex } as Record<string, number>}
       onClick={() => onSelect(item)}
       aria-label={`${item.title} (${item.year || 'year unknown'}). ${item.reason}${ratingSuffix}`}
     >
