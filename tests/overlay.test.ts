@@ -50,7 +50,7 @@ describe('Act I Discovery Plaque Injection (overlay.ts)', () => {
 
     // Check reveal text
     const revealSpan = plaque?.querySelector('.plaque-reveal');
-    expect(revealSpan?.textContent).toContain('│Programme');
+    expect(revealSpan?.textContent).toContain('│Reflect');
 
     // Check click dispatching OPEN_CAPTURE_CANVAS event
     const eventListener = vi.fn();

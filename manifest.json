@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Subsume",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvpBKX48nciipq5BoDjIWbg0g0L6D0yvbE2rUcaPIIe84oBfUZQe83RlSk/48YNdAJ2eZ87sRrrOO09xrYl2RMxVXq5HDE48xEd9DvBbSOFT8zQuZ/C7xJe3X5Zm/nJA+rqHcmPT7cx65D7VhqnZhPQz84KOTt1+QTI52GCQ3cQGoSbQ2zm8y0U7eDtXKHJx8im8XBJNrwRhLH2dP5uYn4UAV2yNPywQb0E1XRnd9WINXpW82UVWgzGu7Mj2PVMQQLndd0EpFmWYkYng1SqwOV6jd151lOw+Nbcyvr+9Mmljws02w8OQiVGJWK5pJ9rIdFnQiI8uX6KTRmilwkGzclwIDAQAB",
   "description": "Track movies & TV shows you discover while browsing. Get smart recommendations powered by AI.",
   "permissions": ["storage", "activeTab", "notifications", "alarms", "identity"],
