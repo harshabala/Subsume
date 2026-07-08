@@ -10,8 +10,7 @@ export type Page =
   | 'recommendations'
   | 'new-releases'
   | 'alerts'
-  | 'settings'
-  | 'logs';
+  | 'settings';
 
 type PrefetchRequest = { type: MessageType; payload?: unknown };
 

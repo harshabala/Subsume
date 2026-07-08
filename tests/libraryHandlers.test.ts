@@ -52,6 +52,8 @@ vi.mock('@/background/storage', async () => {
     getAllWatchAlerts: vi.fn(),
     putWatchAlert: vi.fn(),
     deleteWatchAlert: vi.fn(),
+    mergeSeedCatalog: vi.fn(),
+    mergeSeedCatalogIfVersionBehind: vi.fn().mockResolvedValue(undefined),
     intentForStatus,
     isValidMediaItem,
   };

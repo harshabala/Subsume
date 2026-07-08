@@ -21,6 +21,10 @@
   overflow: hidden;
 }
 
+.popup-inline-notice {
+  padding: 8px 12px 0;
+}
+
 .popup-view {
   display: none;
   flex-direction: column;
@@ -653,16 +657,68 @@
 }
 
 .popup-btn-primary {
-  background: var(--primary, #c9a84c);
-  color: #0c0c0d;
-  border-color: transparent;
+  background: var(--primary);
+  color: var(--on-primary-fg, #0a0a0a);
+  border-color: var(--primary);
   font-weight: 600;
 }
 
 .popup-btn-primary:hover:not(:disabled) {
-  background: var(--primary-hover, #d9b85c);
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+  color: var(--on-primary-fg, #0a0a0a);
 }
 
+.popup-btn-secondary {
+  background: transparent;
+  border-color: var(--border);
+}
+
+.popup-btn-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.popup-brand-capture-icon {
+  font-size: 20px;
+  color: var(--primary);
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.popup-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.popup-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 8px);
+  background: var(--bg-elevated);
+  color: var(--fg-muted);
+  cursor: pointer;
+  padding: 0;
+}
+
+.popup-icon-btn:hover {
+  color: var(--fg-base);
+  border-color: var(--border-strong, var(--border));
+  background: var(--bg-hover);
+}
+
+.popup-icon-btn .material-symbols-outlined {
+  font-size: 20px;
+}
+
+[data-theme='light'] .popup-btn:hover:not(:disabled) {
+  border-color: rgba(0, 0, 0, 0.12);
+}
 /* ─── Success overlay ───────────────────────────────────────────── */
 .log-success-overlay {
   position: absolute;

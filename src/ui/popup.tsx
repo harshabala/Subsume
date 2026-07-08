@@ -7,9 +7,12 @@ import { DEFAULT_EMOTIONS, type EmotionalSpectrum } from '../shared/emotions';
 import { EmotionalSliders } from './components/EmotionalSliders';
 import { AuraVisualizer } from './components/AuraVisualizer';
 import { FilmGrain } from './components/FilmGrain';
+import { InlineNotice } from './components/NoticeProvider';
+import { formatUserError } from './utils/formatUserError';
 import '../shared/tokens.css';
 import './styles/popup.css';
 import './styles/emotional-components.css';
+import './components/inline-notice.css';
 
 interface JoinedItem {
   library: LibraryItem;
@@ -104,6 +107,7 @@ function Popup() {
   const [sanctuaryIntent, setSanctuaryIntent] = useState<SanctuaryIntent>('keep_memory');
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [logActionError, setLogActionError] = useState<string | null>(null);
 
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
@@ -284,7 +288,7 @@ function Popup() {
 
     } catch (err) {
       console.error('[Subsume Popup] Failed to log movie:', err);
-      alert('Failed to log movie: ' + (err instanceof Error ? err.message : String(err)));
+      setLogActionError(`Failed to log movie: ${formatUserError(err)}`);
     } finally {
       setIsSaving(false);
     }
@@ -293,7 +297,7 @@ function Popup() {
   if (loading) {
     return (
       <div className="popup-shell">
-        <div className="popup-loading">Opening sanctuary…</div>
+        <div className="popup-loading">Loading…</div>
       </div>
     );
   }
@@ -324,6 +328,13 @@ function Popup() {
   return (
     <div className="popup-shell">
       <FilmGrain variant="popup" />
+      {logActionError && (
+        <div className="popup-inline-notice">
+          <InlineNotice tone="error" onDismiss={() => setLogActionError(null)}>
+            {logActionError}
+          </InlineNotice>
+        </div>
+      )}
       {/* Success Animation overlay */}
       <div className={`log-success-overlay ${showSuccess ? 'active' : ''}`}>
         <div className="success-icon-circle">
@@ -331,8 +342,8 @@ function Popup() {
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
         </div>
-        <h4 className="success-title">Reflection Saved</h4>
-        <p className="success-message">Appended to your Cinematic Sanctuary.</p>
+        <h4 className="success-title">Saved</h4>
+        <p className="success-message">Added to your library.</p>
       </div>
 
       {/* VIEW 1: Overview and Recent log history */}
@@ -343,15 +354,28 @@ function Popup() {
               <span className="popup-brand-mark"></span>
               Subsume
             </div>
-            <div className="popup-tagline">Track films as you browse</div>
+            <div className="popup-tagline">Capture what you watch</div>
           </div>
-          <button className="popup-close-btn" onClick={() => window.close()} title="Close popup">×</button>
+          <div className="popup-header-actions">
+            <button
+              type="button"
+              className="popup-icon-btn"
+              onClick={() => openSanctuary('settings')}
+              title="Settings"
+              aria-label="Open settings"
+            >
+              <span className="material-symbols-outlined" aria-hidden="true">settings</span>
+            </button>
+            <button type="button" className="popup-icon-btn" onClick={() => window.close()} title="Close" aria-label="Close popup">
+              <span className="material-symbols-outlined" aria-hidden="true">close</span>
+            </button>
+          </div>
         </header>
 
         <div className="popup-stats">
           <div className="popup-stat">
             <div className="popup-stat-value">{stats.total}</div>
-            <div className="popup-stat-label">Archive</div>
+            <div className="popup-stat-label">In library</div>
           </div>
           <div className="popup-stat">
             <div className="popup-stat-value">{stats.watched}</div>
@@ -379,7 +403,7 @@ function Popup() {
         </div>
 
         <div className="popup-section">
-          <div className="popup-section-title">Recent In Sanctuary</div>
+          <div className="popup-section-title">Recently added</div>
           {items.length === 0 ? (
             <div className="popup-empty">
               <p>Your archive is empty.</p>
@@ -395,7 +419,7 @@ function Popup() {
                   }
                 }}
               >
-                Load Demo Sanctuary
+                Load highlight catalogue
               </button>
             </div>
           ) : (
@@ -408,7 +432,7 @@ function Popup() {
                   onClick={() => openSanctuary('library')}
                 >
                   {item.media.posterUrl ? (
-                    <img className="popup-recent-poster" src={item.media.posterUrl} alt="" />
+                    <img className="popup-recent-poster" src={item.media.posterUrl} alt="" loading="lazy" decoding="async" />
                   ) : (
                     <div className="popup-recent-poster" />
                   )}
@@ -430,16 +454,13 @@ function Popup() {
 
         <div className="popup-actions">
           <button className="popup-btn popup-btn-primary" onClick={() => setActiveView('log')}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            Log a Movie / Show
+            <span className="material-symbols-outlined popup-btn-icon" aria-hidden="true">videocam</span>
+            Capture title
           </button>
-          <div className="popup-actions-row">
-            <button className="popup-btn" onClick={() => openSanctuary('settings')} title="Settings">Settings</button>
-            <button className="popup-btn" onClick={() => openSanctuary()}>Open app App</button>
-          </div>
+          <button className="popup-btn popup-btn-secondary" onClick={() => openSanctuary()} type="button">
+            <span className="material-symbols-outlined popup-btn-icon" aria-hidden="true">open_in_new</span>
+            Open full app
+          </button>
         </div>
       </div>
 
@@ -448,21 +469,37 @@ function Popup() {
         <header className="popup-header">
           <div className="popup-brand-area">
             <div className="popup-brand">
-              <span className="popup-brand-mark"></span>
-              Log Movie
+              <span className="material-symbols-outlined popup-brand-capture-icon" aria-hidden="true">videocam</span>
+              Capture title
             </div>
-            <div className="popup-tagline">Capture cinema emotions</div>
+            <div className="popup-tagline">From this page or search</div>
           </div>
-          <button className="popup-close-btn" onClick={() => {
-            setSelectedMovie(null);
-            setSearchQuery('');
-            setActiveView('overview');
-          }} title="Back to overview">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="19" y1="12" x2="5" y2="12"></line>
-              <polyline points="12 19 5 12 12 5"></polyline>
-            </svg>
-          </button>
+          <div className="popup-header-actions">
+            <button
+              type="button"
+              className="popup-icon-btn"
+              onClick={() => openSanctuary('settings')}
+              title="Settings"
+              aria-label="Open settings"
+            >
+              <span className="material-symbols-outlined" aria-hidden="true">settings</span>
+            </button>
+            <button
+              className="popup-close-btn"
+              onClick={() => {
+                setSelectedMovie(null);
+                setSearchQuery('');
+                setActiveView('overview');
+              }}
+              title="Back"
+              aria-label="Back to overview"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+            </button>
+          </div>
         </header>
 
         <div className="ext-body">

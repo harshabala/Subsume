@@ -5,7 +5,8 @@ export type SettingsSectionId =
   | 'credentials'
   | 'ai'
   | 'browsing'
-  | 'data';
+  | 'data'
+  | 'diagnostics';
 
 export interface SettingsSectionMeta {
   id: SettingsSectionId;
@@ -56,6 +57,12 @@ export const SETTINGS_SECTIONS: SettingsSectionMeta[] = [
     title: 'Backup & sync',
     description:
       'Export or import your sanctuary JSON, optional Google Drive vault, and check extension version.',
+  },
+  {
+    id: 'diagnostics',
+    title: 'Diagnostics',
+    description:
+      'Activity and error log for troubleshooting (Settings → Diagnostics). Old “Logs” explore link opens here. Copy entries when reporting Drive, sync, or API issues.',
   },
 ];
 

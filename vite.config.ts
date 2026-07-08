@@ -14,7 +14,14 @@ export default defineConfig(({ command }) => ({
     preact(),
     viteStaticCopy({
       targets: [
-        { src: 'manifest.json', dest: '.' },
+        {
+          src: 'manifest.json',
+          dest: '.',
+          transform: (content) => {
+            const base = JSON.parse(content.toString());
+            return JSON.stringify(base, null, 2);
+          },
+        },
       ],
     }),
     {

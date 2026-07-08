@@ -238,6 +238,8 @@ export function People() {
                           src={`https://image.tmdb.org/t/p/w185${person.profileImageUrl}`}
                           alt={person.name}
                           className="people-sanctuary-avatar"
+                          loading="lazy"
+                          decoding="async"
                         />
                       ) : (
                         <div className="people-sanctuary-avatar-fallback">
@@ -302,6 +304,8 @@ export function People() {
                             src={`https://image.tmdb.org/t/p/w185${person.profilePath}`}
                             alt={person.name}
                             className="people-search-avatar"
+                            loading="lazy"
+                            decoding="async"
                           />
                         ) : (
                           <div className="people-search-avatar-fallback">

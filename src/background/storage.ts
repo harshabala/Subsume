@@ -12,7 +12,8 @@ import {
 } from '@/shared/types';
 import { isValidPersonItem } from '@/shared/validation';
 import { MEDIA_ID_PATTERN } from '@/shared/mediaIds';
-import { SEED_MEDIA, SEED_LIBRARY, SEED_PEOPLE } from './seedData';
+import { SEED_MEDIA, SEED_LIBRARY, SEED_PEOPLE, SEED_CATALOGUE_VERSION, SEED_CATALOGUE_VERSION_KEY } from './seedData';
+import { HIGHLIGHT_LIBRARY } from './seedIndianHighlights';
 
 interface SubsumeDB extends DBSchema {
   media: {
@@ -62,6 +63,81 @@ export async function seedDemoLibraryIfEmpty(): Promise<boolean> {
   if (mediaCount > 0) return false;
   await seedDatabaseIfEmpty(db);
   return true;
+}
+
+/** Add any missing catalogue titles, reflections, and filmmaker rows (safe for existing libraries). */
+export async function mergeSeedCatalog(): Promise<{
+  mediaAdded: number;
+  libraryAdded: number;
+  libraryUpdated: number;
+  peopleUpserted: number;
+}> {
+  const db = await getDb();
+  let mediaAdded = 0;
+  let libraryAdded = 0;
+  let libraryUpdated = 0;
+  let peopleUpserted = 0;
+
+  for (const m of SEED_MEDIA) {
+    const existing = await db.get('media', m.id);
+    if (!existing) {
+      await db.put('media', m);
+      mediaAdded++;
+    }
+  }
+
+  for (const item of SEED_LIBRARY) {
+    const existing = await db.get('library', item.mediaId);
+    if (!existing) {
+      await db.put('library', item);
+      libraryAdded++;
+    } else if (item.userNotes && !existing.userNotes) {
+      await db.put('library', {
+        ...existing,
+        status: item.status ?? existing.status,
+        userRating: item.userRating ?? existing.userRating,
+        userNotes: item.userNotes,
+        sanctuaryIntent: item.sanctuaryIntent ?? existing.sanctuaryIntent,
+        updatedAt: Date.now(),
+      });
+      libraryUpdated++;
+    } else if (HIGHLIGHT_LIBRARY[item.mediaId] && item.userNotes) {
+      await db.put('library', {
+        ...existing,
+        status: item.status ?? existing.status,
+        userRating: item.userRating ?? existing.userRating,
+        userNotes: item.userNotes,
+        sanctuaryIntent: item.sanctuaryIntent ?? existing.sanctuaryIntent,
+        updatedAt: Date.now(),
+      });
+      libraryUpdated++;
+    }
+  }
+
+  for (const person of SEED_PEOPLE) {
+    const existing = await db.get('people', person.id);
+    if (!existing) {
+      await db.put('people', person);
+      peopleUpserted++;
+    } else {
+      const filmographyIds = [...new Set([...(existing.filmographyIds || []), ...person.filmographyIds])];
+      await db.put('people', { ...existing, filmographyIds, knownFor: person.knownFor, biography: person.biography });
+      peopleUpserted++;
+    }
+  }
+
+  return { mediaAdded, libraryAdded, libraryUpdated, peopleUpserted };
+}
+
+/** Run on extension startup when catalogue version bumps (adds Indian highlights, etc.). */
+export async function mergeSeedCatalogIfVersionBehind(): Promise<void> {
+  const stored = await chrome.storage.local.get(SEED_CATALOGUE_VERSION_KEY);
+  const current = typeof stored[SEED_CATALOGUE_VERSION_KEY] === 'number'
+    ? stored[SEED_CATALOGUE_VERSION_KEY]
+    : 0;
+  if (current >= SEED_CATALOGUE_VERSION) return;
+  await mergeSeedCatalog();
+  await chrome.storage.local.set({ [SEED_CATALOGUE_VERSION_KEY]: SEED_CATALOGUE_VERSION });
 }
 
 async function seedDatabaseIfEmpty(db: IDBPDatabase<SubsumeDB>) {

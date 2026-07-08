@@ -374,6 +374,7 @@ export function FilmographyView({ person: initialPerson, onBack, onUnfollow }: F
                       src={item.posterUrl}
                       alt={item.canonicalTitle}
                       loading="lazy"
+                      decoding="async"
                       className="filmography-poster-img"
                     />
                   ) : (

@@ -59,6 +59,7 @@ export function HardcoverSpineCard({
             src={media.posterUrl}
             alt={media.canonicalTitle}
             loading="lazy"
+            decoding="async"
             className="sanctuary-poster-img"
           />
         ) : (

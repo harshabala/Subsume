@@ -3,6 +3,7 @@ import { useState, useCallback } from 'preact/hooks';
 import { sendMessage } from '@/shared/messages';
 import { MessageType, MediaItem, MediaType } from '@/shared/types';
 import { DetailModal } from '../components/DetailModal';
+import { SanctuaryMediaCard } from '../components/SanctuaryMediaCard';
 
 const TYPE_OPTIONS: { value: MediaType | ''; label: string }[] = [
   { value: '', label: 'Complete Archive' },
@@ -134,64 +135,28 @@ export function Search() {
       {results.length > 0 && (
         <div className="card-grid" style={{ padding: '0 32px', maxWidth: 1200, margin: '0 auto 48px' }}>
           {results.map((item) => (
-            <div
+            <SanctuaryMediaCard
               key={item.id}
-              className="sanctuary-media-card"
-              role="button"
-              tabIndex={0}
-              onClick={() => setSelectedMedia(item)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setSelectedMedia(item);
-                }
-              }}
-              aria-label={`View details for ${item.canonicalTitle}`}
-              style={{ cursor: 'pointer' }}
-            >
-              <div className="sanctuary-card-poster">
-                {item.posterUrl ? (
-                  <img src={item.posterUrl} alt={item.canonicalTitle} loading="lazy" className="sanctuary-poster-img" />
-                ) : (
-                  <div className="sanctuary-poster-placeholder">
-                    <span className="sanctuary-placeholder-title">{item.canonicalTitle}</span>
-                  </div>
-                )}
-              </div>
-              <div className="sanctuary-card-content">
-                <h3 className="sanctuary-card-title">{item.canonicalTitle}</h3>
+              media={item}
+              synopsis={item.overview || undefined}
+              onOpen={setSelectedMedia}
+              onAdd={handleAdd}
+              added={addedIds.has(item.id)}
+              adding={addingId === item.id}
+              addLabel="Add to library"
+              addedLabel="In your library"
+              meta={
                 <div className="sanctuary-card-meta">
                   <span>{item.year || 'ARCHIVAL'}</span>
-                  <span className="sanctuary-card-badge">
-                    {item.type === 'tv' ? 'Series' : 'Film'}
-                  </span>
+                  <span className="sanctuary-card-badge">{item.type === 'tv' ? 'Series' : 'Film'}</span>
                   {item.ratings[0] && (
                     <span style={{ color: 'var(--text-artwork)' }}>
                       SCORE {item.ratings[0].score.toFixed(1)}
                     </span>
                   )}
                 </div>
-                {item.overview && (
-                  <p className="sanctuary-card-synopsis">{item.overview}</p>
-                )}
-                <div style={{ marginTop: 'auto', paddingTop: 12 }}>
-                  {addedIds.has(item.id) ? (
-                    <span style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', letterSpacing: '0.05em', color: 'var(--text-meta)' }}>
-                      In your library
-                    </span>
-                  ) : (
-                    <button
-                      className="sanctuary-acquire-btn"
-                      onClick={(e) => { e.stopPropagation(); handleAdd(item); }}
-                      disabled={addingId === item.id}
-                      style={{ width: '100%', padding: '8px', fontSize: '11px' }}
-                    >
-                      {addingId === item.id ? 'Acquiring...' : 'Add to library'}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
+              }
+            />
           ))}
         </div>
       )}

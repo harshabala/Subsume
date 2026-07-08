@@ -106,13 +106,13 @@ export function NewReleases() {
                   {media.year || 'ACT I'}
                 </div>
                 <div>
-                  <div
-                    className="programme-title"
-                    style={{ cursor: 'pointer', transition: 'color 0.2s ease' }}
+                  <button
+                    type="button"
+                    className="programme-title programme-title-btn"
                     onClick={() => setSelectedMedia(media)}
                   >
                     {media.canonicalTitle}
-                  </div>
+                  </button>
                   <div style={{ marginTop: 8 }}>
                     <PlatformChips availability={media.streamingAvailability} max={3} compact />
                   </div>

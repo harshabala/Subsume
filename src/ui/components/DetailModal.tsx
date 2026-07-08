@@ -161,7 +161,7 @@ export function DetailModal({
         <div className="sanctuary-detail-header">
           <div className="sanctuary-detail-poster-wrap">
             {media.posterUrl ? (
-              <img src={media.posterUrl} alt={media.canonicalTitle} className="sanctuary-detail-poster-img" />
+              <img src={media.posterUrl} alt={media.canonicalTitle} className="sanctuary-detail-poster-img" loading="lazy" decoding="async" />
             ) : (
               <div className="sanctuary-detail-poster-placeholder">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">

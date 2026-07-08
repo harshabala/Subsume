@@ -11,26 +11,17 @@ interface RecommendationMediaCardProps {
 export function RecommendationMediaCard({ media, explanation, onClick }: RecommendationMediaCardProps) {
   const tmdbRating = media.ratings?.find(r => r.provider === 'tmdb');
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      onClick();
-    }
-  };
-
   return (
-    <div
-      className="media-card recommendation-media-card"
-      role="button"
-      tabIndex={0}
+    <button
+      type="button"
+      className="media-card recommendation-media-card recommendation-media-card-btn"
       onClick={onClick}
-      onKeyDown={handleKeyDown}
       aria-label={`View details for ${media.canonicalTitle}`}
     >
        <div className="recommendation-media-card-content">
          <div className="media-card-poster recommendation-media-card-poster-wrapper">
            {media.posterUrl ? (
-             <img src={media.posterUrl} alt={media.canonicalTitle} loading="lazy" />
+             <img src={media.posterUrl} alt={media.canonicalTitle} loading="lazy" decoding="async" />
            ) : (
              <div className="empty-poster recommendation-media-card-poster-empty">No Image</div>
            )}
@@ -61,6 +52,6 @@ export function RecommendationMediaCard({ media, explanation, onClick }: Recomme
             </span>
           </div>
        </div>
-    </div>
+    </button>
   );
 }

@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 import { SystemLog } from './types';
+import { logDiagnostic } from './diagnosticLog';
 
 const DEBUG = import.meta.env.DEV;
 const MAX_PERSISTED_DETAIL_LENGTH = 200;
@@ -49,6 +50,14 @@ function pushLog(level: 'info' | 'warn' | 'error', args: any[]) {
     message,
     details: args.length > 1 ? sanitizeForStorage(args.slice(1)) : undefined
   };
+
+  const detailForDiagnostic =
+    logEntry.details !== undefined
+      ? typeof logEntry.details === 'string'
+        ? logEntry.details
+        : JSON.stringify(logEntry.details)
+      : undefined;
+  logDiagnostic(level, 'logger', message, detailForDiagnostic);
 
   storageQueue = storageQueue.then(async () => {
     try {

@@ -1,6 +1,6 @@
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import { sendMessage } from '@/shared/messages';
+import { sendMessage, CONNECT_GOOGLE_DRIVE_TIMEOUT_MS } from '@/shared/messages';
 import {
   MessageType,
   UserPreferences,
@@ -17,11 +17,17 @@ import { AVAILABLE_GENRES } from '@/shared/genres';
 import { validateImportData } from '@/shared/validation';
 import { CURATOR_JOURNEY_COPY, DEFAULT_PROMPTS } from '@/shared/prompts';
 import { SETTINGS_SECTIONS, type SettingsSectionId } from '@/shared/settingsCatalog';
+import { SettingsDiagnosticsPanel } from '../components/SettingsDiagnosticsPanel';
+import { useNotice } from '../components/NoticeProvider';
+import { formatUserError } from '../utils/formatUserError';
+import { logDiagnostic } from '@/shared/diagnosticLog';
 import '../styles/settings.css';
 import '../styles/curator-settings.css';
 import '../styles/settings-nav.css';
+import '../styles/settings-oauth.css';
 
 export function Settings() {
+  const { showNotice } = useNotice();
   const [prefs, setPrefs] = useState<UserPreferences | null>(null);
   const [saving, setSaving] = useState(false);
   const [updateStatus, setUpdateStatus] = useState<string | null>(null);
@@ -32,6 +38,12 @@ export function Settings() {
   const [curatorPreview, setCuratorPreview] = useState<string | null>(null);
   const [curatorPreviewLoading, setCuratorPreviewLoading] = useState(false);
   const [activeSection, setActiveSection] = useState<SettingsSectionId>('appearance');
+  const [driveStatus, setDriveStatus] = useState<string | null>(null);
+  const [driveConnecting, setDriveConnecting] = useState(false);
+  const oauthRedirectUri =
+    typeof chrome !== 'undefined' && chrome.identity?.getRedirectURL
+      ? chrome.identity.getRedirectURL()
+      : '';
 
   useEffect(() => {
     async function load() {
@@ -42,19 +54,33 @@ export function Settings() {
         );
         const loaded = res.data!;
         setPrefs(loaded);
+        const theme = loaded.theme ?? 'dark';
+        applyThemePreference(theme);
+        watchSystemTheme(theme);
         applyCinemaAtmosphere(loaded.cinemaAtmosphere ?? 'default');
       } catch (err) {
-        setLoadError(err instanceof Error ? err.message : 'Failed to load settings.');
+        const msg = err instanceof Error ? err.message : 'Failed to load settings.';
+        setLoadError(msg);
+        logDiagnostic('error', 'settings', msg);
       }
     }
     load();
   }, []);
 
   useEffect(() => {
-    if (window.location.hash === '#ai-curator') {
+    if (!prefs) return;
+    const hash = window.location.hash;
+    if (hash === '#ai-curator') {
       setActiveSection('ai');
       requestAnimationFrame(() => {
         document.getElementById('ai-curator')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      return;
+    }
+    if (hash === '#diagnostics') {
+      setActiveSection('diagnostics');
+      requestAnimationFrame(() => {
+        document.getElementById('settings-diagnostics')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     }
   }, [prefs]);
@@ -84,6 +110,7 @@ export function Settings() {
       const theme = value as ThemePreference;
       applyThemePreference(theme);
       watchSystemTheme(theme);
+      applyCinemaAtmosphere(prefs.cinemaAtmosphere ?? 'default');
     }
     if (key === 'cinemaAtmosphere') {
       applyCinemaAtmosphere(value as CinemaAtmosphere);
@@ -108,8 +135,9 @@ export function Settings() {
       applyThemePreference(theme);
       watchSystemTheme(theme);
       applyCinemaAtmosphere(prefs.cinemaAtmosphere ?? 'default');
+      showNotice('Settings saved.', 'success');
     } catch (err) {
-      alert('Failed to save settings: ' + (err instanceof Error ? err.message : String(err)));
+      showNotice(`Failed to save settings: ${formatUserError(err)}`, 'error');
     } finally {
       setSaving(false);
     }
@@ -183,7 +211,7 @@ export function Settings() {
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
     } catch (err) {
-      alert('Failed to export library: ' + (err instanceof Error ? err.message : String(err)));
+      showNotice(`Failed to export library: ${formatUserError(err)}`, 'error');
     }
   };
 
@@ -256,38 +284,81 @@ export function Settings() {
         const raw = JSON.parse(ev.target?.result as string);
         const data = validateImportData(raw);
         await sendMessage(MessageType.IMPORT_LIBRARY, data);
-        alert('Library imported successfully!');
+        showNotice('Library imported successfully.', 'success');
       } catch (err: unknown) {
-        alert('Failed to import library: ' + (err instanceof Error ? err.message : String(err)));
+        showNotice(`Failed to import library: ${formatUserError(err)}`, 'error');
       }
     };
     reader.readAsText(file);
   };
 
   const handleConnectDrive = async () => {
+    if (driveConnecting) return;
+    setDriveConnecting(true);
+    setDriveStatus(
+      'Opening Google sign-in… A browser window will open. Works in Chrome and Brave. First connect may take a minute.'
+    );
     try {
-      await sendMessage(MessageType.CONNECT_GOOGLE_DRIVE, {});
-      alert('Successfully connected to Google Drive!');
+      const result = (await sendMessage(
+        MessageType.CONNECT_GOOGLE_DRIVE,
+        {},
+        CONNECT_GOOGLE_DRIVE_TIMEOUT_MS
+      )) as { email?: string };
+      setDriveStatus(
+        result?.email
+          ? `Connected as ${result.email}`
+          : 'Connected to Google Drive. You can back up or restore from this device.'
+      );
+      logDiagnostic('info', 'settings.drive', 'Connect Google Drive succeeded');
     } catch (e: unknown) {
-      alert('Failed to connect to Google Drive: ' + (e instanceof Error ? e.message : String(e)));
+      const msg = e instanceof Error ? e.message : String(e);
+      const withRedirect =
+        msg.includes('redirect') || msg.includes('Google sign-in failed')
+          ? `${msg} Add this exact redirect URI in Google Cloud → OAuth Web client: ${oauthRedirectUri}`
+          : msg;
+      setDriveStatus(withRedirect);
+      logDiagnostic('error', 'settings.drive', withRedirect);
+    } finally {
+      setDriveConnecting(false);
     }
   };
 
   const handleBackupNow = async () => {
     try {
       await sendMessage(MessageType.BACKUP_TO_DRIVE, {});
-      alert('Backup successful!');
+      showNotice('Backup completed.', 'success');
     } catch (e: unknown) {
-      alert('Backup failed: ' + (e instanceof Error ? e.message : String(e)));
+      showNotice(`Backup failed: ${formatUserError(e)}`, 'error');
     }
   };
 
   const handleRestoreBackup = async () => {
     try {
       await sendMessage(MessageType.RESTORE_FROM_DRIVE, {});
-      alert('Restore successful!');
+      showNotice('Restore completed.', 'success');
     } catch (e: unknown) {
-      alert('Restore failed: ' + (e instanceof Error ? e.message : String(e)));
+      showNotice(`Restore failed: ${formatUserError(e)}`, 'error');
+    }
+  };
+
+  const handleMergeHighlightCatalogue = async () => {
+    try {
+      const result = (await sendMessage(MessageType.RESTORE_DEMO_LIBRARY, {})) as {
+        mediaAdded?: number;
+        libraryAdded?: number;
+        libraryUpdated?: number;
+      };
+      const parts = [
+        result.mediaAdded ? `${result.mediaAdded} titles added` : null,
+        result.libraryAdded ? `${result.libraryAdded} library rows added` : null,
+        result.libraryUpdated ? `${result.libraryUpdated} reflections updated` : null,
+      ].filter(Boolean);
+      showNotice(
+        parts.length ? `Highlight catalogue merged: ${parts.join(', ')}.` : 'Highlight catalogue is already up to date.',
+        'success'
+      );
+    } catch (e: unknown) {
+      showNotice(`Merge failed: ${formatUserError(e)}`, 'error');
     }
   };
 
@@ -770,9 +841,29 @@ export function Settings() {
             <div>
               <span className="settings-field-label">Remote Storage</span>
               <div className="settings-btn-row">
-                <button className="btn-sanctuary-restraint" onClick={handleConnectDrive}>
-                  Connect Google Drive
+                <p className="settings-panel-hint">
+                  Saves a private backup in your Google account (app data only — not visible in Drive’s main file list).
+                  Sign in with your Google account when prompted.
+                </p>
+                {oauthRedirectUri && (
+                  <p className="settings-panel-hint settings-oauth-redirect" title={oauthRedirectUri}>
+                    OAuth redirect (add in Google Cloud if connect fails):{' '}
+                    <code className="settings-oauth-code">{oauthRedirectUri}</code>
+                  </p>
+                )}
+                <button
+                  className="btn-sanctuary-restraint"
+                  onClick={handleConnectDrive}
+                  disabled={driveConnecting}
+                  aria-busy={driveConnecting}
+                >
+                  {driveConnecting ? 'Connecting…' : 'Connect Google Drive'}
                 </button>
+                {driveStatus && (
+                  <p className={`settings-drive-status ${driveStatus.startsWith('Connected') ? 'ok' : 'err'}`} role="status">
+                    {driveStatus}
+                  </p>
+                )}
                 <button className="btn-sanctuary-restraint" onClick={handleBackupNow}>
                   Back up now
                 </button>
@@ -780,6 +871,16 @@ export function Settings() {
                   Restore from Drive
                 </button>
               </div>
+            </div>
+
+            <div className="settings-section-divider">
+              <span className="settings-field-label">Indian cinema highlight catalogue</span>
+              <p className="settings-panel-hint">
+                Adds Kamal Haasan, Mammootty, Mohanlal, and Tamil picks (Indian, Mudhalvan, Enthiran, Padayappa, etc.) with sample reflections — without wiping your library.
+              </p>
+              <button type="button" className="btn-sanctuary-restraint" onClick={handleMergeHighlightCatalogue}>
+                Merge highlight catalogue
+              </button>
             </div>
 
             <div className="settings-section-divider">
@@ -802,6 +903,8 @@ export function Settings() {
           </div>
         </div>
         )}
+
+        {activeSection === 'diagnostics' && <SettingsDiagnosticsPanel />}
       </div>
 
       <div className="settings-footer-row settings-footer-sticky">

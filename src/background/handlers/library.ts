@@ -24,6 +24,7 @@ import {
   intentForStatus,
   isValidMediaItem,
   seedDemoLibraryIfEmpty,
+  mergeSeedCatalog,
 } from '../storage';
 import { isSafeNavMediaId } from '@/shared/mediaIds';
 import { invalidateProfileCache } from '../context';
@@ -266,7 +267,11 @@ export const libraryHandlers: MessageHandlerMap = {
   },
 
   [MessageType.RESTORE_DEMO_LIBRARY]: async () => {
-    const seeded = await seedDemoLibraryIfEmpty();
-    return { seeded };
+    const empty = await seedDemoLibraryIfEmpty();
+    const merged = await mergeSeedCatalog();
+    return {
+      seeded: empty || merged.mediaAdded > 0 || merged.libraryAdded > 0,
+      ...merged,
+    };
   },
 };

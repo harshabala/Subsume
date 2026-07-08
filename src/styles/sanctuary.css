@@ -428,6 +428,22 @@
   color: var(--border-hero);
 }
 
+.programme-title-btn {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+}
+
+.programme-title-btn:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+}
+
 .programme-meta {
   display: flex;
   flex-direction: column;

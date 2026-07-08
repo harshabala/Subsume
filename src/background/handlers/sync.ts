@@ -4,7 +4,7 @@ import { validateImportData } from '@/shared/validation';
 import { exportLibraryData, importLibraryData } from '../storage';
 import { invalidateProfileCache } from '../context';
 import {
-  getAuthToken,
+  connectGoogleDrive,
   uploadDatabaseBackup,
   downloadDatabaseBackup,
 } from '../drive-sync';
@@ -23,8 +23,8 @@ export const syncHandlers: MessageHandlerMap = {
   },
 
   [MessageType.CONNECT_GOOGLE_DRIVE]: async () => {
-    await getAuthToken(true);
-    return { connected: true };
+    const result = await connectGoogleDrive();
+    return { connected: true, email: result.email };
   },
 
   [MessageType.BACKUP_TO_DRIVE]: async () => {

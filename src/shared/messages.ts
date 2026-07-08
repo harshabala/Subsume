@@ -1,4 +1,8 @@
 import { ExtensionMessage, ExtensionResponse, MessageType } from './types';
+import { logDiagnostic } from './diagnosticLog';
+
+/** Interactive Google OAuth can take a long time — UI sendMessage must match. */
+export const CONNECT_GOOGLE_DRIVE_TIMEOUT_MS = 120_000;
 
 /**
  * Send a typed message from content script or UI to the background service worker.
@@ -10,22 +14,30 @@ export function sendMessage<TReq, TRes>(
 ): Promise<ExtensionResponse<TRes>> {
   return new Promise((resolve, reject) => {
     const timeoutId = setTimeout(() => {
-      reject(new Error(`Message ${type} timed out after ${timeoutMs}ms`));
+      const err = `Message ${type} timed out after ${timeoutMs}ms`;
+      logDiagnostic('error', 'ui.sendMessage', err, `type=${type}`);
+      reject(new Error(err));
     }, timeoutMs);
 
     const message: ExtensionMessage<TReq> = { type, payload };
     chrome.runtime.sendMessage(message, (response: ExtensionResponse<TRes> | undefined) => {
       clearTimeout(timeoutId);
       if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message));
+        const err = chrome.runtime.lastError.message;
+        logDiagnostic('error', 'ui.sendMessage', err, `type=${type}`);
+        reject(new Error(err));
         return;
       }
       if (!response) {
-        reject(new Error(`Message ${type} received no response`));
+        const err = `Message ${type} received no response`;
+        logDiagnostic('error', 'ui.sendMessage', err);
+        reject(new Error(err));
         return;
       }
       if (!response.success) {
-        reject(new Error(response.error ?? `Message ${type} failed`));
+        const err = response.error ?? `Message ${type} failed`;
+        logDiagnostic('error', 'ui.sendMessage', err, `type=${type}`);
+        reject(new Error(err));
         return;
       }
       resolve(response);
@@ -72,6 +84,7 @@ export function createMessageRouter(handlers: MessageHandlerMap): void {
 
       if (!isExtensionOrigin && !ALLOWED_CONTENT_SCRIPT_MESSAGES.has(message.type)) {
         console.warn(`[Subsume] Blocked unauthorized message type ${message.type} from origin ${sender.url}`);
+        logDiagnostic('warn', 'bg.router', `Blocked message ${message.type}`, sender.url ?? '');
         sendResponse({
           success: false,
           error: `Unauthorized message type for this origin: ${message.type}`,
@@ -82,6 +95,7 @@ export function createMessageRouter(handlers: MessageHandlerMap): void {
       const handler = handlers[message.type];
 
       if (!handler) {
+        logDiagnostic('warn', 'bg.router', `Unknown message type: ${message.type}`);
         sendResponse({
           success: false,
           error: `Unknown message type: ${message.type}`,
@@ -89,19 +103,20 @@ export function createMessageRouter(handlers: MessageHandlerMap): void {
         return false;
       }
 
-      // Handle async responses
       const result = handler(message.payload, sender);
 
       if (result instanceof Promise) {
         result
           .then((data) => sendResponse({ success: true, data }))
-          .catch((err) =>
+          .catch((err) => {
+            const msg = err instanceof Error ? err.message : String(err);
+            logDiagnostic('error', 'bg.handler', msg, `type=${message.type}`);
             sendResponse({
               success: false,
-              error: err instanceof Error ? err.message : String(err),
-            })
-          );
-        return true; // Keep the message channel open for async response
+              error: msg,
+            });
+          });
+        return true;
       }
 
       sendResponse({ success: true, data: result });

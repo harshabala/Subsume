@@ -95,11 +95,12 @@ export function Alerts() {
 
   const handleCreate = async () => {
     if (!form.name.trim()) {
-      alert('Please enter an alert name.');
+      setActionError('Please enter an alert name.');
       return;
     }
 
     setSaving(true);
+    setActionError(null);
     try {
       const res = await sendMessage<CreateWatchAlertRequest, WatchAlert>(
         MessageType.CREATE_WATCH_ALERT,

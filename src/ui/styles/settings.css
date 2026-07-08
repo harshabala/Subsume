@@ -758,6 +758,16 @@
   border-radius: 4px;
   cursor: pointer;
   transition: border-color 250ms ease, background 250ms ease;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  appearance: none;
+}
+
+.discovery-feed-card:focus-visible {
+  outline: 2px solid var(--border-hero);
+  outline-offset: 2px;
 }
 
 .discovery-feed-card:hover {
@@ -839,6 +849,7 @@
 }
 
 .discovery-feed-card-title {
+  display: block;
   font-family: var(--font-editorial);
   font-size: 20px;
   font-weight: 400;

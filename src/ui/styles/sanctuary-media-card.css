@@ -1,0 +1,27 @@
+/* Keyboard-accessible media cards (no nested buttons) */
+.sanctuary-media-card--openable .sanctuary-media-card-open {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sanctuary-media-card--openable .sanctuary-media-card-open:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm, 4px);
+}
+
+.sanctuary-media-card .sanctuary-card-actions {
+  padding: 0 12px 12px;
+}
+
+.sanctuary-media-card--openable .sanctuary-card-content {
+  padding-bottom: 0;
+}

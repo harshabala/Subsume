@@ -1,7 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { logger } from '@/shared/logger';
-import { Logs } from '@/ui/pages/Logs';
-import { h, render } from 'preact';
 
 describe('Logger Stability & Polish', () => {
   let storedLogs: any[] = [];
@@ -119,52 +117,5 @@ describe('Logger Stability & Polish', () => {
     expect(typeof persistedDetails).toBe('string');
     expect((persistedDetails as string).length).toBeLessThanOrEqual(201);
     expect(persistedDetails).toContain('…');
-  });
-
-  test('Logs page renders correct badge styles for info, warn, and error levels', async () => {
-    storedLogs = [
-      { timestamp: 1000, level: 'info', message: 'info message' },
-      { timestamp: 2000, level: 'warn', message: 'warn message' },
-      { timestamp: 3000, level: 'error', message: 'error message' }
-    ];
-
-    (chrome as any).storage = {
-      local: {
-        get: vi.fn().mockImplementation((key: string, cb?: any) => {
-          const res = { system_logs: storedLogs };
-          if (cb && typeof cb === 'function') cb(res);
-          return Promise.resolve(res);
-        }),
-        set: vi.fn().mockResolvedValue(undefined),
-      },
-      onChanged: {
-        addListener: vi.fn(),
-        removeListener: vi.fn(),
-      },
-    };
-
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    render(h(Logs, null), container);
-
-    await new Promise((r) => setTimeout(r, 50));
-
-    const badges = Array.from(container.querySelectorAll('tbody tr td:nth-child(2) span')) as HTMLElement[];
-    expect(badges).toHaveLength(3);
-
-    const errorBadge = badges.find(b => b.textContent === 'ERROR');
-    const warnBadge = badges.find(b => b.textContent === 'WARN');
-    const infoBadge = badges.find(b => b.textContent === 'INFO');
-
-    expect(errorBadge).toBeDefined();
-    expect(warnBadge).toBeDefined();
-    expect(infoBadge).toBeDefined();
-
-    expect(errorBadge!.classList.contains('log-level-badge')).toBe(true);
-    expect(errorBadge!.classList.contains('error')).toBe(true);
-    expect(warnBadge!.classList.contains('warn')).toBe(true);
-    expect(infoBadge!.classList.contains('info')).toBe(true);
-
-    document.body.removeChild(container);
   });
 });

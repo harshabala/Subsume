@@ -10,7 +10,6 @@ import { Search } from './pages/Search';
 import { Stats } from './pages/Stats';
 import { People } from './pages/People';
 import { Alerts } from './pages/Alerts';
-import { Logs } from './pages/Logs';
 import { PoeticCaptureCanvas } from './components/PoeticCaptureCanvas';
 import { sendMessage } from '../shared/messages';
 import { MessageType, UserPreferences, LibraryItem, MediaItem, PersonItem } from '../shared/types';
@@ -18,6 +17,8 @@ import { usePrefetch, prefetchPage, prefetchProps, type Page } from './hooks/use
 import { applyThemePreference, applyCinemaAtmosphere, watchSystemTheme } from '../shared/theme';
 import { FilmGrain } from './components/FilmGrain';
 import { ensureDemoLibraryIfEmpty } from './lib/ensureDemoLibrary';
+import { useNotice } from './components/NoticeProvider';
+import { formatUserError } from './utils/formatUserError';
 import './styles/sidebar.css';
 import './styles/app-nav.css';
 
@@ -39,7 +40,6 @@ const EXPLORE_NAV: NavItem[] = [
   { key: 'people', label: 'Filmmakers', icon: 'movie' },
   { key: 'stats', label: 'Stats', icon: 'bar_chart' },
   { key: 'alerts', label: 'Alerts', icon: 'notifications' },
-  { key: 'logs', label: 'Logs', icon: 'description' },
 ];
 
 const PRIMARY_NAV: NavItem[] = [
@@ -51,6 +51,7 @@ const PRIMARY_NAV: NavItem[] = [
 function getInitialPage(): Page {
   const page = new URLSearchParams(window.location.search).get('page');
   if (page === 'alerts') return 'alerts';
+  if (page === 'logs') return 'settings';
   return 'home';
 }
 
@@ -63,6 +64,7 @@ function NavIcon({ item }: { item: NavItem }) {
 }
 
 export function App() {
+  const { showNotice } = useNotice();
   const { prefetchPageOnMount } = usePrefetch();
   const [currentPage, setCurrentPage] = useState<Page>(getInitialPage);
   const [captureMediaId, setCaptureMediaId] = useState<string | null>(() => {
@@ -75,12 +77,25 @@ export function App() {
   const [prefs, setPrefs] = useState<UserPreferences | null>(null);
   const [stats, setStats] = useState<LibraryStats>({ movieCount: 0, tvCount: 0 });
   const [peopleCount, setPeopleCount] = useState(0);
+  const [navMenuOpen, setNavMenuOpen] = useState(false);
   const initialPrefetchDone = useRef(false);
 
   const goToPage = (page: Page) => {
     setCurrentPage(page);
     prefetchPage(page);
+    setNavMenuOpen(false);
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('page') === 'logs') {
+      setCurrentPage('settings');
+      window.location.hash = 'diagnostics';
+      const clean = new URL(window.location.href);
+      clean.searchParams.set('page', 'settings');
+      window.history.replaceState({}, '', clean.pathname + clean.search + '#diagnostics');
+    }
+  }, []);
 
   useEffect(() => {
     sendMessage<Record<string, unknown>, UserPreferences>(MessageType.GET_PREFERENCES, {}).then((res) => {
@@ -127,6 +142,15 @@ export function App() {
     return () => chrome.runtime.onMessage.removeListener(handleMessage);
   }, []);
 
+  useEffect(() => {
+    if (!navMenuOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setNavMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [navMenuOpen]);
+
   const completeOnboarding = async () => {
     if (!prefs) return;
     const newPrefs = { ...prefs, onboardingComplete: true };
@@ -135,7 +159,7 @@ export function App() {
       setPrefs(newPrefs);
     } catch (err) {
       console.error('[Subsume] Failed to save onboarding completion:', err);
-      alert('Failed to complete onboarding: ' + (err instanceof Error ? err.message : String(err)));
+      showNotice(`Failed to complete onboarding: ${formatUserError(err)}`, 'error');
     }
   };
 
@@ -189,8 +213,6 @@ export function App() {
         return <NewReleases />;
       case 'alerts':
         return <Alerts />;
-      case 'logs':
-        return <Logs />;
       case 'settings':
         return <Settings />;
     }
@@ -215,6 +237,16 @@ export function App() {
               </button>
             ))}
           </div>
+          <button
+            type="button"
+            className="nav-menu-toggle"
+            aria-label="Open navigation menu"
+            aria-expanded={navMenuOpen}
+            aria-controls="app-side-menu"
+            onClick={() => setNavMenuOpen(true)}
+          >
+            <span className="material-symbols-outlined" aria-hidden="true">menu</span>
+          </button>
         </nav>
         <nav className="app-subnav" aria-label="Explore">
           {EXPLORE_NAV.map((item) => (
@@ -232,6 +264,63 @@ export function App() {
           ))}
         </nav>
       </header>
+
+      {navMenuOpen && (
+        <div
+          className="side-nav-backdrop app-mobile-nav-layer"
+          role="presentation"
+          onClick={() => setNavMenuOpen(false)}
+        />
+      )}
+      <aside
+        id="app-side-menu"
+        className={`side-menu-drawer app-mobile-nav-layer ${navMenuOpen ? 'open' : ''}`}
+        aria-hidden={!navMenuOpen}
+      >
+        <div className="side-menu-header">
+          <span className="side-menu-title">Navigate</span>
+          <button
+            type="button"
+            className="side-menu-close"
+            aria-label="Close navigation menu"
+            onClick={() => setNavMenuOpen(false)}
+          >
+            <span className="material-symbols-outlined" aria-hidden="true">close</span>
+          </button>
+        </div>
+        <div className="side-menu-content">
+          <div className="side-menu-section">
+            <div className="side-menu-section-label">Primary</div>
+            {PRIMARY_NAV.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                className={`side-menu-item ${currentPage === item.key ? 'active' : ''}`}
+                onClick={() => goToPage(item.key)}
+                {...prefetchProps(item.key)}
+              >
+                <NavIcon item={item} />
+                <span className="side-menu-label">{item.label}</span>
+              </button>
+            ))}
+          </div>
+          <div className="side-menu-section">
+            <div className="side-menu-section-label">Explore</div>
+            {EXPLORE_NAV.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                className={`side-menu-item ${currentPage === item.key ? 'active' : ''}`}
+                onClick={() => goToPage(item.key)}
+                {...prefetchProps(item.key)}
+              >
+                <span className="material-symbols-outlined side-menu-roman" aria-hidden="true">{item.icon}</span>
+                <span className="side-menu-label">{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </aside>
 
       <main className="main-content">
         {renderPage()}

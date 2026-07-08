@@ -14,11 +14,14 @@ import {
   DiscoveryFeedItem,
 } from '@/shared/types';
 import { DetailModal } from '../components/DetailModal';
+import { SanctuaryMediaCard } from '../components/SanctuaryMediaCard';
+import { DiscoveryFeedCard } from '../components/DiscoveryFeedCard';
 import { PlatformChips } from '../components/PlatformChips';
 import { EmotionalWeatherChart } from '../components/EmotionalWeatherChart';
 import { getEmotionalSpectrum, hasEmotionalData } from '@/shared/emotions';
 import { getPlatformNameById } from '@/shared/platforms';
 import '../styles/discovery-search.css';
+import '../styles/discovery-layout.css';
 import { ensureDemoLibraryIfEmpty } from '../lib/ensureDemoLibrary';
 
 interface JoinedItem {
@@ -69,19 +72,6 @@ function feedItemToDigestPick(item: DiscoveryFeedItem): DigestPick {
   };
 }
 
-function sourceLabel(source: DiscoveryFeedItem['source']): string {
-  switch (source) {
-    case 'trakt':
-      return 'Trending';
-    case 'tvmaze':
-      return 'Premiere';
-    case 'wikidata':
-      return 'Spotlight';
-    default:
-      return 'Discovery';
-  }
-}
-
 const DISCOVERY_TYPE_FILTERS: { value: MediaType | ''; label: string }[] = [
   { value: '', label: 'All' },
   { value: 'movie', label: 'Films' },
@@ -90,11 +80,35 @@ const DISCOVERY_TYPE_FILTERS: { value: MediaType | ''; label: string }[] = [
 
 const SEARCH_DEBOUNCE_MS = 350;
 
-const SIMULATED_POSTS = [
-  { title: "The Elegance of Wong Kar-wai's Frames", excerpt: "Time is a recurring motif in the cinema of Wong Kar-wai. It is felt in the ticking clocks of Hong Kong, in the slow-motion glances across narrow corridors..." },
-  { title: "Neon Melancholy and Nostalgia", excerpt: "What is it about neon lighting that evokes such deep nostalgia? Perhaps it is the way it cuts through the obsidian night, illuminating faces but leaving eyes in shadow..." },
-  { title: "The Silence after the Dialogue Stops", excerpt: "In the most profound films, the dialogue is just a bridge between silences. The true reflection happens when the screen fades to black and the waltz lingers..." }
-];
+interface CataloguePulseItem {
+  id: string;
+  label: string;
+  value: number | string;
+  onClick?: () => void;
+}
+
+function DiscoveryCataloguePulse({ items }: { items: CataloguePulseItem[] }) {
+  if (items.length === 0) return null;
+  return (
+    <ul className="discovery-catalogue-pulse" aria-label="Your catalogue at a glance">
+      {items.map((item) => (
+        <li key={item.id} style={{ display: 'contents' }}>
+          {item.onClick ? (
+            <button type="button" className="discovery-pulse-item" onClick={item.onClick}>
+              <span className="discovery-pulse-value">{item.value}</span>
+              <span className="discovery-pulse-label">{item.label}</span>
+            </button>
+          ) : (
+            <div className="discovery-pulse-item discovery-pulse-item--static">
+              <span className="discovery-pulse-value">{item.value}</span>
+              <span className="discovery-pulse-label">{item.label}</span>
+            </div>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export function Home({ onNavigate, onOpenCapture }: HomeProps) {
   const [loading, setLoading] = useState(true);
@@ -120,6 +134,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
   const [feedError, setFeedError] = useState<string | null>(null);
   const [libraryItems, setLibraryItems] = useState<JoinedItem[]>([]);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const feedSectionRef = useRef<HTMLElement | null>(null);
 
   const hydrateDigestPicks = async (digest: WeeklyDigest) => {
     const items = digest.items.slice(0, 12);
@@ -376,19 +391,48 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
     .sort((a, b) => b.library.updatedAt - a.library.updatedAt)
     .slice(0, 6);
 
+  const pulseItems: CataloguePulseItem[] = [
+    {
+      id: 'sanctuary',
+      label: 'In sanctuary',
+      value: loading ? '—' : libraryCount,
+      onClick: () => onNavigate('library'),
+    },
+    {
+      id: 'anticipated',
+      label: 'Anticipated',
+      value: loading ? '—' : toWatchCount,
+      onClick: () => onNavigate('library'),
+    },
+    {
+      id: 'reflected',
+      label: 'Reflected',
+      value: loading ? '—' : watchedCount,
+      onClick: () => onNavigate('library'),
+    },
+  ];
+
+  if (!loading && feedCount > 0) {
+    pulseItems.push({
+      id: 'feed',
+      label: 'Live feed items',
+      value: feedCount,
+      onClick: () => feedSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+    });
+  }
+
+  if (!loading && picks.length > 0) {
+    pulseItems.push({
+      id: 'picks',
+      label: 'Curated picks',
+      value: picks.length,
+      onClick: () => onNavigate('recommendations'),
+    });
+  }
+
   return (
     <div className="page-container sanctuary-page focus-pull-active">
-      {/* Blurred simulated blog background */}
-      <div className="simulated-blog-backdrop">
-        {SIMULATED_POSTS.map((post, idx) => (
-          <div key={idx} className="simulated-blog-post">
-            <div className="simulated-blog-title">{post.title}</div>
-            <p className="simulated-blog-excerpt">{post.excerpt}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Cinematic Lobby Header / Grid */}
+      <div className="discovery-ambient-layer" aria-hidden="true" />
       <div className="lobby-container">
         <div className="hero-poster-column">
           <div className="hero-poster-frame">
@@ -427,12 +471,9 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
           <span className="lobby-act">Act I</span>
           <h2 className="lobby-heading">Discovery</h2>
           <p className="lobby-desc">
-            Welcome to the entry hall of your sanctuary. Here, the cinema you encounter is catalogued not merely by metadata, but by the emotional imprint it leaves behind.
+            Welcome to the entry hall of your sanctuary. Search the archive, follow the live wire, and return to titles you have already reflected on.
           </p>
-          <div className="lobby-status-panel">
-            <span className="status-indicator"></span>
-            <span className="status-text">Quiet catalogue overlay while you browse</span>
-          </div>
+          <DiscoveryCataloguePulse items={pulseItems} />
         </div>
       </div>
 
@@ -482,49 +523,28 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
           <div className="discovery-search-results">
             <div className="discovery-search-results-grid">
               {searchResults.map((media) => (
-                <div
+                <SanctuaryMediaCard
                   key={media.id}
-                  className="sanctuary-media-card clickable"
-                  onClick={() => setSelectedMedia(media)}
-                >
-                  <div className="sanctuary-card-poster">
-                    {media.posterUrl ? (
-                      <img
-                        src={media.posterUrl}
-                        alt={media.canonicalTitle}
-                        className="sanctuary-poster-img"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="sanctuary-poster-placeholder">
-                        <span className="sanctuary-placeholder-title">{media.canonicalTitle}</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="sanctuary-card-content">
-                    <h4 className="sanctuary-card-title">{media.canonicalTitle}</h4>
+                  media={media}
+                  synopsis={
+                    media.overview
+                      ? media.overview.length > 100
+                        ? `${media.overview.slice(0, 97)}…`
+                        : media.overview
+                      : undefined
+                  }
+                  onOpen={setSelectedMedia}
+                  onAdd={handleAdd}
+                  added={addedIds.has(media.id)}
+                  addLabel="Add to library"
+                  addedLabel="Acquired"
+                  meta={
                     <div className="sanctuary-card-meta">
                       <span>{media.year || '—'}</span>
                       <span>{media.type === 'tv' ? 'Series' : 'Film'}</span>
                     </div>
-                    {media.overview && (
-                      <p className="sanctuary-card-synopsis">
-                        {media.overview.length > 100
-                          ? `${media.overview.slice(0, 97)}…`
-                          : media.overview}
-                      </p>
-                    )}
-                    <div className="sanctuary-card-actions">
-                      <button
-                        className="sanctuary-acquire-btn"
-                        disabled={addedIds.has(media.id)}
-                        onClick={(e) => { e.stopPropagation(); handleAdd(media); }}
-                      >
-                        {addedIds.has(media.id) ? 'Acquired' : 'Add to library'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                  }
+                />
               ))}
             </div>
           </div>
@@ -532,21 +552,28 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
       </section>
 
       {!loading && feedError && (
-        <div className="sanctuary-empty-plaque home-empty-notice" style={{ margin: '0 2rem 2rem' }}>
+        <div className="sanctuary-empty-plaque home-feed-notice">
           <span className="sanctuary-plaque-index">Feed Notice</span>
           <p className="sanctuary-plaque-text">{feedError}</p>
-          <button className="optical-button sm" style={{ marginTop: '1rem' }} onClick={() => loadDiscoveryFeed(true)}>
+          <button className="optical-button sm" onClick={() => loadDiscoveryFeed(true)}>
             Retry Discovery Feed
           </button>
         </div>
       )}
 
       {!loading && discoveryFeed && discoveryFeed.items.length > 0 && (
-        <section className="discovery-feed-section">
+        <section
+          id="discovery-live-feed"
+          ref={feedSectionRef}
+          className="discovery-feed-section"
+          aria-labelledby="discovery-feed-heading"
+        >
           <div className="discovery-feed-header">
             <div>
               <span className="discovery-feed-kicker">Live Wire</span>
-              <h3 className="discovery-feed-title">Discovery Feed</h3>
+              <h3 id="discovery-feed-heading" className="discovery-feed-title">
+                Discovery Feed
+              </h3>
               <p className="discovery-feed-desc">
                 Trending on Trakt and premieres from TVmaze — no API keys required
               </p>
@@ -558,45 +585,21 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
           </div>
           <div className="discovery-feed-list">
             {discoveryFeed.items.slice(0, 8).map((item) => (
-              <article
+              <DiscoveryFeedCard
                 key={item.id}
-                className="discovery-feed-card"
-                onClick={() => {
-                  const pick = feedItemToDigestPick(item);
+                item={item}
+                onSelect={(feedItem) => {
+                  const pick = feedItemToDigestPick(feedItem);
                   if (pick.media) setSelectedMedia(pick.media);
                 }}
-              >
-                <div className="discovery-feed-card-poster">
-                  {item.posterUrl ? (
-                    <img src={item.posterUrl} alt={item.title} loading="lazy" />
-                  ) : (
-                    <div className="discovery-feed-card-placeholder">{item.type === 'tv' ? 'TV' : 'Film'}</div>
-                  )}
-                </div>
-                <div className="discovery-feed-card-body">
-                  <div className="discovery-feed-card-top">
-                    <span className={`discovery-feed-source ${item.source}`}>{sourceLabel(item.source)}</span>
-                    <span className="discovery-feed-year">{item.year || '—'}</span>
-                  </div>
-                  <h4 className="discovery-feed-card-title">{item.title}</h4>
-                  <p className="discovery-feed-card-reason">{item.reason}</p>
-                  {item.rating != null && (
-                    <span className="discovery-feed-rating">★ {item.rating.toFixed(1)}</span>
-                  )}
-                </div>
-              </article>
+              />
             ))}
           </div>
         </section>
       )}
 
       {loading ? (
-        <div className="home-main-content" style={{ marginTop: '4rem' }}>
-          <div className="home-stat-grid">
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="skeleton skeleton-stat" style={{ animationDelay: `${i * 40}ms` }} />
-            ))}
-          </div>
+        <div className="home-main-content">
           <div className="home-skeleton-card-grid">
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="skeleton skeleton-card" style={{ animationDelay: `${i * 40}ms` }} />
@@ -604,13 +607,13 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
           </div>
         </div>
       ) : (
-        <div className="home-main-content" style={{ marginTop: '4rem' }}>
-          <section style={{ marginBottom: '2rem' }}>
+        <div className="home-main-content">
+          <section className="home-discovery-section">
             <EmotionalWeatherChart items={libraryItems.map((item) => item.library)} />
           </section>
 
           {recentlyReflected.length > 0 && (
-            <section style={{ marginBottom: '2rem' }}>
+            <section className="home-discovery-section">
               <div className="home-section-header">
                 <div>
                   <h3 className="home-section-title">Recently Reflected</h3>
@@ -633,6 +636,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
                           alt={media.canonicalTitle}
                           className="recently-reflected-poster"
                           loading="lazy"
+                          decoding="async"
                         />
                       ) : (
                         <div className="recently-reflected-poster" />
@@ -652,24 +656,6 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
               </div>
             </section>
           )}
-
-          <div className="home-stat-grid">
-            {[
-              { label: 'In Sanctuary', value: libraryCount, action: () => onNavigate('library') },
-              { label: 'Anticipated', value: toWatchCount, action: () => onNavigate('library') },
-              { label: 'Reflected', value: watchedCount, action: () => onNavigate('library') },
-              { label: 'In Feed', value: feedCount, action: () => {} },
-            ].map((stat) => (
-              <button
-                key={stat.label}
-                onClick={stat.action}
-                className="home-stat-btn"
-              >
-                <div className="home-stat-val">{stat.value}</div>
-                <div className="home-stat-lbl">{stat.label}</div>
-              </button>
-            ))}
-          </div>
 
           <section>
             <div className="home-section-header">
@@ -692,25 +678,12 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
             ) : (
               <div className="home-picks-grid">
                 {picks.map(({ media, explanation }) => (
-                  <div
+                  <SanctuaryMediaCard
                     key={media.id}
-                    className="sanctuary-media-card clickable"
-                    onClick={() => setSelectedMedia(media)}
-                  >
-                    <div className="sanctuary-card-poster">
-                      {media.posterUrl ? (
-                        <img src={media.posterUrl} alt={media.canonicalTitle} className="sanctuary-poster-img" loading="lazy" />
-                      ) : (
-                        <div className="sanctuary-poster-placeholder">
-                          <span className="sanctuary-placeholder-title">No Image</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="sanctuary-card-content">
-                      <h4 className="sanctuary-card-title">{media.canonicalTitle}</h4>
-                      <p className="sanctuary-card-synopsis">{explanation}</p>
-                    </div>
-                  </div>
+                    media={media}
+                    synopsis={explanation}
+                    onOpen={setSelectedMedia}
+                  />
                 ))}
               </div>
             )}
@@ -761,26 +734,37 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
                   const rating = media ? pickRating(media) : null;
                   const availability = platformsToAvailability(pick.platforms);
 
-                  return (
-                    <div
+                  return media ? (
+                    <SanctuaryMediaCard
                       key={pick.mediaId}
-                      className={`sanctuary-media-card ${media ? 'clickable' : 'default-cursor'}`}
-                      onClick={() => media && setSelectedMedia(media)}
-                    >
+                      media={media}
+                      title={pick.title}
+                      synopsis={pick.reason}
+                      onOpen={setSelectedMedia}
+                      onAdd={handleAdd}
+                      added={addedIds.has(media.id)}
+                      afterSynopsis={
+                        <div className="home-chips-wrap">
+                          <PlatformChips availability={availability} max={3} compact />
+                        </div>
+                      }
+                      meta={
+                        <div className="sanctuary-card-meta">
+                          <span>{pick.year}</span>
+                          {rating && <span>{rating}</span>}
+                        </div>
+                      }
+                    />
+                  ) : (
+                    <article key={pick.mediaId} className="sanctuary-media-card">
                       <div className="sanctuary-card-poster">
-                        {media?.posterUrl ? (
-                          <img src={media.posterUrl} alt={pick.title} className="sanctuary-poster-img" loading="lazy" />
-                        ) : (
-                          <div className="sanctuary-poster-placeholder">
-                            <span className="sanctuary-placeholder-title">No Image</span>
-                          </div>
-                        )}
+                        <div className="sanctuary-poster-placeholder">
+                          <span className="sanctuary-placeholder-title">No Image</span>
+                        </div>
                       </div>
                       <div className="sanctuary-card-content">
                         <h4 className="sanctuary-card-title">{pick.title}</h4>
-                        <p className="sanctuary-card-synopsis">
-                          {pick.reason}
-                        </p>
+                        <p className="sanctuary-card-synopsis">{pick.reason}</p>
                         <div className="home-chips-wrap">
                           <PlatformChips availability={availability} max={3} compact />
                         </div>
@@ -788,19 +772,8 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
                           <span>{pick.year}</span>
                           {rating && <span>{rating}</span>}
                         </div>
-                        {media && (
-                          <div className="sanctuary-card-actions">
-                            <button
-                              className="sanctuary-acquire-btn"
-                              disabled={addedIds.has(media.id)}
-                              onClick={(e) => { e.stopPropagation(); handleAdd(media); }}
-                            >
-                              {addedIds.has(media.id) ? 'Acquired' : 'Add to library'}
-                            </button>
-                          </div>
-                        )}
                       </div>
-                    </div>
+                    </article>
                   );
                 })}
               </div>

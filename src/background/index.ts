@@ -1,8 +1,9 @@
 import { createMessageRouter, MessageHandlerMap } from '@/shared/messages';
+import { logDiagnostic } from '@/shared/diagnosticLog';
 import { logger } from '@/shared/logger';
 import { setTmdbApiKey } from './tmdb';
 import { setOmdbApiKey } from './omdb';
-import { getPreferences } from './storage';
+import { getPreferences, mergeSeedCatalogIfVersionBehind } from './storage';
 import { setupLifecycleAndAlarms } from './events';
 
 import { libraryHandlers } from './handlers/library';
@@ -27,6 +28,9 @@ export { handlers };
 
 createMessageRouter(handlers);
 
+console.info('[Subsume] Extension ID (compare to Google OAuth Chrome client Item ID):', chrome.runtime.id);
+logDiagnostic('info', 'bg.startup', 'Background service worker started', `extensionId=${chrome.runtime.id}`);
+
 getPreferences()
   .then((prefs) => {
     if (prefs.tmdbApiKey) {
@@ -39,6 +43,10 @@ getPreferences()
   .catch((err) => {
     logger.error('[Subsume] Failed to initialize background API preferences:', err);
   });
+
+mergeSeedCatalogIfVersionBehind().catch((err) => {
+  logger.error('[Subsume] Seed catalogue merge failed:', err);
+});
 
 setupLifecycleAndAlarms();
 

@@ -181,6 +181,7 @@
   --danger-border: rgba(239, 68, 68, 0.25);
   --danger-bg-solid: hsl(0, 70%, 50%);
   --danger-on-fg: #ffffff;
+  --warning: #fbbf24;
   --warning-fg: rgb(255, 153, 0);
   --warning-bg: rgba(255, 153, 0, 0.1);
   --warning-border: rgba(255, 153, 0, 0.4);
@@ -567,30 +568,118 @@
   }
 }
 
-/* ─── Cinema Atmosphere Presets ─────────────────────────────────── */
-[data-atmosphere="sunset"] {
+/* ─── Cinema Atmosphere Presets (accent only in light; full tint in dark) ─ */
+html[data-theme='dark'][data-atmosphere='sunset'] {
   --app-bg: oklch(12% 0.015 45);
   --card-bg: oklch(16% 0.02 45);
   --card-border: rgba(255, 180, 100, 0.08);
   --primary: oklch(74% 0.16 55);
   --gold: var(--primary);
   --primary-hover: oklch(80% 0.18 55);
+  --hero-bg: var(--app-bg);
+  --nav-bg: oklch(14% 0.018 45 / 0.92);
+  --bg-base: var(--app-bg);
+  --fg-base: oklch(96% 0.01 45);
 }
 
-[data-atmosphere="emerald"] {
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme='light'])[data-atmosphere='sunset'] {
+    --app-bg: oklch(12% 0.015 45);
+    --card-bg: oklch(16% 0.02 45);
+    --card-border: rgba(255, 180, 100, 0.08);
+    --primary: oklch(74% 0.16 55);
+    --gold: var(--primary);
+    --primary-hover: oklch(80% 0.18 55);
+    --hero-bg: var(--app-bg);
+    --nav-bg: oklch(14% 0.018 45 / 0.92);
+    --bg-base: var(--app-bg);
+    --fg-base: oklch(96% 0.01 45);
+  }
+}
+
+html[data-theme='dark'][data-atmosphere='emerald'] {
   --app-bg: oklch(9% 0.008 165);
   --card-bg: oklch(13% 0.012 165);
   --card-border: rgba(100, 255, 180, 0.08);
   --primary: oklch(76% 0.12 160);
   --gold: var(--primary);
   --primary-hover: oklch(82% 0.14 160);
+  --hero-bg: var(--app-bg);
+  --nav-bg: oklch(11% 0.01 165 / 0.92);
+  --bg-base: var(--app-bg);
+  --fg-base: oklch(96% 0.01 165);
 }
 
-[data-atmosphere="french"] {
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme='light'])[data-atmosphere='emerald'] {
+    --app-bg: oklch(9% 0.008 165);
+    --card-bg: oklch(13% 0.012 165);
+    --card-border: rgba(100, 255, 180, 0.08);
+    --primary: oklch(76% 0.12 160);
+    --gold: var(--primary);
+    --primary-hover: oklch(82% 0.14 160);
+    --hero-bg: var(--app-bg);
+    --nav-bg: oklch(11% 0.01 165 / 0.92);
+    --bg-base: var(--app-bg);
+    --fg-base: oklch(96% 0.01 165);
+  }
+}
+
+html[data-theme='dark'][data-atmosphere='french'] {
   --app-bg: oklch(10% 0.01 285);
   --card-bg: oklch(14% 0.015 285);
   --card-border: rgba(180, 150, 255, 0.08);
   --primary: oklch(70% 0.22 340);
   --gold: var(--primary);
   --primary-hover: oklch(75% 0.24 340);
+  --hero-bg: var(--app-bg);
+  --nav-bg: oklch(12% 0.012 285 / 0.92);
+  --bg-base: var(--app-bg);
+  --fg-base: oklch(96% 0.01 285);
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme='light'])[data-atmosphere='french'] {
+    --app-bg: oklch(10% 0.01 285);
+    --card-bg: oklch(14% 0.015 285);
+    --card-border: rgba(180, 150, 255, 0.08);
+    --primary: oklch(70% 0.22 340);
+    --gold: var(--primary);
+    --primary-hover: oklch(75% 0.24 340);
+    --hero-bg: var(--app-bg);
+    --nav-bg: oklch(12% 0.012 285 / 0.92);
+    --bg-base: var(--app-bg);
+    --fg-base: oklch(96% 0.01 285);
+  }
+}
+
+[data-theme='light'][data-atmosphere='sunset'] {
+  --primary: oklch(52% 0.16 55);
+  --primary-hover: oklch(48% 0.17 55);
+  --card-border: rgba(180, 120, 60, 0.22);
+  --border-hero: hsla(35, 70%, 42%, 0.45);
+  --nav-bg: hsla(0, 0%, 100%, 0.92);
+  --app-bg: #f5f0e8;
+  --bg-base: #f5f0e8;
+  --fg-base: #1a1918;
+}
+
+[data-theme='light'][data-atmosphere='emerald'] {
+  --primary: oklch(48% 0.12 160);
+  --primary-hover: oklch(44% 0.13 160);
+  --card-border: rgba(60, 140, 100, 0.2);
+  --nav-bg: hsla(0, 0%, 100%, 0.92);
+  --app-bg: #f5f0e8;
+  --bg-base: #f5f0e8;
+  --fg-base: #1a1918;
+}
+
+[data-theme='light'][data-atmosphere='french'] {
+  --primary: oklch(48% 0.2 340);
+  --primary-hover: oklch(44% 0.21 340);
+  --card-border: rgba(120, 80, 160, 0.2);
+  --nav-bg: hsla(0, 0%, 100%, 0.92);
+  --app-bg: #f5f0e8;
+  --bg-base: #f5f0e8;
+  --fg-base: #1a1918;
 }

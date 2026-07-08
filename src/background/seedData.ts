@@ -1,30 +1,11 @@
 import { MediaItem, LibraryItem, PersonItem } from '../shared/types';
+import { INDIAN_HIGHLIGHT_MEDIA, libraryEntryForSeed } from './seedIndianHighlights';
+
+export const SEED_CATALOGUE_VERSION = 3;
+export const SEED_CATALOGUE_VERSION_KEY = 'subsume_seed_catalogue_version';
 
 export const SEED_MEDIA: MediaItem[] = [
-  {
-    id: 'seed_top_gun_maverick',
-    canonicalTitle: 'Top Gun: Maverick',
-    type: 'movie',
-    year: 2022,
-    genres: ['Action', 'Drama'],
-    ratings: [{ score: 8.3, provider: 'tmdb' }, { score: 9.6, provider: 'rt' }],
-    providers: [],
-    posterUrl: 'https://image.tmdb.org/t/p/w500/n0YuM4f5lvGAP6MAW2kBIzugXnc.jpg',
-    overview: 'After thirty years, Maverick pushes the envelope as a Navy test pilot.\n\n• Directed by: Joseph Kosinski\n• Starring: Tom Cruise, Miles Teller, Jennifer Connelly\n• Cinematography: Claudio Miranda\n• Music by: Harold Faltermeyer, Hans Zimmer',
-    wikidataDirectorBio: 'Joseph Kosinski'
-  },
-  {
-    id: 'seed_mi_fallout',
-    canonicalTitle: 'Mission: Impossible - Fallout',
-    type: 'movie',
-    year: 2018,
-    genres: ['Action', 'Adventure', 'Thriller'],
-    ratings: [{ score: 8.5, provider: 'tmdb' }, { score: 9.7, provider: 'rt' }],
-    providers: [],
-    posterUrl: 'https://image.tmdb.org/t/p/w500/AkJQpZp9WoNdj7pLYSj1L0RcMMN.jpg',
-    overview: 'Ethan Hunt and his IMF team race against time after a mission gone wrong.\n\n• Directed by: Christopher McQuarrie\n• Starring: Tom Cruise, Henry Cavill, Ving Rhames, Simon Pegg\n• Cinematography: Rob Hardy\n• Music by: Lorne Balfe',
-    wikidataDirectorBio: 'Christopher McQuarrie'
-  },
+  ...INDIAN_HIGHLIGHT_MEDIA,
   {
     id: 'seed_nayakan',
     canonicalTitle: 'Nayakan',
@@ -288,15 +269,34 @@ export const SEED_MEDIA: MediaItem[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/tFXcEccSQMf3lfhfXKSU9iRBpa3.jpg',
     overview: 'A young man visits his white girlfriend\'s family estate, uncovering dark secrets.\n\n• Directed by: Jordan Peele\n• Starring: Daniel Kaluuya, Allison Williams, Bradley Whitford\n• Cinematography: Toby Oliver\n• Music by: Michael Abels',
     wikidataDirectorBio: 'Jordan Peele'
+  },
+  {
+    id: 'seed_top_gun_maverick',
+    canonicalTitle: 'Top Gun: Maverick',
+    type: 'movie',
+    year: 2022,
+    genres: ['Action', 'Drama'],
+    ratings: [{ score: 8.3, provider: 'tmdb' }, { score: 9.6, provider: 'rt' }],
+    providers: [],
+    posterUrl: 'https://image.tmdb.org/t/p/w500/n0YuM4f5lvGAP6MAW2kBIzugXnc.jpg',
+    overview: 'After thirty years, Maverick pushes the envelope as a Navy test pilot.\n\n• Directed by: Joseph Kosinski\n• Starring: Tom Cruise, Miles Teller, Jennifer Connelly',
+    wikidataDirectorBio: 'Joseph Kosinski'
+  },
+  {
+    id: 'seed_mi_fallout',
+    canonicalTitle: 'Mission: Impossible - Fallout',
+    type: 'movie',
+    year: 2018,
+    genres: ['Action', 'Adventure', 'Thriller'],
+    ratings: [{ score: 8.5, provider: 'tmdb' }, { score: 9.7, provider: 'rt' }],
+    providers: [],
+    posterUrl: 'https://image.tmdb.org/t/p/w500/AkJQpZp9WoNdj7pLYSj1L0RcMMN.jpg',
+    overview: 'Ethan Hunt and his IMF team race against time after a mission gone wrong.\n\n• Directed by: Christopher McQuarrie\n• Starring: Tom Cruise, Henry Cavill',
+    wikidataDirectorBio: 'Christopher McQuarrie'
   }
 ];
 
-export const SEED_LIBRARY: LibraryItem[] = SEED_MEDIA.map((m, idx) => ({
-  mediaId: m.id,
-  status: 'to-watch',
-  addedAt: Date.now() - idx * 24 * 60 * 60 * 1000,
-  updatedAt: Date.now() - idx * 24 * 60 * 60 * 1000
-}));
+export const SEED_LIBRARY: LibraryItem[] = SEED_MEDIA.map((m, idx) => libraryEntryForSeed(m, idx));
 
 export const SEED_PEOPLE: PersonItem[] = [
   {
@@ -317,7 +317,7 @@ export const SEED_PEOPLE: PersonItem[] = [
     profileImageUrl: 'https://image.tmdb.org/t/p/w300_and_h450_bestv2/jzS2umMVOZ73IFEH6X0M7Os02Ji.jpg',
     biography: 'Kamal Haasan (born November 7, 1954) is a legendary Indian actor, director, screenwriter, and producer working primarily in Tamil cinema. Widely regarded as one of the greatest actors in Indian cinema history, he is celebrated for his incredible versatility, method acting, and technical innovations.',
     knownFor: ['Nayakan', 'Anbe Sivam', 'Indian'],
-    filmographyIds: ['seed_nayakan', 'seed_anbe_sivam'],
+    filmographyIds: ['seed_indian', 'seed_mudhalvan', 'seed_nayakan', 'seed_anbe_sivam', 'seed_vikram'],
     followedAt: Date.now(),
     lastSyncedAt: Date.now()
   },
@@ -372,7 +372,7 @@ export const SEED_PEOPLE: PersonItem[] = [
     profileImageUrl: 'https://image.tmdb.org/t/p/w300_and_h450_bestv2/qQLZgSwskFW7VxSVfyZMV933jUU.jpg',
     biography: 'Mohanlal Vishwanathan (born May 21, 1960) is a legendary Indian actor, producer, and singer who works primarily in Malayalam cinema. Spanning over four decades, he is widely regarded as one of the finest natural actors in the history of cinema, famous for Kireedam, Manichitrathazhu, and Spadikam.',
     knownFor: ['Kireedam', 'Manichitrathazhu', 'Spadikam'],
-    filmographyIds: ['seed_iruvar', 'seed_kireedam', 'seed_manichitrathazhu', 'seed_spadikam'],
+    filmographyIds: ['seed_iruvar', 'seed_kireedam', 'seed_manichitrathazhu', 'seed_spadikam', 'seed_drishyam_ml'],
     followedAt: Date.now(),
     lastSyncedAt: Date.now()
   },
