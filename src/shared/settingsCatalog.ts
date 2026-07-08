@@ -20,13 +20,13 @@ export const SETTINGS_SECTIONS: SettingsSectionMeta[] = [
     id: 'appearance',
     title: 'Look & atmosphere',
     description:
-      'Theme (dark, light, or system) and colour atmosphere presets. Changes preview immediately; use Engrave Settings at the bottom to save.',
+      'Theme (dark, light, or system) and colour atmosphere presets. Changes preview immediately; use Save settings at the bottom to keep them.',
   },
   {
     id: 'taste',
     title: 'Taste & platforms',
     description:
-      'Favourite genres and streaming platforms shape discovery feeds, weekly digests, and rule-based recommendations — not your private notes.',
+      'Favourite genres and streaming platforms shape discovery feeds, weekly digests, and rule-based recommendations. They do not change your private notes.',
   },
   {
     id: 'discovery',
@@ -50,7 +50,7 @@ export const SETTINGS_SECTIONS: SettingsSectionMeta[] = [
     id: 'browsing',
     title: 'Browsing & overlays',
     description:
-      'How Subsume behaves on streaming and review sites: hover cards, poster badges, screenplay dock, and domains where scanning is turned off.',
+      'How Subsume behaves on streaming and review sites: hover cards, poster badges, reflection dock, and sites where overlays are turned off.',
   },
   {
     id: 'data',

@@ -214,11 +214,11 @@ export function FilmographyView({ person: initialPerson, onBack, onUnfollow }: F
       {/* Topbar */}
       <div className="filmography-topbar">
         <button onClick={onBack} className="filmography-filter-btn">
-          ← Archival Index
+          ← Back to filmmakers
         </button>
 
         <button onClick={(e) => { onUnfollow(e); onBack(); }} className="filmography-filter-btn rescind">
-          Rescind Surveillance (Unfollow)
+          Unfollow
         </button>
       </div>
 
@@ -247,7 +247,7 @@ export function FilmographyView({ person: initialPerson, onBack, onUnfollow }: F
           <div className="filmography-bio-header">
             <div>
               <span className="filmography-bio-role">
-                {person.role || 'Auteur Sanctum'}
+                {person.role || 'Filmmaker'}
               </span>
               <h2 className="filmography-bio-name">{person.name}</h2>
             </div>
@@ -259,7 +259,7 @@ export function FilmographyView({ person: initialPerson, onBack, onUnfollow }: F
                 disabled={loading}
                 className="filmography-text-btn"
               >
-                Re-Index
+                Refresh filmography
               </button>
             </div>
           </div>
@@ -273,12 +273,12 @@ export function FilmographyView({ person: initialPerson, onBack, onUnfollow }: F
                 onClick={() => setBioExpanded(!bioExpanded)}
                 className="filmography-text-btn"
               >
-                {bioExpanded ? 'Fold Message' : 'Expand Message'}
+                {bioExpanded ? 'Show less' : 'Read more'}
               </button>
             </div>
           ) : (
             <p className="filmography-bio-empty">
-              No biographical dossier recorded.
+              No biography on file yet.
             </p>
           )}
 
@@ -289,7 +289,7 @@ export function FilmographyView({ person: initialPerson, onBack, onUnfollow }: F
                 disabled={addingAll || addedAll}
                 className="filmography-add-all-btn"
               >
-                {addingAll ? 'Inscribing Ledger...' : addedAll ? 'Sanctuary Ledger Updated' : `Enroll all ${notInLibraryCount} works into sanctuary`}
+                {addingAll ? 'Adding to archive…' : addedAll ? 'All added to archive' : `Add all ${notInLibraryCount} to archive`}
               </button>
             </div>
           )}
@@ -314,7 +314,7 @@ export function FilmographyView({ person: initialPerson, onBack, onUnfollow }: F
         </div>
 
         <div className="filmography-sort-group">
-          <span>Projection Ordering:</span>
+          <span>Sort by:</span>
           <select
             value={sortBy}
             onChange={(e) => setSortBy((e.target as HTMLSelectElement).value as typeof sortBy)}
@@ -322,18 +322,18 @@ export function FilmographyView({ person: initialPerson, onBack, onUnfollow }: F
           >
             <option value="year-desc">Chronological (Latest)</option>
             <option value="year-asc">Chronological (Earliest)</option>
-            <option value="rating">Critical Resonance</option>
-            <option value="title">Message A–Z</option>
+            <option value="rating">Rating</option>
+            <option value="title">Title A–Z</option>
           </select>
         </div>
       </div>
 
       {/* Film Strip Presentation Grid */}
       {loading && sortedItems.length === 0 ? (
-        <div className="filmography-grid-empty">Inspecting archival reel...</div>
+        <div className="filmography-grid-empty">Loading filmography…</div>
       ) : sortedItems.length === 0 ? (
         <div className="filmography-grid-empty">
-          No cinematic frames match current projection specifications.
+          No titles match these filters.
         </div>
       ) : (
         <div className="filmography-grid">

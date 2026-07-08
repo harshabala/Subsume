@@ -176,7 +176,7 @@ export function People() {
           <span className="sanctuary-subtitle">Filmmakers</span>
         </div>
         <h2 className="sanctuary-title">Filmmakers</h2>
-        <p className="sanctuary-description">Follow directors, actors, and writers to track their entire body of work across cinematic history.</p>
+        <p className="sanctuary-description">Follow the filmmakers you care about and keep their full repertoire in your private archive.</p>
       </header>
 
       <div className="people-sanctuary-tabs">
@@ -190,7 +190,7 @@ export function People() {
           onClick={() => setActiveView('search')}
           className={`people-sanctuary-tab${activeView === 'search' ? ' active' : ''}`}
         >
-          Catalogue Enquiry
+          Search catalogue
         </button>
       </div>
 
@@ -199,14 +199,14 @@ export function People() {
           <div>
             {loadingFollowing && following.length === 0 ? (
               <div className="sanctuary-loading-text">
-                Consulting auteur registry...
+                Loading filmmakers…
               </div>
             ) : following.length === 0 ? (
               <div className="sanctuary-empty-plaque">
                 <span className="sanctuary-plaque-index">Registry Index 00</span>
-                <h3 className="sanctuary-plaque-title">No auteurs enrolled</h3>
+                <h3 className="sanctuary-plaque-title">No filmmakers followed yet</h3>
                 <p className="sanctuary-plaque-text">
-                  Enquire the global catalogue to enroll directors, cinematographers, or actors into your private sanctuary.
+                  Search the catalogue to follow directors, cinematographers, actors, and other luminaries in your archive.
                 </p>
               </div>
             ) : (
@@ -228,7 +228,7 @@ export function People() {
                       <button
                         onClick={(e) => handleUnfollow(person.id, e)}
                         className="people-sanctuary-unfollow"
-                        title="Rescind enrollment"
+                        title="Unfollow"
                       >
                         ×
                       </button>
@@ -261,7 +261,7 @@ export function People() {
 
                       {person.lastSyncedAt === 0 && (
                         <span className="people-sanctuary-sync">
-                          Synchronizing...
+                          Syncing filmography…
                         </span>
                       )}
                     </div>
@@ -274,13 +274,13 @@ export function People() {
           <div className="people-search-stack">
             {!hasApiKey && (
               <div className="people-api-notice">
-                Provide TMDb archival credential in Settings to conduct global auteur enquiries.
+                Add your TMDb API key in Settings to search the catalogue.
               </div>
             )}
 
             <input
               type="text"
-              placeholder="Enquire director, actor, cinematographer, composer..."
+              placeholder="Search director, actor, cinematographer, composer…"
               value={query}
               onInput={(e) => setQuery(e.currentTarget.value)}
               disabled={!hasApiKey}
@@ -288,7 +288,7 @@ export function People() {
             />
 
             {searchLoading ? (
-              <div className="sanctuary-loading-text sm">Enquiring archives...</div>
+              <div className="sanctuary-loading-text sm">Searching catalogue…</div>
             ) : searchResults.length > 0 ? (
               <div className="people-search-results">
                 {searchResults.map((person) => {
@@ -353,7 +353,7 @@ export function People() {
                           disabled={isFollowed}
                           className={`people-enroll-btn${isFollowed ? ' enrolled' : ' active'}`}
                         >
-                          {isFollowed ? 'Enrolled ✓' : 'Follow'}
+                          {isFollowed ? 'Following ✓' : 'Follow'}
                         </button>
                       </div>
                     </div>
@@ -361,7 +361,7 @@ export function People() {
                 })}
               </div>
             ) : query.trim() ? (
-              <div className="sanctuary-empty-plaque">No auteurs located matching enquiry.</div>
+              <div className="sanctuary-empty-plaque">No filmmakers matched your search.</div>
             ) : null}
           </div>
         )}

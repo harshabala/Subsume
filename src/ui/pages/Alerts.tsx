@@ -152,7 +152,7 @@ export function Alerts() {
           <span className="sanctuary-subtitle">Alerts</span>
         </div>
         <h2 className="sanctuary-title">Watch Alerts</h2>
-        <p className="sanctuary-description">Configure telegraphic surveillance criteria for forthcoming sanctuary releases.</p>
+        <p className="sanctuary-description">Set a programme of genres, platforms, and keywords. We will notify you when new releases fit your marquee.</p>
       </header>
 
       {actionError && (
@@ -167,20 +167,20 @@ export function Alerts() {
             onClick={() => setShowForm((value) => !value)}
             className={showForm ? 'btn-sanctuary-restraint sm' : 'btn-sanctuary-gold sm'}
           >
-            {showForm ? 'Cancel Dispatch' : 'Create alert'}
+            {showForm ? 'Cancel' : 'Create alert'}
           </button>
         </div>
 
         {showForm && (
           <div className="alerts-form-panel">
             <h3 className="alerts-form-heading">
-              Telegraphic Dispatch Specification
+              New watch alert
             </h3>
 
             <div className="alerts-form-fields">
               <div>
                 <label className="alerts-field-label">
-                  Surveillance Title / Level
+                  Alert name
                 </label>
                 <input
                   type="text"
@@ -195,7 +195,7 @@ export function Alerts() {
 
               <div>
                 <label className="alerts-field-label">
-                  Format Scope
+                  Format
                 </label>
                 <select
                   value={form.type || 'both'}
@@ -215,7 +215,7 @@ export function Alerts() {
 
               <div>
                 <label className="alerts-field-label">
-                  Target Genres
+                  Genres
                 </label>
                 <div className="alerts-chip-grid">
                   {AVAILABLE_GENRES.map((genre) => {
@@ -241,7 +241,7 @@ export function Alerts() {
 
               <div>
                 <label className="alerts-field-label">
-                  Monitored Platforms
+                  Platforms
                 </label>
                 <div className="alerts-chip-grid">
                   {AVAILABLE_PLATFORMS.map((platform) => {
@@ -267,11 +267,11 @@ export function Alerts() {
 
               <div>
                 <label className="alerts-field-label">
-                  Message Keyword Filter (Optional)
+                  Keyword (optional)
                 </label>
                 <input
                   type="text"
-                  placeholder="Title inscription must include..."
+                  placeholder="Title must include…"
                   value={form.keyword || ''}
                   onInput={(e) =>
                     setForm({ ...form, keyword: (e.target as HTMLInputElement).value })
@@ -286,7 +286,7 @@ export function Alerts() {
                   disabled={saving}
                   className="btn-sanctuary-gold sm"
                 >
-                  {saving ? 'Engraving...' : 'Enroll Surveillance Alert'}
+                  {saving ? 'Saving…' : 'Create alert'}
                 </button>
               </div>
             </div>
@@ -295,14 +295,14 @@ export function Alerts() {
 
         {loading ? (
           <div className="alerts-loading">
-            Inspecting dispatch logs...
+            Loading alerts…
           </div>
         ) : alerts.length === 0 ? (
           <div className="sanctuary-empty-plaque">
-            <span className="sanctuary-plaque-index">Dispatch Index 00</span>
-            <h3 className="sanctuary-plaque-title">No surveillance configured</h3>
+            <span className="sanctuary-plaque-index">Programme index 00</span>
+            <h3 className="sanctuary-plaque-title">No alerts yet</h3>
             <p className="sanctuary-plaque-text">
-              Assemble a surveillance alert to receive telegraphic dispatches when new releases match your exact specifications.
+              Create an alert and we will let you know when new releases match your programme.
             </p>
           </div>
         ) : (
@@ -319,9 +319,9 @@ export function Alerts() {
                       {formatAlertCriteria(alert)}
                     </p>
                     <p className="alerts-card-meta">
-                      Last Enquiry: {formatTimestamp(alert.lastCheckedAt)}
+                      Last checked: {formatTimestamp(alert.lastCheckedAt)}
                       {alert.lastMatchAt
-                        ? ` · Last Resonance: ${formatTimestamp(alert.lastMatchAt)}`
+                        ? ` · Last match: ${formatTimestamp(alert.lastMatchAt)}`
                         : ''}
                     </p>
                   </div>
@@ -334,13 +334,13 @@ export function Alerts() {
                         onChange={() => handleToggleEnabled(alert)}
                         className="alerts-toggle-checkbox"
                       />
-                      Enrolled
+                      Active
                     </label>
                     <button
                       onClick={() => handleDelete(alert.id)}
                       className="btn-sanctuary-danger"
                     >
-                      Purge
+                      Delete
                     </button>
                   </div>
                 </div>

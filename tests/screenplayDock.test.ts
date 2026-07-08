@@ -37,7 +37,7 @@ describe('AuteurScreenplayDock (dock.ts)', () => {
     const shadow = dock.shadow!;
     const pill = shadow.querySelector('.dock-toggle-btn');
     expect(pill).not.toBeNull();
-    expect(pill?.textContent).toContain('✦ Reflection Dock');
+    expect(pill?.textContent).toContain('✦ Reflection dock');
     expect(shadow.querySelector('.dock-card')).toBeNull();
   });
 
@@ -51,7 +51,7 @@ describe('AuteurScreenplayDock (dock.ts)', () => {
     expect(dock.isExpanded).toBe(true);
     const card = dock.shadow!.querySelector('.dock-card');
     expect(card).not.toBeNull();
-    expect(dock.shadow!.querySelector('.dock-title')?.textContent).toContain('Auteur Reflection Dock');
+    expect(dock.shadow!.querySelector('.dock-title')?.textContent).toContain('Reflection dock');
     expect(dock.shadow!.querySelector('textarea')).not.toBeNull();
     expect(dock.shadow!.querySelector('.dock-save-btn')).not.toBeNull();
   });

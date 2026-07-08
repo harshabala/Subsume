@@ -186,7 +186,7 @@ export class AuteurScreenplayDock {
     header.className = 'dock-header';
     const title = document.createElement('span');
     title.className = 'dock-title';
-    title.textContent = 'Auteur Reflection Dock';
+    title.textContent = 'Reflection dock';
     const closeBtn = document.createElement('button');
     closeBtn.className = 'dock-collapse-btn';
     closeBtn.textContent = '\u2715';
@@ -196,11 +196,11 @@ export class AuteurScreenplayDock {
 
     const subtitle = document.createElement('div');
     subtitle.className = 'dock-subtitle';
-    subtitle.textContent = 'Poetic sanctuary reflection notes for this page';
+    subtitle.textContent = 'Notes for this page, saved to your archive';
 
     const textarea = document.createElement('textarea');
     textarea.className = 'dock-textarea';
-    textarea.placeholder = 'Record your reflections...';
+    textarea.placeholder = 'What stayed with you after this page?';
     void loadPageReflection(this.pageKey).then((notes) => {
       textarea.value = notes;
     }).catch((err) => {
@@ -211,7 +211,7 @@ export class AuteurScreenplayDock {
     footer.className = 'dock-footer';
     const saveBtn = document.createElement('button');
     saveBtn.className = 'dock-save-btn';
-    saveBtn.textContent = 'Save';
+    saveBtn.textContent = 'Save reflection';
     saveBtn.addEventListener('click', this.boundOnSave!);
     footer.appendChild(saveBtn);
 
@@ -283,7 +283,7 @@ export class AuteurScreenplayDock {
     if (!this.isExpandedState) {
       const btn = document.createElement('button');
       btn.className = 'dock-toggle-btn';
-      btn.textContent = '✦ Reflection Dock';
+      btn.textContent = '✦ Reflection dock';
       btn.addEventListener('click', this.boundOnToggle!);
       this.mountPoint.appendChild(btn);
     } else {

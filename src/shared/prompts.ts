@@ -62,7 +62,7 @@ export const CURATOR_JOURNEY_COPY = {
   steps: [
     'Subsume builds a taste profile from your sanctuary — watched titles, ratings, emotional recall, notes, followed filmmakers, and genres. Nothing leaves your browser except the prompt you send to your chosen LLM provider.',
     'On Recommendations, the curator reads that profile and suggests titles you have not logged yet, with a short reason tied to your history.',
-    'Weekly, a background alarm can run the same logic against new streaming releases and notify you when picks are ready (Settings → preserve LLM enabled + API key).',
+    'Weekly, a background check can run the same logic against new streaming releases and notify you when picks are ready (keep the LLM enabled in Settings and add your API key).',
     'You may edit the curator instructions below. The taste profile JSON is assembled automatically each time — you do not edit that by hand.',
   ],
 };

@@ -197,7 +197,7 @@ function HoverCard({
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                 </svg>
-                Remove
+                Remove from archive
               </button>
             ) : (
               <>
@@ -205,13 +205,13 @@ function HoverCard({
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                   </svg>
-                  Add to Movies
+                  Add to archive
                 </button>
                 <button className="subsume-btn subsume-btn-secondary" onClick={() => onAdd('tv')}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                   </svg>
-                  Add to TV Shows
+                  Add series to archive
                 </button>
               </>
             )}
@@ -554,14 +554,13 @@ export class HoverCardManager {
       // Brief confirmation feedback
       const mount = this.shadowRoot.getElementById('subsume-mount');
       if (mount) {
-        const addedLabel = type === 'movie' ? 'Movies' : 'TV Shows';
         render(
           <div className="subsume-hover-card subsume-visible subsume-added">
             <div className="subsume-added-msg">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M20 6L9 17l-5-5" />
               </svg>
-              <span>Added to {addedLabel}!</span>
+              <span>Added to archive!</span>
             </div>
           </div>,
           mount
@@ -588,7 +587,7 @@ export class HoverCardManager {
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M20 6L9 17l-5-5" />
               </svg>
-              <span>Removed from library!</span>
+              <span>Removed from archive!</span>
             </div>
           </div>,
           mount

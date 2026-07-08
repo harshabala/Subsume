@@ -571,22 +571,22 @@ export function Settings() {
                 className="settings-input"
               />
               <p className="settings-help-text">
-                Required for catalogue synchronization. Acquire credential at{' '}
+                Required for catalogue sync. Get a key at{' '}
                 <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener" className="settings-api-link">themoviedb.org</a>.
               </p>
             </div>
 
             <div>
-              <label className="settings-field-label">OMDb API key (optional) (Optional)</label>
+              <label className="settings-field-label">OMDb API key (optional)</label>
               <input
                 type="password"
-                placeholder="Enter OMDb credential"
+                placeholder="Paste your OMDb API key"
                 value={prefs.omdbApiKey || ''}
                 onChange={(e) => handleChange('omdbApiKey', e.currentTarget.value)}
                 className="settings-input"
               />
               <p className="settings-help-text">
-                Enriches archival records with supplementary reception plates. Acquire credential at{' '}
+                Adds extra ratings from OMDb. Get a key at{' '}
                 <a href="https://www.omdbapi.com/apikey.aspx" target="_blank" rel="noopener" className="settings-api-link">omdbapi.com</a>.
               </p>
             </div>

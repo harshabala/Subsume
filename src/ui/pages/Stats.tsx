@@ -63,10 +63,10 @@ export function Stats() {
     <div className="page-container sanctuary-page-shell">
       <header className="sanctuary-header">
         <div className="sanctuary-header-meta">
-          <span className="sanctuary-subtitle">Diagnostics</span>
+          <span className="sanctuary-subtitle">Statistics</span>
         </div>
-        <h2 className="sanctuary-title">Personal Statistics</h2>
-        <p className="sanctuary-description">An archival breakdown of your sanctuary reflections and auteur engagement.</p>
+        <h2 className="sanctuary-title">Your programme</h2>
+        <p className="sanctuary-description">A snapshot of what you have watched, rated, and what stayed with you.</p>
       </header>
 
       {loading ? (
@@ -76,10 +76,10 @@ export function Stats() {
         </div>
       ) : totalWatched === 0 ? (
         <div className="sanctuary-empty-plaque">
-          <span className="sanctuary-plaque-index">1ndex 00</span>
-          <h3 className="sanctuary-plaque-title">No reflections recorded</h3>
+          <span className="sanctuary-plaque-index">Index 00</span>
+          <h3 className="sanctuary-plaque-title">No screenings logged yet</h3>
           <p className="sanctuary-plaque-text">
-            Mark titles in your sanctuary as "Watched" and provide reflections to assemble your archival scientific museum plates.
+            Mark titles as Watched and add reflections to see your afterglow, genres, and hours on the silver screen.
           </p>
         </div>
       ) : (
@@ -91,19 +91,19 @@ export function Stats() {
 
           <div className="stats-grid">
             <div className="stats-plaque-card">
-              <span className="sanctuary-plaque-index stats-plaque-index">1</span>
+              <span className="sanctuary-plaque-index stats-plaque-index">I</span>
               <span className="stat-value stats-plaque-value">{totalWatched}</span>
-              <span className="stats-plaque-label">Reflected Titles</span>
+              <span className="stats-plaque-label">Titles watched</span>
             </div>
 
             <div className="stats-plaque-card">
-              <span className="sanctuary-plaque-index stats-plaque-index">1I</span>
+              <span className="sanctuary-plaque-index stats-plaque-index">II</span>
               <span className="stat-value stats-plaque-value">{totalHours}</span>
               <span className="stats-plaque-label">Hours watched</span>
             </div>
 
             <div className="stats-plaque-card">
-              <span className="sanctuary-plaque-index stats-plaque-index">1II</span>
+              <span className="sanctuary-plaque-index stats-plaque-index">III</span>
               <span className="stat-value stats-plaque-value accent">{avgRating}</span>
               <span className="stats-plaque-label">Average rating</span>
             </div>
@@ -112,7 +112,7 @@ export function Stats() {
           <div className="stats-charts-grid">
             <div className="stats-chart-panel">
               <h3 className="stats-chart-title">
-                Auteur & Taxonomy Distribution
+                Top genres
               </h3>
               <div className="stats-genre-list">
                 {sortedGenres.map(([genre, count]) => {
@@ -121,7 +121,7 @@ export function Stats() {
                     <div key={genre} className="stats-genre-row">
                       <div className="stats-genre-header">
                         <span className="stats-genre-name">{genre}</span>
-                        <span className="stats-genre-count">{count} {count === 1 ? 'record' : 'records'}</span>
+                        <span className="stats-genre-count">{count} {count === 1 ? 'title' : 'titles'}</span>
                       </div>
                       <div className="stats-progress-track">
                         <div className="stats-progress-fill" style={{ width: `${widthPercent}%` }} />
@@ -134,7 +134,7 @@ export function Stats() {
 
             <div className="stats-chart-panel flex-col">
               <h3 className="stats-chart-title">
-                Sanctuary Format Balance
+                Movies vs series
               </h3>
 
               <div className="stats-mix-center">
