@@ -13,7 +13,13 @@ import {
 import { isValidPersonItem } from '@/shared/validation';
 import { MEDIA_ID_PATTERN } from '@/shared/mediaIds';
 import { SEED_MEDIA, SEED_LIBRARY, SEED_PEOPLE, SEED_CATALOGUE_VERSION, SEED_CATALOGUE_VERSION_KEY } from './seedData';
-import { HIGHLIGHT_LIBRARY } from './seedIndianHighlights';
+
+const SEED_MEDIA_PATCHES: (Partial<MediaItem> & { id: string })[] = [
+  {
+    id: 'seed_drishyam_ml',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/7d8GLneJkF81q1POdK7VUrjWafX.jpg',
+  },
+];
 
 interface SubsumeDB extends DBSchema {
   media: {
@@ -86,31 +92,40 @@ export async function mergeSeedCatalog(): Promise<{
     }
   }
 
+  for (const patch of SEED_MEDIA_PATCHES) {
+    const existing = await db.get('media', patch.id);
+    if (existing) {
+      const { id: _id, ...fields } = patch;
+      await db.put('media', { ...existing, ...fields });
+      mediaAdded++;
+    }
+  }
+
   for (const item of SEED_LIBRARY) {
     const existing = await db.get('library', item.mediaId);
     if (!existing) {
       await db.put('library', item);
       libraryAdded++;
-    } else if (item.userNotes && !existing.userNotes) {
-      await db.put('library', {
-        ...existing,
-        status: item.status ?? existing.status,
-        userRating: item.userRating ?? existing.userRating,
-        userNotes: item.userNotes,
-        sanctuaryIntent: item.sanctuaryIntent ?? existing.sanctuaryIntent,
-        updatedAt: Date.now(),
-      });
-      libraryUpdated++;
-    } else if (HIGHLIGHT_LIBRARY[item.mediaId] && item.userNotes) {
-      await db.put('library', {
-        ...existing,
-        status: item.status ?? existing.status,
-        userRating: item.userRating ?? existing.userRating,
-        userNotes: item.userNotes,
-        sanctuaryIntent: item.sanctuaryIntent ?? existing.sanctuaryIntent,
-        updatedAt: Date.now(),
-      });
-      libraryUpdated++;
+    } else {
+      const legacyNotes = (existing as unknown as Record<string, unknown>).userNotes;
+      if (!existing.notes && typeof legacyNotes === 'string' && legacyNotes.length > 0) {
+        await db.put('library', {
+          ...existing,
+          notes: legacyNotes,
+          updatedAt: Date.now(),
+        });
+        libraryUpdated++;
+      } else if (item.notes && !existing.notes) {
+        await db.put('library', {
+          ...existing,
+          status: item.status ?? existing.status,
+          userRating: item.userRating ?? existing.userRating,
+          notes: item.notes,
+          sanctuaryIntent: item.sanctuaryIntent ?? existing.sanctuaryIntent,
+          updatedAt: Date.now(),
+        });
+        libraryUpdated++;
+      }
     }
   }
 

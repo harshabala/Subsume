@@ -1,7 +1,7 @@
 import { MediaItem, LibraryItem, PersonItem } from '../shared/types';
 import { INDIAN_HIGHLIGHT_MEDIA, libraryEntryForSeed } from './seedIndianHighlights';
 
-export const SEED_CATALOGUE_VERSION = 3;
+export const SEED_CATALOGUE_VERSION = 4;
 export const SEED_CATALOGUE_VERSION_KEY = 'subsume_seed_catalogue_version';
 
 export const SEED_MEDIA: MediaItem[] = [

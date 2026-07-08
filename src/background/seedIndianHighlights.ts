@@ -78,7 +78,7 @@ export const INDIAN_HIGHLIGHT_MEDIA: MediaItem[] = [
     genres: ['Drama', 'Thriller'],
     ratings: [{ score: 8.7, provider: 'tmdb' }],
     providers: [],
-    posterUrl: 'https://image.tmdb.org/t/p/w500/4Y1WNkd88JXqWAJ2o8CDv9kJp2v.jpg',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/7d8GLneJkF81q1POdK7VUrjWafX.jpg',
     overview:
       'A father shields his family after an unthinkable accident — Malayalam original.\n\n• Directed by: Jeethu Joseph\n• Starring: Mohanlal, Meena, Ansiba Hassan',
     wikidataDirectorBio: 'Jeethu Joseph',
@@ -87,117 +87,87 @@ export const INDIAN_HIGHLIGHT_MEDIA: MediaItem[] = [
 
 export const HIGHLIGHT_LIBRARY: Record<
   string,
-  Pick<LibraryItem, 'status' | 'userRating' | 'userNotes' | 'sanctuaryIntent'>
+  Pick<LibraryItem, 'status' | 'userRating' | 'notes' | 'sanctuaryIntent'>
 > = {
   seed_indian: {
     status: 'watched',
     userRating: 9,
     sanctuaryIntent: 'keep_memory',
-    userNotes:
+    notes:
       'Shankar + Kamal at peak — the makeup, the moral fury, AR Rahman’s score. Still the template for big Tamil vigilante cinema.',
   },
   seed_mudhalvan: {
     status: 'watched',
     userRating: 9,
     sanctuaryIntent: 'keep_memory',
-    userNotes:
+    notes:
       'One of the sharpest “what if media held power accountable” films. Arjun and Manisha, Rahman again — endlessly rewatchable.',
   },
   seed_nayakan: {
     status: 'watched',
     userRating: 10,
     sanctuaryIntent: 'keep_memory',
-    userNotes: 'Kamal and Mani Ratnam at their peak — the Mumbai don myth made human.',
+    notes: 'Kamal and Mani Ratnam at their peak — the Mumbai don myth made human.',
   },
   seed_anbe_sivam: {
     status: 'watched',
     userRating: 9,
     sanctuaryIntent: 'revisit_this_month',
-    userNotes: 'Humanist road movie; Kamal and Madhavan chemistry is gold.',
+    notes: 'Humanist road movie; Kamal and Madhavan chemistry is gold.',
   },
   seed_enthiran: {
     status: 'watched',
     userRating: 8,
     sanctuaryIntent: 'keep_memory',
-    userNotes: 'Rajini sci-fi spectacle — silly and sincere in equal measure.',
+    notes: 'Rajini sci-fi spectacle — silly and sincere in equal measure.',
   },
   seed_padayappa: {
     status: 'watched',
     userRating: 8,
     sanctuaryIntent: 'keep_memory',
-    userNotes: 'Peak mass Rajini; Ramya Krishnan’s Neelambari is iconic.',
+    notes: 'Peak mass Rajini; Ramya Krishnan’s Neelambari is iconic.',
   },
   seed_kireedam: {
     status: 'watched',
     userRating: 10,
     sanctuaryIntent: 'keep_memory',
-    userNotes: 'Mohanlal’s shattered son — Malayalam drama that still hurts.',
+    notes: 'Mohanlal’s shattered son — Malayalam drama that still hurts.',
   },
   seed_manichitrathazhu: {
     status: 'watched',
     userRating: 9,
     sanctuaryIntent: 'keep_memory',
-    userNotes: 'Shobana + Mohanlal + Suresh Gopi — haunted house done right.',
+    notes: 'Shobana + Mohanlal + Suresh Gopi — haunted house done right.',
   },
   seed_oru_vadakkan_veeragatha: {
     status: 'watched',
     userRating: 9,
     sanctuaryIntent: 'keep_memory',
-    userNotes: 'Mammootty reframes Chandu; folk myth turned tragedy.',
+    notes: 'Mammootty reframes Chandu; folk myth turned tragedy.',
   },
   seed_vikram: {
     status: 'watched',
     userRating: 8,
     sanctuaryIntent: 'revisit_this_month',
-    userNotes: 'Lokesh + Kamal universe kickoff — propulsive and loud in the best way.',
+    notes: 'Lokesh + Kamal universe kickoff — propulsive and loud in the best way.',
   },
   seed_drishyam_ml: {
     status: 'watched',
     userRating: 9,
     sanctuaryIntent: 'keep_memory',
-    userNotes: 'The Mohanlal original before the remakes — quiet panic, perfect plotting.',
-  },
-  seed_nayakan: {
-    status: 'watched',
-    userRating: 10,
-    sanctuaryIntent: 'keep_memory',
-    userNotes: 'Kamal and Mani Ratnam at their peak — the Mumbai don myth made human.',
-  },
-  seed_anbe_sivam: {
-    status: 'watched',
-    userRating: 10,
-    sanctuaryIntent: 'keep_memory',
-    userNotes: 'Humanism without syrup — Kamal and Madhavan on the road.',
-  },
-  seed_kireedam: {
-    status: 'watched',
-    userRating: 9,
-    sanctuaryIntent: 'keep_memory',
-    userNotes: 'Mohanlal’s “Sethumadhavan” — Malayalam tragedy that still stings.',
-  },
-  seed_manichitrathazhu: {
-    status: 'watched',
-    userRating: 9,
-    sanctuaryIntent: 'keep_memory',
-    userNotes: 'Shobana, Mohanlal, and one of Indian cinema’s great hauntings.',
+    notes: 'The Mohanlal original before the remakes — quiet panic, perfect plotting.',
   },
   seed_spadikam: {
     status: 'watched',
     userRating: 9,
     sanctuaryIntent: 'revisit_this_month',
-    userNotes: 'Mohanlal rage and redemption — mass cinema with a soul.',
-  },
-  seed_oru_vadakkan_veeragatha: {
-    status: 'watched',
-    userRating: 9,
-    sanctuaryIntent: 'keep_memory',
-    userNotes: 'Mammootty as Chanthu — folklore turned epic performance.',
+    notes: 'Mohanlal rage and redemption — mass cinema with a soul.',
   },
   seed_iruvar: {
     status: 'watched',
     userRating: 9,
     sanctuaryIntent: 'keep_memory',
-    userNotes: 'Mani Ratnam’s political myth — Mohanlal and Prakash Raj.',
+    notes: 'Mani Ratnam’s political myth — Mohanlal and Prakash Raj.',
   },
 };
 
@@ -212,7 +182,7 @@ export function libraryEntryForSeed(media: MediaItem, index: number): LibraryIte
     addedAt: t,
     updatedAt: t,
     userRating: h?.userRating,
-    userNotes: h?.userNotes,
+    notes: h?.notes,
     sanctuaryIntent: h?.sanctuaryIntent,
   };
 }

@@ -137,7 +137,7 @@ Highlight titles can have rich demo state in `HIGHLIGHT_LIBRARY`:
 {
   status: 'watched' | 'to-watch' | 'watching' | 'abandoned',
   userRating?: number,           // 1–10
-  userNotes?: string,            // personal reflection copy
+  notes?: string,                 // personal reflection copy
   sanctuaryIntent?: 'keep_memory' | 'revisit_this_month' | 'wishlist',
 }
 ```
@@ -312,7 +312,7 @@ Fill every field per §4–§9. Escape apostrophes in TypeScript strings (`\'`).
 
 - If the title is a **featured highlight**, add an entry to `HIGHLIGHT_LIBRARY` keyed by `media.id`
 - Avoid **duplicate keys** in `HIGHLIGHT_LIBRARY` (one entry per id)
-- Write reflection `userNotes` only when the operator provides copy or asks for placeholder demo reflections
+- Write reflection `notes` only when the operator provides copy or asks for placeholder demo reflections
 
 ### Step F — Build / update `PersonItem` rows
 

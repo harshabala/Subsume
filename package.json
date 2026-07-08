@@ -1,6 +1,6 @@
 {
   "name": "subsume",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": true,
   "description": "Track movies & TV shows you discover while browsing.",
   "type": "module",

@@ -26,7 +26,7 @@ Edit:
 
 - `src/background/seedIndianHighlights.ts` — new titles + reflection copy
 - `src/background/seedData.ts` — order, people filmography
-- `HIGHLIGHT_LIBRARY` map — watched status, ratings, `userNotes`
+- `HIGHLIGHT_LIBRARY` map — watched status, ratings, `notes`
 
 Rebuild: `npm run build`, reload extension.
 
