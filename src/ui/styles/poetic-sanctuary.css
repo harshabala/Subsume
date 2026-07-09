@@ -327,6 +327,10 @@
 
 /* ─── Reduced Motion ──────────────────────────────────────────────── */
 
+.poetic-emotions-panel {
+  position: relative;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .poetic-poster,
   .poetic-textarea,
@@ -342,5 +346,10 @@
   .poetic-poster.writing {
     transform: none;
     filter: none;
+  }
+
+  .poetic-sanctuary-modal.save-ceremony .aura-visualizer-glow,
+  .poetic-emotions-panel.save-ceremony::after {
+    animation: none !important;
   }
 }

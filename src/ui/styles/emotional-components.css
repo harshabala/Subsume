@@ -1,5 +1,30 @@
 /* ─── Shared Emotional Components ─────────────────────────────── */
 
+/* Interpolatable aura stop radii (@property preferred; snaps if unsupported) */
+@property --aura-awe {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 50%;
+}
+
+@property --aura-melancholy {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 50%;
+}
+
+@property --aura-tension {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 50%;
+}
+
+@property --aura-warmth {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 50%;
+}
+
 .emotional-sliders-sanctuary {
   display: flex;
   flex-direction: column;
@@ -66,7 +91,16 @@
 .aura-visualizer-glow {
   position: absolute;
   inset: 0;
-  transition: background 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  background:
+    radial-gradient(circle at 10% 20%, var(--color-awe) 0%, transparent var(--aura-awe)),
+    radial-gradient(circle at 90% 10%, var(--color-melancholy) 0%, transparent var(--aura-melancholy)),
+    radial-gradient(circle at 20% 90%, var(--color-tension) 0%, transparent var(--aura-tension)),
+    radial-gradient(circle at 80% 80%, var(--color-warmth) 0%, transparent var(--aura-warmth));
+  transition:
+    --aura-awe 0.45s var(--ease-soft-settle),
+    --aura-melancholy 0.45s var(--ease-soft-settle),
+    --aura-tension 0.45s var(--ease-soft-settle),
+    --aura-warmth 0.45s var(--ease-soft-settle);
 }
 
 .aura-visualizer-label {
@@ -77,6 +111,90 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--muted-fg);
+}
+
+/* One-shot aura settle after successful reflection/notes save (~500ms) */
+.aura-visualizer-sanctuary.save-ceremony .aura-visualizer-glow {
+  animation: aura-save-settle var(--duration-soft-settle, 500ms) var(--ease-soft-settle) both;
+}
+
+@keyframes aura-save-settle {
+  0% {
+    opacity: 0.82;
+    transform: scale(0.985);
+  }
+  45% {
+    opacity: 1;
+    transform: scale(1.015);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Gold underline sweep on notes / capture surfaces during save ceremony */
+.save-ceremony-surface {
+  position: relative;
+}
+
+.save-ceremony-surface::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1.5px;
+  border-radius: 1px;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    var(--primary, hsl(45, 80%, 62%)) 20%,
+    var(--primary-hover, hsl(45, 85%, 68%)) 50%,
+    var(--primary, hsl(45, 80%, 62%)) 80%,
+    transparent 100%
+  );
+  transform: scaleX(0);
+  transform-origin: left center;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.save-ceremony-surface.save-ceremony::after {
+  animation: save-ceremony-gold-line var(--duration-soft-settle, 500ms) var(--ease-soft-settle) both;
+}
+
+@keyframes save-ceremony-gold-line {
+  0% {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  70% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aura-visualizer-glow {
+    transition: none;
+  }
+
+  .aura-visualizer-sanctuary.save-ceremony .aura-visualizer-glow,
+  .save-ceremony-surface.save-ceremony::after {
+    animation: none;
+  }
+
+  .save-ceremony-surface::after {
+    opacity: 0;
+  }
 }
 
 .emotional-weather-chart {

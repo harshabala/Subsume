@@ -72,6 +72,19 @@
 
   /* ─── Cinematic Motion ───────────────────────────────────────── */
   --ease-focus-pull: cubic-bezier(0.25, 1, 0.5, 1);
+  /* Soft settle: decelerating linear() with no bounce/overshoot.
+     Use for aura stop interpolation, save ceremony, rare settle moments. */
+  --ease-soft-settle: linear(
+    0,
+    0.25 20%,
+    0.5 40%,
+    0.7 58%,
+    0.85 74%,
+    0.94 88%,
+    0.98 96%,
+    1
+  );
+  --duration-soft-settle: 500ms;
   --duration-curtain: 450ms; /* Slow Dolly enter */
   --duration-curtain-close: 300ms; /* Curtain Close exit (subtler) */
   --blur-hero: blur(16px);

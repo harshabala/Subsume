@@ -28,6 +28,7 @@ const SUGGESTED_TAGS = ["Rewatchable", "Festival", "Criterion", "Silent Era", "F
 
 
 const EXIT_FALLBACK_MS = 350;
+const SAVE_CEREMONY_MS = 500;
 
 function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
@@ -54,7 +55,9 @@ export function DetailModal({
   );
   const [detailsExpanded, setDetailsExpanded] = useState(false);
   const [closing, setClosing] = useState(false);
+  const [saveCeremony, setSaveCeremony] = useState(false);
   const notesDebounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const ceremonyTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const modalRef = useRef<HTMLDivElement>(null);
   const closedRef = useRef(false);
   const titleId = `detail-title-${media.id}`;
@@ -80,6 +83,9 @@ export function DetailModal({
     return () => {
       if (notesDebounceRef.current) {
         clearTimeout(notesDebounceRef.current);
+      }
+      if (ceremonyTimerRef.current) {
+        clearTimeout(ceremonyTimerRef.current);
       }
     };
   }, []);
@@ -119,6 +125,35 @@ export function DetailModal({
     };
   }, [closing]);
 
+  const playSaveCeremony = () => {
+    if (prefersReducedMotion()) return;
+    // Retrigger one-shot class if already mid-ceremony
+    setSaveCeremony(false);
+    if (ceremonyTimerRef.current) {
+      clearTimeout(ceremonyTimerRef.current);
+    }
+    // Double rAF so the class can re-apply and restart CSS animation
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setSaveCeremony(true);
+        ceremonyTimerRef.current = setTimeout(() => {
+          setSaveCeremony(false);
+          ceremonyTimerRef.current = undefined;
+        }, SAVE_CEREMONY_MS);
+      });
+    });
+  };
+
+  const commitNotesSave = (
+    nextNotes: string,
+    nextAtmosphere: string,
+    nextLingering: string,
+    nextEmotions: EmotionalSpectrum,
+  ) => {
+    onUpdateNotes?.(nextNotes, nextAtmosphere, nextLingering, nextEmotions);
+    playSaveCeremony();
+  };
+
   const scheduleNotesSave = (
     nextNotes: string,
     nextAtmosphere: string,
@@ -129,7 +164,8 @@ export function DetailModal({
       clearTimeout(notesDebounceRef.current);
     }
     notesDebounceRef.current = setTimeout(() => {
-      onUpdateNotes?.(nextNotes, nextAtmosphere, nextLingering, nextEmotions);
+      notesDebounceRef.current = undefined;
+      commitNotesSave(nextNotes, nextAtmosphere, nextLingering, nextEmotions);
     }, 500);
   };
 
@@ -158,7 +194,7 @@ export function DetailModal({
     if (notesDebounceRef.current) {
       clearTimeout(notesDebounceRef.current);
       notesDebounceRef.current = undefined;
-      onUpdateNotes?.(notes, atmosphere, lingeringThought, emotions);
+      commitNotesSave(notes, atmosphere, lingeringThought, emotions);
     }
   };
 
@@ -403,7 +439,10 @@ export function DetailModal({
                     </div>
                   </div>
 
-                  <div className="sanctuary-detail-notes-section">
+                  <div
+                    className={`sanctuary-detail-notes-section save-ceremony-surface${saveCeremony ? ' save-ceremony' : ''}`}
+                    data-testid="detail-notes-section"
+                  >
                     <span className="sanctuary-detail-control-label">Reflection:</span>
                     <textarea
                       value={notes}
@@ -447,7 +486,7 @@ export function DetailModal({
                         variant="sanctuary"
                         idPrefix="detail"
                       />
-                      <AuraVisualizer values={emotions} variant="sanctuary" />
+                      <AuraVisualizer values={emotions} variant="sanctuary" ceremony={saveCeremony} />
                     </div>
                   </div>
                 </div>

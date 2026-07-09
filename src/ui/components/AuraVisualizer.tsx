@@ -6,6 +6,8 @@ export interface AuraVisualizerProps {
   label?: string;
   variant?: 'popup' | 'sanctuary';
   className?: string;
+  /** One-shot settle ceremony class (e.g. after notes save). */
+  ceremony?: boolean;
 }
 
 export function AuraVisualizer({
@@ -13,28 +15,36 @@ export function AuraVisualizer({
   label = 'Generated Aura Spectrum',
   variant = 'sanctuary',
   className = '',
+  ceremony = false,
 }: AuraVisualizerProps) {
-  const auraStyle = {
-    background: `
-      radial-gradient(circle at 10% 20%, var(--color-awe) 0%, transparent ${values.awe}%),
-      radial-gradient(circle at 90% 10%, var(--color-melancholy) 0%, transparent ${values.melancholy}%),
-      radial-gradient(circle at 20% 90%, var(--color-tension) 0%, transparent ${values.tension}%),
-      radial-gradient(circle at 80% 80%, var(--color-warmth) 0%, transparent ${values.warmth}%)
-    `,
-  };
+  // CSS custom properties enable @property-based interpolation of gradient stops.
+  const auraVars = {
+    '--aura-awe': `${values.awe}%`,
+    '--aura-melancholy': `${values.melancholy}%`,
+    '--aura-tension': `${values.tension}%`,
+    '--aura-warmth': `${values.warmth}%`,
+  } as h.JSX.CSSProperties;
 
   if (variant === 'popup') {
     return (
       <div className={`vibe-visualizer ${className}`.trim()} data-testid="aura-visualizer">
-        <div className="vibe-glow-layer" style={auraStyle} />
+        <div className="vibe-glow-layer" style={auraVars} />
         <span className="vibe-label">{label}</span>
       </div>
     );
   }
 
+  const sanctuaryClass = [
+    'aura-visualizer-sanctuary',
+    ceremony ? 'save-ceremony' : '',
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <div className={`aura-visualizer-sanctuary ${className}`.trim()} data-testid="aura-visualizer">
-      <div className="aura-visualizer-glow" style={auraStyle} />
+    <div className={sanctuaryClass} data-testid="aura-visualizer">
+      <div className="aura-visualizer-glow" style={auraVars} />
       <span className="aura-visualizer-label">{label}</span>
     </div>
   );

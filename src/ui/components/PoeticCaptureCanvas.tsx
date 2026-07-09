@@ -28,6 +28,15 @@ export interface PoeticCaptureCanvasProps {
 const FOCUSABLE_SELECTOR =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+const SAVE_CEREMONY_MS = 500;
+
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return false;
+  }
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
 export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureCanvasProps) {
   const [media, setMedia] = useState<MediaItem | null>(null);
   const [loading, setLoading] = useState(true);
@@ -40,10 +49,13 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
   const [emotions, setEmotions] = useState<EmotionalSpectrum>(DEFAULT_EMOTIONS);
   const [isWriting, setIsWriting] = useState<boolean>(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveCeremony, setSaveCeremony] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const dialogRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const ceremonyTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const headingId = useId();
   const textareaId = useId();
 
@@ -134,13 +146,27 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
     };
   }, [onClose, loading, loadError]);
 
+  useEffect(() => {
+    return () => {
+      if (ceremonyTimerRef.current) {
+        clearTimeout(ceremonyTimerRef.current);
+      }
+    };
+  }, []);
+
   const handleRetry = () => {
     fetchMedia(() => true);
   };
 
+  const finishAfterSave = () => {
+    onSave?.();
+    onClose();
+  };
+
   const handleSave = async () => {
-    if (!media) return;
+    if (!media || saving) return;
     setSaveError(null);
+    setSaving(true);
     try {
       await sendMessage<AddToListRequest, LibraryItem>(MessageType.ADD_TO_LIST, {
         mediaItem: media,
@@ -182,16 +208,26 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
           rating,
         });
       }
-      onSave?.();
-      onClose();
+
+      // One-shot micro-ceremony before dismiss; PRM skips motion and closes immediately
+      if (prefersReducedMotion()) {
+        finishAfterSave();
+        return;
+      }
+      setSaveCeremony(true);
+      ceremonyTimerRef.current = setTimeout(() => {
+        ceremonyTimerRef.current = undefined;
+        finishAfterSave();
+      }, SAVE_CEREMONY_MS);
     } catch (err) {
       console.error('[PoeticCaptureCanvas] Save failed:', err);
       setSaveError(err instanceof Error ? err.message : 'Failed to save reflection. Please try again.');
+      setSaving(false);
     }
   };
 
   const director = media?.wikidataDirectorBio;
-  const modalClass = `poetic-sanctuary-modal${isWriting ? ' staging-one-focal-point' : ''}`;
+  const modalClass = `poetic-sanctuary-modal${isWriting ? ' staging-one-focal-point' : ''}${saveCeremony ? ' save-ceremony' : ''}`;
 
   return (
     <div
@@ -252,14 +288,17 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
               onBlur={() => setIsWriting(false)}
             />
 
-            <div class="poetic-emotions-panel" data-testid="poetic-emotions-panel">
+            <div
+              class={`poetic-emotions-panel save-ceremony-surface${saveCeremony ? ' save-ceremony' : ''}`}
+              data-testid="poetic-emotions-panel"
+            >
               <EmotionalSliders
                 values={emotions}
                 onChange={(key, value) => setEmotions((prev) => ({ ...prev, [key]: value }))}
                 variant="sanctuary"
                 idPrefix="poetic"
               />
-              <AuraVisualizer values={emotions} variant="sanctuary" />
+              <AuraVisualizer values={emotions} variant="sanctuary" ceremony={saveCeremony} />
             </div>
 
             {emotionalRecall.length >= 140 && (
@@ -341,7 +380,13 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
               <button type="button" class="close-btn" onClick={onClose}>
                 Close
               </button>
-              <button type="button" class="save-btn" data-testid="save-btn" onClick={handleSave} disabled={!media}>
+              <button
+                type="button"
+                class="save-btn"
+                data-testid="save-btn"
+                onClick={handleSave}
+                disabled={!media || saving}
+              >
                 Save reflection
               </button>
             </div>
