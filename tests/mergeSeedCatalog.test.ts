@@ -80,6 +80,7 @@ vi.mock('@/background/seedData', () => ({
   SEED_MEDIA: [mediaAlpha, mediaBeta, mediaDrishyam],
   SEED_LIBRARY: [libraryAlpha, libraryBeta],
   SEED_PEOPLE: [],
+  SEED_PEOPLE_OBSOLETE_IDS: ['tmdb_person_56531', 'tmdb_person_147079'],
   SEED_CATALOGUE_VERSION: 99,
   SEED_CATALOGUE_VERSION_KEY: 'subsume_seed_catalogue_version',
 }));

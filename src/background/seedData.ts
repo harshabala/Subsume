@@ -2,8 +2,18 @@ import { MediaItem, LibraryItem, PersonItem } from '../shared/types';
 import { INDIAN_HIGHLIGHT_MEDIA, libraryEntryForSeed } from './seedIndianHighlights';
 
 /** Bump when catalogue metadata changes so existing installs re-merge. */
-export const SEED_CATALOGUE_VERSION = 5;
+export const SEED_CATALOGUE_VERSION = 6;
 export const SEED_CATALOGUE_VERSION_KEY = 'subsume_seed_catalogue_version';
+
+/**
+ * Wrong `tmdb_person_*` ids shipped in earlier catalogue versions (name labeled X, TMDb id is Y).
+ * Removed on merge so users do not keep Chiranjeevi under "Mammootty", etc.
+ */
+export const SEED_PEOPLE_OBSOLETE_IDS: string[] = [
+  'tmdb_person_56531', // was labeled Kamal Haasan → Solomon Perel
+  'tmdb_person_5655', // was labeled Satyajit Ray → Wes Anderson
+  'tmdb_person_147079', // was labeled Mammootty → Chiranjeevi
+];
 
 export const SEED_MEDIA: MediaItem[] = [
   ...INDIAN_HIGHLIGHT_MEDIA,
@@ -395,12 +405,17 @@ export const SEED_MEDIA: MediaItem[] = [
 
 export const SEED_LIBRARY: LibraryItem[] = SEED_MEDIA.map((m, idx) => libraryEntryForSeed(m, idx));
 
+/**
+ * Filmmaker seed rows. `id` MUST be `tmdb_person_{real TMDb person id}`.
+ * Wrong ids ship the wrong face (e.g. 147079 is Chiranjeevi, not Mammootty).
+ * Validate with: `npm run validate:seed-people`
+ */
 export const SEED_PEOPLE: PersonItem[] = [
   {
     id: 'tmdb_person_500',
     name: 'Tom Cruise',
     role: 'actor',
-    profileImageUrl: 'https://image.tmdb.org/t/p/w300_and_h450_bestv2/p17SLq4wabXwIYyjXF1Wf5cNnAm.jpg',
+    profileImageUrl: 'https://image.tmdb.org/t/p/w300_and_h450_bestv2/3mShHjSQR7NXOVbdTu5rT2Qd0MN.jpg',
     biography: 'Thomas Cruise Mapother IV (born July 3, 1962) is a legendary American actor and producer. One of the highest-grossing box office stars of all time, he is celebrated for performing his own death-defying stunts in action classics like the Mission: Impossible series, Top Gun, and Edge of Tomorrow.',
     knownFor: ['Top Gun: Maverick', 'Mission: Impossible - Fallout', 'Jerry Maguire'],
     filmographyIds: ['seed_top_gun_maverick', 'seed_mi_fallout'],
@@ -408,10 +423,10 @@ export const SEED_PEOPLE: PersonItem[] = [
     lastSyncedAt: Date.now()
   },
   {
-    id: 'tmdb_person_56531',
+    id: 'tmdb_person_93193',
     name: 'Kamal Haasan',
     role: 'actor',
-    profileImageUrl: 'https://image.tmdb.org/t/p/w300_and_h450_bestv2/jzS2umMVOZ73IFEH6X0M7Os02Ji.jpg',
+    profileImageUrl: 'https://image.tmdb.org/t/p/w300_and_h450_bestv2/17zscZgz4wOlGDd3Gziw4YbI3G.jpg',
     biography: 'Kamal Haasan (born November 7, 1954) is a legendary Indian actor, director, screenwriter, and producer working primarily in Tamil cinema. Widely regarded as one of the greatest actors in Indian cinema history, he is celebrated for his incredible versatility, method acting, and technical innovations.',
     knownFor: ['Nayakan', 'Anbe Sivam', 'Indian'],
     filmographyIds: ['seed_indian', 'seed_nayakan', 'seed_anbe_sivam', 'seed_vikram'],
@@ -419,10 +434,10 @@ export const SEED_PEOPLE: PersonItem[] = [
     lastSyncedAt: Date.now()
   },
   {
-    id: 'tmdb_person_5655',
+    id: 'tmdb_person_12160',
     name: 'Satyajit Ray',
     role: 'director',
-    profileImageUrl: 'https://image.tmdb.org/t/p/w300_and_h450_bestv2/s03CeUeC5yAXyB1acqP0zGNo2SC.jpg',
+    profileImageUrl: 'https://image.tmdb.org/t/p/w300_and_h450_bestv2/qP5mjuc3dL8n9c1zeY4W6L2w38L.jpg',
     biography: 'Satyajit Ray (May 2, 1921 – April 23, 1992) was a legendary Indian filmmaker, screenwriter, author, and composer. Regarded as one of the greatest auteurs of world cinema, he directed masterpieces such as Pather Panchali and Charulata, introducing Indian realism to the global stage.',
     knownFor: ['Pather Panchali', 'Charulata', 'The Apu Trilogy'],
     filmographyIds: ['seed_pather_panchali', 'seed_charulata'],
@@ -474,10 +489,10 @@ export const SEED_PEOPLE: PersonItem[] = [
     lastSyncedAt: Date.now()
   },
   {
-    id: 'tmdb_person_147079',
+    id: 'tmdb_person_124111',
     name: 'Mammootty',
     role: 'actor',
-    profileImageUrl: 'https://image.tmdb.org/t/p/w300_and_h450_bestv2/jRCxnhftb7NprH92cdfah8KoAHg.jpg',
+    profileImageUrl: 'https://image.tmdb.org/t/p/w300_and_h450_bestv2/c5ewp9XtDIOwK5QWhwA7TD0GzqO.jpg',
     biography: 'Mammootty (born September 7, 1951) is a legendary Indian actor and producer working in Malayalam cinema. Over a career of 50 years, he has acted in more than 400 films, won three National Film Awards, and is celebrated as one of the greatest actors in Indian cinema history.',
     knownFor: ['Oru Vadakkan Veeragatha', 'Vidheyan', 'Mathilukal'],
     filmographyIds: ['seed_oru_vadakkan_veeragatha', 'seed_vidheyan'],

@@ -12,7 +12,14 @@ import {
 } from '@/shared/types';
 import { isValidPersonItem } from '@/shared/validation';
 import { MEDIA_ID_PATTERN } from '@/shared/mediaIds';
-import { SEED_MEDIA, SEED_LIBRARY, SEED_PEOPLE, SEED_CATALOGUE_VERSION, SEED_CATALOGUE_VERSION_KEY } from './seedData';
+import {
+  SEED_MEDIA,
+  SEED_LIBRARY,
+  SEED_PEOPLE,
+  SEED_PEOPLE_OBSOLETE_IDS,
+  SEED_CATALOGUE_VERSION,
+  SEED_CATALOGUE_VERSION_KEY,
+} from './seedData';
 
 /**
  * Full catalogue rows re-applied on version bump for existing `seed_*` media.
@@ -147,15 +154,25 @@ export async function mergeSeedCatalog(): Promise<{
       await db.put('people', person);
       peopleUpserted++;
     } else {
-      // Catalogue filmography is authoritative; do not keep stale seed links forever via union.
+      // Catalogue identity is authoritative (name + face + filmography).
       await db.put('people', {
         ...existing,
+        name: person.name,
+        role: person.role,
         filmographyIds: person.filmographyIds,
         knownFor: person.knownFor,
         biography: person.biography,
-        profileImageUrl: person.profileImageUrl || existing.profileImageUrl,
+        profileImageUrl: person.profileImageUrl,
       });
       peopleUpserted++;
+    }
+  }
+
+  // Drop mis-mapped person rows from older catalogue versions (wrong TMDb ids).
+  for (const obsoleteId of SEED_PEOPLE_OBSOLETE_IDS) {
+    const existing = await db.get('people', obsoleteId);
+    if (existing) {
+      await db.delete('people', obsoleteId);
     }
   }
 

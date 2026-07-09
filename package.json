@@ -10,7 +10,8 @@
     "zip": "cd dist && zip -r ../subsume.zip .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "validate:seed-people": "node scripts/validate-seed-people.mjs"
   },
   "dependencies": {
     "idb": "^8.0.0",

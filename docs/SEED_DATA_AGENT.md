@@ -189,6 +189,13 @@ Rules:
 
 Person IDs: `tmdb_person_{numeric TMDb person id}`.
 
+**Critical:** The number must be the real TMDb person id from `themoviedb.org/person/{id}`.
+Wrong ids ship the wrong face (we once labeled Mammootty with Chiranjeevi’s id, Kamal with Solomon Perel, Ray with Wes Anderson).
+
+After any people change:
+1. Run `npm run validate:seed-people` (network) — asserts page `og:title` matches seed `name`
+2. Bump `SEED_CATALOGUE_VERSION` and list retired wrong ids in `SEED_PEOPLE_OBSOLETE_IDS`
+
 ---
 
 ## 6. Ratings — how to fetch and store
