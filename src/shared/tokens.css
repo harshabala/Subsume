@@ -72,7 +72,8 @@
 
   /* ─── Cinematic Motion ───────────────────────────────────────── */
   --ease-focus-pull: cubic-bezier(0.25, 1, 0.5, 1);
-  --duration-curtain: 450ms;
+  --duration-curtain: 450ms; /* Slow Dolly enter */
+  --duration-curtain-close: 300ms; /* Curtain Close exit (subtler) */
   --blur-hero: blur(16px);
 
   /* ─── Brand Gradients (Gilded Night) ─────────────────────────── */

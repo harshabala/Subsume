@@ -27,6 +27,15 @@ interface DetailModalProps {
 const SUGGESTED_TAGS = ["Rewatchable", "Festival", "Criterion", "Silent Era", "Foreign Language", "Comfort Watch", "One-Timer"];
 
 
+const EXIT_FALLBACK_MS = 350;
+
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return false;
+  }
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
 export function DetailModal({
   media,
   libraryItem,
@@ -44,8 +53,10 @@ export function DetailModal({
     libraryItem ? getEmotionalSpectrum(libraryItem) : DEFAULT_EMOTIONS,
   );
   const [detailsExpanded, setDetailsExpanded] = useState(false);
+  const [closing, setClosing] = useState(false);
   const notesDebounceRef = useRef<ReturnType<typeof setTimeout>>();
   const modalRef = useRef<HTMLDivElement>(null);
+  const closedRef = useRef(false);
   const titleId = `detail-title-${media.id}`;
 
   const reflectionExcerpt = libraryItem ? getReflectionExcerpt(libraryItem) : undefined;
@@ -72,6 +83,41 @@ export function DetailModal({
       }
     };
   }, []);
+
+  const finishClose = () => {
+    if (closedRef.current) return;
+    closedRef.current = true;
+    onClose();
+  };
+
+  const requestClose = () => {
+    if (closedRef.current || closing) return;
+    if (prefersReducedMotion()) {
+      finishClose();
+      return;
+    }
+    setClosing(true);
+  };
+
+  // Wait for curtain-close animationend, with timeout fallback if it never fires
+  useEffect(() => {
+    if (!closing) return;
+
+    const el = modalRef.current;
+    const onEnd = (e: AnimationEvent) => {
+      if (el && e.target !== el) return;
+      // Ignore enter animation if it somehow races; only finish on exit
+      if (e.animationName && !String(e.animationName).includes('exit')) return;
+      finishClose();
+    };
+
+    el?.addEventListener('animationend', onEnd as EventListener);
+    const timer = window.setTimeout(finishClose, EXIT_FALLBACK_MS);
+    return () => {
+      el?.removeEventListener('animationend', onEnd as EventListener);
+      window.clearTimeout(timer);
+    };
+  }, [closing]);
 
   const scheduleNotesSave = (
     nextNotes: string,
@@ -118,33 +164,35 @@ export function DetailModal({
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') requestClose();
     };
     document.addEventListener('keydown', handleEsc);
     modalRef.current?.focus();
     return () => document.removeEventListener('keydown', handleEsc);
-  }, [onClose]);
+  }, [closing]);
 
   const tmdbRating = media.ratings.find((r) => r.provider === 'tmdb');
   const imdbRating = media.ratings.find((r) => r.provider === 'imdb');
   const rtRating = media.ratings.find((r) => r.provider === 'rt');
 
+  const closingClass = closing ? ' closing' : '';
+
   return (
     <div
-      className="sanctuary-modal-backdrop"
+      className={`sanctuary-modal-backdrop${closingClass}`}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) requestClose();
       }}
     >
       <div
-        className="sanctuary-modal-content"
+        className={`sanctuary-modal-content${closingClass}`}
         ref={modalRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
       >
-        <button type="button" onClick={onClose} className="sanctuary-modal-close" aria-label="Close details">
+        <button type="button" onClick={requestClose} className="sanctuary-modal-close" aria-label="Close details">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
