@@ -2,7 +2,6 @@ import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import {
   REFLECTION_CARD_EXCERPT_MAX,
-  truncateForExcerpt,
   needsExcerptTruncation,
 } from '@/shared/textTruncate';
 
@@ -23,13 +22,22 @@ export function ExpandableReflection({
   const [expanded, setExpanded] = useState(false);
   const trimmed = text.trim();
   const canTruncate = needsExcerptTruncation(trimmed, maxLength);
-  const display = expanded || !canTruncate ? trimmed : truncateForExcerpt(trimmed, maxLength);
 
   return (
-    <div className={`reflection-excerpt-block ${expanded ? 'reflection-excerpt-expanded' : ''}`}>
-      <p className={`${className} ${!expanded && canTruncate ? 'reflection-excerpt-clamped' : ''}`}>
-        &ldquo;{display}&rdquo;
-      </p>
+    <div
+      className={[
+        'reflection-excerpt-block',
+        canTruncate ? 'reflection-excerpt-expandable' : '',
+        expanded ? 'reflection-excerpt-expanded' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
+      <div className="reflection-excerpt-panel">
+        <div className="reflection-excerpt-panel-inner">
+          <p className={className}>&ldquo;{trimmed}&rdquo;</p>
+        </div>
+      </div>
       {canTruncate && (
         <button
           type="button"

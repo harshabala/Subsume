@@ -2,10 +2,26 @@
   max-width: 500px;
   margin: 0 auto 24px;
   border-color: var(--border-hero);
+  animation: sanctuary-notice-enter 180ms ease forwards;
 }
 
 .sanctuary-notice-plaque-text {
   color: var(--text-reflection);
+}
+
+@keyframes sanctuary-notice-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sanctuary-notice-plaque {
+    animation: none;
+  }
 }
 
 .sanctuary-notice-plaque--centered {

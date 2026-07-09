@@ -78,13 +78,62 @@ export function App() {
   const [stats, setStats] = useState<LibraryStats>({ movieCount: 0, tvCount: 0 });
   const [peopleCount, setPeopleCount] = useState(0);
   const [navMenuOpen, setNavMenuOpen] = useState(false);
+  const [navMenuClosing, setNavMenuClosing] = useState(false);
+  const navMenuVisible = navMenuOpen || navMenuClosing;
+  const drawerOpen = navMenuOpen && !navMenuClosing;
   const initialPrefetchDone = useRef(false);
+  const navCloseDoneRef = useRef(false);
+
+  const prefersReducedMotion = () =>
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const openNavMenu = () => {
+    navCloseDoneRef.current = false;
+    setNavMenuClosing(false);
+    setNavMenuOpen(true);
+  };
+
+  const finishNavMenuClose = () => {
+    if (navCloseDoneRef.current) return;
+    navCloseDoneRef.current = true;
+    setNavMenuOpen(false);
+    setNavMenuClosing(false);
+  };
+
+  const closeNavMenu = () => {
+    if (!navMenuOpen || navMenuClosing) return;
+    if (prefersReducedMotion()) {
+      navCloseDoneRef.current = true;
+      setNavMenuOpen(false);
+      setNavMenuClosing(false);
+      return;
+    }
+    navCloseDoneRef.current = false;
+    setNavMenuClosing(true);
+  };
 
   const goToPage = (page: Page) => {
     setCurrentPage(page);
     prefetchPage(page);
-    setNavMenuOpen(false);
+    closeNavMenu();
   };
+
+  useEffect(() => {
+    if (!navMenuClosing) return;
+    const drawer = document.getElementById('app-side-menu');
+    const onEnd = (e: TransitionEvent) => {
+      if (e.target !== drawer) return;
+      if (e.propertyName !== 'transform' && e.propertyName !== 'opacity') return;
+      finishNavMenuClose();
+    };
+    drawer?.addEventListener('transitionend', onEnd);
+    const fallback = window.setTimeout(finishNavMenuClose, 400);
+    return () => {
+      drawer?.removeEventListener('transitionend', onEnd);
+      window.clearTimeout(fallback);
+    };
+  }, [navMenuClosing]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -241,9 +290,9 @@ export function App() {
             type="button"
             className="nav-menu-toggle"
             aria-label="Open navigation menu"
-            aria-expanded={navMenuOpen}
+            aria-expanded={drawerOpen}
             aria-controls="app-side-menu"
-            onClick={() => setNavMenuOpen(true)}
+            onClick={openNavMenu}
           >
             <span className="material-symbols-outlined" aria-hidden="true">menu</span>
           </button>
@@ -265,17 +314,17 @@ export function App() {
         </nav>
       </header>
 
-      {navMenuOpen && (
+      {navMenuVisible && (
         <div
-          className="side-nav-backdrop app-mobile-nav-layer"
+          className={`side-nav-backdrop app-mobile-nav-layer ${navMenuClosing ? 'closing' : ''}`}
           role="presentation"
-          onClick={() => setNavMenuOpen(false)}
+          onClick={closeNavMenu}
         />
       )}
       <aside
         id="app-side-menu"
-        className={`side-menu-drawer app-mobile-nav-layer ${navMenuOpen ? 'open' : ''}`}
-        aria-hidden={!navMenuOpen}
+        className={`side-menu-drawer app-mobile-nav-layer ${drawerOpen ? 'open' : ''}${navMenuClosing ? ' closing' : ''}`}
+        aria-hidden={!drawerOpen}
       >
         <div className="side-menu-header">
           <span className="side-menu-title">Browse the house</span>
@@ -283,7 +332,7 @@ export function App() {
             type="button"
             className="side-menu-close"
             aria-label="Close navigation menu"
-            onClick={() => setNavMenuOpen(false)}
+            onClick={closeNavMenu}
           >
             <span className="material-symbols-outlined" aria-hidden="true">close</span>
           </button>
