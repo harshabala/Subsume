@@ -14,12 +14,24 @@ import { isValidPersonItem } from '@/shared/validation';
 import { MEDIA_ID_PATTERN } from '@/shared/mediaIds';
 import { SEED_MEDIA, SEED_LIBRARY, SEED_PEOPLE, SEED_CATALOGUE_VERSION, SEED_CATALOGUE_VERSION_KEY } from './seedData';
 
-const SEED_MEDIA_PATCHES: (Partial<MediaItem> & { id: string })[] = [
-  {
-    id: 'seed_drishyam_ml',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/7d8GLneJkF81q1POdK7VUrjWafX.jpg',
-  },
-];
+/**
+ * Full catalogue rows re-applied on version bump for existing `seed_*` media.
+ * Adds missing titles and refreshes poster/ratings/overview without touching user library rows.
+ * (Previously only SEED_MEDIA_PATCHES touched a single poster; v5 ships full metadata refresh.)
+ */
+const SEED_MEDIA_PATCHES: (Partial<MediaItem> & { id: string })[] = SEED_MEDIA.map((m) => ({
+  id: m.id,
+  canonicalTitle: m.canonicalTitle,
+  type: m.type,
+  year: m.year,
+  genres: m.genres,
+  ratings: m.ratings,
+  providers: m.providers,
+  posterUrl: m.posterUrl,
+  overview: m.overview,
+  wikidataDirectorBio: m.wikidataDirectorBio,
+  wikidataSummary: m.wikidataSummary,
+}));
 
 interface SubsumeDB extends DBSchema {
   media: {
@@ -135,8 +147,14 @@ export async function mergeSeedCatalog(): Promise<{
       await db.put('people', person);
       peopleUpserted++;
     } else {
-      const filmographyIds = [...new Set([...(existing.filmographyIds || []), ...person.filmographyIds])];
-      await db.put('people', { ...existing, filmographyIds, knownFor: person.knownFor, biography: person.biography });
+      // Catalogue filmography is authoritative; do not keep stale seed links forever via union.
+      await db.put('people', {
+        ...existing,
+        filmographyIds: person.filmographyIds,
+        knownFor: person.knownFor,
+        biography: person.biography,
+        profileImageUrl: person.profileImageUrl || existing.profileImageUrl,
+      });
       peopleUpserted++;
     }
   }

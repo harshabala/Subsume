@@ -1,6 +1,6 @@
 /**
  * Indian cinema highlights — merged into existing libraries via MERGE_SEED_CATALOG.
- * TMDb poster paths (w500).
+ * TMDb poster paths (w500). Metadata verified 2026-07-09 via TMDb + Wikidata (no API key).
  */
 import type { MediaItem, LibraryItem } from '../shared/types';
 
@@ -10,12 +10,15 @@ export const INDIAN_HIGHLIGHT_MEDIA: MediaItem[] = [
     canonicalTitle: 'Indian',
     type: 'movie',
     year: 1996,
-    genres: ['Action', 'Drama', 'Thriller'],
-    ratings: [{ score: 8.1, provider: 'tmdb' }],
-    providers: [],
-    posterUrl: 'https://image.tmdb.org/t/p/w500/1nfv2e14T1YxTwRsd67XAsOnv8D.jpg',
+    genres: ['Drama', 'Action', 'Thriller'],
+    ratings: [{ score: 6.9, provider: 'tmdb' }],
+    providers: [
+      { provider: 'tmdb', externalId: '31521', url: 'https://www.themoviedb.org/movie/31521' },
+      { provider: 'imdb', externalId: 'tt0116630', url: 'https://www.imdb.com/title/tt0116630/' },
+    ],
+    posterUrl: 'https://image.tmdb.org/t/p/w500/zhGayNbH2ZHWaJkhSv3qEhs5fy6.jpg',
     overview:
-      'A veteran freedom fighter returns to fight corruption — Kamal Haasan in a dual role for Shankar.\n\n• Directed by: S. Shankar\n• Starring: Kamal Haasan, Manisha Koirala, Urmila Matondkar',
+      'Senapathy, an ex-freedom fighter, is angry. He is angry against the rampant corruption at every level of the bureaucracy. He will clean it up at any cost.\n\n• Directed by: S. Shankar\n• Written by: S. Shankar, Sujatha\n• Starring: Kamal Haasan, Manisha Koirala, Urmila Matondkar\n• Cinematography: Jeeva\n• Music by: A. R. Rahman',
     wikidataDirectorBio: 'S. Shankar',
   },
   {
@@ -23,12 +26,15 @@ export const INDIAN_HIGHLIGHT_MEDIA: MediaItem[] = [
     canonicalTitle: 'Mudhalvan',
     type: 'movie',
     year: 1999,
-    genres: ['Drama', 'Thriller'],
-    ratings: [{ score: 8.4, provider: 'tmdb' }],
-    providers: [],
-    posterUrl: 'https://image.tmdb.org/t/p/w500/bvYjhsbxOBwpm8xLE5BhdA3a8CZ.jpg',
+    genres: ['Thriller'],
+    ratings: [{ score: 6.9, provider: 'tmdb' }],
+    providers: [
+      { provider: 'tmdb', externalId: '66526', url: 'https://www.themoviedb.org/movie/66526' },
+      { provider: 'imdb', externalId: 'tt0220656', url: 'https://www.imdb.com/title/tt0220656/' },
+    ],
+    posterUrl: 'https://image.tmdb.org/t/p/w500/k69lNVmDJcLLJb4LBCk3L2yv4Vw.jpg',
     overview:
-      'A TV reporter is challenged to become Chief Minister for a day — political thriller classic.\n\n• Directed by: S. Shankar\n• Starring: Arjun Sarja, Manisha Koirala, Raghuvaran',
+      'A man accepts a challenge to act as the Chief Minister for one day only, and makes such a success of it that soon he is embroiled in political intrigue.\n\n• Directed by: S. Shankar\n• Written by: S. Shankar, Sujatha\n• Starring: Arjun Sarja, Manisha Koirala, Raghuvaran\n• Cinematography: K. V. Anand\n• Music by: A. R. Rahman',
     wikidataDirectorBio: 'S. Shankar',
   },
   {
@@ -36,12 +42,15 @@ export const INDIAN_HIGHLIGHT_MEDIA: MediaItem[] = [
     canonicalTitle: 'Enthiran',
     type: 'movie',
     year: 2010,
-    genres: ['Sci-Fi', 'Action', 'Romance'],
-    ratings: [{ score: 7.2, provider: 'tmdb' }],
-    providers: [],
-    posterUrl: 'https://image.tmdb.org/t/p/w500/8sMuhJ53TLmT8BC2Lyeq5B1OCuI.jpg',
+    genres: ['Action', 'Sci-Fi', 'Adventure'],
+    ratings: [{ score: 6.5, provider: 'tmdb' }],
+    providers: [
+      { provider: 'tmdb', externalId: '148284', url: 'https://www.themoviedb.org/movie/148284' },
+      { provider: 'imdb', externalId: 'tt1305797', url: 'https://www.imdb.com/title/tt1305797/' },
+    ],
+    posterUrl: 'https://image.tmdb.org/t/p/w500/hai6CSCLxULO1RThjDP3lWAqOtQ.jpg',
     overview:
-      'A scientist’s android develops a dangerous will of its own (Robot / Enthiran).\n\n• Directed by: S. Shankar\n• Starring: Rajinikanth, Aishwarya Rai Bachchan',
+      'Dr. Vaseegaran creates Chitti, a powerful robot in his own image, but it is rejected by the scientific body AIRD due to its lack of human behaviour and emotions. After a lightning strike triggers emotions in Chitti, he begins to develop human-like feelings. However, Chitti falls in love with Dr. Vaseegaran\'s fiancée, Sana, and turns against his creator, leading to dangerous consequences.\n\n• Directed by: S. Shankar\n• Written by: S. Shankar, Madhan Karky\n• Starring: Rajinikanth, Aishwarya Rai Bachchan\n• Cinematography: R. Rathnavelu\n• Music by: A. R. Rahman',
     wikidataDirectorBio: 'S. Shankar',
   },
   {
@@ -50,11 +59,14 @@ export const INDIAN_HIGHLIGHT_MEDIA: MediaItem[] = [
     type: 'movie',
     year: 1999,
     genres: ['Drama', 'Action'],
-    ratings: [{ score: 7.8, provider: 'tmdb' }],
-    providers: [],
-    posterUrl: 'https://image.tmdb.org/t/p/w500/4Y1WNkd88JXqWAJ2o8CDv9kJp2v.jpg',
+    ratings: [{ score: 7.4, provider: 'tmdb' }],
+    providers: [
+      { provider: 'tmdb', externalId: '47940', url: 'https://www.themoviedb.org/movie/47940' },
+      { provider: 'imdb', externalId: 'tt0213969', url: 'https://www.imdb.com/title/tt0213969/' },
+    ],
+    posterUrl: 'https://image.tmdb.org/t/p/w500/8PSYF0AtpLbSlTDneCUo7zP4qL1.jpg',
     overview:
-      'An engineer rises from humble roots while facing a relentless rival.\n\n• Directed by: K. S. Ravikumar\n• Starring: Rajinikanth, Ramya Krishnan, Soundarya',
+      'Padayappa, a mechanical engineer whose father gives up his property to his foster brother, and then dies of shock soon after. Neelambari initially loves Padayappa, but plans to humiliate him after his family humiliates her father. The rest of the plot deals with Padayappa overcoming all the obstacles placed by Neelambari.\n\n• Directed by: K. S. Ravikumar\n• Written by: K. S. Ravikumar\n• Starring: Rajinikanth, Ramya Krishnan, Soundarya\n• Cinematography: Tirru\n• Music by: A. R. Rahman',
     wikidataDirectorBio: 'K. S. Ravikumar',
   },
   {
@@ -62,12 +74,15 @@ export const INDIAN_HIGHLIGHT_MEDIA: MediaItem[] = [
     canonicalTitle: 'Vikram',
     type: 'movie',
     year: 2022,
-    genres: ['Action', 'Thriller'],
-    ratings: [{ score: 8.0, provider: 'tmdb' }],
-    providers: [],
-    posterUrl: 'https://image.tmdb.org/t/p/w500/rpygWG88jmfDSJhTwewy9dxey4T.jpg',
+    genres: ['Action', 'Crime', 'Thriller'],
+    ratings: [{ score: 7.6, provider: 'tmdb' }],
+    providers: [
+      { provider: 'tmdb', externalId: '743563', url: 'https://www.themoviedb.org/movie/743563' },
+      { provider: 'imdb', externalId: 'tt9179430', url: 'https://www.imdb.com/title/tt9179430/' },
+    ],
+    posterUrl: 'https://image.tmdb.org/t/p/w500/774UV1aCURb4s4JfEFg3IEMu5Zj.jpg',
     overview:
-      'A black-ops agent hunts a phantom cell threatening the nation.\n\n• Directed by: Lokesh Kanagaraj\n• Starring: Kamal Haasan, Vijay Sethupathi, Fahadh Faasil',
+      'Amar is assigned to investigate a case of serial killings. When Amar investigates the case, he realizes it is not what it seems to be and following down this path will lead to nothing but war between everyone involved.\n\n• Directed by: Lokesh Kanagaraj\n• Written by: Lokesh Kanagaraj, Rathna Kumar\n• Starring: Kamal Haasan, Vijay Sethupathi, Fahadh Faasil\n• Cinematography: Girish Gangadharan\n• Music by: Anirudh Ravichander',
     wikidataDirectorBio: 'Lokesh Kanagaraj',
   },
   {
@@ -75,12 +90,15 @@ export const INDIAN_HIGHLIGHT_MEDIA: MediaItem[] = [
     canonicalTitle: 'Drishyam',
     type: 'movie',
     year: 2013,
-    genres: ['Drama', 'Thriller'],
-    ratings: [{ score: 8.7, provider: 'tmdb' }],
-    providers: [],
+    genres: ['Thriller', 'Crime', 'Drama'],
+    ratings: [{ score: 7.5, provider: 'tmdb' }],
+    providers: [
+      { provider: 'tmdb', externalId: '244049', url: 'https://www.themoviedb.org/movie/244049' },
+      { provider: 'imdb', externalId: 'tt3417422', url: 'https://www.imdb.com/title/tt3417422/' },
+    ],
     posterUrl: 'https://image.tmdb.org/t/p/w500/7d8GLneJkF81q1POdK7VUrjWafX.jpg',
     overview:
-      'A father shields his family after an unthinkable accident — Malayalam original.\n\n• Directed by: Jeethu Joseph\n• Starring: Mohanlal, Meena, Ansiba Hassan',
+      'Georgekutty lives a happy life with his wife and daughters. Things take a turn when his daughter gets indecently filmed using a hidden camera, by the son of a police inspector.\n\n• Directed by: Jeethu Joseph\n• Written by: Jeethu Joseph\n• Starring: Mohanlal, Meena, Ansiba Hassan, Asha Sarath\n• Cinematography: Sujith Vaassudev\n• Music by: Anil Johnson, Vinu Thomas',
     wikidataDirectorBio: 'Jeethu Joseph',
   },
 ];

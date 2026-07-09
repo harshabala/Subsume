@@ -85,8 +85,6 @@ vi.mock('@/background/seedData', () => ({
 }));
 
 const DB_NAME = 'subsume-db';
-const PATCHED_DRISHYAM_POSTER =
-  'https://image.tmdb.org/t/p/w500/7d8GLneJkF81q1POdK7VUrjWafX.jpg';
 
 const SENTINEL_MEDIA: MediaItem = {
   id: 'sentinel_skip_auto_seed',
@@ -182,7 +180,8 @@ describe('mergeSeedCatalog', () => {
 
     const result = await storage.mergeSeedCatalog();
 
-    expect(result.mediaAdded).toBe(4);
+    // 3 new catalogue rows + 3 full metadata refreshes for those same seed ids
+    expect(result.mediaAdded).toBe(6);
     expect(result.libraryAdded).toBe(2);
 
     const alpha = await storage.getMediaItem('seed_alpha');
@@ -191,34 +190,37 @@ describe('mergeSeedCatalog', () => {
     expect(beta?.canonicalTitle).toBe('Beta Film');
   });
 
-  it('does not overwrite existing media metadata (only patches via SEED_MEDIA_PATCHES)', async () => {
-    const userAlpha: MediaItem = {
+  it('refreshes existing seed_* catalogue metadata (posters, titles, overview)', async () => {
+    const staleAlpha: MediaItem = {
       ...mediaAlpha,
-      canonicalTitle: 'User Custom Alpha Title',
+      canonicalTitle: 'Stale Alpha Title',
       posterUrl: 'https://example.com/user-alpha.jpg',
-      overview: 'User synopsis should survive merge',
+      overview: 'Stale synopsis should be replaced by catalogue',
     };
-    const userDrishyam: MediaItem = {
+    const staleDrishyam: MediaItem = {
       ...mediaDrishyam,
       posterUrl: 'https://example.com/old-drishyam.jpg',
     };
 
     const storage = await prepareCatalogueDb({
-      media: [userAlpha, userDrishyam, SENTINEL_MEDIA],
+      media: [staleAlpha, staleDrishyam, SENTINEL_MEDIA],
     });
 
     const result = await storage.mergeSeedCatalog();
 
     const alpha = await storage.getMediaItem('seed_alpha');
     const drishyam = await storage.getMediaItem('seed_drishyam_ml');
+    const sentinel = await storage.getMediaItem('sentinel_skip_auto_seed');
 
     expect(alpha).toMatchObject({
-      canonicalTitle: 'User Custom Alpha Title',
-      posterUrl: 'https://example.com/user-alpha.jpg',
-      overview: 'User synopsis should survive merge',
+      canonicalTitle: 'Alpha Film',
+      posterUrl: 'https://example.com/alpha-seed.jpg',
     });
-    expect(drishyam?.posterUrl).toBe(PATCHED_DRISHYAM_POSTER);
-    expect(result.mediaAdded).toBe(2);
+    expect(drishyam?.posterUrl).toBe('https://example.com/drishyam-seed.jpg');
+    // Non-seed rows are never rewritten by catalogue merge
+    expect(sentinel?.canonicalTitle).toBe('Sentinel');
+    // beta newly added + alpha/drishyam/beta refreshed (3) = 1 + 3
+    expect(result.mediaAdded).toBe(4);
   });
 
   it('adds library entry with notes when missing', async () => {
