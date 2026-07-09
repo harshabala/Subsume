@@ -168,21 +168,87 @@
   color: var(--fg-base);
 }
 
+/* One-shot projector beam + empty plaque enter (ceremonial, 600–900ms) */
+@keyframes empty-projector-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes empty-projector-beam {
+  0% {
+    opacity: 0;
+    clip-path: circle(0% at 50% 50%);
+  }
+  35% {
+    opacity: 0.9;
+    clip-path: circle(48% at 50% 50%);
+  }
+  100% {
+    opacity: 0;
+    clip-path: circle(78% at 50% 50%);
+  }
+}
+
+@keyframes empty-projector-frame {
+  from {
+    opacity: 0;
+    clip-path: inset(42% 42% 42% 42%);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
 .empty-state-projection {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   padding: var(--spacing-2xl) var(--spacing-xl);
   color: var(--muted-fg);
+  animation: empty-projector-in 720ms var(--ease-focus-pull, cubic-bezier(0.25, 1, 0.5, 1)) both;
+}
+
+.empty-state-projection-beam {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--spacing-2xl) + 36px);
+  width: 168px;
+  height: 168px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 0;
+  background: conic-gradient(
+    from 200deg at 50% 50%,
+    transparent 0deg,
+    hsla(45, 80%, 62%, 0.28) 70deg,
+    transparent 150deg,
+    hsla(45, 70%, 58%, 0.16) 240deg,
+    transparent 320deg
+  );
+  filter: blur(14px);
+  animation: empty-projector-beam 820ms var(--ease-focus-pull, cubic-bezier(0.25, 1, 0.5, 1)) both;
 }
 
 .empty-state-projection-frame {
+  position: relative;
+  z-index: 1;
   color: var(--primary);
   margin-bottom: var(--spacing-lg);
+  animation: empty-projector-frame 700ms var(--ease-focus-pull, cubic-bezier(0.25, 1, 0.5, 1)) both;
 }
 
 .empty-state-projection-title {
+  position: relative;
+  z-index: 1;
   font-family: var(--font-editorial);
   font-size: 1.125rem;
   color: var(--fg-base);
@@ -190,15 +256,31 @@
 }
 
 .empty-state-projection-message {
+  position: relative;
+  z-index: 1;
   font-size: var(--font-size-sm);
   line-height: 1.5;
   max-width: 36ch;
 }
 
 .empty-state-projection-hint {
+  position: relative;
+  z-index: 1;
   margin-top: var(--spacing-md);
   font-size: var(--font-size-xs);
   opacity: 0.8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .empty-state-projection,
+  .empty-state-projection-beam,
+  .empty-state-projection-frame {
+    animation: none;
+  }
+
+  .empty-state-projection-beam {
+    opacity: 0;
+  }
 }
 
 .emotion-dots {

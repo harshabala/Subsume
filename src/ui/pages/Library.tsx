@@ -313,11 +313,12 @@ export function Library() {
         ) : (
           <Fragment>
             <div className="card-grid">
-              {filteredAndSortedItems.map(({ library, media }) => (
+              {filteredAndSortedItems.map(({ library, media }, index) => (
                 <HardcoverSpineCard
                   key={library.mediaId}
                   library={library}
                   media={media}
+                  index={index}
                   onSelect={() => setSelectedItem({ library, media })}
                   onUpdateStatus={updateStatus}
                   onUpdateRating={updateRating}

@@ -389,8 +389,28 @@
   margin-bottom: 0.35rem;
 }
 
+/* Weekly digest grid: fade + blur enter when programme is present */
+@keyframes home-digest-enter {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+.home-weekly-enter {
+  animation: home-digest-enter 480ms var(--ease-focus-pull, cubic-bezier(0.25, 1, 0.5, 1)) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .discovery-feed-card {
+    animation: none;
+  }
+
+  .home-weekly-enter {
     animation: none;
   }
 }

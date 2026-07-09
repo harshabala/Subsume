@@ -7,6 +7,30 @@
   margin: 1.5rem 0 3rem;
 }
 
+/* First-paint stagger (matches discovery feed: first 6 via --feed-index) */
+@keyframes libraryCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-grid > .media-card {
+  /* backwards only: avoid holding transform after enter so hover lift still works */
+  animation: libraryCardIn 0.45s var(--ease-focus-pull, cubic-bezier(0.25, 1, 0.5, 1)) backwards;
+  animation-delay: calc(min(var(--feed-index, 0), 5) * 60ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-grid > .media-card {
+    animation: none;
+  }
+}
+
 .library-tabs {
   margin-bottom: var(--spacing-xl);
 }

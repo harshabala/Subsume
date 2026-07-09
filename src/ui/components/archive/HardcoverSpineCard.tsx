@@ -14,6 +14,8 @@ import { hasEmotionalData, getEmotionalSpectrum, EMOTION_KEYS } from '@/shared/e
 export interface HardcoverSpineCardProps {
   library: LibraryItem;
   media: MediaItem;
+  /** Grid index for enter stagger (first 6, like discovery feed). */
+  index?: number;
   onSelect: () => void;
   onUpdateStatus: (mediaId: string, status: LibraryStatus) => void;
   onUpdateRating: (mediaId: string, rating: number) => void;
@@ -25,6 +27,7 @@ export interface HardcoverSpineCardProps {
 export function HardcoverSpineCard({
   library,
   media,
+  index = 0,
   onSelect,
   onUpdateStatus,
   onUpdateRating,
@@ -36,6 +39,7 @@ export function HardcoverSpineCard({
   const reflectionExcerpt = getReflectionExcerpt(library);
   const intent = resolveSanctuaryIntent(library);
   const title = media?.canonicalTitle || 'Untitled reel';
+  const staggerIndex = Math.min(index, 5);
 
   const handleCardKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -47,6 +51,7 @@ export function HardcoverSpineCard({
   return (
     <div
       className="media-card sanctuary-media-card"
+      style={{ '--feed-index': staggerIndex } as Record<string, number>}
       role="button"
       tabIndex={0}
       onClick={onSelect}

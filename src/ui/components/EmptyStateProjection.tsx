@@ -15,6 +15,7 @@ export function EmptyStateProjection({
 }: EmptyStateProjectionProps) {
   return (
     <div className={`empty-state-projection ${className}`.trim()} data-testid="empty-state-projection">
+      <div className="empty-state-projection-beam" aria-hidden="true" />
       <svg
         className="empty-state-projection-frame"
         width="72"

@@ -753,7 +753,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
                 <p className="sanctuary-plaque-text">No programme items yet. Refresh to pull the latest from the wire.</p>
               </div>
             ) : (
-              <div className="home-weekly-grid">
+              <div className="home-weekly-grid home-weekly-enter" key="home-weekly-digest">
                 {weeklyPicks.map((pick) => {
                   const media = pick.media;
                   const rating = media ? pickRating(media) : null;
