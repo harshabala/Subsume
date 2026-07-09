@@ -355,6 +355,17 @@
   z-index: 50;
 }
 
+@keyframes popup-suggestion-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .suggestion-item {
   padding: 10px 14px;
   font-size: 13px;
@@ -364,6 +375,22 @@
   align-items: center;
   transition: background 0.15s;
   color: var(--fg-base);
+  animation: popup-suggestion-enter 180ms ease both;
+  animation-delay: calc(min(var(--suggestion-index, 0), 5) * 40ms);
+}
+
+.suggestion-item--static {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .suggestion-item {
+    animation: none;
+  }
+
+  .popup-view {
+    animation: none;
+  }
 }
 
 .suggestion-item:hover,

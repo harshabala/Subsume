@@ -7,6 +7,30 @@
   animation: subsume-pulse 1.5s ease-in-out infinite;
 }
 
+/* Soft crossfade when loading ↔ content (or empty) swaps */
+@keyframes recommendations-crossfade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.recommendations-phase {
+  animation: recommendations-crossfade-in 180ms ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recommendations-phase {
+    animation: none;
+  }
+
+  .recommendations-loading-card {
+    animation: none;
+  }
+}
+
 .recommendation-media-card {
   display: flex;
   flex-direction: column;

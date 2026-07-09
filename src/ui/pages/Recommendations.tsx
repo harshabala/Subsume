@@ -267,64 +267,69 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
         </p>
       </header>
 
-      {/* ── Existing rule-based section (unchanged) ── */}
-      {loading ? (
-        <div className="sanctuary-empty-plaque">
-           <div className="subsume-spinner sanctuary-spinner-centered" />
-           <p className="sanctuary-plaque-text">Reviewing your repertoire...</p>
-        </div>
-      ) : hasNoRecs ? (
-        <div className="sanctuary-empty-plaque">
-          <span className="sanctuary-plaque-index">Programme awaiting</span>
-          <h3 className="sanctuary-plaque-title">Your Ledger Needs More Reels</h3>
-          <p className="sanctuary-plaque-text">
-            Curation grows with what you watch and remember. Add works to your archive, or mark screenings as complete.
-          </p>
-        </div>
-      ) : isGrouped ? (
-        <div className="recommendations-grouped-container">
-          {groupedRecs.map(({ seedTitle, recommendations }) => {
-            const isCollapsed = collapsedGroups[seedTitle] || false;
-            return (
-              <div key={seedTitle} className="recommendations-rule-group">
-                <div 
-                  className="recommendations-rule-group-header"
-                  onClick={() => toggleGroup(seedTitle)}
-                  style={{ marginBottom: isCollapsed ? '0px' : '16px' }}
-                >
-                  <span className="sanctuary-subtitle" style={{ marginRight: '4px' }}>[ {isCollapsed ? '+' : '–'} ]</span>
-                  <h3 className="recommendations-rule-group-title">
-                    Because you experienced <span className="recommendations-rule-group-title-highlight">{seedTitle}</span>
-                  </h3>
-                </div>
-                {!isCollapsed && (
-                  <div className="card-grid recommendations-rule-grid">
-                    {recommendations.map(r => (
-                      <RecommendationMediaCard
-                        key={r.media.id}
-                        media={r.media}
-                        explanation={r.explanation}
-                        onClick={() => setSelectedMedia(r.media)}
-                      />
-                    ))}
+      {/* ── Existing rule-based section (soft crossfade loading ↔ content) ── */}
+      <div
+        key={loading ? 'rule-loading' : hasNoRecs ? 'rule-empty' : isGrouped ? 'rule-grouped' : 'rule-flat'}
+        className="recommendations-phase"
+      >
+        {loading ? (
+          <div className="sanctuary-empty-plaque">
+             <div className="subsume-spinner sanctuary-spinner-centered" />
+             <p className="sanctuary-plaque-text">Reviewing your repertoire...</p>
+          </div>
+        ) : hasNoRecs ? (
+          <div className="sanctuary-empty-plaque">
+            <span className="sanctuary-plaque-index">Programme awaiting</span>
+            <h3 className="sanctuary-plaque-title">Your Ledger Needs More Reels</h3>
+            <p className="sanctuary-plaque-text">
+              Curation grows with what you watch and remember. Add works to your archive, or mark screenings as complete.
+            </p>
+          </div>
+        ) : isGrouped ? (
+          <div className="recommendations-grouped-container">
+            {groupedRecs.map(({ seedTitle, recommendations }) => {
+              const isCollapsed = collapsedGroups[seedTitle] || false;
+              return (
+                <div key={seedTitle} className="recommendations-rule-group">
+                  <div 
+                    className="recommendations-rule-group-header"
+                    onClick={() => toggleGroup(seedTitle)}
+                    style={{ marginBottom: isCollapsed ? '0px' : '16px' }}
+                  >
+                    <span className="sanctuary-subtitle" style={{ marginRight: '4px' }}>[ {isCollapsed ? '+' : '–'} ]</span>
+                    <h3 className="recommendations-rule-group-title">
+                      Because you experienced <span className="recommendations-rule-group-title-highlight">{seedTitle}</span>
+                    </h3>
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="card-grid recommendations-rule-grid">
-          {recs.map(r => (
-            <RecommendationMediaCard
-              key={r.media.id}
-              media={r.media}
-              explanation={r.explanation}
-              onClick={() => setSelectedMedia(r.media)}
-            />
-          ))}
-        </div>
-      )}
+                  {!isCollapsed && (
+                    <div className="card-grid recommendations-rule-grid">
+                      {recommendations.map(r => (
+                        <RecommendationMediaCard
+                          key={r.media.id}
+                          media={r.media}
+                          explanation={r.explanation}
+                          onClick={() => setSelectedMedia(r.media)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="card-grid recommendations-rule-grid">
+            {recs.map(r => (
+              <RecommendationMediaCard
+                key={r.media.id}
+                media={r.media}
+                explanation={r.explanation}
+                onClick={() => setSelectedMedia(r.media)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* ── Phase 4: AI Personalized Section ── */}
       <div className="recommendations-ai-section">
@@ -409,7 +414,7 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
 
         {/* LOADING STATE */}
         {recsLoading && (
-          <div>
+          <div key="ai-loading" className="recommendations-phase">
             <div className="recommendations-loading-grid">
               {[0, 1, 2, 3].map(i => (
                 <div key={i} className="recommendations-loading-card" style={{ animationDelay: `${i * 0.04}s` }} />
@@ -423,7 +428,7 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
 
         {/* RESULTS STATE */}
         {!recsLoading && personalizedRecs.length > 0 && (
-          <div>
+          <div key="ai-results" className="recommendations-phase">
             {/* Header row */}
             <div className="recommendations-results-header">
               <span className="sanctuary-plaque-title" style={{ margin: 0, fontSize: '20px' }}>Curator&apos;s programme</span>

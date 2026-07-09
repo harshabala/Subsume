@@ -543,9 +543,14 @@ function Popup() {
             />
             
             {showSuggestions && (suggestions.length > 0 || searchLoading) && (
-              <ul id="popup-suggestions-list" className="suggestions-list" role="listbox">
+              <ul
+                id="popup-suggestions-list"
+                className="suggestions-list"
+                role="listbox"
+                key={searchLoading ? 'searching' : `suggestions-${searchQuery}`}
+              >
                 {searchLoading ? (
-                  <li className="suggestion-item" role="option" style={{ fontStyle: 'italic', justifyContent: 'center' }}>Searching the repertoire…</li>
+                  <li className="suggestion-item suggestion-item--static" role="option" style={{ fontStyle: 'italic', justifyContent: 'center' }}>Searching the repertoire…</li>
                 ) : (
                   suggestions.map((movie, index) => (
                     <li
@@ -553,6 +558,7 @@ function Popup() {
                       role="option"
                       aria-selected={highlightedIndex === index}
                       className={`suggestion-item${highlightedIndex === index ? ' highlighted' : ''}`}
+                      style={{ '--suggestion-index': Math.min(index, 5) } as Record<string, number>}
                       onClick={() => handleSelectMovie(movie)}
                       onMouseEnter={() => setHighlightedIndex(index)}
                     >
