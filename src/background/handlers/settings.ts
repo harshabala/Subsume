@@ -60,7 +60,7 @@ function mergePreferences(
       continue;
     }
 
-    (merged as Record<string, unknown>)[field] = value;
+    (merged as unknown as Record<string, unknown>)[field] = value;
   }
 
   return merged;

@@ -256,18 +256,26 @@ function Popup() {
       });
 
       // 3. Save notes and emotional spectrum ratings
-      const notesRes = await sendMessage<{ updated?: boolean }, { updated: boolean }>(
-        MessageType.SET_USER_NOTES,
+      const notesRes = await sendMessage<
         {
-          mediaId: selectedMovie.id,
-          notes: logNotes.trim(),
-          emotionalRecall: logNotes.trim() || undefined,
-          awe: emotions.awe,
-          melancholy: emotions.melancholy,
-          tension: emotions.tension,
-          warmth: emotions.warmth,
-        }
-      );
+          mediaId: string;
+          notes: string;
+          emotionalRecall?: string;
+          awe?: number;
+          melancholy?: number;
+          tension?: number;
+          warmth?: number;
+        },
+        { updated: boolean }
+      >(MessageType.SET_USER_NOTES, {
+        mediaId: selectedMovie.id,
+        notes: logNotes.trim(),
+        emotionalRecall: logNotes.trim() || undefined,
+        awe: emotions.awe,
+        melancholy: emotions.melancholy,
+        tension: emotions.tension,
+        warmth: emotions.warmth,
+      });
       if (!notesRes.data?.updated) {
         throw new Error('Failed to persist emotional reflection to library.');
       }

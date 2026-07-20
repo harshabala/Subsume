@@ -156,3 +156,180 @@
   background: var(--onboarding-cta-hover-bg);
   border-color: var(--onboarding-cta-hover-border);
 }
+
+.onboarding-cta:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.onboarding-cta--ghost {
+  border-color: transparent;
+  color: var(--onboarding-body);
+  letter-spacing: 0.08em;
+}
+
+.onboarding-cta--ghost:hover {
+  background: transparent;
+  border-color: var(--onboarding-cta-border);
+  color: var(--onboarding-cta);
+}
+
+/* ─── Wizard steps ─────────────────────────────────────────────────── */
+
+.onboarding-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 36px;
+}
+
+.onboarding-step-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--onboarding-divider);
+  opacity: 0.45;
+  transition: opacity 180ms ease, transform 180ms ease, background 180ms ease;
+}
+
+.onboarding-step-dot--current {
+  opacity: 1;
+  transform: scale(1.35);
+  background: var(--onboarding-cta-border);
+}
+
+.onboarding-step-dot--done {
+  opacity: 0.85;
+  background: var(--onboarding-monogram);
+}
+
+.onboarding-step {
+  width: 100%;
+}
+
+.onboarding-headline--step {
+  font-size: 32px;
+}
+
+.onboarding-body--compact {
+  margin-bottom: 28px;
+}
+
+/* ─── Forms ────────────────────────────────────────────────────────── */
+
+.onboarding-form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  text-align: left;
+  gap: 10px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.onboarding-label {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--onboarding-monogram);
+  margin-top: 6px;
+}
+
+.onboarding-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: transparent;
+  border: 1px solid var(--onboarding-divider);
+  border-radius: 2px;
+  color: var(--onboarding-headline);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  padding: 12px 14px;
+  outline: none;
+  transition: border-color 180ms ease;
+}
+
+.onboarding-input:focus {
+  border-color: var(--onboarding-cta-border);
+}
+
+.onboarding-input::placeholder {
+  color: var(--onboarding-pillar-desc);
+  opacity: 0.7;
+}
+
+.onboarding-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--onboarding-body) 50%),
+    linear-gradient(135deg, var(--onboarding-body) 50%, transparent 50%);
+  background-position: calc(100% - 18px) calc(50% - 2px), calc(100% - 12px) calc(50% - 2px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 32px;
+}
+
+.onboarding-help {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--onboarding-pillar-desc);
+  font-weight: 300;
+  margin: 0 0 8px;
+}
+
+.onboarding-link {
+  color: var(--onboarding-cta);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.onboarding-link:hover {
+  color: var(--onboarding-headline);
+}
+
+.onboarding-error {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.5;
+  color: #c45c5c;
+  margin: 0 0 4px;
+  font-weight: 400;
+}
+
+.onboarding-warn {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--onboarding-monogram);
+  margin: 0 0 4px;
+  font-weight: 300;
+  font-style: italic;
+}
+
+.onboarding-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.onboarding-actions--stack {
+  flex-direction: column;
+}
+
+.onboarding-form .onboarding-cta {
+  margin-top: 8px;
+  align-self: center;
+}
+
+.onboarding-actions .onboarding-cta {
+  margin-top: 0;
+}

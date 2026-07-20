@@ -226,12 +226,20 @@ export function Settings() {
   async function loadCuratorPreview() {
     setCuratorPreviewLoading(true);
     try {
-      const preview = await sendMessage<{
-        systemPrompt: string;
-        userPrompt: string;
-        tasteProfileJson: string;
-        taskPrompt: string;
-      }>(MessageType.GET_CURATOR_PROMPT_PREVIEW, {});
+      const res = await sendMessage<
+        Record<string, never>,
+        {
+          systemPrompt: string;
+          userPrompt: string;
+          tasteProfileJson: string;
+          taskPrompt: string;
+        }
+      >(MessageType.GET_CURATOR_PROMPT_PREVIEW, {});
+      const preview = res.data;
+      if (!preview) {
+        setCuratorPreview('Could not assemble preview. Save settings and try again.');
+        return;
+      }
       const assembled = [
         '── SYSTEM (persona) ──',
         preview.systemPrompt,

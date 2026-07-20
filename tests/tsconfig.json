@@ -1,7 +1,9 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "types": ["vitest/globals", "chrome"]
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "types": ["vitest/globals", "chrome", "@testing-library/jest-dom"]
   },
   "include": ["**/*.ts", "**/*.tsx"]
 }

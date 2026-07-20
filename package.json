@@ -1,16 +1,21 @@
 {
   "name": "subsume",
-  "version": "0.1.11",
+  "version": "0.2.0",
   "private": true,
-  "description": "Track movies & TV shows you discover while browsing.",
+  "description": "A private film journal for Chrome. Capture what stayed with you, follow filmmakers, and discover titles as you browse.",
   "type": "module",
   "scripts": {
     "dev": "vite build --watch",
     "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "ci": "npm run typecheck && npm test && npm run build",
     "zip": "cd dist && zip -r ../subsume.zip .",
+    "package": "npm run build && node scripts/package-extension.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "lint:eslint": "eslint src --max-warnings 200",
     "validate:seed-people": "node scripts/validate-seed-people.mjs"
   },
   "dependencies": {
@@ -20,14 +25,19 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@preact/preset-vite": "^2.10.5",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/preact": "^3.2.4",
     "@types/chrome": "^0.0.287",
     "@types/uuid": "^10.0.0",
     "@vitest/coverage-v8": "^4.1.9",
     "esbuild": "^0.28.1",
+    "eslint": "^10.7.0",
     "fake-indexeddb": "^6.0.0",
     "jsdom": "^24.0.0",
     "typescript": "^5.7.0",
+    "typescript-eslint": "^8.64.0",
     "vite": "^8.0.16",
     "vite-plugin-static-copy": "^4.1.1",
     "vitest": "^4.1.9"

@@ -4,7 +4,8 @@
 
 <!-- Add a screenshot or short GIF here of the Poetic Capture Canvas or the museum plaque hover reveal.
      This is the single highest-leverage addition to this README — a portfolio reader decides
-     whether to keep reading in about 3 seconds, and a visual does that work instantly. -->
+     whether to keep reading in about 3 seconds, and a visual does that work instantly.
+     CWS listing frames: store/screenshots/ (see store/screenshots/README.md). -->
 
 ---
 
@@ -17,6 +18,7 @@
 - [Architecture](#architecture--engineering-blueprints)
 - [Security](#security)
 - [Setup & Local Run](#setup--local-run-guide)
+- [Chrome Web Store](#chrome-web-store)
 - [Attribution](#attribution--acknowledgements)
 - [License](#license)
 
@@ -114,7 +116,7 @@ The **Hardcover Library Archive** organizes everything you've captured — each 
 - **Strict TypeScript:** No `any` types in production code. All `unknown` inputs are narrowed at boundaries.
 - **Memory Safety:** Every Shadow DOM manager (`MuseumPlaqueManager`, `AuteurScreenplayDock`) implements an explicit `destroy()` lifecycle. Every async hook uses an `isMountedRef` cancellation flag.
 - **Structured Telemetry:** All diagnostic messaging routes through a typed `logger` utility.
-- **Test Coverage:** 96 tests across 18 suites (Vitest).
+- **Test Coverage:** ~222+ unit tests (Vitest). Run `npm test` for the live count.
 
 ---
 
@@ -144,7 +146,7 @@ LLM calls (OpenAI, Anthropic, Gemini) are made **directly from the background se
 
 ### Google Drive Sync
 
-Drive backup requires a **real Google OAuth client ID** in `manifest.json`. The committed placeholder `YOUR_CLIENT_ID_HERE` will not work until you replace it with a Chrome-extension OAuth client from [Google Cloud Console](https://console.cloud.google.com/). See [Setup → Google Drive OAuth](#google-drive-oauth-optional).
+Drive backup uses a **Web application OAuth client** (implicit grant via `chrome.identity.launchWebAuthFlow`). The client ID lives in [`src/shared/googleDriveOAuth.ts`](./src/shared/googleDriveOAuth.ts) — not in `manifest.json`. Production OAuth is registered for the **fixed extension ID** pinned by the manifest `key` (`ehbkfdgpbemaimepgeeflenhbbpgokoj`). Forks need their own Google Cloud OAuth client and redirect URI. See [Setup → Google Drive OAuth](#google-drive-oauth-optional) and [`docs/GOOGLE_DRIVE_SETUP.md`](./docs/GOOGLE_DRIVE_SETUP.md).
 
 ### Content Script Surface
 
@@ -177,8 +179,8 @@ You can blacklist domains in **Settings → Disabled Domains** to disable all co
 ### Installation
 
 ```bash
-git clone https://github.com/harshabalakrishnan16/subsume.git
-cd subsume
+git clone https://github.com/harshabala/Subsume.git
+cd Subsume
 
 npm install
 npm run build
@@ -186,9 +188,14 @@ npm run build
 
 ### Google Drive OAuth (Optional)
 
-> **Required for Drive sync:** The repo ships with a placeholder OAuth client ID. Google Drive backup and restore **will not work** until you register your own client.
+> **Production builds:** Drive sync is preconfigured for the stable extension ID from the manifest `key`. Load unpacked from a clean `dist/` build of this repo and Connect Google Drive should work for the registered OAuth client.
 
-Replace `YOUR_CLIENT_ID_HERE` in `manifest.json` with a real **Chrome extension OAuth client ID** from [Google Cloud Console](https://console.cloud.google.com/) (APIs & Services → Credentials → Create OAuth client ID → Chrome extension). Use the extension ID shown on `chrome://extensions` when creating the client. Do not commit your production client ID if you maintain a public fork — use a local override ignored by git (see `.gitignore`).
+OAuth is **not** configured via a `YOUR_CLIENT_ID_HERE` placeholder in `manifest.json`. The Web client ID and scopes live in:
+
+- [`src/shared/googleDriveOAuth.ts`](./src/shared/googleDriveOAuth.ts) — `GOOGLE_CLIENT_ID`, scopes, registered redirect URI
+- [`docs/GOOGLE_DRIVE_SETUP.md`](./docs/GOOGLE_DRIVE_SETUP.md) — Google Cloud console steps and troubleshooting
+
+**Forks:** create your own **Web application** OAuth client in [Google Cloud Console](https://console.cloud.google.com/), enable the Drive API and the scopes listed in the setup doc, and set the authorized redirect URI to `https://<your-extension-id>.chromiumapp.org/` (from `chrome.identity.getRedirectURL()` / Settings → Data). Update `GOOGLE_CLIENT_ID` (and the registered URI constant) for your fork. Do not reuse the upstream production client for a public fork with a different extension ID.
 
 ### Loading into Chrome / Brave
 
@@ -198,14 +205,30 @@ Replace `YOUR_CLIENT_ID_HERE` in `manifest.json` with a real **Chrome extension 
 4. Select the `dist/` folder inside your project directory.
 5. Click the Subsume icon → **Settings** → paste your TMDb API key.
 
+### Screenshots for docs & store
+
+A short GIF or still of the Poetic Capture Canvas or a museum plaque hover reveal helps readers orient in seconds (see the placeholder at the top of this README). For Chrome Web Store listing shots, use the sizes and suggested frames in [`store/screenshots/README.md`](./store/screenshots/README.md) and place finals under `store/screenshots/` (promotional tiles under [`store/assets/`](./store/assets/)). Screenshots must be captured by a human from a running extension until automated generation exists.
+
+---
+
+## Chrome Web Store
+
+Subsume is prepared for Chrome Web Store packaging and review. Status and materials:
+
+| Item | Location / command |
+| :--- | :--- |
+| **Package upload zip** | `npm run package` — builds `dist/`, then zips package contents to `subsume.zip` (source maps excluded; see `scripts/package-extension.mjs`) |
+| **Privacy policy** | [`docs/PRIVACY.md`](./docs/PRIVACY.md) — host this URL (or a rendered copy) for the CWS privacy field |
+| **Listing / review notes** | [`store/`](./store/) — `MANIFEST_NOTES.md` (permission rationale), `assets/` (promo tile sizes), `screenshots/` (required screenshot frames) |
+| **Stable extension ID** | Manifest `key` pins ID `ehbkfdgpbemaimepgeeflenhbbpgokoj` for OAuth redirect URIs |
+
+Before a store submission: run `npm run ci` (or `npm test` + `npm run build`), capture screenshots per `store/screenshots/README.md`, and confirm Drive OAuth against the fixed ID.
+
 ---
 
 ## Contributing
 
-<!-- Fill this in — even a couple lines. Reviewers scanning a portfolio README often check
-     for this to gauge whether the project is meant to be a living tool or a closed showcase. -->
-
-Issues and PRs are welcome. Please open an issue before submitting larger changes so we can align on approach first.
+Issues and PRs are welcome. Please open an issue before submitting larger changes so we can align on approach first. See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for setup, pre-ship checks, and process. This project follows a short [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md).
 
 ---
 
@@ -219,7 +242,7 @@ Subsume stands on the shoulders of incredible open-source tools and open data pr
 - **[idb](https://github.com/jakearchibald/idb):** For robust Promise-based IndexedDB transaction wrapping.
 - **[Lucide Icons](https://lucide.dev/):** For crisp, modern UI iconography.
 - **[Newsreader](https://fonts.google.com/specimen/Newsreader) & [Outfit](https://fonts.google.com/specimen/Outfit) (Google Fonts):** For the editorial typographic identity of the sanctuary.
-- **[Vitest](https://vitest.dev/):** For the unit test suite (96 tests across 18 suites).
+- **[Vitest](https://vitest.dev/):** For the unit test suite (~222+ tests; run `npm test` for the current count).
 
 ---
 

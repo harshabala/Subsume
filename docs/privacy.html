@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Privacy policy for Subsume, a client-side Chrome extension for personal film and TV libraries. No Subsume backend; data stays on your device unless you enable optional Drive backup." />
+  <title>Privacy Policy — Subsume</title>
+  <style>
+    :root {
+      --bg: #0c0b0a;
+      --bg-elevated: #141210;
+      --text: #e8e2d6;
+      --text-muted: #9a9285;
+      --gold: #c4a35a;
+      --gold-dim: #8a7340;
+      --border: #2a2620;
+      --link: #d4b86a;
+      --code-bg: #1a1714;
+      --radius: 8px;
+      --max: 42rem;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+      font-size: 1.05rem;
+      line-height: 1.65;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(196, 163, 90, 0.08), transparent),
+        var(--bg);
+    }
+
+    a {
+      color: var(--link);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.15em;
+    }
+
+    a:hover {
+      color: var(--gold);
+    }
+
+    .wrap {
+      max-width: calc(var(--max) + 4rem);
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 4rem;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.75rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .brand {
+      font-size: 0.75rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      margin: 0 0 0.75rem;
+    }
+
+    h1 {
+      font-size: clamp(1.75rem, 4vw, 2.25rem);
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      margin: 0 0 0.5rem;
+      color: var(--text);
+    }
+
+    .meta {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin: 0;
+    }
+
+    nav.toc {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    nav.toc h2 {
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      margin: 0 0 0.75rem;
+      font-weight: 600;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    nav.toc ol {
+      margin: 0;
+      padding-left: 1.25rem;
+      color: var(--text-muted);
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.9rem;
+    }
+
+    nav.toc li {
+      margin: 0.35rem 0;
+    }
+
+    main h2 {
+      font-size: 1.25rem;
+      font-weight: 500;
+      color: var(--gold);
+      margin: 2.5rem 0 0.85rem;
+      letter-spacing: 0.01em;
+    }
+
+    main h2:first-child {
+      margin-top: 0;
+    }
+
+    main p,
+    main li {
+      color: var(--text);
+    }
+
+    main p {
+      margin: 0 0 1rem;
+    }
+
+    main ul,
+    main ol {
+      margin: 0 0 1.25rem;
+      padding-left: 1.35rem;
+    }
+
+    main li {
+      margin: 0.4rem 0;
+    }
+
+    .callout {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--gold-dim);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 1rem 1.25rem;
+      margin: 1.25rem 0 1.5rem;
+      font-size: 0.98rem;
+    }
+
+    .callout strong {
+      color: var(--gold);
+      font-weight: 500;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0 1.5rem;
+      font-size: 0.92rem;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    th,
+    td {
+      text-align: left;
+      vertical-align: top;
+      padding: 0.65rem 0.75rem;
+      border: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--bg-elevated);
+      color: var(--gold-dim);
+      font-weight: 600;
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    td {
+      color: var(--text);
+    }
+
+    code {
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 0.85em;
+      background: var(--code-bg);
+      padding: 0.12em 0.35em;
+      border-radius: 3px;
+      color: var(--text);
+    }
+
+    footer {
+      margin-top: 3.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    footer p {
+      margin: 0.4rem 0;
+    }
+
+    .back {
+      display: inline-block;
+      margin-top: 0.75rem;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <p class="brand">Subsume</p>
+      <h1>Privacy Policy</h1>
+      <p class="meta">Effective date: July 1, 2026 · Developer: Harsha Balakrishnan</p>
+    </header>
+
+    <nav class="toc" aria-label="Table of contents">
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#contact">Contact</a></li>
+        <li><a href="#summary">Summary</a></li>
+        <li><a href="#information">Information processed</a></li>
+        <li><a href="#storage">How data is stored</a></li>
+        <li><a href="#network">Network requests</a></li>
+        <li><a href="#not-do">What we do not do</a></li>
+        <li><a href="#controls">Your controls</a></li>
+        <li><a href="#permissions">Permissions</a></li>
+        <li><a href="#children">Children’s privacy</a></li>
+        <li><a href="#retention">Data retention</a></li>
+        <li><a href="#international">International use</a></li>
+        <li><a href="#changes">Changes</a></li>
+      </ol>
+    </nav>
+
+    <main>
+      <p>
+        This privacy policy describes how <strong>Subsume</strong>, a Chrome browser extension developed by
+        <strong>Harsha Balakrishnan</strong> (“we,” “us,” or “the developer”), handles information when you install and use the extension.
+      </p>
+      <p>
+        Subsume is a private cinematic sanctuary: a client-side tool for tracking films and television you care about,
+        recording notes and emotional ratings, and optionally enriching metadata or recommendations through third-party
+        services you choose. There is <strong>no Subsume backend server</strong>. Your library lives on your device unless
+        you explicitly enable optional cloud backup.
+      </p>
+
+      <h2 id="contact">Contact</h2>
+      <p>
+        For privacy questions or requests, contact
+        <strong>Harsha Balakrishnan</strong> at
+        <a href="mailto:harsha16balakrishnan@proton.me">harsha16balakrishnan@proton.me</a>.
+      </p>
+
+      <h2 id="summary">Summary</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Topic</th>
+            <th>Practice</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Subsume servers</td>
+            <td>None. The extension does not operate a Subsume backend or account system.</td>
+          </tr>
+          <tr>
+            <td>Where your library lives</td>
+            <td>On your device (IndexedDB and <code>chrome.storage.local</code>), unless you enable optional Google Drive appData backup.</td>
+          </tr>
+          <tr>
+            <td>Selling data</td>
+            <td>We do not sell personal data.</td>
+          </tr>
+          <tr>
+            <td>Advertising</td>
+            <td>No ads; no advertising SDKs.</td>
+          </tr>
+          <tr>
+            <td>Analytics</td>
+            <td>No third-party analytics SDKs.</td>
+          </tr>
+          <tr>
+            <td>Encryption at rest</td>
+            <td>Local data is <strong>not</strong> encrypted at rest by Subsume. Protect access to your browser profile and device.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2 id="information">Information the extension processes</h2>
+      <p>
+        Subsume processes data <strong>on your device</strong> and, when you enable features that require it, sends limited
+        requests to third-party APIs. Categories include:
+      </p>
+
+      <h3 style="font-size:1.05rem;color:var(--text-muted);font-weight:500;margin:1.5rem 0 0.5rem;">Personal media library</h3>
+      <p>
+        Titles you save (films and TV shows), status (for example watched, wishlist, or sanctuary intents), ratings,
+        emotional scales, free-text notes and reflections, people you follow (directors, cast, crew), alerts, and related preferences.
+      </p>
+
+      <h3 style="font-size:1.05rem;color:var(--text-muted);font-weight:500;margin:1.5rem 0 0.5rem;">Preferences and settings</h3>
+      <p>
+        Feature toggles, theme choices, disabled domains (content-script blacklist), platform/streaming preferences,
+        digest settings, and similar configuration stored locally.
+      </p>
+
+      <h3 style="font-size:1.05rem;color:var(--text-muted);font-weight:500;margin:1.5rem 0 0.5rem;">Optional API keys</h3>
+      <p>
+        If you supply them in Settings, Subsume stores keys you provide for services such as TMDb, OMDb, and large language
+        model providers (OpenAI, Anthropic, and/or Google Gemini). These keys are stored in local extension storage
+        (including IndexedDB as part of user preferences). <strong>They are not encrypted at rest.</strong> They are used
+        only to call the providers you configure, from the extension’s background context.
+      </p>
+      <div class="callout">
+        <strong>API keys are never sent to content scripts.</strong> Content scripts receive feature toggles and limited
+        library lookup results only, not credentials.
+      </div>
+
+      <h3 style="font-size:1.05rem;color:var(--text-muted);font-weight:500;margin:1.5rem 0 0.5rem;">Optional Google Drive backup</h3>
+      <p>
+        If you connect Google Drive, Subsume may back up library-related data to Google Drive <strong>appData</strong>
+        (application-specific storage associated with the extension’s OAuth client). Connection uses Chrome’s identity /
+        OAuth flow. You can disconnect Drive in Settings. Drive is optional; the extension works without it.
+      </p>
+
+      <h3 style="font-size:1.05rem;color:var(--text-muted);font-weight:500;margin:1.5rem 0 0.5rem;">Page context for discovery (content scripts)</h3>
+      <p>
+        To detect posters and titles while you browse, content scripts may run on <strong>http</strong> and
+        <strong>https</strong> pages. They inspect page content for media titles and poster images so Subsume can show
+        quiet overlays (for example rating plaques or hover cards). You can disable Subsume on specific domains via
+        <strong>Settings → Disabled Domains</strong>. Uninstalling the extension removes the scripts entirely.
+      </p>
+      <p>
+        Content scripts do not receive your API keys. Sensitive library export and settings operations are restricted to
+        the extension UI and background service worker, not arbitrary page scripts.
+      </p>
+
+      <h2 id="storage">How data is stored</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Location</th>
+            <th>What is stored</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>IndexedDB</strong> (on your device)</td>
+            <td>Media records, library entries, people, caches, preferences (including optional API keys), and related sanctuary data.</td>
+          </tr>
+          <tr>
+            <td><code>chrome.storage.local</code> (on your device)</td>
+            <td>Preferences, diagnostic logs, page-reflection dock notes keyed by page path, and similar small state.</td>
+          </tr>
+          <tr>
+            <td><strong>Google Drive appData</strong> (optional)</td>
+            <td>Backup of library data when you connect and use Drive backup/restore.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        Local storage is <strong>not encrypted at rest</strong> by Subsume. Anyone with access to your user account, unlocked
+        device, or Chrome profile may be able to read extension data. Use device encryption, a strong OS login, and browser
+        profile hygiene as appropriate for your risk tolerance.
+      </p>
+      <p>
+        When you uninstall Subsume, Chrome removes the extension’s local storage. Optional Drive appData may remain in your
+        Google account until you delete it through Google’s tools or disconnect and clear backups as applicable.
+      </p>
+
+      <h2 id="network">Network requests and third parties</h2>
+      <p>
+        Subsume does not send your library to a Subsume-operated server. Network traffic goes only to services you use
+        (or that the extension is built to query for public metadata), including:
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>TMDb</strong> (The Movie Database)</td>
+            <td>Film/TV metadata, posters, people, search, and related catalogue data. Requires your TMDb API key when configured.</td>
+          </tr>
+          <tr>
+            <td><strong>OMDb</strong> (optional)</td>
+            <td>Supplemental title metadata when you provide an OMDb API key.</td>
+          </tr>
+          <tr>
+            <td><strong>OpenAI / Anthropic / Google Gemini</strong> (optional)</td>
+            <td>AI recommendations or digests using <strong>your</strong> API keys, from the background service worker. Prompt material may include short excerpts of your notes and taste profile built from your local library—not arbitrary full page DOM dumps.</td>
+          </tr>
+          <tr>
+            <td><strong>Trakt</strong></td>
+            <td>Public or API-backed media metadata/discovery where used by the extension.</td>
+          </tr>
+          <tr>
+            <td><strong>TVMaze</strong></td>
+            <td>Television metadata.</td>
+          </tr>
+          <tr>
+            <td><strong>Wikidata / Wikipedia</strong></td>
+            <td>Structured and encyclopedic metadata for titles or people.</td>
+          </tr>
+          <tr>
+            <td><strong>Google APIs</strong></td>
+            <td>OAuth identity and Google Drive appData backup when you connect Drive.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        Each third party processes requests under <strong>its own</strong> privacy policy and terms. Subsume does not control
+        those services. Review their policies before enabling optional integrations or providing API keys.
+      </p>
+      <p>
+        This product uses the TMDb API but is not endorsed or certified by TMDb.
+      </p>
+
+      <h2 id="not-do">What we do not do</h2>
+      <ul>
+        <li>We do <strong>not</strong> sell your personal data.</li>
+        <li>We do <strong>not</strong> show advertisements in the extension.</li>
+        <li>We do <strong>not</strong> embed third-party analytics, advertising, or tracking SDKs.</li>
+        <li>We do <strong>not</strong> operate a Subsume cloud account that aggregates all users’ libraries.</li>
+        <li>We do <strong>not</strong> send API keys to content scripts or to host pages.</li>
+      </ul>
+      <p>
+        Diagnostic logging, if enabled or used for troubleshooting, stays in local extension storage (with secret redaction
+        where implemented) and is not a third-party analytics product.
+      </p>
+
+      <h2 id="controls">Your controls</h2>
+      <ol>
+        <li><strong>Export</strong> your library from the extension (exports are designed to exclude API keys; media and library records are included).</li>
+        <li><strong>Disable domains</strong> so content scripts do not run their discovery UI on sites you blacklist.</li>
+        <li><strong>Disconnect Google Drive</strong> to stop optional backup via the extension’s Settings.</li>
+        <li><strong>Clear or change API keys</strong> in Settings; stop using optional LLM or OMDb features at any time.</li>
+        <li><strong>Uninstall</strong> the extension to remove it and its local Chrome extension data from the browser.</li>
+        <li><strong>Contact</strong> the developer at the email above with privacy questions.</li>
+      </ol>
+
+      <h2 id="permissions">Permissions (plain language)</h2>
+      <p>Chrome may show that Subsume requests permissions such as:</p>
+      <ul>
+        <li><strong>Storage</strong> — save your library and settings on the device.</li>
+        <li><strong>Active tab</strong> — work with the page you are viewing when you use extension UI.</li>
+        <li><strong>Notifications</strong> — optional digests or alerts you enable.</li>
+        <li><strong>Alarms</strong> — schedule periodic tasks such as digests.</li>
+        <li><strong>Identity</strong> — sign in to Google for optional Drive backup.</li>
+        <li><strong>Host access</strong> — call the metadata and AI endpoints listed above.</li>
+        <li><strong>Content scripts on web pages</strong> — detect titles/posters for discovery overlays; controllable via domain blacklist.</li>
+      </ul>
+
+      <h2 id="children">Children’s privacy</h2>
+      <p>
+        Subsume is <strong>not directed at children under 13</strong>. We do not knowingly collect personal information from
+        children under 13. If you believe a child under 13 has provided personal information through the extension in a way
+        that concerns you, contact us at the email above and we will take reasonable steps to address the issue.
+      </p>
+
+      <h2 id="retention">Data retention</h2>
+      <ul>
+        <li><strong>On device:</strong> Data remains until you delete it within the extension, clear site/extension data, or uninstall.</li>
+        <li><strong>Drive appData (optional):</strong> Retained in your Google account according to your use of backup and Google’s policies until you delete it or disconnect as applicable.</li>
+        <li><strong>Third-party APIs:</strong> Retention of request logs is governed by those providers, not by Subsume.</li>
+      </ul>
+
+      <h2 id="international">International use</h2>
+      <p>
+        Processing occurs on your device and, when features are used, via third-party services that may operate in various
+        countries. By using Subsume, you understand that optional API and Drive traffic may cross borders according to those
+        providers’ infrastructure.
+      </p>
+
+      <h2 id="changes">Changes to this policy</h2>
+      <p>
+        We may update this privacy policy when the extension’s practices change. The <strong>effective date</strong> at the
+        top will be revised. Material changes should be reflected in the policy hosted for the Chrome Web Store listing.
+        Continued use after an update constitutes acceptance of the revised policy where permitted by law.
+      </p>
+
+      <div class="callout">
+        This policy describes Subsume’s actual architecture: a client-side Chrome extension without a Subsume backend.
+        It is not legal advice. If you redistribute a fork, update contact details, OAuth clients, and this policy to match
+        your deployment.
+      </div>
+    </main>
+
+    <footer>
+      <p><em>Subsume — a private cinematic sanctuary on your device.</em></p>
+      <p>
+        Developer: Harsha Balakrishnan ·
+        <a href="mailto:harsha16balakrishnan@proton.me">harsha16balakrishnan@proton.me</a>
+      </p>
+      <a class="back" href="https://github.com/harshabala/Subsume">← github.com/harshabala/Subsume</a>
+    </footer>
+  </div>
+</body>
+</html>

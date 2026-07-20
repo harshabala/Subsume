@@ -23,7 +23,7 @@ export function sendMessage<TReq, TRes>(
     chrome.runtime.sendMessage(message, (response: ExtensionResponse<TRes> | undefined) => {
       clearTimeout(timeoutId);
       if (chrome.runtime.lastError) {
-        const err = chrome.runtime.lastError.message;
+        const err = chrome.runtime.lastError.message ?? 'Unknown chrome.runtime error';
         logDiagnostic('error', 'ui.sendMessage', err, `type=${type}`);
         reject(new Error(err));
         return;

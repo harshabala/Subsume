@@ -4,7 +4,10 @@ First off, thank you for considering contributing to Subsume! It's people like y
 
 ## Development Setup
 
-1. Fork and clone the repository.
+1. Fork and clone the repository:
+   ```bash
+   git clone https://github.com/harshabala/Subsume.git
+   ```
 2. Ensure you have Node.js 18+ installed.
 3. Run `npm install` to install dependencies.
 4. Run `npm run dev` to start the build in watch mode.
@@ -25,7 +28,7 @@ npm run test
 
 Before merging UI, security, or capture-flow changes, confirm:
 
-- [ ] **`manifest.json`** — `YOUR_CLIENT_ID_HERE` is replaced locally if you test Drive sync; broad `content_scripts` matches are intentional and documented in the manifest `__comment_content_scripts` field.
+- [ ] **Google Drive OAuth** — production client ID lives in `src/shared/googleDriveOAuth.ts` (not a manifest placeholder). The manifest `key` pins extension ID `ehbkfdgpbemaimepgeeflenhbbpgokoj` for the registered redirect URI. Forks need their own Web OAuth client; see `docs/GOOGLE_DRIVE_SETUP.md`. Broad `content_scripts` matches are intentional and documented in `store/MANIFEST_NOTES.md`.
 - [ ] **`emotionalRecall` capture flow** — Poetic Capture Canvas persists `emotionalRecall` via `SET_USER_NOTES`; run `npm run test -- tests/captureToLibrary.test.ts tests/poeticCaptureCanvas.test.tsx tests/libraryHandlers.test.ts`.
 - [ ] **`sendMessage` error handling** — Typed IPC rejects `success: false`, missing responses, and `chrome.runtime.lastError`; run `npm run test -- tests/sendMessage.test.ts`.
 - [ ] **Security regression tests** — Message allowlist, API-key stripping, and poster budget caps still pass:
@@ -42,4 +45,4 @@ Before merging UI, security, or capture-flow changes, confirm:
 
 ## Code of Conduct
 
-Please note that this project is released with a Contributor Code of Conduct. By participating in this project you agree to abide by its terms.
+Please note that this project is released with a [Contributor Code of Conduct](./CODE_OF_CONDUCT.md). By participating in this project you agree to abide by its terms.

@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as tmdbModule from '@/background/tmdb';
 import { fetchWikipediaSummary, fetchWikidataDirectorInfo } from '@/background/wikidata';
 
-vi.mock('@/background/tmdb', () => {
-  const actual = vi.importActual('@/background/tmdb');
+vi.mock('@/background/tmdb', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/background/tmdb')>();
   return {
     ...actual,
     fetchWithRetry: vi.fn(),

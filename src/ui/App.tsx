@@ -5,7 +5,7 @@ import { Library } from './pages/Library';
 import { Recommendations } from './pages/Recommendations';
 import { NewReleases } from './pages/NewReleases';
 import { Settings } from './pages/Settings';
-import { Onboarding } from './pages/Onboarding';
+import { Onboarding, type OnboardingPatch } from './pages/Onboarding';
 import { Search } from './pages/Search';
 import { Stats } from './pages/Stats';
 import { People } from './pages/People';
@@ -200,9 +200,13 @@ export function App() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [navMenuOpen]);
 
-  const completeOnboarding = async () => {
+  const completeOnboarding = async (patch: OnboardingPatch) => {
     if (!prefs) return;
-    const newPrefs = { ...prefs, onboardingComplete: true };
+    const newPrefs = {
+      ...prefs,
+      ...patch,
+      onboardingComplete: true,
+    };
     try {
       await sendMessage(MessageType.SET_PREFERENCES, newPrefs);
       setPrefs(newPrefs);

@@ -265,21 +265,29 @@ export class HoverCardManager {
   private setupSyncListener() {
     if (typeof chrome === 'undefined' || !chrome.runtime?.onMessage) return;
 
-    this.syncListener = (message, sender) => {
+    this.syncListener = (message: unknown, sender) => {
       // Only accept messages originating from our own extension service worker.
       // This prevents a compromised page from spoofing LIBRARY_UPDATED events.
       if (sender.id !== chrome.runtime.id) return;
 
-      if (message && message.type === 'LIBRARY_UPDATED') {
-        const libItem = message.libraryItem as LibraryItem | undefined;
-        const mediaId = message.mediaId || libItem?.mediaId;
+      if (!message || typeof message !== 'object') return;
+      const msg = message as {
+        type?: string;
+        libraryItem?: LibraryItem;
+        mediaId?: string;
+        action?: string;
+      };
+
+      if (msg.type === 'LIBRARY_UPDATED') {
+        const libItem = msg.libraryItem;
+        const mediaId = msg.mediaId || libItem?.mediaId;
         if (!mediaId) return;
 
-        if (message.action === 'add' && libItem) {
+        if (msg.action === 'add' && libItem) {
           this.libraryItems.set(mediaId, libItem);
-        } else if (message.action === 'update' && libItem) {
+        } else if (msg.action === 'update' && libItem) {
           this.libraryItems.set(mediaId, libItem);
-        } else if (message.action === 'remove') {
+        } else if (msg.action === 'remove') {
           this.libraryItems.delete(mediaId);
         }
       }
