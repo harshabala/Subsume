@@ -28,6 +28,11 @@ import { isValidMediaId } from '@/shared/mediaIds';
 import { mergeMediaItems } from '../mediaMerge';
 import type { LibraryStatus, MediaItem } from '@/shared/types';
 import { logger } from '@/shared/logger';
+import {
+  originHostFromSender,
+  tryConsumeOriginRateLimit,
+  ORIGIN_RATE_LIMIT_REASON,
+} from '../originRateLimit';
 
 const ARCHIVE_STATUSES = new Set<LibraryStatus>([
   'to-watch',
@@ -116,7 +121,22 @@ export const bookHandlers: MessageHandlerMap = {
     return { works: results.map((r) => r.work), medium };
   },
 
-  [MessageType.RESOLVE_PAGE_CANDIDATE]: async (payload) => {
+  [MessageType.RESOLVE_PAGE_CANDIDATE]: async (payload, sender) => {
+    const originHost = originHostFromSender(sender);
+    const quota = tryConsumeOriginRateLimit(originHost, 'resolve');
+    if (!quota.allowed) {
+      logger.info(
+        '[Subsume] RESOLVE_PAGE_CANDIDATE rate-limited for origin',
+        originHost,
+        `(retry in ${Math.ceil(quota.retryAfterMs / 1000)}s)`
+      );
+      return {
+        resolved: false as const,
+        reason: ORIGIN_RATE_LIMIT_REASON,
+        retryAfterMs: quota.retryAfterMs,
+      };
+    }
+
     const candidate = payload as DetectionCandidate;
     if (!candidate || candidate.medium !== 'book') {
       return { resolved: false as const, reason: 'not_a_book_candidate' };

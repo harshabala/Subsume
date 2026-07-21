@@ -34,8 +34,12 @@ import { searchOpenLibrary } from '@/background/openLibrary';
 import {
   weeklyPeriodKey,
   shouldRunDispatch,
+  shouldRunLegacyWeeklyDigest,
   generateSubsumeDispatch,
+  reconcileDispatchAlarm,
   DISPATCH_PERIOD_STORAGE_KEY,
+  DISPATCH_ALARM_NAME,
+  WEEKLY_DIGEST_ALARM_NAME,
 } from '@/background/dispatch';
 
 const basePrefs: UserPreferences = {
@@ -111,6 +115,75 @@ describe('shouldRunDispatch', () => {
   it('returns true when last period differs', () => {
     const now = new Date(2026, 6, 20);
     expect(shouldRunDispatch(basePrefs, '2026-W29', now)).toBe(true);
+  });
+});
+
+describe('shouldRunLegacyWeeklyDigest (single generation path)', () => {
+  it('runs legacy path only when dispatch is off', () => {
+    expect(shouldRunLegacyWeeklyDigest(false)).toBe(true);
+    expect(shouldRunLegacyWeeklyDigest(undefined)).toBe(true);
+    expect(shouldRunLegacyWeeklyDigest(true)).toBe(false);
+  });
+});
+
+describe('reconcileDispatchAlarm (single alarm armed)', () => {
+  beforeEach(() => {
+    vi.mocked(chrome.alarms.get).mockImplementation(
+      ((_name: string, cb?: (alarm?: chrome.alarms.Alarm) => void) => {
+        if (cb) cb(undefined);
+        return Promise.resolve(undefined);
+      }) as typeof chrome.alarms.get
+    );
+    vi.mocked(chrome.alarms.clear).mockImplementation(
+      ((_name: string, cb?: (wasCleared: boolean) => void) => {
+        if (cb) cb(true);
+        return Promise.resolve(true);
+      }) as typeof chrome.alarms.clear
+    );
+    vi.mocked(chrome.alarms.create).mockClear();
+    vi.mocked(chrome.alarms.clear).mockClear();
+  });
+
+  it('when dispatchEnabled: clears weeklyDigest and creates subsumeDispatch only', async () => {
+    await reconcileDispatchAlarm({ ...basePrefs, dispatchEnabled: true });
+
+    const cleared = vi.mocked(chrome.alarms.clear).mock.calls.map((c) => c[0]);
+    expect(cleared).toContain(WEEKLY_DIGEST_ALARM_NAME);
+    expect(cleared).toContain(DISPATCH_ALARM_NAME);
+
+    const created = vi.mocked(chrome.alarms.create).mock.calls.map((c) => c[0]);
+    expect(created).toContain(DISPATCH_ALARM_NAME);
+    expect(created).not.toContain(WEEKLY_DIGEST_ALARM_NAME);
+  });
+
+  it('when dispatch disabled: clears subsumeDispatch and ensures weeklyDigest', async () => {
+    await reconcileDispatchAlarm({ ...basePrefs, dispatchEnabled: false });
+
+    const cleared = vi.mocked(chrome.alarms.clear).mock.calls.map((c) => c[0]);
+    expect(cleared).toContain(DISPATCH_ALARM_NAME);
+    expect(cleared).not.toContain(WEEKLY_DIGEST_ALARM_NAME);
+
+    const created = vi.mocked(chrome.alarms.create).mock.calls.map((c) => c[0]);
+    expect(created).toContain(WEEKLY_DIGEST_ALARM_NAME);
+    expect(created).not.toContain(DISPATCH_ALARM_NAME);
+  });
+
+  it('when dispatch disabled and weeklyDigest already exists: does not recreate it', async () => {
+    vi.mocked(chrome.alarms.get).mockImplementation(
+      ((name: string, cb?: (alarm?: chrome.alarms.Alarm) => void) => {
+        const alarm =
+          name === WEEKLY_DIGEST_ALARM_NAME
+            ? ({ name: WEEKLY_DIGEST_ALARM_NAME, scheduledTime: 1 } as chrome.alarms.Alarm)
+            : undefined;
+        if (cb) cb(alarm);
+        return Promise.resolve(alarm);
+      }) as typeof chrome.alarms.get
+    );
+
+    await reconcileDispatchAlarm({ ...basePrefs, dispatchEnabled: false });
+
+    const created = vi.mocked(chrome.alarms.create).mock.calls.map((c) => c[0]);
+    expect(created).not.toContain(WEEKLY_DIGEST_ALARM_NAME);
   });
 });
 

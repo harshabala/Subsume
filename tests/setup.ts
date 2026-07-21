@@ -38,7 +38,11 @@ const chromeMock = {
   },
   alarms: {
     create: vi.fn(),
-    get: vi.fn(),
+    get: vi.fn((_name: string, cb?: (alarm?: chrome.alarms.Alarm) => void) => {
+      // Callback form used by reconcileDispatchAlarm / ensurePeriodAlarm.
+      if (cb) cb(undefined);
+      return Promise.resolve(undefined);
+    }),
     clear: vi.fn((_name: string, cb?: () => void) => {
       if (cb) cb();
       return Promise.resolve(true);

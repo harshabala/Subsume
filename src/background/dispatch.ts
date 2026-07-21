@@ -24,6 +24,17 @@ import { searchOpenLibrary } from './openLibrary';
 
 export const DISPATCH_PERIOD_STORAGE_KEY = 'subsume_dispatch_last_period';
 export const DISPATCH_ALARM_NAME = 'subsumeDispatch';
+/** Legacy screen-only weekly digest alarm (used only when dispatch is off). */
+export const WEEKLY_DIGEST_ALARM_NAME = 'weeklyDigest';
+const WEEKLY_PERIOD_MINUTES = 10080;
+
+/**
+ * Pure gate: legacy `weeklyDigest` alarm should only generate when dispatch is off.
+ * When dispatch is on, multi-medium generation is owned by `subsumeDispatch`.
+ */
+export function shouldRunLegacyWeeklyDigest(dispatchEnabled: boolean | undefined): boolean {
+  return !dispatchEnabled;
+}
 
 const DEFAULT_WEEKDAY = 4; // Thursday (0 = Sunday)
 const DEFAULT_LOCAL_TIME = '19:00';
@@ -111,27 +122,34 @@ export async function generateSubsumeDispatch(
 }
 
 /**
- * Create or clear the `subsumeDispatch` alarm based on prefs.
- * When enabled: weekly period, delayed until next preferred local Thursday 19:00.
+ * Reconcile weekly generation alarms so only one path is armed.
+ *
+ * - dispatch **on**: schedule `subsumeDispatch`, clear legacy `weeklyDigest`
+ * - dispatch **off**: clear `subsumeDispatch`, ensure legacy `weeklyDigest` exists
  */
 export async function reconcileDispatchAlarm(prefs: UserPreferences): Promise<void> {
   if (typeof chrome === 'undefined' || !chrome.alarms) return;
 
   if (!prefs.dispatchEnabled) {
     await clearAlarm(DISPATCH_ALARM_NAME);
+    await ensurePeriodAlarm(WEEKLY_DIGEST_ALARM_NAME, WEEKLY_PERIOD_MINUTES);
+    logger.info('[Subsume] Dispatch off — legacy weeklyDigest alarm active');
     return;
   }
+
+  // Dispatch owns weekly generation: cancel legacy path so both alarms never fire.
+  await clearAlarm(WEEKLY_DIGEST_ALARM_NAME);
 
   const delayInMinutes = minutesUntilNextDispatch(prefs);
   await clearAlarm(DISPATCH_ALARM_NAME);
   chrome.alarms.create(DISPATCH_ALARM_NAME, {
     delayInMinutes: Math.max(1, delayInMinutes),
-    periodInMinutes: 10080,
+    periodInMinutes: WEEKLY_PERIOD_MINUTES,
   });
   logger.info(
     '[Subsume] subsumeDispatch alarm scheduled in',
     Math.round(delayInMinutes),
-    'minutes'
+    'minutes (legacy weeklyDigest cleared)'
   );
 }
 
@@ -378,6 +396,24 @@ function clearAlarm(name: string): Promise<void> {
       resolve();
     }
   });
+}
+
+function getAlarm(name: string): Promise<chrome.alarms.Alarm | undefined> {
+  return new Promise((resolve) => {
+    try {
+      chrome.alarms.get(name, (alarm) => resolve(alarm ?? undefined));
+    } catch {
+      resolve(undefined);
+    }
+  });
+}
+
+/** Create a periodic alarm only if it is not already scheduled (preserve fire time). */
+async function ensurePeriodAlarm(name: string, periodInMinutes: number): Promise<void> {
+  const existing = await getAlarm(name);
+  if (!existing) {
+    chrome.alarms.create(name, { periodInMinutes });
+  }
 }
 
 // ─── Date / timezone utils ───────────────────────────────────────────────────

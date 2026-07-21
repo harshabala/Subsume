@@ -10,7 +10,9 @@ import { generateWeeklyDigest } from './digest';
 import {
   generateSubsumeDispatch,
   reconcileDispatchAlarm,
+  shouldRunLegacyWeeklyDigest,
   DISPATCH_ALARM_NAME,
+  WEEKLY_DIGEST_ALARM_NAME,
 } from './dispatch';
 import {
   setNotificationBadge,
@@ -135,20 +137,21 @@ export function setupLifecycleAndAlarms(): void {
       }
     }
 
-    // Legacy weekly digest: when dispatch is off, keep screen-only path.
-    // When dispatch is on, use multi-medium Subsume Dispatch (idempotent).
-    if (alarm.name === 'weeklyDigest') {
+    // Legacy weekly digest (screen-only). Only runs when dispatch is off.
+    // When dispatch is on, generation is owned solely by subsumeDispatch.
+    if (alarm.name === WEEKLY_DIGEST_ALARM_NAME) {
       try {
         logger.info('[Subsume] Weekly digest alarm triggered.');
         const prefs = await getPreferences();
-        if (prefs.dispatchEnabled) {
-          const digest = await generateSubsumeDispatch(prefs);
-          await notifyWeeklyDigestReady(digest, true);
-        } else {
-          const digest = await generateWeeklyDigest(prefs);
-          await saveWeeklyDigest(digest);
-          await notifyWeeklyDigestReady(digest, false);
+        if (!shouldRunLegacyWeeklyDigest(prefs.dispatchEnabled)) {
+          logger.info(
+            '[Subsume] weeklyDigest skipped — dispatchEnabled; multi-medium path owns generation.'
+          );
+          return;
         }
+        const digest = await generateWeeklyDigest(prefs);
+        await saveWeeklyDigest(digest);
+        await notifyWeeklyDigestReady(digest, false);
       } catch (err) {
         logger.error('[Subsume] Weekly digest generation failed:', err);
       }
@@ -190,14 +193,7 @@ export function setupLifecycleAndAlarms(): void {
     }
   });
 
-  // Legacy weekly digest alarm (backward compatible for users with dispatch off)
-  chrome.alarms.get('weeklyDigest', (alarm) => {
-    if (!alarm) {
-      chrome.alarms.create('weeklyDigest', { periodInMinutes: 10080 });
-    }
-  });
-
-  // Opt-in multi-medium dispatch alarm (Thursday 19:00 local by default)
+  // Single weekly path: reconcile arms either weeklyDigest (legacy) or subsumeDispatch.
   getPreferences()
     .then((prefs) => reconcileDispatchAlarm(prefs))
     .catch((err) => {

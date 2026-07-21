@@ -10,6 +10,10 @@ import {
   GetLatestReleasesRequest,
   PosterMatch,
 } from '@/shared/types';
+import {
+  originHostFromSender,
+  tryConsumeOriginRateLimit,
+} from '../originRateLimit';
 import { discoverySearch } from '../discoverySearch';
 import { isSafeNavMediaId } from '@/shared/mediaIds';
 import {
@@ -177,7 +181,19 @@ async function fetchMediaDetails(tmdbId: string, mediaType: 'movie' | 'tv', apiK
 }
 
 export const titleHandlers: MessageHandlerMap = {
-  [MessageType.GET_TITLE_DETAILS]: async (payload) => {
+  [MessageType.GET_TITLE_DETAILS]: async (payload, sender) => {
+    const originHost = originHostFromSender(sender);
+    const quota = tryConsumeOriginRateLimit(originHost, 'resolve');
+    if (!quota.allowed) {
+      logger.info(
+        '[Subsume] GET_TITLE_DETAILS rate-limited for origin',
+        originHost,
+        `(retry in ${Math.ceil(quota.retryAfterMs / 1000)}s)`
+      );
+      // Friendly skip: null details rather than a hard error for content scripts.
+      return null;
+    }
+
     const req = payload as GetTitleDetailsRequest;
     logger.log('[Subsume] GET_TITLE_DETAILS:', req.title);
     
@@ -258,7 +274,18 @@ export const titleHandlers: MessageHandlerMap = {
     return getLatestReleases(type, prefs);
   },
 
-  [MessageType.RESOLVE_POSTER]: async (payload) => {
+  [MessageType.RESOLVE_POSTER]: async (payload, sender) => {
+    const originHost = originHostFromSender(sender);
+    const quota = tryConsumeOriginRateLimit(originHost, 'resolve');
+    if (!quota.allowed) {
+      logger.info(
+        '[Subsume] RESOLVE_POSTER rate-limited for origin',
+        originHost,
+        `(retry in ${Math.ceil(quota.retryAfterMs / 1000)}s)`
+      );
+      return { match: null, reason: 'rate_limited' as const };
+    }
+
     const req = payload as {
       strategy: 'tmdb-cdn' | 'alt-text' | 'ancestor-text';
       tmdbId?: string;
