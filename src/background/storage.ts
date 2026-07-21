@@ -13,6 +13,7 @@ import {
 import type {
   CatalogWork,
   BookEdition,
+  BookWorkDetails,
   LibraryRelationship,
   Experience,
   Reflection,
@@ -20,6 +21,7 @@ import type {
   WorkRelation,
   CatalogIdRedirect,
   ArchivePair,
+  SourceProvenance,
 } from '@/shared/catalogTypes';
 import {
   mediaItemToCatalogWork,
@@ -461,9 +463,84 @@ export async function migrateV3ToV4IfNeeded(
   }
 }
 
+/**
+ * Whether dual-write conversion produced an empty/shallow bookDetails payload.
+ * Sparse MediaItem puts often omit authors and never carry series/subjects.
+ */
+function isShallowBookDetails(bd?: BookWorkDetails): boolean {
+  if (!bd) return true;
+  const noAuthors = !bd.authors || bd.authors.length === 0;
+  const noExtra =
+    !bd.series &&
+    !(bd.primarySubjects && bd.primarySubjects.length > 0) &&
+    !(bd.adaptationWorkIds && bd.adaptationWorkIds.length > 0) &&
+    !bd.defaultEditionId;
+  return noAuthors && noExtra;
+}
+
+/**
+ * mediaItemToCatalogWork stamps a single generic provenance row; treat that as shallow
+ * so enrichment from Open Library / Google Books is not wiped on every putMediaItem.
+ */
+function isShallowSourceProvenance(p: SourceProvenance[]): boolean {
+  if (p.length === 0) return true;
+  if (p.length === 1) {
+    const fields = p[0]?.fields ?? [];
+    return fields.length <= 3;
+  }
+  return false;
+}
+
+function mergeBookDetailsForDualWrite(
+  incoming?: BookWorkDetails,
+  existing?: BookWorkDetails,
+): BookWorkDetails | undefined {
+  if (isShallowBookDetails(incoming)) return existing ?? incoming;
+  if (isShallowBookDetails(existing)) return incoming;
+  return {
+    authors: incoming!.authors.length > 0 ? incoming!.authors : existing!.authors,
+    firstPublishedYear: incoming!.firstPublishedYear ?? existing!.firstPublishedYear,
+    series: incoming!.series ?? existing!.series,
+    primarySubjects:
+      (incoming!.primarySubjects?.length ?? 0) > 0
+        ? incoming!.primarySubjects
+        : existing!.primarySubjects,
+    adaptationWorkIds:
+      (incoming!.adaptationWorkIds?.length ?? 0) > 0
+        ? incoming!.adaptationWorkIds
+        : existing!.adaptationWorkIds,
+    defaultEditionId: incoming!.defaultEditionId ?? existing!.defaultEditionId,
+  };
+}
+
+/**
+ * Merge a MediaItem→CatalogWork conversion into an existing work so dual-write
+ * does not wipe createdAt, creatorCredits, bookDetails, or sourceProvenance.
+ */
+function mergeDualWriteCatalogWork(incoming: CatalogWork, existing: CatalogWork): CatalogWork {
+  const provenance =
+    existing.sourceProvenance.length > 0 && isShallowSourceProvenance(incoming.sourceProvenance)
+      ? existing.sourceProvenance
+      : incoming.sourceProvenance.length > 0
+        ? incoming.sourceProvenance
+        : existing.sourceProvenance;
+
+  return {
+    ...incoming,
+    createdAt: existing.createdAt,
+    creatorCredits:
+      incoming.creatorCredits.length > 0 ? incoming.creatorCredits : existing.creatorCredits,
+    bookDetails: mergeBookDetailsForDualWrite(incoming.bookDetails, existing.bookDetails),
+    sourceProvenance: provenance,
+    lastEnrichedAt: existing.lastEnrichedAt ?? incoming.lastEnrichedAt,
+  };
+}
+
 async function dualWriteMedia(db: IDBPDatabase<SubsumeDB>, item: MediaItem): Promise<void> {
   if (!db.objectStoreNames.contains('works')) return;
-  await db.put('works', mediaItemToCatalogWork(item));
+  const mapped = mediaItemToCatalogWork(item);
+  const existing = await db.get('works', item.id);
+  await db.put('works', existing ? mergeDualWriteCatalogWork(mapped, existing) : mapped);
 }
 
 async function dualWriteLibrary(db: IDBPDatabase<SubsumeDB>, item: LibraryItem): Promise<void> {
@@ -565,7 +642,11 @@ export async function putMediaItems(items: MediaItem[]): Promise<void> {
   const tx = db.transaction(['media', 'works'], 'readwrite');
   for (const item of items) {
     await tx.objectStore('media').put(item);
-    await tx.objectStore('works').put(mediaItemToCatalogWork(item));
+    const mapped = mediaItemToCatalogWork(item);
+    const existing = await tx.objectStore('works').get(item.id);
+    await tx.objectStore('works').put(
+      existing ? mergeDualWriteCatalogWork(mapped, existing) : mapped,
+    );
   }
   await tx.done;
 }
