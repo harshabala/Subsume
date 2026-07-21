@@ -89,13 +89,21 @@
   border-radius: 4px;
   padding: var(--spacing-md) calc(var(--spacing-xl) + var(--spacing-xs));
   cursor: pointer;
-  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    transform var(--duration-fast, 130ms) ease;
   backdrop-filter: blur(16px);
 }
 
 .sanctuary-action-button:hover {
   background: var(--plaque-bg-hover);
   border-color: var(--accent-gold-border-strong);
+}
+
+.sanctuary-action-button:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .sanctuary-acquire-btn {
@@ -177,12 +185,20 @@
   border-radius: 4px;
   padding: 0 24px;
   cursor: pointer;
-  transition: border-color 0.3s ease, color 0.3s ease, opacity 0.3s ease;
+  transition:
+    border-color 0.3s ease,
+    color 0.3s ease,
+    opacity 0.3s ease,
+    transform var(--duration-fast, 130ms) ease;
 }
 
 .optical-button:hover:not(:disabled) {
   border-color: var(--border-hero);
   color: var(--text-reflection);
+}
+
+.optical-button:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .optical-button:disabled {
@@ -213,7 +229,11 @@
   color: var(--text-meta);
   border-radius: 4px;
   cursor: pointer;
-  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease,
+    transform var(--duration-fast, 130ms) ease;
 }
 
 .optical-filter-tab.active {
@@ -225,6 +245,10 @@
 .optical-filter-tab:hover:not(.active) {
   color: var(--text-artwork);
   border-color: var(--filter-hover-border);
+}
+
+.optical-filter-tab:active {
+  transform: scale(0.98);
 }
 
 /* ── Historic Theatre Programme (New Releases) ── */
@@ -1406,7 +1430,11 @@
   text-transform: uppercase;
   letter-spacing: 0.15em;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform var(--duration-fast, 130ms) ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1415,6 +1443,9 @@
   border-color: var(--border-hero);
   color: var(--text-reflection);
   background: var(--surface-subtle);
+}
+.sanctuary-btn-restraint:active:not(:disabled) {
+  transform: scale(0.97);
 }
 .sanctuary-btn-danger {
   color: var(--danger-fg);
@@ -1435,13 +1466,19 @@
   text-transform: uppercase;
   letter-spacing: 0.15em;
   cursor: pointer;
-  transition: background 0.2s ease, opacity 0.2s ease;
+  transition:
+    background 0.2s ease,
+    opacity 0.2s ease,
+    transform var(--duration-fast, 130ms) ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 .sanctuary-btn-gold:hover {
   background: var(--primary-hover-bg);
+}
+.sanctuary-btn-gold:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .sanctuary-input {
@@ -1645,10 +1682,17 @@ select.sanctuary-input option {
   text-transform: uppercase;
   letter-spacing: 0.15em;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform var(--duration-fast, 130ms) ease;
 }
 .filmography-filter-btn:hover {
   border-color: var(--border-hero);
+}
+.filmography-filter-btn:active {
+  transform: scale(0.98);
 }
 .filmography-filter-btn.rescind {
   color: var(--danger-fg);
@@ -2347,11 +2391,18 @@ select.sanctuary-input option {
   color: var(--text-meta);
   border-bottom: 2px solid transparent;
   cursor: pointer;
-  transition: color 0.2s ease, border-bottom-color 0.2s ease;
+  transition:
+    color 0.2s ease,
+    border-bottom-color 0.2s ease,
+    transform var(--duration-fast, 130ms) ease;
 }
 
 .intent-tab-btn:hover {
   color: var(--text-reflection);
+}
+
+.intent-tab-btn:active {
+  transform: scale(0.98);
 }
 
 .intent-tab-btn.active {
@@ -2418,7 +2469,15 @@ select.sanctuary-input option {
   color: var(--text-meta);
   white-space: nowrap;
   user-select: none;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform var(--duration-fast, 130ms) ease;
+}
+
+.tag-filter-chip:active {
+  transform: scale(0.98);
 }
 
 .tag-filter-chip.active {
@@ -2557,6 +2616,15 @@ select.sanctuary-input option {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   cursor: pointer;
+  transition:
+    background var(--duration-fast, 130ms) ease,
+    border-color var(--duration-fast, 130ms) ease,
+    color var(--duration-fast, 130ms) ease,
+    transform var(--duration-fast, 130ms) ease;
+}
+
+.collection-tab-btn:active {
+  transform: scale(0.98);
 }
 
 .collection-tab-btn.active {
@@ -3072,3 +3140,18 @@ select.sanctuary-input option {
   color: var(--info-fg);
 }
 
+
+/* ── Active press scale (physics-subtle-deformation: 0.95–1.05) ── */
+@media (prefers-reduced-motion: reduce) {
+  .sanctuary-action-button:active:not(:disabled),
+  .optical-button:active:not(:disabled),
+  .optical-filter-tab:active,
+  .sanctuary-btn-gold:active:not(:disabled),
+  .sanctuary-btn-restraint:active:not(:disabled),
+  .intent-tab-btn:active,
+  .collection-tab-btn:active,
+  .tag-filter-chip:active,
+  .filmography-filter-btn:active {
+    transform: none;
+  }
+}
