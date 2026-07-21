@@ -94,15 +94,29 @@ const PLAQUE_STYLES = `
   }
 
   .plaque-action {
+    position: relative;
     font-family: var(--font-editorial);
     font-size: 13px;
     font-weight: 600;
     color: var(--text-reflection);
     background: none;
     border: none;
-    padding: 0;
+    min-height: 32px;
+    min-width: 32px;
+    padding: 4px 6px;
     cursor: pointer;
     flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+
+  /* Hit-slop expansion for dense plaque controls (Fitts) */
+  .plaque-action::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
   }
 
   .plaque-action:hover,
@@ -129,8 +143,10 @@ const PLAQUE_STYLES = `
   }
 
   .plaque-add {
+    position: relative;
     margin-left: 2px;
-    padding: 2px 6px;
+    min-height: 32px;
+    padding: 4px 8px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-restraint);
     background: transparent;
@@ -141,7 +157,16 @@ const PLAQUE_STYLES = `
     letter-spacing: 0.03em;
     cursor: pointer;
     flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
     transition: border-color 200ms ease, color 200ms ease, background 200ms ease;
+  }
+
+  .plaque-add::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
   }
 
   .plaque-add:hover,

@@ -91,6 +91,7 @@
 .recommendation-dismiss-btn {
   align-self: flex-end;
   margin: 0 12px 10px;
+  min-height: 32px;
   padding: 4px 10px;
   font-family: var(--font-ui);
   font-size: 10px;
@@ -101,6 +102,9 @@
   border: 1px solid var(--border-restraint, #5a5248);
   border-radius: 3px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 .recommendation-dismiss-btn:hover {
@@ -306,9 +310,13 @@
   font-weight: 600;
   border: none;
   border-radius: var(--radius-sm);
+  min-height: 32px;
   padding: 4px 10px;
   align-self: flex-start;
   transition: background 0.15s;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 .recommendation-ai-card-add-button-added {
@@ -327,12 +335,16 @@
 
 .recommendation-ai-card-acquire-btn {
   margin-top: 8px;
+  min-height: 32px;
   padding: 6px 12px;
   font-size: 11px;
   font-weight: 600;
   border-radius: 2px;
   align-self: flex-start;
   transition: background 0.15s;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 .recommendations-header-badge {
@@ -375,11 +387,16 @@
   color: var(--badge-on-gold-fg);
   border: none;
   border-radius: var(--radius-md);
+  min-height: 44px;
   padding: 10px 24px;
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
   transition: opacity 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 .recommendations-error-container {
@@ -413,9 +430,13 @@
   color: var(--fg-base);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
+  min-height: 32px;
   padding: 6px 16px;
   font-size: 13px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 .recommendations-loading-grid {
@@ -473,11 +494,15 @@
 .recommendations-view-mode-btn {
   font-size: 11px;
   font-weight: 600;
+  min-height: 32px;
   padding: 3px 10px;
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 .recommendations-view-mode-btn-active {
@@ -498,7 +523,11 @@
   color: var(--fg-subtle);
   border: none;
   cursor: pointer;
-  padding: 0;
+  min-height: 32px;
+  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 .recommendations-flat-grid {
@@ -653,7 +682,11 @@
 }
 
 .recommendations-retry-btn {
+  min-height: 44px;
   padding: 8px 20px;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 .recommendations-exhibition-title {
@@ -662,8 +695,12 @@
 }
 
 .recommendations-regen-btn {
+  min-height: 32px;
   padding: 6px 14px;
   font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 .recommendations-grouped-seed-title {

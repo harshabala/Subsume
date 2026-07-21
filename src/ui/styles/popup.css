@@ -87,6 +87,7 @@
 }
 
 .popup-close-btn {
+  position: relative;
   background: none;
   border: none;
   color: var(--fg-muted);
@@ -95,10 +96,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
   border-radius: 50%;
   transition: all 0.2s;
+}
+
+/* Expand hit area without growing visual chrome */
+.popup-close-btn::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
 }
 
 .popup-close-btn:hover {
@@ -711,7 +721,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 38px;
+  min-height: 44px;
   padding: 0 14px;
   border-radius: var(--radius-md, 8px);
   font-size: 13px;
@@ -774,8 +784,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   border: 1px solid var(--border-restraint);
   border-radius: var(--radius-md, 8px);
   background: var(--bg-plaque);

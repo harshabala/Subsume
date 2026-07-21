@@ -87,6 +87,7 @@
   color: var(--text-reflection);
   border: 1px solid var(--border-hero);
   border-radius: 4px;
+  min-height: 44px;
   padding: var(--spacing-md) calc(var(--spacing-xl) + var(--spacing-xs));
   cursor: pointer;
   transition:
@@ -116,6 +117,7 @@
   color: var(--text-artwork);
   border: 1px solid var(--border-restraint);
   border-radius: 4px;
+  min-height: 32px;
   padding: 8px 16px;
   cursor: pointer;
   transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
@@ -183,6 +185,7 @@
   color: var(--text-artwork);
   border: 1px solid var(--border-restraint);
   border-radius: 4px;
+  min-height: 44px;
   padding: 0 24px;
   cursor: pointer;
   transition:
@@ -207,8 +210,9 @@
 }
 
 .optical-button.sm {
+  min-height: 32px;
+  height: auto;
   padding: 8px 16px;
-  height: 34px;
 }
 
 
@@ -223,6 +227,7 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
+  min-height: 32px;
   padding: var(--spacing-sm) var(--spacing-md);
   background: transparent;
   border: 1px solid var(--border-restraint);
@@ -523,8 +528,12 @@
 }
 
 .programme-acquire-btn {
+  min-height: 32px;
   padding: var(--spacing-sm) var(--spacing-md);
   font-size: 9px;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 /* ── DetailModal Velvet Obscura Sanctuary Classes ── */
@@ -811,6 +820,7 @@
   background: transparent;
   border: 1px solid var(--border-restraint);
   color: var(--border-hero);
+  min-height: 32px;
   padding: 8px 12px;
   border-radius: 2px;
   cursor: pointer;
@@ -847,6 +857,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-height: 32px;
   padding: 8px 10px;
   background: transparent;
   border: 1px solid var(--border-restraint);
@@ -898,6 +909,9 @@
   letter-spacing: 0.15em;
   color: var(--border-hero);
   text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
   padding: var(--spacing-sm) var(--spacing-md);
   border: 1px solid var(--border-restraint);
   border-radius: 2px;
@@ -1054,7 +1068,8 @@
   color: var(--text-artwork);
   user-select: none;
   transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
-  min-height: auto;
+  min-height: 32px;
+  box-sizing: border-box;
 }
 
 .sanctuary-detail-suggestion-chip:hover {
@@ -1338,9 +1353,12 @@
   color: var(--text-reflection, inherit);
   font-family: var(--font-ui);
   font-size: 11px;
+  min-height: 32px;
   padding: 4px 10px;
   border-radius: 999px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 
@@ -1401,6 +1419,7 @@
   background: var(--border-hero);
   border: none;
   color: var(--on-primary-fg);
+  min-height: 44px;
   padding: var(--spacing-md) calc(var(--spacing-xl) + var(--spacing-xs));
   border-radius: 2px;
   font-family: var(--font-ui);
@@ -1423,6 +1442,7 @@
   background: transparent;
   border: 1px solid var(--border-restraint);
   color: var(--text-reflection);
+  min-height: 44px;
   padding: 8px 18px;
   border-radius: 2px;
   font-family: var(--font-ui);
@@ -1458,6 +1478,7 @@
   background: var(--border-hero);
   border: none;
   color: var(--on-primary-fg);
+  min-height: 44px;
   padding: var(--spacing-md) var(--spacing-xl);
   border-radius: 2px;
   font-family: var(--font-ui);
@@ -1601,7 +1622,8 @@ select.sanctuary-input option {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  padding: 0;
+  min-height: 32px;
+  padding: 4px 0;
 }
 .filmography-text-btn:hover {
   text-decoration: underline;
@@ -1639,6 +1661,7 @@ select.sanctuary-input option {
   background: var(--border-hero);
   border: none;
   color: var(--on-primary-fg);
+  min-height: 44px;
   padding: var(--spacing-md) var(--spacing-xl);
   border-radius: 2px;
   font-family: var(--font-ui);
@@ -1675,6 +1698,7 @@ select.sanctuary-input option {
   background: transparent;
   border: 1px solid var(--border-restraint);
   color: var(--text-reflection);
+  min-height: 32px;
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: 2px;
   font-family: var(--font-ui);
@@ -2068,6 +2092,7 @@ select.sanctuary-input option {
   border: 1px solid var(--border-restraint);
   background: transparent;
   color: var(--text-artwork);
+  min-height: 32px;
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: 2px;
   font-size: 12px;
@@ -2077,6 +2102,7 @@ select.sanctuary-input option {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  box-sizing: border-box;
 }
 .settings-chip:hover {
   border-color: var(--border-hero);
@@ -2384,6 +2410,7 @@ select.sanctuary-input option {
 .intent-tab-btn {
   background: none;
   border: none;
+  min-height: 44px;
   padding: var(--spacing-sm) var(--spacing-xs);
   font-family: var(--font-editorial);
   font-size: 16px;
@@ -2461,6 +2488,7 @@ select.sanctuary-input option {
   font-family: var(--font-ui);
   text-transform: uppercase;
   letter-spacing: 0.1em;
+  min-height: 32px;
   padding: 4px 12px;
   background: var(--input-bg);
   border: 1px solid var(--border-restraint);
@@ -2469,6 +2497,9 @@ select.sanctuary-input option {
   color: var(--text-meta);
   white-space: nowrap;
   user-select: none;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
   transition:
     background 0.2s ease,
     border-color 0.2s ease,
@@ -2606,6 +2637,7 @@ select.sanctuary-input option {
 }
 
 .collection-tab-btn {
+  min-height: 32px;
   padding: 6px 14px;
   border: 1px solid var(--border-restraint, var(--border));
   border-radius: 2px;
@@ -2616,6 +2648,9 @@ select.sanctuary-input option {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
   transition:
     background var(--duration-fast, 130ms) ease,
     border-color var(--duration-fast, 130ms) ease,
@@ -2708,6 +2743,7 @@ select.sanctuary-input option {
 .hardcover-details-toggle {
   background: transparent;
   border: none;
+  min-height: 32px;
   padding: 4px 0;
   font-family: var(--font-ui);
   font-size: 11px;
@@ -2788,6 +2824,7 @@ select.sanctuary-input option {
 }
 
 .hardcover-remove-btn {
+  min-height: 32px;
   padding: var(--spacing-xs) var(--spacing-md);
   font-size: 11px;
   font-family: var(--font-ui);
@@ -2800,6 +2837,9 @@ select.sanctuary-input option {
   cursor: pointer;
   transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
   align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 .hardcover-remove-btn:hover {
@@ -2808,6 +2848,7 @@ select.sanctuary-input option {
 }
 
 .hardcover-confirm-btn {
+  min-height: 32px;
   padding: var(--spacing-xs) var(--spacing-md);
   font-size: 11px;
   font-family: var(--font-ui);
@@ -2816,6 +2857,9 @@ select.sanctuary-input option {
   border: none;
   border-radius: 2px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 /* ── Sanctuary Page Shell (Stats, Logs, People) ── */
