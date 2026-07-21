@@ -336,7 +336,7 @@ export function Library({ onNavigate }: LibraryProps = {}) {
         setSortBy={setSortBy}
       />
 
-      <div className="library-content" style={{ padding: '0 32px' }}>
+      <div className="library-content">
         <TagFilterBar
           allTags={allTags}
           activeTagFilter={activeTagFilter}

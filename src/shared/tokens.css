@@ -52,6 +52,9 @@
   --spacing-lg: 20px;
   --spacing-xl: 24px;
   --spacing-2xl: 32px;
+  /* Shared chrome column: logo, subnav, and page content share one left edge */
+  --app-shell-max: 1200px;
+  --app-shell-gutter: 32px;
 
   /* ─── Radius & Transitions ───────────────────────────────────── */
   --radius-sm: 4px;

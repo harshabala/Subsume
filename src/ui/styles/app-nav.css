@@ -10,6 +10,17 @@
   border-bottom: 1px solid var(--border-restraint, var(--border));
 }
 
+/* Primary + explore share the same max-width column as .page-container */
+.app-nav-shell .fixed-top-nav,
+.app-nav-shell .app-subnav {
+  max-width: var(--app-shell-max, 1200px);
+  margin-inline: auto;
+  width: 100%;
+  box-sizing: border-box;
+  padding-left: var(--app-shell-gutter, 32px);
+  padding-right: var(--app-shell-gutter, 32px);
+}
+
 .app-nav-shell .fixed-top-nav {
   position: relative;
   top: auto;
@@ -18,7 +29,8 @@
   height: auto;
   min-height: 3.25rem;
   box-shadow: none;
-  padding: 10px 12px 8px;
+  padding-top: 10px;
+  padding-bottom: 8px;
   gap: 8px;
 }
 
@@ -28,13 +40,16 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  /* Optical: serif italic starts slightly left of capital S; nudge to match Search label */
+  margin-left: 0;
+  padding-left: 0;
 }
 
 .fixed-top-nav {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 16px 8px;
+  padding: 10px var(--app-shell-gutter, 32px) 8px;
   flex-wrap: nowrap;
   min-width: 0;
 }
@@ -43,13 +58,20 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 0 12px 10px;
+  padding-top: 0;
+  padding-bottom: 10px;
   max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
+}
+
+/* First explore item label aligns with logo / page titles (icons hang left of label) */
+.app-subnav-link:first-child {
+  margin-left: -6px; /* cancel half of icon gap so "Search" text matches logo stem */
+  padding-left: 8px;
 }
 
 .app-subnav-link {
@@ -104,6 +126,10 @@
 
 /* Mobile: primary nav via menu; explore subnav scrolls in-bar */
 @media (max-width: 720px) {
+  :root {
+    --app-shell-gutter: 16px;
+  }
+
   .app-nav-shell .nav-tabs {
     display: none;
   }
@@ -129,8 +155,15 @@
   }
 
   .app-subnav {
-    padding: 0 8px 10px;
+    padding-top: 0;
+    padding-bottom: 10px;
+    /* left/right from shared shell gutter */
     gap: 2px;
+  }
+
+  .app-subnav-link:first-child {
+    margin-left: 0;
+    padding-left: 10px;
   }
 
   .app-subnav-link span.app-subnav-label-full {
@@ -145,11 +178,16 @@
 }
 
 @media (max-width: 360px) {
+  :root {
+    --app-shell-gutter: 12px;
+  }
+
   .app-nav-shell .fixed-top-nav {
-    padding: 8px 10px 6px;
+    padding-top: 8px;
+    padding-bottom: 6px;
   }
 
   .app-subnav {
-    padding: 0 6px 8px;
+    padding-bottom: 8px;
   }
 }

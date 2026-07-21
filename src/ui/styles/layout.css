@@ -25,13 +25,16 @@
 /* ─── Page Shell ──────────────────────────────────────────────────── */
 
 .page-container {
-  max-width: 1200px;
+  max-width: var(--app-shell-max, 1200px);
   margin: 0 auto;
-  padding: var(--spacing-xl) 0;
+  padding: var(--spacing-xl) var(--app-shell-gutter, 32px);
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .page-header {
-  padding: 0 var(--spacing-xl);
+  /* Gutter comes from .page-container so title lines up with nav logo / Search */
+  padding: 0;
   margin-bottom: var(--spacing-xl);
 }
 
@@ -169,9 +172,10 @@
   display: grid;
   grid-template-columns: 1.2fr 1fr;
   gap: 3rem;
-  max-width: 1100px;
-  margin: 4rem auto;
-  padding: 0 2rem;
+  max-width: 100%;
+  margin: 4rem auto 0;
+  /* Shell gutter is on .page-container — keep lobby flush to that edge */
+  padding: 0;
   align-items: center;
   position: relative;
   z-index: 10;
@@ -410,8 +414,8 @@
   .lobby-container {
     grid-template-columns: 1fr;
     gap: 5rem;
-    padding: 0 1.25rem 4rem;
-    margin: 2.5rem auto;
+    padding: 0 0 4rem;
+    margin: 2.5rem auto 0;
   }
   .catalogue-plaque-card {
     right: 0;
@@ -428,7 +432,7 @@
 
 @media (max-width: 360px) {
   .lobby-container {
-    padding: 0 1rem 3rem;
+    padding: 0 0 3rem;
     gap: 3.5rem;
   }
 
@@ -440,11 +444,7 @@
     width: calc(100vw - 2rem);
   }
 
-  .page-header {
-    padding: 0 var(--spacing-md, 16px);
-  }
-
   .page-container {
-    padding-inline: 0;
+    padding-inline: var(--app-shell-gutter, 16px);
   }
 }
