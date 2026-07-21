@@ -20,6 +20,7 @@
   --border: hsla(0, 0%, 100%, 0.07);
   --border-subtle: hsla(0, 0%, 100%, 0.04);
   --gold: var(--primary);
+  --accent-gold: var(--primary);
 
   /* ─── Sanctuary — Cinematic Capture & Archive ──────────────── */
   --bg-sanctuary: hsl(240, 18%, 5%);
@@ -60,7 +61,8 @@
   --duration-fast: 130ms;
   --duration-normal: 220ms;
   --duration-slow: 260ms;
-  --transition-fast: var(--duration-fast) ease;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-fast: var(--duration-fast) var(--ease-out);
   --transition-base: var(--duration-normal) ease;
   --transition-normal: var(--transition-base);
 
@@ -237,11 +239,11 @@
   --badge-on-gold-fg: #121212;
   --spinner-track: rgba(255, 255, 255, 0.1);
   --selection-bg: rgba(201, 168, 76, 0.35);
-  --shadow-poster: 0 12px 32px rgba(0, 0, 0, 0.6);
-  --shadow-nav: 0 4px 30px rgba(0, 0, 0, 0.4);
-  --shadow-drawer: -10px 0 40px rgba(0, 0, 0, 0.6);
-  --shadow-hero-poster: 0 30px 70px rgba(0, 0, 0, 0.7);
-  --shadow-plaque: 0 15px 35px rgba(0, 0, 0, 0.5);
+  --shadow-poster: 0 12px 32px hsla(240, 18%, 4%, 0.6);
+  --shadow-nav: 0 4px 30px hsla(240, 18%, 4%, 0.4);
+  --shadow-drawer: -10px 0 40px hsla(240, 18%, 4%, 0.6);
+  --shadow-hero-poster: 0 30px 70px hsla(240, 18%, 4%, 0.7);
+  --shadow-plaque: 0 15px 35px hsla(240, 18%, 4%, 0.5);
   --shadow-card-hover: 0 8px 24px rgba(10, 10, 11, 0.35);
   --ambient-glow-cool: hsla(240, 60%, 30%, 0.18);
   --ambient-glow-warm: hsla(45, 80%, 50%, 0.08);

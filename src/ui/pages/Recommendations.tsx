@@ -17,14 +17,16 @@ import '../styles/recommendations.css';
 
 interface RecommendationsProps {
   onOpenCuratorSettings?: () => void;
+  onNavigate?: (page: 'search' | 'library' | 'home' | 'new-releases') => void;
 }
 
-export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps = {}) {
+export function Recommendations({ onOpenCuratorSettings, onNavigate }: RecommendationsProps = {}) {
   // ── Existing rule-based state ─────────────────────────────────────────
   const [recs, setRecs] = useState<(Recommendation & { media: MediaItem })[]>([]);
   const [groupedRecs, setGroupedRecs] = useState<{ seedTitle: string; recommendations: (Recommendation & { media: MediaItem })[] }[]>([]);
   const [isGrouped, setIsGrouped] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [ledgerError, setLedgerError] = useState<string | null>(null);
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
@@ -40,120 +42,132 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
   const [actionError, setActionError] = useState<string | null>(null);
 
   // ── Existing rule-based fetch ─────────────────────────────────────────
-  useEffect(() => {
-    async function fetchRecs() {
-      setLoading(true);
-      try {
-        const recResponse = await sendMessage<any, Recommendation[] | GroupedRecommendation[]>(
-          MessageType.GET_RECOMMENDATIONS,
-          {}
-        );
+  async function fetchLedgerRecs() {
+    setLoading(true);
+    setLedgerError(null);
+    try {
+      const recResponse = await sendMessage<any, Recommendation[] | GroupedRecommendation[]>(
+        MessageType.GET_RECOMMENDATIONS,
+        {}
+      );
 
-        if (!recResponse.data || recResponse.data.length === 0) {
-          setLoading(false);
+      if (!recResponse.data || recResponse.data.length === 0) {
+        setRecs([]);
+        setGroupedRecs([]);
+        setIsGrouped(false);
+        return;
+      }
+
+      const groupedData = recResponse.data;
+      const hasGroups = Array.isArray(groupedData) && groupedData.length > 0 && 'seedTitle' in groupedData[0];
+
+      if (hasGroups) {
+        // Grouped path: unchanged, only Recommendation objects here
+        const mediaIds = (groupedData as GroupedRecommendation[]).flatMap(g => g.recommendations.map(r => r.mediaId));
+
+        if (mediaIds.length === 0) {
+          setRecs([]);
+          setGroupedRecs([]);
+          setIsGrouped(false);
           return;
         }
 
-        const groupedData = recResponse.data;
-        const hasGroups = Array.isArray(groupedData) && groupedData.length > 0 && 'seedTitle' in groupedData[0];
+        const mediaResponse = await sendMessage<any, MediaItem[]>(
+          MessageType.GET_MEDIA_ITEMS,
+          { mediaIds }
+        );
 
-        if (hasGroups) {
-          // Grouped path: unchanged, only Recommendation objects here
-          const mediaIds = (groupedData as GroupedRecommendation[]).flatMap(g => g.recommendations.map(r => r.mediaId));
-
-          if (mediaIds.length === 0) {
-            setLoading(false);
-            return;
-          }
-
-          const mediaResponse = await sendMessage<any, MediaItem[]>(
-            MessageType.GET_MEDIA_ITEMS,
-            { mediaIds }
+        if (mediaResponse.data) {
+          const mediaMap = new Map(
+            mediaResponse.data.map((m) => [m.id, m])
           );
 
-          if (mediaResponse.data) {
-            const mediaMap = new Map(
-              mediaResponse.data.map((m) => [m.id, m])
-            );
+          const hydratedGroups = (groupedData as GroupedRecommendation[]).map(group => {
+            const hydratedRecs = group.recommendations
+              .map(r => ({ ...r, media: mediaMap.get(r.mediaId)! }))
+              .filter(r => r.media);
+            return {
+              seedTitle: group.seedTitle,
+              recommendations: hydratedRecs,
+            };
+          }).filter(g => g.recommendations.length > 0);
 
-            const hydratedGroups = (groupedData as GroupedRecommendation[]).map(group => {
-              const hydratedRecs = group.recommendations
-                .map(r => ({ ...r, media: mediaMap.get(r.mediaId)! }))
-                .filter(r => r.media);
-              return {
-                seedTitle: group.seedTitle,
-                recommendations: hydratedRecs,
-              };
-            }).filter(g => g.recommendations.length > 0);
+          setGroupedRecs(hydratedGroups);
+          setRecs([]);
+          setIsGrouped(true);
+        }
+      } else {
+        // Flat path: may contain mix of Recommendation and MediaItem
+        const flatData = groupedData as Array<Recommendation | MediaItem>;
 
-            setGroupedRecs(hydratedGroups);
-            setIsGrouped(true);
-          }
-        } else {
-          // Flat path: may contain mix of Recommendation and MediaItem
-          const flatData = groupedData as Array<Recommendation | MediaItem>;
+        // Split into Recommendation (has mediaId) and MediaItem (has id but not mediaId)
+        const recommendations: Recommendation[] = [];
+        const mediaItems: MediaItem[] = [];
 
-          // Split into Recommendation (has mediaId) and MediaItem (has id but not mediaId)
-          const recommendations: Recommendation[] = [];
-          const mediaItems: MediaItem[] = [];
-
-          for (const entry of flatData) {
-            if ('mediaId' in entry) {
-              recommendations.push(entry as Recommendation);
-            } else if ('id' in entry) {
-              mediaItems.push(entry as MediaItem);
-            }
-          }
-
-          // Collect mediaIds from Recommendation entries
-          const mediaIds = recommendations.map(r => r.mediaId);
-
-          // Pre-hydrate MediaItem entries as if they were Recommendations
-          const traktHydrated: (Recommendation & { media: MediaItem })[] = mediaItems.map(item => ({
-            mediaId: item.id,
-            media: item,
-            explanation:
-              item.type === 'book'
-                ? 'Related to books in your archive'
-                : 'Now showing on Trakt',
-          }));
-
-          if (mediaIds.length === 0) {
-            // Only have Trakt items, no Recommendations to fetch
-            setRecs(traktHydrated);
-            setIsGrouped(false);
-            setLoading(false);
-            return;
-          }
-
-          const mediaResponse = await sendMessage<any, MediaItem[]>(
-            MessageType.GET_MEDIA_ITEMS,
-            { mediaIds }
-          );
-
-          if (mediaResponse.data) {
-            const mediaMap = new Map(
-              mediaResponse.data.map((m) => [m.id, m])
-            );
-
-            // Hydrate Recommendation entries from mediaMap
-            const hydratedFromBackend = recommendations
-              .map((r) => ({ ...r, media: mediaMap.get(r.mediaId)! }))
-              .filter((r) => r.media);
-
-            // Merge both sets
-            const allHydrated = [...hydratedFromBackend, ...traktHydrated];
-            setRecs(allHydrated);
-            setIsGrouped(false);
+        for (const entry of flatData) {
+          if ('mediaId' in entry) {
+            recommendations.push(entry as Recommendation);
+          } else if ('id' in entry) {
+            mediaItems.push(entry as MediaItem);
           }
         }
-      } catch (err) {
-        console.error('Failed to get recommendations', err);
-      } finally {
-        setLoading(false);
+
+        // Collect mediaIds from Recommendation entries
+        const mediaIds = recommendations.map(r => r.mediaId);
+
+        // Pre-hydrate MediaItem entries as if they were Recommendations
+        const traktHydrated: (Recommendation & { media: MediaItem })[] = mediaItems.map(item => ({
+          mediaId: item.id,
+          media: item,
+          explanation:
+            item.type === 'book'
+              ? 'Related to books in your archive'
+              : 'Now showing on Trakt',
+        }));
+
+        if (mediaIds.length === 0) {
+          // Only have Trakt items, no Recommendations to fetch
+          setRecs(traktHydrated);
+          setGroupedRecs([]);
+          setIsGrouped(false);
+          return;
+        }
+
+        const mediaResponse = await sendMessage<any, MediaItem[]>(
+          MessageType.GET_MEDIA_ITEMS,
+          { mediaIds }
+        );
+
+        if (mediaResponse.data) {
+          const mediaMap = new Map(
+            mediaResponse.data.map((m) => [m.id, m])
+          );
+
+          // Hydrate Recommendation entries from mediaMap
+          const hydratedFromBackend = recommendations
+            .map((r) => ({ ...r, media: mediaMap.get(r.mediaId)! }))
+            .filter((r) => r.media);
+
+          // Merge both sets
+          const allHydrated = [...hydratedFromBackend, ...traktHydrated];
+          setRecs(allHydrated);
+          setGroupedRecs([]);
+          setIsGrouped(false);
+        }
       }
+    } catch (err) {
+      console.error('Failed to get recommendations', err);
+      setRecs([]);
+      setGroupedRecs([]);
+      setIsGrouped(false);
+      setLedgerError(err instanceof Error ? err.message : 'Failed to load ledger recommendations.');
+    } finally {
+      setLoading(false);
     }
-    fetchRecs();
+  }
+
+  useEffect(() => {
+    fetchLedgerRecs();
   }, []);
 
   // ── Phase 4: Silently load watch profile on mount ──────────────────
@@ -176,8 +190,8 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
       setAddedIds((prev) => new Set(prev).add(media.id));
       setAiAddedIds((prev) => new Set(prev).add(media.id));
     } catch (err) {
-      console.error('Failed to add to library', err);
-      setActionError(err instanceof Error ? err.message : 'Failed to add title to your library.');
+      console.error('Failed to add to archive', err);
+      setActionError(err instanceof Error ? err.message : 'Failed to add title to your archive.');
     }
   }
 
@@ -269,8 +283,8 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
       await sendMessage(MessageType.ADD_TO_LIST, { mediaItem, type: rec.type });
       setAiAddedIds(prev => new Set(prev).add(rec.tmdbId));
     } catch (err) {
-      console.error('Failed to add AI rec to library', err);
-      setActionError(err instanceof Error ? err.message : 'Failed to add recommendation to your library.');
+      console.error('Failed to add AI rec to archive', err);
+      setActionError(err instanceof Error ? err.message : 'Failed to add recommendation to your archive.');
     }
   }
 
@@ -304,13 +318,28 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
       {/* ── Primary: rule-based / ledger recommendations (full width) ── */}
       <section className="recommendations-ledger-section" aria-label="Ledger recommendations">
         <div
-          key={loading ? 'rule-loading' : hasNoRecs ? 'rule-empty' : isGrouped ? 'rule-grouped' : 'rule-flat'}
+          key={loading ? 'rule-loading' : ledgerError ? 'rule-error' : hasNoRecs ? 'rule-empty' : isGrouped ? 'rule-grouped' : 'rule-flat'}
           className="recommendations-phase"
         >
           {loading ? (
             <div className="sanctuary-empty-plaque">
                <div className="subsume-spinner sanctuary-spinner-centered" />
                <p className="sanctuary-plaque-text">Reviewing your repertoire...</p>
+            </div>
+          ) : ledgerError ? (
+            <div className="sanctuary-empty-plaque">
+              <span className="sanctuary-plaque-index">Ledger unreachable</span>
+              <h3 className="sanctuary-plaque-title">Could Not Load Recommendations</h3>
+              <p className="sanctuary-plaque-text recommendations-plaque-text">
+                The programme could not reach your viewing ledger. Check your connection, then try again.
+              </p>
+              <button
+                type="button"
+                onClick={fetchLedgerRecs}
+                className="optical-button recommendations-retry-btn"
+              >
+                Try again
+              </button>
             </div>
           ) : hasNoRecs ? (
             <div className="sanctuary-empty-plaque">
@@ -319,11 +348,21 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
               <p className="sanctuary-plaque-text">
                 Ledger recommendations grow with what you watch and remember. Add works to your archive, or mark screenings as complete.
               </p>
+              {onNavigate && (
+                <button
+                  type="button"
+                  className="optical-button recommendations-retry-btn"
+                  onClick={() => onNavigate('search')}
+                >
+                  Search catalogue
+                </button>
+              )}
             </div>
           ) : isGrouped ? (
             <div className="recommendations-grouped-container">
               {groupedRecs.map(({ seedTitle, recommendations }) => {
                 const isCollapsed = collapsedGroups[seedTitle] || false;
+                const panelId = `rec-group-${seedTitle.replace(/\s+/g, '-').toLowerCase()}`;
                 return (
                   <div key={seedTitle} className="recommendations-rule-group">
                     <button
@@ -331,17 +370,18 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
                       className="recommendations-rule-group-header"
                       onClick={() => toggleGroup(seedTitle)}
                       aria-expanded={!isCollapsed}
+                      aria-controls={panelId}
                       style={{ marginBottom: isCollapsed ? '0px' : '16px' }}
                     >
                       <span className="sanctuary-subtitle recommendations-rule-group-toggle" aria-hidden="true">
                         [ {isCollapsed ? '+' : '–'} ]
                       </span>
-                      <h3 className="recommendations-rule-group-title">
+                      <span className="recommendations-rule-group-title">
                         Because you experienced <span className="recommendations-rule-group-title-highlight">{seedTitle}</span>
-                      </h3>
+                      </span>
                     </button>
                     {!isCollapsed && (
-                      <div className="card-grid recommendations-rule-grid">
+                      <div id={panelId} className="card-grid recommendations-rule-grid">
                         {recommendations.map(r => (
                           <RecommendationMediaCard
                             key={r.media.id}
@@ -481,12 +521,13 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
                 <span className="sanctuary-plaque-title recommendations-exhibition-title">Curator&apos;s programme</span>
                 <div className="recommendations-results-actions">
                   {recGroups !== null && (
-                    <div className="recommendations-view-mode-toggle">
+                    <div className="recommendations-view-mode-toggle" role="group" aria-label="View mode">
                       {(['grouped', 'flat'] as const).map(mode => (
                         <button
                           type="button"
                           key={mode}
                           onClick={() => setViewMode(mode)}
+                          aria-pressed={viewMode === mode}
                           className={`recommendations-view-mode-btn ${viewMode === mode ? 'recommendations-view-mode-btn-active' : 'recommendations-view-mode-btn-inactive'}`}
                         >
                           {mode === 'grouped' ? 'By programme' : 'Full marquee'}

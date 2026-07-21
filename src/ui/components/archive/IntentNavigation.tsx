@@ -1,13 +1,15 @@
 import { h, Fragment } from 'preact';
 import { useState } from 'preact/hooks';
 import { LibraryStatus } from '@/shared/types';
+import { INTENT_LABELS_V2 } from '@/shared/statusLabels';
+import { FILMS_TAB_LABEL, SERIES_TAB_LABEL } from '@/shared/productCopy';
 import { IntentFilterOption } from './types';
 
 const INTENT_TABS: { id: IntentFilterOption; label: string }[] = [
   { id: 'all', label: 'Full repertoire' },
-  { id: 'keep_memory', label: 'Keep This Memory' },
-  { id: 'revisit_this_month', label: 'Revisit This Month' },
-  { id: 'wishlist', label: 'Wishlist' },
+  { id: 'keep_memory', label: INTENT_LABELS_V2.keep_memory },
+  { id: 'revisit_this_month', label: INTENT_LABELS_V2.return_soon },
+  { id: 'wishlist', label: INTENT_LABELS_V2.wishlist },
 ];
 
 export type CollectionFilter = 'all' | LibraryStatus;
@@ -108,7 +110,7 @@ export function IntentNavigation({
             className={`tab-item ${activeTab === 'screen' || activeTab === 'movies' ? 'active' : ''}`}
             onClick={() => setActiveTab('movies')}
           >
-            Movies
+            {FILMS_TAB_LABEL}
           </button>
           <button
             type="button"
@@ -117,7 +119,7 @@ export function IntentNavigation({
             className={`tab-item ${activeTab === 'tv' ? 'active' : ''}`}
             onClick={() => setActiveTab('tv')}
           >
-            Series
+            {SERIES_TAB_LABEL}
           </button>
         </div>
       )}

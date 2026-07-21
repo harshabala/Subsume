@@ -62,16 +62,28 @@
 
 .emotional-slider-input::-webkit-slider-thumb {
   appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--primary);
+  border: none;
   box-shadow: 0 0 8px color-mix(in oklch, var(--primary) 40%, transparent);
+  cursor: pointer;
   transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.2s ease;
 }
 
+.emotional-slider-input::-moz-range-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: none;
+  box-shadow: 0 0 8px color-mix(in oklch, var(--primary) 40%, transparent);
+  cursor: pointer;
+}
+
 .emotional-slider-input:active::-webkit-slider-thumb {
-  transform: scale(1.25);
+  transform: scale(1.08);
 }
 
 .emotional-slider-input:focus-visible {
@@ -452,6 +464,15 @@
 
 .film-grain-popup {
   opacity: var(--grain-opacity-popup);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .film-grain,
+  .film-grain-app,
+  .film-grain-popup {
+    display: none !important;
+    opacity: 0 !important;
+  }
 }
 
 .recently-reflected-strip {

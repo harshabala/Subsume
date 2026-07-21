@@ -11,7 +11,11 @@ import {
 import { formatPlatformName } from '@/shared/platforms';
 import { setupShadowStyles } from '@/shared/shadowTokens';
 import { legacyStatusLabel } from '@/shared/statusLabels';
-import { mediumLabel, ADD_TO_ARCHIVE_LABEL } from '@/shared/productCopy';
+import {
+  mediumLabel,
+  ADD_TO_ARCHIVE_LABEL,
+  REMOVE_FROM_ARCHIVE_LABEL,
+} from '@/shared/productCopy';
 import { attachClosedShadow, isTrustedGesture } from '@/content/closedShadow';
 
 // ─── Positioning ─────────────────────────────────────────────────────
@@ -195,6 +199,7 @@ function HoverCard({
           <div className="subsume-actions">
             {inLibrary ? (
               <button
+                type="button"
                 className="subsume-btn subsume-btn-danger"
                 onClick={(e) => {
                   if (!isTrustedGesture(e)) return;
@@ -204,35 +209,22 @@ function HoverCard({
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                 </svg>
-                Remove from archive
+                {REMOVE_FROM_ARCHIVE_LABEL}
               </button>
             ) : (
-              <>
-                <button
-                  className="subsume-btn subsume-btn-primary"
-                  onClick={(e) => {
-                    if (!isTrustedGesture(e)) return;
-                    onAdd('movie');
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                  {ADD_TO_ARCHIVE_LABEL}
-                </button>
-                <button
-                  className="subsume-btn subsume-btn-secondary"
-                  onClick={(e) => {
-                    if (!isTrustedGesture(e)) return;
-                    onAdd('tv');
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                  Add series to archive
-                </button>
-              </>
+              <button
+                type="button"
+                className="subsume-btn subsume-btn-primary"
+                onClick={(e) => {
+                  if (!isTrustedGesture(e)) return;
+                  onAdd(mediaItem.type);
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                {ADD_TO_ARCHIVE_LABEL}
+              </button>
             )}
           </div>
         </>
@@ -623,7 +615,7 @@ export class HoverCardManager {
         setTimeout(() => this.hideCard(), 1200);
       }
     } catch (err) {
-      console.error('[Subsume] Failed to remove from library:', err);
+      console.error('[Subsume] Failed to remove from archive:', err);
     }
   }
 }
@@ -931,11 +923,11 @@ const HOVER_CARD_STYLES = `
   }
 
   .subsume-status-badge.status-watched {
-    color: var(--success, #3d8b5f);
+    color: var(--success-fg, var(--success));
   }
 
   .subsume-status-badge.status-abandoned {
-    color: var(--destructive, #ef4444);
+    color: var(--danger-fg-strong, var(--destructive));
   }
 
   .subsume-user-rating-badge {
@@ -963,6 +955,7 @@ const HOVER_CARD_STYLES = `
     align-items: center;
     justify-content: center;
     gap: var(--spacing-sm);
+    min-height: 44px;
     padding: var(--spacing-sm) var(--spacing-md);
     border: none;
     border-radius: var(--radius-md);
@@ -970,11 +963,21 @@ const HOVER_CARD_STYLES = `
     font-weight: 600;
     font-family: inherit;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+    transition: background 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+      color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .subsume-btn:active {
     transform: scale(0.97);
+  }
+
+  .subsume-btn:focus-visible {
+    outline: 2px solid var(--accent-gold, var(--primary));
+    outline-offset: 2px;
   }
 
   .subsume-btn-primary {
@@ -1004,15 +1007,16 @@ const HOVER_CARD_STYLES = `
 
   .subsume-btn-danger {
     flex: 1;
-    background: hsla(0, 84%, 60%, 0.1);
-    color: var(--destructive, #ef4444);
-    border: 1px solid hsla(0, 84%, 60%, 0.2);
+    background: var(--danger-bg);
+    color: var(--danger-fg-strong, var(--destructive));
+    border: 1px solid var(--danger-border);
   }
 
   .subsume-btn-danger:hover {
-    background: hsla(0, 84%, 60%, 0.18);
+    background: var(--danger-bg);
     transform: translateY(-1px);
-    border-color: hsla(0, 84%, 60%, 0.3);
+    border-color: var(--danger-border);
+    filter: brightness(1.08);
   }
 
   /* Added confirmation */
@@ -1027,7 +1031,7 @@ const HOVER_CARD_STYLES = `
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
-    color: var(--success, #3d8b5f);
+    color: var(--success-fg, var(--success));
     font-size: 15px;
     font-weight: 600;
   }

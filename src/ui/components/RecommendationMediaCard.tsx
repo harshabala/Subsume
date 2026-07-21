@@ -34,7 +34,6 @@ export function RecommendationMediaCard({
              ) : (
                <div className="empty-poster recommendation-media-card-poster-empty">No Image</div>
              )}
-             <span className="recommendation-type-badge" aria-label={typeLabel}>{typeLabel}</span>
            </div>
            <div>
              <h4 className="media-card-title">{media.canonicalTitle}</h4>

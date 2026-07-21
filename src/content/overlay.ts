@@ -62,8 +62,9 @@ function MuseumPlaqueOverlay({ match, onReflect }: PlaqueProps) {
     'div',
     { className: 'subsume-plaque-root' },
     h(
-      'div',
+      'button',
       {
+        type: 'button',
         className: 'museum-plaque',
         onClick: (e: MouseEvent) => {
           if (!isTrustedGesture(e)) return;
@@ -72,6 +73,7 @@ function MuseumPlaqueOverlay({ match, onReflect }: PlaqueProps) {
           onReflect();
         },
         title: 'Inscribe what stayed with you after this screening',
+        'aria-label': `Reflect on ${match.title}`,
       },
       [
         h('span', { className: 'plaque-score' }, `★ ${baselineScore}`),
@@ -107,6 +109,8 @@ const PLAQUE_STYLES = `
     display: inline-flex;
     align-items: center;
     gap: var(--spacing-sm);
+    min-height: 44px;
+    min-width: 44px;
     padding: var(--spacing-sm) var(--spacing-md);
     border-radius: var(--radius-md);
     background: var(--bg-plaque);
@@ -121,7 +125,12 @@ const PLAQUE_STYLES = `
     letter-spacing: 0.02em;
     cursor: pointer;
     pointer-events: auto;
-    transition: all 280ms cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+    transition: background 280ms cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 280ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 280ms cubic-bezier(0.16, 1, 0.3, 1),
+      color 280ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
     overflow: hidden;
     white-space: nowrap;
   }
@@ -132,6 +141,11 @@ const PLAQUE_STYLES = `
     border-color: var(--border);
     box-shadow: var(--shadow-lg);
     transform: translateY(-1px);
+  }
+
+  .museum-plaque:focus-visible {
+    outline: 2px solid var(--accent-gold, var(--primary));
+    outline-offset: 2px;
   }
 
   .plaque-score {

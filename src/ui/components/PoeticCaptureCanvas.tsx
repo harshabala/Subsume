@@ -29,6 +29,9 @@ const FOCUSABLE_SELECTOR =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 const SAVE_CEREMONY_MS = 280; /* matches --duration-soft-settle; ≤300ms UI wiki */
+const EXIT_FALLBACK_MS = 350; /* curtain-close + buffer; matches DetailModal */
+/** Progressive disclosure: intent + rating after short recall, not a full essay. */
+const RECALL_DISCLOSURE_CHARS = 40;
 
 function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
@@ -48,16 +51,35 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
   const [lingeringThought, setLingeringThought] = useState<string>('');
   const [emotions, setEmotions] = useState<EmotionalSpectrum>(DEFAULT_EMOTIONS);
   const [isWriting, setIsWriting] = useState<boolean>(false);
+  /** Sticky: first non-empty blur on recall reveals intent + rating. */
+  const [recallBlurredWithContent, setRecallBlurredWithContent] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveCeremony, setSaveCeremony] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [closing, setClosing] = useState(false);
 
   const dialogRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const ceremonyTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const closedRef = useRef(false);
   const headingId = useId();
   const textareaId = useId();
+
+  const finishClose = useCallback(() => {
+    if (closedRef.current) return;
+    closedRef.current = true;
+    onClose();
+  }, [onClose]);
+
+  const requestClose = useCallback(() => {
+    if (closedRef.current || closing) return;
+    if (prefersReducedMotion()) {
+      finishClose();
+      return;
+    }
+    setClosing(true);
+  }, [closing, finishClose]);
 
   const fetchMedia = useCallback(async (isMounted: () => boolean) => {
     setLoading(true);
@@ -115,7 +137,7 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        onClose();
+        requestClose();
         return;
       }
 
@@ -144,7 +166,7 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
       document.removeEventListener('keydown', handleKeyDown);
       previousFocusRef.current?.focus();
     };
-  }, [onClose, loading, loadError]);
+  }, [requestClose, loading, loadError]);
 
   useEffect(() => {
     return () => {
@@ -154,13 +176,32 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
     };
   }, []);
 
+  // Wait for curtain-close animationend, with timeout fallback if it never fires
+  useEffect(() => {
+    if (!closing) return;
+
+    const el = dialogRef.current;
+    const onEnd = (e: AnimationEvent) => {
+      if (el && e.target !== el) return;
+      if (e.animationName && !String(e.animationName).includes('exit')) return;
+      finishClose();
+    };
+
+    el?.addEventListener('animationend', onEnd as EventListener);
+    const timer = window.setTimeout(finishClose, EXIT_FALLBACK_MS);
+    return () => {
+      el?.removeEventListener('animationend', onEnd as EventListener);
+      window.clearTimeout(timer);
+    };
+  }, [closing, finishClose]);
+
   const handleRetry = () => {
     fetchMedia(() => true);
   };
 
   const finishAfterSave = () => {
     onSave?.();
-    onClose();
+    requestClose();
   };
 
   const handleSave = async () => {
@@ -227,7 +268,9 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
   };
 
   const director = media?.wikidataDirectorBio;
-  const modalClass = `poetic-sanctuary-modal${isWriting ? ' staging-one-focal-point' : ''}${saveCeremony ? ' save-ceremony' : ''}`;
+  const showProgressiveControls =
+    emotionalRecall.length >= RECALL_DISCLOSURE_CHARS || recallBlurredWithContent;
+  const modalClass = `poetic-sanctuary-modal${isWriting ? ' staging-one-focal-point' : ''}${saveCeremony ? ' save-ceremony' : ''}${closing ? ' closing' : ''}`;
 
   return (
     <div
@@ -285,7 +328,13 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
               value={emotionalRecall}
               onInput={(e) => setEmotionalRecall((e.currentTarget as HTMLTextAreaElement).value)}
               onFocus={() => setIsWriting(true)}
-              onBlur={() => setIsWriting(false)}
+              onBlur={() => {
+                setIsWriting(false);
+                const value = textareaRef.current?.value ?? emotionalRecall;
+                if (value.trim().length > 0) {
+                  setRecallBlurredWithContent(true);
+                }
+              }}
             />
 
             <div
@@ -301,7 +350,7 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
               <AuraVisualizer values={emotions} variant="sanctuary" ceremony={saveCeremony} />
             </div>
 
-            {emotionalRecall.length >= 140 && (
+            {showProgressiveControls && (
               <div class="progressive-controls">
                 <div class="intent-selectors" data-testid="intent-selectors">
                   <button
@@ -346,8 +395,9 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
 
                 <div class="metadata-fields-group">
                   <div class="metadata-input-group">
-                    <label class="metadata-label">Atmosphere</label>
+                    <label class="metadata-label" for="poetic-atmosphere">Atmosphere</label>
                     <input
+                      id="poetic-atmosphere"
                       type="text"
                       class="poetic-input"
                       placeholder="e.g. Melancholic, Neon-drenched, Warm Amber"
@@ -358,8 +408,9 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
                   </div>
 
                   <div class="metadata-input-group">
-                    <label class="metadata-label">Lingering Thought</label>
+                    <label class="metadata-label" for="poetic-lingering">Lingering Thought</label>
                     <input
+                      id="poetic-lingering"
                       type="text"
                       class="poetic-input"
                       placeholder="e.g. The cost of love / A memory frozen in time..."
@@ -377,7 +428,7 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
             )}
 
             <div class="poetic-actions">
-              <button type="button" class="close-btn" onClick={onClose}>
+              <button type="button" class="close-btn" onClick={requestClose}>
                 Close
               </button>
               <button

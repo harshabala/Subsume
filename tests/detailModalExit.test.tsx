@@ -154,6 +154,22 @@ describe('DetailModal exit lifecycle', () => {
     expect(container.querySelector('.sanctuary-modal-content.closing')).toBeTruthy();
   });
 
+  it('second Escape during exit finishes close immediately (interruptible)', () => {
+    const { container, onClose } = renderModal();
+
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    });
+    expect(onClose).not.toHaveBeenCalled();
+    expect(container.querySelector('.sanctuary-modal-content.closing')).toBeTruthy();
+
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    });
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it('backdrop click triggers exit lifecycle', () => {
     const { container, onClose } = renderModal();
 

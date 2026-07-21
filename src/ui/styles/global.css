@@ -88,7 +88,7 @@ button {
   border-radius: var(--radius-sm);
   border: none;
   cursor: pointer;
-  min-height: 40px;
+  min-height: 44px;
   transition: background-color var(--transition-fast),
               color var(--transition-fast),
               transform var(--transition-fast);
@@ -205,8 +205,8 @@ input[type="range"] {
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 28px;
+  height: 28px;
   background: var(--primary);
   border-radius: 50%;
   cursor: pointer;
@@ -215,8 +215,8 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 input[type="range"]::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+  width: 28px;
+  height: 28px;
   background: var(--primary);
   border-radius: 50%;
   cursor: pointer;
@@ -610,5 +610,12 @@ nav a.active {
   .media-card.sanctuary-media-card {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+  }
+
+  .film-grain,
+  .film-grain-app,
+  .film-grain-popup {
+    display: none !important;
+    opacity: 0 !important;
   }
 }

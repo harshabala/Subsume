@@ -1,5 +1,6 @@
 /* Sanctuary tokens live in src/shared/tokens.css */
 
+/* Enter: Slow Dolly ≤300ms (--duration-curtain). Exit: Curtain Close ≤300ms (DetailModal pattern). */
 .poetic-sanctuary-modal {
   position: fixed;
   inset: 0;
@@ -11,6 +12,12 @@
   color: var(--text-sanctuary);
   font-family: var(--font-editorial);
   overflow: hidden;
+  animation: poetic-backdrop-enter var(--duration-curtain, 280ms) var(--ease-focus-pull, ease-out);
+}
+
+.poetic-sanctuary-modal.closing {
+  animation: poetic-backdrop-exit var(--duration-curtain-close, 300ms) ease-in forwards;
+  pointer-events: none;
 }
 
 .poetic-backdrop {
@@ -28,7 +35,10 @@
   height: 100%;
   object-fit: cover;
   opacity: 0.2;
-  transition: all var(--duration-slow) cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    opacity var(--duration-slow) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+    filter var(--duration-slow) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+    transform var(--duration-slow) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
 }
 
 .poetic-poster.writing {
@@ -58,6 +68,13 @@
   box-shadow: var(--shadow-hero);
   backdrop-filter: blur(20px);
   box-sizing: border-box;
+  /* Slow Dolly: opacity + translateY + scale from ≥0.96 (cinematic, ≤300ms) */
+  animation: poetic-modal-enter var(--duration-curtain, 280ms) var(--ease-focus-pull, ease-out);
+}
+
+.poetic-sanctuary-modal.closing .poetic-content {
+  /* Curtain Close: shorter, smaller motion, ease-in */
+  animation: poetic-modal-exit var(--duration-curtain-close, 300ms) ease-in forwards;
 }
 
 .poetic-media-header {
@@ -217,7 +234,10 @@
   text-transform: uppercase;
   letter-spacing: 0.15em;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease;
 }
 
 .intent-selectors button.active {
@@ -245,7 +265,10 @@
   font-family: var(--font-ui);
   font-size: 11px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .rating-control button.active {
@@ -270,7 +293,11 @@
   text-transform: uppercase;
   letter-spacing: 0.15em;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    opacity 0.2s ease;
 }
 
 .save-btn {
@@ -325,6 +352,41 @@
   border-color: var(--border-hero);
 }
 
+/* ─── Enter / Exit keyframes (Slow Dolly + Curtain Close) ─────────── */
+
+@keyframes poetic-backdrop-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes poetic-backdrop-exit {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes poetic-modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes poetic-modal-exit {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    /* Subtler than enter: smaller translate, nearer scale */
+    transform: scale(0.98) translateY(4px);
+  }
+}
+
 /* ─── Reduced Motion ──────────────────────────────────────────────── */
 
 .poetic-emotions-panel {
@@ -332,6 +394,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .poetic-sanctuary-modal,
+  .poetic-sanctuary-modal.closing,
+  .poetic-content,
+  .poetic-sanctuary-modal.closing .poetic-content {
+    animation: none !important;
+  }
+
   .poetic-poster,
   .poetic-textarea,
   .poetic-input,

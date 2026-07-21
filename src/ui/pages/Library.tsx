@@ -28,7 +28,11 @@ function mediumFilterToType(filter: MediumFilter): MediaType | undefined {
   return undefined;
 }
 
-export function Library() {
+interface LibraryProps {
+  onNavigate?: (page: 'search' | 'home' | 'library' | 'recommendations' | 'new-releases') => void;
+}
+
+export function Library({ onNavigate }: LibraryProps = {}) {
   const [activeTab, setActiveTab] = useState<MediumFilter>('all');
   const [intentFilter, setIntentFilter] = useState<IntentFilterOption>('all');
   const [collectionFilter, setCollectionFilter] = useState<CollectionFilter>('all');
@@ -366,6 +370,8 @@ export function Library() {
             title={emptyCopy.title}
             message={emptyCopy.message}
             hint={emptyCopy.hint}
+            actionLabel={onNavigate ? 'Search catalogue' : undefined}
+            onAction={onNavigate ? () => onNavigate('search') : undefined}
           />
         ) : filteredAndSortedItems.length === 0 ? (
           <EmptyStateProjection

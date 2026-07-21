@@ -45,9 +45,15 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
   const handleTmdbContinue = async () => {
     clearError();
+    const trimmed = tmdbApiKey.trim();
+    // Empty key: not hard-required — continue without validating
+    if (!trimmed) {
+      setError("Paste a TMDb token to validate, or choose \"I'll add keys later\".");
+      return;
+    }
     setValidating(true);
     try {
-      const result = await validateTmdbKey(tmdbApiKey);
+      const result = await validateTmdbKey(trimmed);
       if (!result.valid) {
         setError(result.error || 'TMDb key could not be validated.');
         return;
@@ -56,6 +62,11 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     } finally {
       setValidating(false);
     }
+  };
+
+  const handleTmdbSkip = () => {
+    setTmdbApiKey('');
+    goTo(3);
   };
 
   const handleOmdbContinue = async () => {
@@ -204,9 +215,9 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               API Key.
             </p>
             <p className="onboarding-body onboarding-body--compact">
-              Books use Open Library by default with no key. TMDb remains required
-              for film and TV features; you can finish setup with TMDb alone and
-              read with Open Library immediately.
+              Optional for now. Screen metadata (posters, search, programme) is
+              richer with TMDb; you can add a token later under Settings. Books
+              use Open Library by default with no key.
             </p>
             <div className="onboarding-form">
               <label className="onboarding-label" htmlFor="onboarding-tmdb-key">
@@ -241,14 +252,24 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   {error}
                 </p>
               )}
-              <button
-                type="button"
-                className="onboarding-cta"
-                onClick={handleTmdbContinue}
-                disabled={validating}
-              >
-                {validating ? 'Validating…' : 'Validate & continue'}
-              </button>
+              <div className="onboarding-actions">
+                <button
+                  type="button"
+                  className="onboarding-cta onboarding-cta--ghost"
+                  onClick={handleTmdbSkip}
+                  disabled={validating}
+                >
+                  I&apos;ll add keys later
+                </button>
+                <button
+                  type="button"
+                  className="onboarding-cta"
+                  onClick={handleTmdbContinue}
+                  disabled={validating}
+                >
+                  {validating ? 'Validating…' : 'Validate & continue'}
+                </button>
+              </div>
             </div>
           </section>
         )}
@@ -404,18 +425,9 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               Keys stay in your browser. You can revise them anytime under
               Settings. When you are ready, step into the programme.
             </p>
-            <div className="onboarding-actions onboarding-actions--stack">
-              <button type="button" className="onboarding-cta" onClick={finish}>
-                Enter the house
-              </button>
-              <button
-                type="button"
-                className="onboarding-cta onboarding-cta--ghost"
-                onClick={finish}
-              >
-                Start discovering
-              </button>
-            </div>
+            <button type="button" className="onboarding-cta" onClick={finish}>
+              Enter the house
+            </button>
           </section>
         )}
       </div>

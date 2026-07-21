@@ -1,5 +1,5 @@
 import { h } from 'preact';
-import { useState } from 'preact/hooks';
+import { useId, useState } from 'preact/hooks';
 import {
   REFLECTION_CARD_EXCERPT_MAX,
   needsExcerptTruncation,
@@ -20,6 +20,7 @@ export function ExpandableReflection({
   onToggleExpand,
 }: ExpandableReflectionProps) {
   const [expanded, setExpanded] = useState(false);
+  const panelId = useId();
   const trimmed = text.trim();
   const canTruncate = needsExcerptTruncation(trimmed, maxLength);
 
@@ -33,7 +34,7 @@ export function ExpandableReflection({
         .filter(Boolean)
         .join(' ')}
     >
-      <div className="reflection-excerpt-panel">
+      <div className="reflection-excerpt-panel" id={panelId}>
         <div className="reflection-excerpt-panel-inner">
           <p className={className}>&ldquo;{trimmed}&rdquo;</p>
         </div>
@@ -43,6 +44,7 @@ export function ExpandableReflection({
           type="button"
           className="reflection-excerpt-toggle"
           aria-expanded={expanded}
+          aria-controls={panelId}
           onClick={(e) => {
             e.stopPropagation();
             const next = !expanded;

@@ -4,7 +4,12 @@ import { sendMessage } from '@/shared/messages';
 import { MessageType, MediaItem, MediaType } from '@/shared/types';
 import { DetailModal } from '../components/DetailModal';
 import { SanctuaryMediaCard } from '../components/SanctuaryMediaCard';
-import { mediumLabel, ADD_TO_ARCHIVE_LABEL, IN_ARCHIVE_LABEL } from '@/shared/productCopy';
+import {
+  mediumLabel,
+  ADD_TO_ARCHIVE_LABEL,
+  IN_ARCHIVE_LABEL,
+  failedToAddToArchiveMessage,
+} from '@/shared/productCopy';
 
 const TYPE_OPTIONS: { value: MediaType | ''; label: string }[] = [
   { value: '', label: 'All works' },
@@ -80,7 +85,7 @@ export function Search() {
       setAddedIds((prev) => new Set(prev).add(item.id));
     } catch (err) {
       console.error('[Subsume] Failed to add:', err);
-      setError(err instanceof Error ? err.message : 'Failed to add title to your library.');
+      setError(err instanceof Error ? err.message : failedToAddToArchiveMessage());
     } finally {
       setAddingId(null);
     }
@@ -113,7 +118,8 @@ export function Search() {
       <div className="optical-search-container">
         <div className="sanctuary-filter-row">
           <input
-            type="text"
+            type="search"
+            aria-label="Search films, series, and books"
             placeholder="Title, author, director, or cast..."
             value={query}
             onInput={(e) => setQuery(e.currentTarget.value)}
@@ -121,6 +127,7 @@ export function Search() {
             className="optical-input"
           />
           <button
+            type="button"
             className="optical-button"
             onClick={handleSearch}
             disabled={loading || !query.trim()}
@@ -129,10 +136,12 @@ export function Search() {
           </button>
         </div>
 
-        <div className="sanctuary-filter-chips">
+        <div className="sanctuary-filter-chips" role="group" aria-label="Format filter">
           {TYPE_OPTIONS.map((opt) => (
             <button
               key={opt.value}
+              type="button"
+              aria-pressed={typeFilter === opt.value}
               onClick={() => setTypeFilter(opt.value)}
               className="optical-button"
               style={{

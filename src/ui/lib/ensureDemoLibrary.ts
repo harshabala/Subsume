@@ -7,25 +7,28 @@ export interface JoinedLibraryItem {
 }
 
 /**
- * Seeds the demo sanctuary when the library is empty (first install / cleared data).
- * Returns the current library after any seed attempt.
+ * Loads the current library. Does **not** auto-seed demo titles.
+ *
+ * Demo restoration is opt-in only (Settings / popup “Restore demo library”).
+ * Silent auto-seed blurred ownership on first open; keep that path explicit.
  */
 export async function ensureDemoLibraryIfEmpty(): Promise<JoinedLibraryItem[]> {
   const initial = await sendMessage<Record<string, unknown>, JoinedLibraryItem[]>(
     MessageType.GET_LIBRARY,
     {}
   );
-  const items = initial.data ?? [];
-  if (items.length > 0) return items;
+  return initial.data ?? [];
+}
 
-  try {
-    await sendMessage(MessageType.RESTORE_DEMO_LIBRARY, {});
-    const refreshed = await sendMessage<Record<string, unknown>, JoinedLibraryItem[]>(
-      MessageType.GET_LIBRARY,
-      {}
-    );
-    return refreshed.data ?? [];
-  } catch {
-    return items;
-  }
+/**
+ * Explicit opt-in: restore the demo sanctuary library.
+ * Prefer calling this only from a user-initiated control.
+ */
+export async function restoreDemoLibrary(): Promise<JoinedLibraryItem[]> {
+  await sendMessage(MessageType.RESTORE_DEMO_LIBRARY, {});
+  const refreshed = await sendMessage<Record<string, unknown>, JoinedLibraryItem[]>(
+    MessageType.GET_LIBRARY,
+    {}
+  );
+  return refreshed.data ?? [];
 }

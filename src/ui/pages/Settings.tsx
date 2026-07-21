@@ -615,8 +615,9 @@ export function Settings() {
 
           <div className="settings-field-stack">
             <div>
-              <label className="settings-field-label">TMDb API key</label>
+              <label className="settings-field-label" htmlFor="settings-tmdb-key">TMDb API key</label>
               <input
+                id="settings-tmdb-key"
                 type="password"
                 placeholder="Paste your TMDb API key"
                 value={prefs.tmdbApiKey || ''}
@@ -630,8 +631,9 @@ export function Settings() {
             </div>
 
             <div>
-              <label className="settings-field-label">OMDb API key (optional)</label>
+              <label className="settings-field-label" htmlFor="settings-omdb-key">OMDb API key (optional)</label>
               <input
+                id="settings-omdb-key"
                 type="password"
                 placeholder="Paste your OMDb API key"
                 value={prefs.omdbApiKey || ''}
@@ -645,8 +647,9 @@ export function Settings() {
             </div>
 
             <div>
-              <label className="settings-field-label">Google Books API key (optional)</label>
+              <label className="settings-field-label" htmlFor="settings-google-books-key">Google Books API key (optional)</label>
               <input
+                id="settings-google-books-key"
                 type="password"
                 placeholder="Paste your Google Books API key"
                 value={prefs.googleBooksApiKey || ''}
@@ -690,8 +693,9 @@ export function Settings() {
           {prefs.llmEnabled && (
             <div className="settings-sub-panel">
               <div>
-                <label className="settings-field-label">Provider</label>
+                <label className="settings-field-label" htmlFor="settings-llm-provider">Provider</label>
                 <select
+                  id="settings-llm-provider"
                   value={prefs.llmProvider || 'openai'}
                   onChange={(e) => handleChange('llmProvider', e.currentTarget.value)}
                   className="settings-input"
@@ -703,8 +707,9 @@ export function Settings() {
               </div>
 
               <div>
-                <label className="settings-field-label">API key</label>
+                <label className="settings-field-label" htmlFor="settings-llm-key">API key</label>
                 <input
+                  id="settings-llm-key"
                   type="password"
                   placeholder="sk-..."
                   value={prefs.llmApiKey || ''}
@@ -714,8 +719,9 @@ export function Settings() {
               </div>
 
               <div>
-                <label className="settings-field-label">Fallback API key (optional)</label>
+                <label className="settings-field-label" htmlFor="settings-llm-fallback-key">Fallback API key (optional)</label>
                 <input
+                  id="settings-llm-fallback-key"
                   type="password"
                   placeholder="sk-..."
                   value={prefs.llmSecondaryApiKey || ''}
@@ -741,8 +747,9 @@ export function Settings() {
 
           <div className="settings-field-stack">
             <div>
-              <label className="settings-field-label">Curator persona (system)</label>
+              <label className="settings-field-label" htmlFor="settings-curator-persona">Curator persona (system)</label>
               <textarea
+                id="settings-curator-persona"
                 value={prefs.llmCuratorSystemPrompt ?? ''}
                 onChange={(e) => handleChange('llmCuratorSystemPrompt', e.currentTarget.value)}
                 placeholder={DEFAULT_PROMPTS.curatorSystem}
@@ -759,8 +766,9 @@ export function Settings() {
             </div>
 
             <div>
-              <label className="settings-field-label">Recommendations task (after taste JSON)</label>
+              <label className="settings-field-label" htmlFor="settings-curator-recs">Recommendations task (after taste JSON)</label>
               <textarea
+                id="settings-curator-recs"
                 value={prefs.llmPromptRecommendation ?? ''}
                 onChange={(e) => handleChange('llmPromptRecommendation', e.currentTarget.value)}
                 placeholder={DEFAULT_PROMPTS.recommendation}
@@ -777,8 +785,9 @@ export function Settings() {
             </div>
 
             <div>
-              <label className="settings-field-label">Weekly digest task (new releases)</label>
+              <label className="settings-field-label" htmlFor="settings-curator-digest">Weekly digest task (new releases)</label>
               <textarea
+                id="settings-curator-digest"
                 value={prefs.llmPromptDigest ?? ''}
                 onChange={(e) => handleChange('llmPromptDigest', e.currentTarget.value)}
                 placeholder={DEFAULT_PROMPTS.digest}
@@ -795,8 +804,9 @@ export function Settings() {
             </div>
 
             <div>
-              <label className="settings-field-label">Grouping task (“Because you experienced…”)</label>
+              <label className="settings-field-label" htmlFor="settings-curator-grouping">Grouping task (“Because you experienced…”)</label>
               <textarea
+                id="settings-curator-grouping"
                 value={prefs.llmPromptGrouping ?? ''}
                 onChange={(e) => handleChange('llmPromptGrouping', e.currentTarget.value)}
                 placeholder={DEFAULT_PROMPTS.grouping}
@@ -875,8 +885,9 @@ export function Settings() {
             </label>
 
             <div>
-              <label className="settings-field-label">Title detection on websites</label>
+              <label className="settings-field-label" htmlFor="settings-detection-sensitivity">Title detection on websites</label>
               <select
+                id="settings-detection-sensitivity"
                 value={prefs.detectionSensitivity || 'medium'}
                 onChange={(e) => handleChange('detectionSensitivity', (e.target as HTMLSelectElement).value)}
                 className="settings-input"
@@ -888,8 +899,9 @@ export function Settings() {
             </div>
 
             <div>
-              <label className="settings-field-label">Sites where Subsume is off (one domain per line)</label>
+              <label className="settings-field-label" htmlFor="settings-disabled-domains">Sites where Subsume is off (one domain per line)</label>
               <textarea
+                id="settings-disabled-domains"
                 value={prefs.disabledDomains?.join('\n') || ''}
                 onChange={(e) => handleChange('disabledDomains', e.currentTarget.value.split('\n').map(d => d.trim()).filter(Boolean))}
                 placeholder={'example.com\nnews.ycombinator.com'}

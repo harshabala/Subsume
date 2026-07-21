@@ -11,6 +11,7 @@ import { ExpandableReflection } from './ExpandableReflection';
 import { ReflectionTimeline } from './ReflectionTimeline';
 import { ExperienceHistory } from './ExperienceHistory';
 import { statusOptionsForMedium, getReflectionExcerpt } from './archive/constants';
+import { mediumLabel } from '@/shared/productCopy';
 
 type RelatedWorkRow = {
   relation: { id: string; relation: WorkRelationType; fromWorkId: string; toWorkId: string };
@@ -37,6 +38,8 @@ interface DetailModalProps {
 
 const SUGGESTED_TAGS = ["Rewatchable", "Festival", "Criterion", "Silent Era", "Foreign Language", "Comfort Watch", "One-Timer"];
 
+const FOCUSABLE_SELECTOR =
+  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 const EXIT_FALLBACK_MS = 350;
 const SAVE_CEREMONY_MS = 280; /* matches --duration-soft-settle; ≤300ms UI wiki */
@@ -88,8 +91,16 @@ export function DetailModal({
   const ceremonyTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const progressDebounceRef = useRef<ReturnType<typeof setTimeout>>();
   const modalRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   const closedRef = useRef(false);
+  const closingRef = useRef(false);
   const titleId = `detail-title-${media.id}`;
+  const statusFieldId = `detail-status-${media.id}`;
+  const ratingFieldId = `detail-rating-${media.id}`;
+  const tagsFieldId = `detail-tags-${media.id}`;
+  const notesFieldId = `detail-notes-${media.id}`;
+  const atmosphereFieldId = `detail-atmosphere-${media.id}`;
+  const lingeringFieldId = `detail-lingering-${media.id}`;
   const isBook = media.type === 'book';
   const statusOptions = statusOptionsForMedium(media.type);
   const againLabel = isBook ? 'Read again' : 'Watch again';
@@ -296,20 +307,26 @@ export function DetailModal({
     }, 400);
   };
 
-  const finishClose = () => {
+  const finishClose = useCallback(() => {
     if (closedRef.current) return;
     closedRef.current = true;
     onClose();
-  };
+  }, [onClose]);
 
-  const requestClose = () => {
-    if (closedRef.current || closing) return;
+  const requestClose = useCallback(() => {
+    if (closedRef.current) return;
+    // Second Esc (or close) during exit: finish immediately — do not hard-block
+    if (closingRef.current) {
+      finishClose();
+      return;
+    }
     if (prefersReducedMotion()) {
       finishClose();
       return;
     }
+    closingRef.current = true;
     setClosing(true);
-  };
+  }, [finishClose]);
 
   // Wait for curtain-close animationend, with timeout fallback if it never fires
   useEffect(() => {
@@ -329,7 +346,7 @@ export function DetailModal({
       el?.removeEventListener('animationend', onEnd as EventListener);
       window.clearTimeout(timer);
     };
-  }, [closing]);
+  }, [closing, finishClose]);
 
   const playSaveCeremony = () => {
     if (prefersReducedMotion()) return;
@@ -404,14 +421,51 @@ export function DetailModal({
     }
   };
 
+  const requestCloseRef = useRef(requestClose);
+  requestCloseRef.current = requestClose;
+
+  // Focus trap + Esc (incl. exit interrupt) + restore focus — matches PoeticCaptureCanvas
   useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') requestClose();
+    previousFocusRef.current = document.activeElement as HTMLElement | null;
+
+    const focusDialog = () => {
+      modalRef.current?.focus();
     };
-    document.addEventListener('keydown', handleEsc);
-    modalRef.current?.focus();
-    return () => document.removeEventListener('keydown', handleEsc);
-  }, [closing]);
+    const focusTimer = window.setTimeout(focusDialog, 0);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        requestCloseRef.current();
+        return;
+      }
+
+      if (e.key !== 'Tab' || !modalRef.current) return;
+
+      const focusable = Array.from(
+        modalRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+      );
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.clearTimeout(focusTimer);
+      document.removeEventListener('keydown', handleKeyDown);
+      previousFocusRef.current?.focus();
+    };
+  }, []);
 
   const tmdbRating = media.ratings.find((r) => r.provider === 'tmdb');
   const imdbRating = media.ratings.find((r) => r.provider === 'imdb');
@@ -464,7 +518,7 @@ export function DetailModal({
 
           <div className="sanctuary-detail-main">
             <div className="sanctuary-detail-inscription">
-              {isBook ? 'Book' : media.type === 'tv' ? 'TV series' : 'Film'}
+              {mediumLabel(media.type)}
             </div>
             <h2 id={titleId} className="sanctuary-detail-title">
               {media.canonicalTitle}
@@ -654,8 +708,11 @@ export function DetailModal({
               {detailsExpanded && (
                 <div className="sanctuary-detail-details-panel">
                   <div className="sanctuary-detail-control-row">
-                    <span className="sanctuary-detail-control-label">Status:</span>
+                    <label className="sanctuary-detail-control-label" htmlFor={statusFieldId}>
+                      Status:
+                    </label>
                     <select
+                      id={statusFieldId}
                       value={libraryItem.status}
                       onChange={(e) => onUpdateStatus?.((e.target as HTMLSelectElement).value as LibraryStatus)}
                       className="sanctuary-detail-input sanctuary-detail-select"
@@ -747,8 +804,11 @@ export function DetailModal({
 
                   {libraryItem.status === 'watched' && (
                     <div className="sanctuary-detail-control-row">
-                      <span className="sanctuary-detail-control-label">Your verdict:</span>
+                      <label className="sanctuary-detail-control-label" htmlFor={ratingFieldId}>
+                        Your verdict:
+                      </label>
                       <input
+                        id={ratingFieldId}
                         type="range"
                         min={1}
                         max={10}
@@ -756,8 +816,9 @@ export function DetailModal({
                         value={libraryItem.userRating || 5}
                         onChange={(e) => onUpdateRating?.(parseInt((e.target as HTMLInputElement).value, 10))}
                         className="sanctuary-detail-range"
+                        aria-valuetext={`${libraryItem.userRating || 5} out of 10`}
                       />
-                      <span className="sanctuary-detail-rating-display">
+                      <span className="sanctuary-detail-rating-display" aria-hidden="true">
                         {libraryItem.userRating || 5} <span className="sanctuary-detail-rating-max">/ 10</span>
                       </span>
                     </div>
@@ -783,7 +844,9 @@ export function DetailModal({
                   />
 
                   <div className="sanctuary-detail-tags-section">
-                    <span className="sanctuary-detail-control-label">Tags:</span>
+                    <label className="sanctuary-detail-control-label" htmlFor={tagsFieldId}>
+                      Tags:
+                    </label>
 
                     <div className="sanctuary-detail-tags-list">
                       {(libraryItem.userTags || []).map((tag) => (
@@ -805,6 +868,7 @@ export function DetailModal({
                     </div>
 
                     <input
+                      id={tagsFieldId}
                       type="text"
                       placeholder="Tag this screening, press Enter"
                       className="sanctuary-detail-input"
@@ -850,8 +914,11 @@ export function DetailModal({
                     className={`sanctuary-detail-notes-section save-ceremony-surface${saveCeremony ? ' save-ceremony' : ''}`}
                     data-testid="detail-notes-section"
                   >
-                    <span className="sanctuary-detail-control-label">Reflection:</span>
+                    <label className="sanctuary-detail-control-label" htmlFor={notesFieldId}>
+                      Reflection:
+                    </label>
                     <textarea
+                      id={notesFieldId}
                       value={notes}
                       placeholder="What stayed with you after the credits?"
                       onChange={(e) => handleNotesChange(e.currentTarget.value)}
@@ -862,8 +929,14 @@ export function DetailModal({
 
                     <div className="sanctuary-detail-metadata-inputs">
                       <div className="sanctuary-detail-input-wrap">
-                        <span className="sanctuary-detail-control-label sanctuary-detail-control-label-sm">Atmosphere:</span>
+                        <label
+                          className="sanctuary-detail-control-label sanctuary-detail-control-label-sm"
+                          htmlFor={atmosphereFieldId}
+                        >
+                          Atmosphere:
+                        </label>
                         <input
+                          id={atmosphereFieldId}
                           type="text"
                           value={atmosphere}
                           placeholder="e.g. Melancholic, Warm Amber"
@@ -873,8 +946,14 @@ export function DetailModal({
                         />
                       </div>
                       <div className="sanctuary-detail-input-wrap">
-                        <span className="sanctuary-detail-control-label sanctuary-detail-control-label-sm">Lingering Thought:</span>
+                        <label
+                          className="sanctuary-detail-control-label sanctuary-detail-control-label-sm"
+                          htmlFor={lingeringFieldId}
+                        >
+                          Lingering Thought:
+                        </label>
                         <input
+                          id={lingeringFieldId}
                           type="text"
                           value={lingeringThought}
                           placeholder="e.g. The cost of love..."

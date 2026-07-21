@@ -91,7 +91,7 @@
   background: var(--bg-plaque);
   color: var(--text-reflection);
   border: 1px solid var(--border-hero);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   min-height: 44px;
   padding: var(--spacing-md) calc(var(--spacing-xl) + var(--spacing-xs));
   cursor: pointer;
@@ -101,6 +101,11 @@
     color var(--transition-fast),
     transform var(--duration-fast, 130ms) ease;
   backdrop-filter: blur(16px);
+}
+
+.sanctuary-action-button:focus-visible {
+  outline: 2px solid var(--accent-gold, var(--border-hero));
+  outline-offset: 2px;
 }
 
 .sanctuary-action-button:hover {
@@ -2680,7 +2685,7 @@ select.sanctuary-input option {
   max-height: 12rem;
   opacity: 1;
   transition:
-    max-height 0.32s var(--ease-focus-pull, cubic-bezier(0.25, 1, 0.5, 1)),
+    max-height 0.28s var(--ease-focus-pull, cubic-bezier(0.25, 1, 0.5, 1)),
     opacity 0.22s ease;
 }
 

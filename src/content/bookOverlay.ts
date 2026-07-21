@@ -102,28 +102,33 @@ const PLAQUE_STYLES = `
     color: var(--text-reflection);
     background: none;
     border: none;
-    min-height: 32px;
-    min-width: 32px;
-    padding: 4px 6px;
+    min-height: 44px;
+    min-width: 44px;
+    padding: 4px 8px;
     cursor: pointer;
     flex-shrink: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
+    border-radius: var(--radius-sm);
   }
 
   /* Hit-slop expansion for dense plaque controls (Fitts) */
   .plaque-action::before {
     content: '';
     position: absolute;
-    inset: -4px;
+    inset: -2px;
   }
 
-  .plaque-action:hover,
+  .plaque-action:hover {
+    color: var(--primary-hover);
+  }
+
   .plaque-action:focus-visible {
     color: var(--primary-hover);
-    outline: none;
+    outline: 2px solid var(--accent-gold, var(--primary));
+    outline-offset: 2px;
   }
 
   .plaque-archive-label {
@@ -146,8 +151,9 @@ const PLAQUE_STYLES = `
   .plaque-add {
     position: relative;
     margin-left: 2px;
-    min-height: 32px;
-    padding: 4px 8px;
+    min-height: 44px;
+    min-width: 44px;
+    padding: 4px 10px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-restraint);
     background: transparent;
@@ -160,6 +166,7 @@ const PLAQUE_STYLES = `
     flex-shrink: 0;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     box-sizing: border-box;
     transition: border-color 200ms ease, color 200ms ease, background 200ms ease;
   }
@@ -167,20 +174,56 @@ const PLAQUE_STYLES = `
   .plaque-add::before {
     content: '';
     position: absolute;
-    inset: -4px;
+    inset: -2px;
   }
 
-  .plaque-add:hover,
+  .plaque-add:hover {
+    border-color: hsla(45, 80%, 55%, 0.5);
+    color: var(--text-reflection);
+    background: var(--primary-soft);
+  }
+
   .plaque-add:focus-visible {
     border-color: hsla(45, 80%, 55%, 0.5);
     color: var(--text-reflection);
     background: var(--primary-soft);
-    outline: none;
+    outline: 2px solid var(--accent-gold, var(--primary));
+    outline-offset: 2px;
   }
 
   .plaque-add:disabled {
     opacity: 0.5;
     cursor: default;
+  }
+
+  /* In-library open control — keyboard operable, Fitts min hit */
+  .plaque-open {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    min-height: 44px;
+    min-width: 44px;
+    max-width: 100%;
+    padding: 4px 6px;
+    margin: 0;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    box-sizing: border-box;
+  }
+
+  .plaque-open:hover .plaque-archive-label,
+  .plaque-open:hover .plaque-title {
+    color: var(--primary-hover);
+  }
+
+  .plaque-open:focus-visible {
+    outline: 2px solid var(--accent-gold, var(--primary));
+    outline-offset: 2px;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -397,24 +440,30 @@ export class BookPlaqueManager {
     root.setAttribute('aria-label', `Subsume: ${match.title}`);
 
     if (match.inLibrary) {
+      const openBtn = document.createElement('button');
+      openBtn.type = 'button';
+      openBtn.className = 'plaque-open';
+      openBtn.setAttribute('aria-label', `Open ${match.title} in archive`);
+      openBtn.title = `Open ${match.title}`;
+
       const label = document.createElement('span');
       label.className = 'plaque-archive-label';
       label.textContent = IN_ARCHIVE_LABEL;
-      root.appendChild(label);
+      openBtn.appendChild(label);
 
       const title = document.createElement('span');
       title.className = 'plaque-title';
       title.textContent = truncateTitle(match.title);
       title.title = match.title;
-      root.appendChild(title);
+      openBtn.appendChild(title);
 
-      root.style.cursor = 'pointer';
-      root.addEventListener('click', (e) => {
+      openBtn.addEventListener('click', (e) => {
         if (!isTrustedGesture(e)) return;
         e.preventDefault();
         e.stopPropagation();
         this.handleOpenDetail(state);
       });
+      root.appendChild(openBtn);
     } else {
       const star = document.createElement('span');
       star.className = 'plaque-star';

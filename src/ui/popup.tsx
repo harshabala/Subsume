@@ -279,7 +279,7 @@ function Popup() {
         warmth: emotions.warmth,
       });
       if (!notesRes.data?.updated) {
-        throw new Error('Failed to persist emotional reflection to library.');
+        throw new Error('Failed to persist emotional reflection to archive.');
       }
 
       // Display success feedback
@@ -452,7 +452,7 @@ function Popup() {
                       <span>{item.media.year || '—'}</span>
                       <span>·</span>
                       <span className={`popup-status-badge ${item.library.status}`}>
-                        {item.library.status.replace('-', ' ')}
+                        {legacyStatusLabel(item.library.status, item.media.type)}
                       </span>
                     </div>
                   </div>
@@ -519,6 +519,7 @@ function Popup() {
               type="text"
               className="search-input"
               role="combobox"
+              aria-label="Search titles to inscribe"
               aria-expanded={showSuggestions && (suggestions.length > 0 || searchLoading)}
               aria-controls="popup-suggestions-list"
               aria-autocomplete="list"
@@ -625,6 +626,7 @@ function Popup() {
           {/* Journal Notes */}
           <textarea
             className="ext-notes-textarea"
+            aria-label="Journal notes"
             value={logNotes}
             onInput={(e) => setLogNotes((e.target as HTMLTextAreaElement).value)}
             placeholder="What resonance did this screening leave? A line, a scene, an afterglow..."

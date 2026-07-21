@@ -117,7 +117,7 @@ export function People() {
     }
   }, [activeView, loadFollowing]);
 
-  // Debounced search for filmmakers
+  // Debounced search for creators
   useEffect(() => {
     if (!query.trim()) {
       setSearchResults([]);
@@ -208,17 +208,19 @@ export function People() {
     <div className="page-container sanctuary-page-shell">
       <header className="sanctuary-header">
         <div className="sanctuary-header-meta">
-          <span className="sanctuary-subtitle">Filmmakers</span>
+          <span className="sanctuary-subtitle">Creators</span>
         </div>
         <h2 className="sanctuary-title">Creators</h2>
         <p className="sanctuary-description">
-          Follow filmmakers and authors you care about and keep their repertoire in your private archive.
+          Follow creators and authors you care about and keep their repertoire in your private archive.
         </p>
       </header>
 
-      <div className="people-sanctuary-tabs">
+      <div className="people-sanctuary-tabs" role="tablist" aria-label="Creators views">
         <button
           type="button"
+          role="tab"
+          aria-selected={activeView === 'following'}
           onClick={() => setActiveView('following')}
           className={`people-sanctuary-tab${activeView === 'following' ? ' active' : ''}`}
         >
@@ -226,6 +228,8 @@ export function People() {
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected={activeView === 'search'}
           onClick={() => setActiveView('search')}
           className={`people-sanctuary-tab${activeView === 'search' ? ' active' : ''}`}
         >
@@ -238,12 +242,12 @@ export function People() {
           <div>
             {loadingFollowing && following.length === 0 ? (
               <div className="sanctuary-loading-text">
-                Loading filmmakers…
+                Loading creators…
               </div>
             ) : following.length === 0 ? (
               <div className="sanctuary-empty-plaque">
                 <span className="sanctuary-plaque-index">Registry Index 00</span>
-                <h3 className="sanctuary-plaque-title">No filmmakers followed yet</h3>
+                <h3 className="sanctuary-plaque-title">No creators followed yet</h3>
                 <p className="sanctuary-plaque-text">
                   Search the catalogue to follow directors, cinematographers, actors, and other luminaries in your archive.
                 </p>
@@ -363,17 +367,18 @@ export function People() {
           <div className="people-search-stack">
             {!canSearch && (
               <div className="people-api-notice">
-                Add your TMDb API key in Settings to search filmmakers, or enable Open Library for authors.
+                Add your TMDb API key in Settings to search creators, or enable Open Library for authors.
               </div>
             )}
             {!hasApiKey && openLibraryEnabled && (
               <div className="people-api-notice">
-                Searching authors via Open Library. Add a TMDb key to also search filmmakers.
+                Searching authors via Open Library. Add a TMDb key to also search creators.
               </div>
             )}
 
             <input
-              type="text"
+              type="search"
+              aria-label="Search creators and authors"
               placeholder="Search director, actor, author, cinematographer…"
               value={query}
               onInput={(e) => setQuery(e.currentTarget.value)}
@@ -441,6 +446,7 @@ export function People() {
                             onChange={(e) => setSelectedRoles((prev) => ({ ...prev, [person.id]: (e.target as HTMLSelectElement).value as CrewRole }))}
                             disabled={isFollowed}
                             className="people-role-select"
+                            aria-label={`Role for ${person.name}`}
                           >
                             {ROLE_OPTIONS.map((opt) => (
                               <option value={opt.value} key={opt.value}>

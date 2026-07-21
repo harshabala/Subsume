@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useMemo } from 'preact/hooks';
 import { sendMessage } from '@/shared/messages';
 import { MessageType, PersonItem, MediaItem, LibraryItem, LibraryStatus } from '@/shared/types';
 import { DetailModal } from './DetailModal';
+import { IN_ARCHIVE_LABEL, CREATORS_LABEL } from '@/shared/productCopy';
 
 export interface FilmographyProps {
   person: PersonItem;
@@ -215,7 +216,7 @@ export function FilmographyView({ person: initialPerson, onBack, onUnfollow }: F
       {/* Topbar */}
       <div className="filmography-topbar">
         <button type="button" onClick={onBack} className="filmography-filter-btn">
-          ← Back to filmmakers
+          ← Back to {CREATORS_LABEL.toLowerCase()}
         </button>
 
         {confirmUnfollow ? (
@@ -345,15 +346,16 @@ export function FilmographyView({ person: initialPerson, onBack, onUnfollow }: F
                 onClick={() => setFilter(opt)}
                 className={`filmography-filter-btn ${active ? 'active' : ''}`}
               >
-                {opt === 'all' ? 'Entire Strip' : opt === 'movie' ? 'Cinema' : opt === 'tv' ? 'Series' : opt === 'library' ? 'In Library' : 'Unviewed'}
+                {opt === 'all' ? 'Entire Strip' : opt === 'movie' ? 'Films' : opt === 'tv' ? 'Series' : opt === 'library' ? IN_ARCHIVE_LABEL : 'Unviewed'}
               </button>
             );
           })}
         </div>
 
         <div className="filmography-sort-group">
-          <span>Sort by:</span>
+          <label htmlFor="filmography-sort">Sort by:</label>
           <select
+            id="filmography-sort"
             value={sortBy}
             onChange={(e) => setSortBy((e.target as HTMLSelectElement).value as typeof sortBy)}
             className="filmography-sort-select"

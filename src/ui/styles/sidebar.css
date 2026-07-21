@@ -300,6 +300,13 @@
   letter-spacing: 0.05em;
 }
 
+/* Inert main content while drawer is open (browsers that lack full inert support) */
+.main-content[inert],
+.main-content[aria-hidden='true'] {
+  pointer-events: none;
+  user-select: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .side-menu-drawer {
     transition: none;

@@ -95,16 +95,16 @@ describe('PoeticCaptureCanvas', () => {
     const textarea = container.querySelector('textarea') as HTMLTextAreaElement;
     expect(container.querySelector('[data-testid="intent-selectors"]')).toBeNull();
 
-    // Short text - should NOT disclose controls
+    // Short text (< 40 chars) - should NOT disclose controls
     await act(async () => {
-      textarea.value = 'The haunting waltz theme.';
+      textarea.value = 'The haunting waltz.';
       textarea.dispatchEvent(new Event('input', { bubbles: true }));
     });
     expect(container.querySelector('[data-testid="intent-selectors"]')).toBeNull();
 
-    // Long text (>= 140 chars) - SHOULD disclose controls
+    // Long enough (>= 40 chars) - SHOULD disclose controls
     await act(async () => {
-      textarea.value = 'The haunting waltz theme of this masterpiece creates an atmosphere that is absolutely unforgettable. The lingering thought remains: how do we reconcile the ghosts of our past choices with the reality of the present moment? A truly sublime cinematic experience.';
+      textarea.value = 'The haunting waltz theme of this masterpiece stays with me.';
       textarea.dispatchEvent(new Event('input', { bubbles: true }));
     });
 
@@ -191,7 +191,7 @@ describe('PoeticCaptureCanvas', () => {
     const ratingCall = sendMessageCalls.find(c => (c[0] as any).type === MessageType.SET_USER_RATING);
     expect((ratingCall?.[0] as any).payload).toEqual({ mediaId: 'media_123', rating: 9 });
 
-    // Ceremony holds dismiss for ~280ms when PRM is off
+    // Ceremony holds dismiss for ~280ms when PRM is off; exit curtain adds ~350ms fallback
     expect(onSave).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
     expect(container.querySelector('.save-ceremony')).toBeTruthy();
@@ -201,6 +201,13 @@ describe('PoeticCaptureCanvas', () => {
     });
 
     expect(onSave).toHaveBeenCalled();
+    // Curtain close runs after ceremony before onClose
+    expect(onClose).not.toHaveBeenCalled();
+
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 400));
+    });
+
     expect(onClose).toHaveBeenCalled();
   });
 });

@@ -8,6 +8,12 @@ import {
 } from '@/shared/types';
 import { AVAILABLE_GENRES } from '@/shared/genres';
 import { AVAILABLE_PLATFORMS } from '@/shared/platforms';
+import {
+  PREMIERE_ALERTS_TITLE,
+  FILMS_TAB_LABEL,
+  SERIES_TAB_LABEL,
+  mediumLabel,
+} from '@/shared/productCopy';
 import '../styles/settings.css';
 
 type AlertFormType = NonNullable<CreateWatchAlertRequest['type']>;
@@ -28,7 +34,7 @@ function formatAlertCriteria(alert: WatchAlert): string {
   if (alert.type === 'book') {
     parts.push('Books');
   } else if (alert.type && alert.type !== 'both') {
-    parts.push(alert.type === 'movie' ? 'Movies' : 'TV');
+    parts.push(mediumLabel(alert.type));
   }
 
   if (alert.type !== 'book') {
@@ -194,7 +200,7 @@ export function Alerts() {
         <div className="sanctuary-header-meta">
           <span className="sanctuary-subtitle">Alerts</span>
         </div>
-        <h2 className="sanctuary-title">Release Alerts</h2>
+        <h2 className="sanctuary-title">{PREMIERE_ALERTS_TITLE}</h2>
         <p className="sanctuary-description">
           Set a programme of genres, platforms, keywords, or book authors. We will
           notify you when new screen releases or matching books appear.
@@ -210,6 +216,9 @@ export function Alerts() {
       <div className="alerts-content">
         <div>
           <button
+            type="button"
+            aria-expanded={showForm}
+            aria-controls="alerts-create-form"
             onClick={() => setShowForm((value) => !value)}
             className={showForm ? 'btn-sanctuary-restraint sm' : 'btn-sanctuary-gold sm'}
           >
@@ -218,17 +227,18 @@ export function Alerts() {
         </div>
 
         {showForm && (
-          <div className="alerts-form-panel">
+          <div className="alerts-form-panel" id="alerts-create-form">
             <h3 className="alerts-form-heading">
               New release alert
             </h3>
 
             <div className="alerts-form-fields">
               <div>
-                <label className="alerts-field-label">
+                <label className="alerts-field-label" htmlFor="alert-name">
                   Alert name
                 </label>
                 <input
+                  id="alert-name"
                   type="text"
                   placeholder={
                     isBookForm
@@ -244,10 +254,11 @@ export function Alerts() {
               </div>
 
               <div>
-                <label className="alerts-field-label">
+                <label className="alerts-field-label" htmlFor="alert-format">
                   Format
                 </label>
                 <select
+                  id="alert-format"
                   value={form.type || 'both'}
                   onChange={(e) =>
                     handleTypeChange(
@@ -256,9 +267,9 @@ export function Alerts() {
                   }
                   className="settings-input"
                 >
-                  <option value="both" className="sanctuary-select-option">Cinema &amp; Series</option>
-                  <option value="movie" className="sanctuary-select-option">Cinema Only</option>
-                  <option value="tv" className="sanctuary-select-option">Series Only</option>
+                  <option value="both" className="sanctuary-select-option">{FILMS_TAB_LABEL} &amp; {SERIES_TAB_LABEL}</option>
+                  <option value="movie" className="sanctuary-select-option">{FILMS_TAB_LABEL} only</option>
+                  <option value="tv" className="sanctuary-select-option">{SERIES_TAB_LABEL} only</option>
                   <option value="book" className="sanctuary-select-option">Books</option>
                 </select>
               </div>
@@ -266,10 +277,10 @@ export function Alerts() {
               {!isBookForm && (
                 <>
                   <div>
-                    <label className="alerts-field-label">
+                    <span className="alerts-field-label" id="alert-genres-label">
                       Genres
-                    </label>
-                    <div className="alerts-chip-grid">
+                    </span>
+                    <div className="alerts-chip-grid" role="group" aria-labelledby="alert-genres-label">
                       {AVAILABLE_GENRES.map((genre) => {
                         const active = (form.genres || []).includes(genre.id);
                         return (
@@ -292,10 +303,10 @@ export function Alerts() {
                   </div>
 
                   <div>
-                    <label className="alerts-field-label">
+                    <span className="alerts-field-label" id="alert-platforms-label">
                       Platforms
-                    </label>
-                    <div className="alerts-chip-grid">
+                    </span>
+                    <div className="alerts-chip-grid" role="group" aria-labelledby="alert-platforms-label">
                       {AVAILABLE_PLATFORMS.map((platform) => {
                         const active = (form.platforms || []).includes(platform.id);
                         return (
@@ -320,10 +331,11 @@ export function Alerts() {
               )}
 
               <div>
-                <label className="alerts-field-label">
+                <label className="alerts-field-label" htmlFor="alert-keyword">
                   {isBookForm ? 'Title keyword (optional)' : 'Keyword (optional)'}
                 </label>
                 <input
+                  id="alert-keyword"
                   type="text"
                   placeholder={
                     isBookForm
@@ -340,10 +352,11 @@ export function Alerts() {
 
               {isBookForm && (
                 <div>
-                  <label className="alerts-field-label">
+                  <label className="alerts-field-label" htmlFor="alert-author">
                     Author (optional)
                   </label>
                   <input
+                    id="alert-author"
                     type="text"
                     placeholder="Author name must include…"
                     value={form.authorKeyword || ''}
@@ -360,6 +373,7 @@ export function Alerts() {
 
               <div>
                 <button
+                  type="button"
                   onClick={handleCreate}
                   disabled={saving}
                   className="btn-sanctuary-gold sm"

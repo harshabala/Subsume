@@ -50,6 +50,7 @@ const DOCK_STYLES = `
     background: var(--bg-overlay);
     color: var(--text-reflection);
     border: 1px solid var(--border-hero);
+    min-height: 44px;
     padding: var(--spacing-md) var(--spacing-lg);
     border-radius: 20px;
     font-family: var(--font-editorial);
@@ -57,16 +58,24 @@ const DOCK_STYLES = `
     font-weight: 500;
     cursor: pointer;
     box-shadow: var(--shadow-md);
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
+    box-sizing: border-box;
   }
 
   .dock-toggle-btn:hover {
     border-color: var(--primary);
     transform: translateY(-1px);
     box-shadow: var(--shadow-lg);
+  }
+
+  .dock-toggle-btn:focus-visible {
+    outline: 2px solid var(--accent-gold, var(--primary));
+    outline-offset: 2px;
   }
 
   .dock-card {
@@ -100,11 +109,23 @@ const DOCK_STYLES = `
     color: var(--text-meta);
     cursor: pointer;
     font-size: 14px;
+    min-width: 44px;
+    min-height: 44px;
     padding: var(--spacing-xs);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    box-sizing: border-box;
   }
 
   .dock-collapse-btn:hover {
     color: var(--text-reflection);
+  }
+
+  .dock-collapse-btn:focus-visible {
+    outline: 2px solid var(--accent-gold, var(--primary));
+    outline-offset: 2px;
   }
 
   .dock-subtitle {
@@ -141,17 +162,34 @@ const DOCK_STYLES = `
     background: var(--primary-soft);
     color: var(--text-reflection);
     border: 1px solid var(--border-hero);
+    min-height: 44px;
     padding: var(--spacing-sm) var(--spacing-md);
     border-radius: var(--radius-sm);
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+    box-sizing: border-box;
   }
 
   .dock-save-btn:hover {
     background: var(--primary-soft);
     border-color: var(--primary);
+  }
+
+  .dock-save-btn:focus-visible {
+    outline: 2px solid var(--accent-gold, var(--primary));
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dock-toggle-btn,
+    .dock-save-btn {
+      transition: none;
+    }
+    .dock-toggle-btn:hover {
+      transform: none;
+    }
   }
 `;
 
@@ -188,7 +226,9 @@ export class AuteurScreenplayDock {
     title.className = 'dock-title';
     title.textContent = 'Reflection dock';
     const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
     closeBtn.className = 'dock-collapse-btn';
+    closeBtn.setAttribute('aria-label', 'Collapse reflection dock');
     closeBtn.textContent = '\u2715';
     closeBtn.addEventListener('click', this.boundOnToggle!);
     header.appendChild(title);
@@ -210,6 +250,7 @@ export class AuteurScreenplayDock {
     const footer = document.createElement('div');
     footer.className = 'dock-footer';
     const saveBtn = document.createElement('button');
+    saveBtn.type = 'button';
     saveBtn.className = 'dock-save-btn';
     saveBtn.textContent = 'Save reflection';
     saveBtn.addEventListener('click', this.boundOnSave!);
@@ -282,6 +323,7 @@ export class AuteurScreenplayDock {
 
     if (!this.isExpandedState) {
       const btn = document.createElement('button');
+      btn.type = 'button';
       btn.className = 'dock-toggle-btn';
       btn.textContent = '✦ Reflection dock';
       btn.addEventListener('click', this.boundOnToggle!);

@@ -32,6 +32,6 @@ describe('Discovery Pages Sanctuary Overhaul', () => {
 
   it('renders NewReleases page with programme typography', () => {
     render(<NewReleases />, container);
-    expect(container.querySelector('.sanctuary-title')?.textContent).toContain('Cinematic Programme');
+    expect(container.querySelector('.sanctuary-title')?.textContent).toContain('Now Showing');
   });
 });

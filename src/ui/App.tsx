@@ -1,5 +1,5 @@
 import { h } from 'preact';
-import { useEffect, useState, useRef } from 'preact/hooks';
+import { useEffect, useState, useRef, useCallback } from 'preact/hooks';
 import { Home } from './pages/Home';
 import { Library } from './pages/Library';
 import { Recommendations } from './pages/Recommendations';
@@ -21,6 +21,9 @@ import { useNotice } from './components/NoticeProvider';
 import { formatUserError } from './utils/formatUserError';
 import './styles/sidebar.css';
 import './styles/app-nav.css';
+
+const DRAWER_FOCUSABLE_SELECTOR =
+  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 interface LibraryStats {
   movieCount: number;
@@ -97,6 +100,8 @@ export function App() {
   const drawerOpen = navMenuOpen && !navMenuClosing;
   const initialPrefetchDone = useRef(false);
   const navCloseDoneRef = useRef(false);
+  const menuToggleRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLElement>(null);
 
   const prefersReducedMotion = () =>
     typeof window !== 'undefined' &&
@@ -108,24 +113,31 @@ export function App() {
     setNavMenuOpen(true);
   };
 
-  const finishNavMenuClose = () => {
+  const finishNavMenuClose = useCallback(() => {
     if (navCloseDoneRef.current) return;
     navCloseDoneRef.current = true;
     setNavMenuOpen(false);
     setNavMenuClosing(false);
-  };
+    // Restore focus to menu toggle after drawer fully closes
+    requestAnimationFrame(() => {
+      menuToggleRef.current?.focus();
+    });
+  }, []);
 
-  const closeNavMenu = () => {
+  const closeNavMenu = useCallback(() => {
     if (!navMenuOpen || navMenuClosing) return;
     if (prefersReducedMotion()) {
       navCloseDoneRef.current = true;
       setNavMenuOpen(false);
       setNavMenuClosing(false);
+      requestAnimationFrame(() => {
+        menuToggleRef.current?.focus();
+      });
       return;
     }
     navCloseDoneRef.current = false;
     setNavMenuClosing(true);
-  };
+  }, [navMenuOpen, navMenuClosing]);
 
   const goToPage = (page: Page) => {
     setCurrentPage(page);
@@ -135,19 +147,19 @@ export function App() {
 
   useEffect(() => {
     if (!navMenuClosing) return;
-    const drawer = document.getElementById('app-side-menu');
+    const drawer = drawerRef.current ?? document.getElementById('app-side-menu');
     const onEnd = (e: TransitionEvent) => {
       if (e.target !== drawer) return;
       if (e.propertyName !== 'transform' && e.propertyName !== 'opacity') return;
       finishNavMenuClose();
     };
     drawer?.addEventListener('transitionend', onEnd);
-    const fallback = window.setTimeout(finishNavMenuClose, 400);
+    const fallback = window.setTimeout(finishNavMenuClose, 280);
     return () => {
       drawer?.removeEventListener('transitionend', onEnd);
       window.clearTimeout(fallback);
     };
-  }, [navMenuClosing]);
+  }, [navMenuClosing, finishNavMenuClose]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -205,14 +217,51 @@ export function App() {
     return () => chrome.runtime.onMessage.removeListener(handleMessage);
   }, []);
 
+  // Drawer open: move focus in, trap Tab, Esc closes with animation
   useEffect(() => {
-    if (!navMenuOpen) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setNavMenuOpen(false);
+    if (!drawerOpen) return;
+
+    const drawer = drawerRef.current;
+    const focusFirst = () => {
+      if (!drawer) return;
+      const focusable = Array.from(
+        drawer.querySelectorAll<HTMLElement>(DRAWER_FOCUSABLE_SELECTOR),
+      );
+      (focusable[0] ?? drawer).focus();
     };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [navMenuOpen]);
+    const focusTimer = window.setTimeout(focusFirst, 0);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeNavMenu();
+        return;
+      }
+      if (e.key !== 'Tab' || !drawer) return;
+
+      const focusable = Array.from(
+        drawer.querySelectorAll<HTMLElement>(DRAWER_FOCUSABLE_SELECTOR),
+      );
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.clearTimeout(focusTimer);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [drawerOpen, closeNavMenu]);
 
   const completeOnboarding = async (patch: OnboardingPatch) => {
     if (!prefs) return;
@@ -264,18 +313,23 @@ export function App() {
       case 'home':
         return <Home onNavigate={setCurrentPage} onOpenCapture={setCaptureMediaId} />;
       case 'library':
-        return <Library />;
+        return <Library onNavigate={setCurrentPage} />;
       case 'search':
         return <Search />;
       case 'people':
         return <People />;
       case 'stats':
-        return <Stats />;
+        return <Stats onNavigate={setCurrentPage} />;
       case 'recommendations':
-        return <Recommendations onOpenCuratorSettings={() => {
-          window.location.hash = 'ai-curator';
-          setCurrentPage('settings');
-        }} />;
+        return (
+          <Recommendations
+            onNavigate={setCurrentPage}
+            onOpenCuratorSettings={() => {
+              window.location.hash = 'ai-curator';
+              setCurrentPage('settings');
+            }}
+          />
+        );
       case 'new-releases':
         return <NewReleases />;
       case 'alerts':
@@ -306,11 +360,15 @@ export function App() {
           </div>
           <button
             type="button"
+            ref={menuToggleRef}
             className="nav-menu-toggle"
-            aria-label="Open navigation menu"
+            aria-label={drawerOpen ? 'Close' : 'Open navigation menu'}
             aria-expanded={drawerOpen}
             aria-controls="app-side-menu"
-            onClick={openNavMenu}
+            onClick={() => {
+              if (drawerOpen) closeNavMenu();
+              else if (!navMenuVisible) openNavMenu();
+            }}
           >
             <span className="material-symbols-outlined" aria-hidden="true">menu</span>
           </button>
@@ -340,9 +398,12 @@ export function App() {
         />
       )}
       <aside
+        ref={drawerRef}
         id="app-side-menu"
         className={`side-menu-drawer app-mobile-nav-layer ${drawerOpen ? 'open' : ''}${navMenuClosing ? ' closing' : ''}`}
         aria-hidden={!drawerOpen}
+        // Drawer is not a modal dialog; tabbability controlled via tabIndex when closed
+        tabIndex={drawerOpen ? -1 : undefined}
       >
         <div className="side-menu-header">
           <span className="side-menu-title">Browse the house</span>
@@ -350,6 +411,7 @@ export function App() {
             type="button"
             className="side-menu-close"
             aria-label="Close navigation menu"
+            tabIndex={drawerOpen ? 0 : -1}
             onClick={closeNavMenu}
           >
             <span className="material-symbols-outlined" aria-hidden="true">close</span>
@@ -363,6 +425,7 @@ export function App() {
                 key={item.key}
                 type="button"
                 className={`side-menu-item ${currentPage === item.key ? 'active' : ''}`}
+                tabIndex={drawerOpen ? 0 : -1}
                 onClick={() => goToPage(item.key)}
                 {...prefetchProps(item.key)}
               >
@@ -378,6 +441,7 @@ export function App() {
                 key={item.key}
                 type="button"
                 className={`side-menu-item ${currentPage === item.key ? 'active' : ''}`}
+                tabIndex={drawerOpen ? 0 : -1}
                 onClick={() => goToPage(item.key)}
                 {...prefetchProps(item.key)}
               >
@@ -393,6 +457,7 @@ export function App() {
                 key={item.key}
                 type="button"
                 className={`side-menu-item ${currentPage === item.key ? 'active' : ''}`}
+                tabIndex={drawerOpen ? 0 : -1}
                 onClick={() => goToPage(item.key)}
                 {...prefetchProps(item.key)}
               >
@@ -404,7 +469,12 @@ export function App() {
         </div>
       </aside>
 
-      <main className="main-content">
+      <main
+        className="main-content"
+        // When drawer is open, take main out of the accessibility tree / tab order
+        {...(drawerOpen ? ({ inert: true } as Record<string, unknown>) : {})}
+        aria-hidden={drawerOpen ? true : undefined}
+      >
         {renderPage()}
         {captureMediaId && (
           <PoeticCaptureCanvas

@@ -123,16 +123,23 @@
 }
 
 .settings-chip {
-  border-radius: 2px;
-  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  min-height: 40px;
+  padding: 8px 14px;
   font-size: 12px;
   font-family: var(--font-ui);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  box-sizing: border-box;
   /* active/inactive toggled via modifier classes below */
+}
+
+.settings-chip:focus-visible {
+  outline: 2px solid var(--accent-gold, var(--border-hero));
+  outline-offset: 2px;
 }
 
 .settings-chip.inactive {
@@ -220,15 +227,22 @@
   background: var(--border-hero);
   border: none;
   color: var(--on-primary-fg);
+  min-height: 44px;
   padding: 12px 28px;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   font-family: var(--font-ui);
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.15em;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.btn-sanctuary-gold:focus-visible {
+  outline: 2px solid var(--accent-gold, var(--border-hero));
+  outline-offset: 2px;
 }
 
 .btn-sanctuary-gold.sm {
@@ -240,17 +254,24 @@
   background: transparent;
   border: 1px solid var(--border-restraint);
   color: var(--text-reflection);
+  min-height: 44px;
   padding: 10px 20px;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   font-family: var(--font-ui);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.15em;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+}
+
+.btn-sanctuary-restraint:focus-visible {
+  outline: 2px solid var(--accent-gold, var(--border-hero));
+  outline-offset: 2px;
 }
 
 .btn-sanctuary-restraint.sm {
@@ -533,12 +554,19 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  border-radius: 2px;
-  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  min-height: 40px;
+  padding: 8px 12px;
   cursor: pointer;
   font-family: var(--font-ui);
   font-size: 12px;
-  transition: all 0.2s ease;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.alerts-chip:focus-visible {
+  outline: 2px solid var(--accent-gold, var(--border-hero));
+  outline-offset: 2px;
 }
 
 .alerts-chip.inactive {

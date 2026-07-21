@@ -21,13 +21,90 @@
   z-index: 2;
 }
 
-/* Quiet lobby CTAs — single vault control + light explore links */
+/* Quiet lobby CTAs — one primary, one secondary, text links for the rest */
 .discovery-lobby-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px 12px;
+  gap: 10px 14px;
   margin-top: clamp(16px, 2vw, 24px);
+}
+
+.discovery-lobby-links {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin-left: 2px;
+}
+
+.discovery-lobby-text-link {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 4px 0;
+  margin: 0;
+  font-family: var(--font-ui, 'Outfit', sans-serif);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-meta, var(--muted-fg));
+  cursor: pointer;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.discovery-lobby-text-link:hover,
+.discovery-lobby-text-link:focus-visible {
+  color: var(--text-reflection, var(--app-fg));
+  border-bottom-color: var(--border-hero, var(--accent-gold, currentColor));
+  outline: none;
+}
+
+.discovery-lobby-text-link:disabled {
+  opacity: 0.55;
+  cursor: default;
+  border-bottom-color: transparent;
+}
+
+.discovery-lobby-link-sep {
+  color: var(--text-meta, var(--muted-fg));
+  opacity: 0.55;
+  font-size: 12px;
+  user-select: none;
+}
+
+/* Secondary discovery band — weather / picks / week sit lower with quieter chrome */
+.home-secondary-band {
+  display: flex;
+  flex-direction: column;
+  gap: var(--discovery-gap-section, 32px);
+  margin-top: var(--discovery-gap-section, 32px);
+  padding-top: var(--discovery-gap-section, 32px);
+  border-top: 1px solid var(--border-restraint, var(--card-border));
+  opacity: 0.92;
+}
+
+.home-section-quiet .home-section-header--quiet {
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom-color: color-mix(in srgb, var(--border-restraint, var(--card-border)) 70%, transparent);
+}
+
+.home-section-title--quiet {
+  font-size: 18px;
+  font-style: normal;
+  letter-spacing: 0.02em;
+  color: var(--text-meta, var(--muted-fg));
+}
+
+.home-btn-group--quiet {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
 }
 
 .hero-poster-placeholder {

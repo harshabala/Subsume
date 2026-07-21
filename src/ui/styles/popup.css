@@ -98,10 +98,10 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  min-width: 32px;
-  min-height: 32px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: 50%;
-  transition: all 0.2s;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Expand hit area without growing visual chrome */
@@ -114,6 +114,10 @@
 .popup-close-btn:hover {
   background: var(--bg-hover);
   color: var(--fg-base);
+}
+
+.popup-close-btn:active {
+  transform: scale(0.96);
 }
 
 /* ─── Stats — discovery pulse rhythm ───────────────────────────── */
@@ -345,7 +349,9 @@
 .intent-pill:focus-visible,
 .suggestion-item:focus-visible,
 .ext-notes-textarea:focus-visible,
-.slider-input:focus-visible {
+.slider-input:focus-visible,
+.selected-movie-deselect-btn:focus-visible,
+.popup-icon-btn:focus-visible {
   outline: 2px solid color-mix(in oklch, var(--primary, #c9a84c) 70%, white);
   outline-offset: 2px;
 }
@@ -489,19 +495,37 @@
 }
 
 .selected-movie-deselect-btn {
+  position: relative;
   background: none;
   border: none;
   color: var(--fg-muted);
   cursor: pointer;
   font-size: 14px;
+  min-width: 44px;
+  min-height: 44px;
   padding: 4px;
   border-radius: 4px;
-  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  box-sizing: border-box;
+}
+
+/* Expand hit area for dense deselect control (Fitts) */
+.selected-movie-deselect-btn::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
 }
 
 .selected-movie-deselect-btn:hover {
   background: var(--bg-hover);
   color: var(--fg-base);
+}
+
+.selected-movie-deselect-btn:active {
+  transform: scale(0.96);
 }
 
 /* ─── Sliders ───────────────────────────────────────────────────── */
@@ -546,8 +570,8 @@
 .slider-input::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   cursor: pointer;
   transition: transform 0.1s;
@@ -555,7 +579,7 @@
 }
 
 .slider-input::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
+  transform: scale(1.08);
 }
 
 /* Emotional spectrum colors */
@@ -565,8 +589,8 @@
 #slider-warmth::-webkit-slider-thumb { background-color: var(--color-warmth, oklch(76% 0.16 55)); }
 
 .slider-input::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   cursor: pointer;
   border: none;
@@ -731,12 +755,16 @@
   background: var(--bg-plaque);
   color: var(--fg-base);
   font-family: var(--font-ui);
-  transition: all 0.2s;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
 }
 
 .popup-btn:hover:not(:disabled) {
   background: var(--bg-plaque-hover);
   border-color: var(--filter-hover-border, var(--border-restraint));
+}
+
+.popup-btn:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .popup-btn:disabled {

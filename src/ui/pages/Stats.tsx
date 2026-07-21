@@ -9,7 +9,11 @@ interface JoinedItem {
   media: MediaItem;
 }
 
-export function Stats() {
+interface StatsProps {
+  onNavigate?: (page: 'search' | 'library' | 'home') => void;
+}
+
+export function Stats({ onNavigate }: StatsProps = {}) {
   const [items, setItems] = useState<JoinedItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -88,6 +92,15 @@ export function Stats() {
           <p className="sanctuary-plaque-text">
             Mark titles as experienced and add reflections to see your afterglow, genres, and time with screen and page.
           </p>
+          {onNavigate && (
+            <button
+              type="button"
+              className="optical-button library-retry-btn"
+              onClick={() => onNavigate('search')}
+            >
+              Search catalogue
+            </button>
+          )}
         </div>
       ) : (
         <div className="stats-stack">
