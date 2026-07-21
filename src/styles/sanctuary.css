@@ -28,6 +28,11 @@
   color: var(--text-reflection);
   margin: 0 0 var(--spacing-md) 0;
   letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.sanctuary-header h1 {
+  text-wrap: balance;
 }
 
 .sanctuary-description {
@@ -91,9 +96,9 @@
   padding: var(--spacing-md) calc(var(--spacing-xl) + var(--spacing-xs));
   cursor: pointer;
   transition:
-    background 0.3s ease,
-    border-color 0.3s ease,
-    color 0.3s ease,
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
     transform var(--duration-fast, 130ms) ease;
   backdrop-filter: blur(16px);
 }
@@ -120,7 +125,7 @@
   min-height: 32px;
   padding: 8px 16px;
   cursor: pointer;
-  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
   width: 100%;
 }
 
@@ -189,9 +194,9 @@
   padding: 0 24px;
   cursor: pointer;
   transition:
-    border-color 0.3s ease,
-    color 0.3s ease,
-    opacity 0.3s ease,
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    opacity var(--transition-fast),
     transform var(--duration-fast, 130ms) ease;
 }
 
@@ -235,9 +240,9 @@
   border-radius: 4px;
   cursor: pointer;
   transition:
-    background 0.25s ease,
-    border-color 0.25s ease,
-    color 0.25s ease,
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
     transform var(--duration-fast, 130ms) ease;
 }
 
@@ -274,7 +279,7 @@
   padding: var(--spacing-md) 0;
   position: relative;
   cursor: pointer;
-  transition: color 0.3s ease;
+  transition: color var(--transition-fast);
 }
 
 .programme-tab.active {
@@ -467,7 +472,7 @@
   color: var(--text-reflection);
   line-height: 1.3;
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: color var(--transition-fast);
 }
 
 .programme-title:hover {
@@ -635,7 +640,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: color var(--transition-fast);
 }
 
 .sanctuary-modal-close:hover {
@@ -824,7 +829,7 @@
   padding: 8px 12px;
   border-radius: 2px;
   cursor: pointer;
-  transition: border-color 0.2s ease, color 0.2s ease;
+  transition: border-color var(--transition-fast), color var(--transition-fast);
 }
 
 .sanctuary-detail-related-link-btn:hover,
@@ -915,7 +920,7 @@
   padding: var(--spacing-sm) var(--spacing-md);
   border: 1px solid var(--border-restraint);
   border-radius: 2px;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
 }
 
 .sanctuary-detail-provider-btn:hover {
@@ -1067,7 +1072,7 @@
   cursor: pointer;
   color: var(--text-artwork);
   user-select: none;
-  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+  transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
   min-height: 32px;
   box-sizing: border-box;
 }
@@ -1428,7 +1433,7 @@
   text-transform: uppercase;
   letter-spacing: 0.15em;
   cursor: pointer;
-  transition: background 0.2s ease, opacity 0.2s ease;
+  transition: background var(--transition-fast), opacity var(--transition-fast);
   width: 100%;
 }
 
@@ -1451,9 +1456,9 @@
   letter-spacing: 0.15em;
   cursor: pointer;
   transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease,
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
     transform var(--duration-fast, 130ms) ease;
   display: inline-flex;
   align-items: center;
@@ -1488,8 +1493,8 @@
   letter-spacing: 0.15em;
   cursor: pointer;
   transition:
-    background 0.2s ease,
-    opacity 0.2s ease,
+    background var(--transition-fast),
+    opacity var(--transition-fast),
     transform var(--duration-fast, 130ms) ease;
   display: inline-flex;
   align-items: center;
@@ -1513,7 +1518,7 @@
   width: 100%;
   box-sizing: border-box;
   outline: none;
-  transition: border-color 0.2s ease;
+  transition: border-color var(--transition-fast);
 }
 .sanctuary-input:focus {
   border-color: var(--border-hero);
@@ -1670,7 +1675,7 @@ select.sanctuary-input option {
   text-transform: uppercase;
   letter-spacing: 0.15em;
   cursor: pointer;
-  transition: opacity 0.2s ease, background 0.2s ease;
+  transition: opacity var(--transition-fast), background var(--transition-fast);
 }
 .filmography-add-all-btn:hover:not(:disabled) {
   opacity: 0.9;
@@ -1707,9 +1712,9 @@ select.sanctuary-input option {
   letter-spacing: 0.15em;
   cursor: pointer;
   transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease,
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
     transform var(--duration-fast, 130ms) ease;
 }
 .filmography-filter-btn:hover {
@@ -1776,7 +1781,7 @@ select.sanctuary-input option {
   flex-direction: column;
   position: relative;
   box-shadow: var(--shadow-card);
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
 }
 .filmography-card:hover {
   transform: translateY(-2px);
@@ -2098,7 +2103,7 @@ select.sanctuary-input option {
   font-size: 12px;
   font-family: var(--font-ui);
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -2283,7 +2288,7 @@ select.sanctuary-input option {
   border-radius: 4px;
   padding: 24px;
   backdrop-filter: var(--blur-hero);
-  transition: opacity 0.2s ease;
+  transition: opacity var(--transition-fast);
 }
 .alerts-item-plaque.enabled {
   opacity: 1;
@@ -2419,8 +2424,8 @@ select.sanctuary-input option {
   border-bottom: 2px solid transparent;
   cursor: pointer;
   transition:
-    color 0.2s ease,
-    border-bottom-color 0.2s ease,
+    color var(--transition-fast),
+    border-bottom-color var(--transition-fast),
     transform var(--duration-fast, 130ms) ease;
 }
 
@@ -2501,9 +2506,9 @@ select.sanctuary-input option {
   align-items: center;
   box-sizing: border-box;
   transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease,
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
     transform var(--duration-fast, 130ms) ease;
 }
 
@@ -2616,7 +2621,7 @@ select.sanctuary-input option {
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: color var(--transition-fast);
 }
 
 .reflection-excerpt-toggle:hover {
@@ -2835,7 +2840,7 @@ select.sanctuary-input option {
   color: var(--text-meta);
   border-radius: 2px;
   cursor: pointer;
-  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
   align-self: flex-start;
   display: inline-flex;
   align-items: center;

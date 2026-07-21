@@ -79,6 +79,7 @@
   color: var(--onboarding-headline);
   margin: 0 0 20px;
   letter-spacing: -0.02em;
+  text-wrap: balance;
 }
 
 .onboarding-divider {

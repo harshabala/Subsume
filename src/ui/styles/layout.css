@@ -44,6 +44,7 @@
   margin: 0;
   letter-spacing: -0.01em;
   line-height: 1.2;
+  text-wrap: balance;
 }
 
 .page-subtitle {
