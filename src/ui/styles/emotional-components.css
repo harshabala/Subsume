@@ -97,10 +97,10 @@
     radial-gradient(circle at 20% 90%, var(--color-tension) 0%, transparent var(--aura-tension)),
     radial-gradient(circle at 80% 80%, var(--color-warmth) 0%, transparent var(--aura-warmth));
   transition:
-    --aura-awe 0.45s var(--ease-soft-settle),
-    --aura-melancholy 0.45s var(--ease-soft-settle),
-    --aura-tension 0.45s var(--ease-soft-settle),
-    --aura-warmth 0.45s var(--ease-soft-settle);
+    --aura-awe var(--duration-soft-settle, 280ms) var(--ease-soft-settle),
+    --aura-melancholy var(--duration-soft-settle, 280ms) var(--ease-soft-settle),
+    --aura-tension var(--duration-soft-settle, 280ms) var(--ease-soft-settle),
+    --aura-warmth var(--duration-soft-settle, 280ms) var(--ease-soft-settle);
 }
 
 .aura-visualizer-label {
@@ -113,9 +113,9 @@
   color: var(--muted-fg);
 }
 
-/* One-shot aura settle after successful reflection/notes save (~500ms) */
+/* One-shot aura settle after save — cinematic ease, ≤300ms per UI wiki */
 .aura-visualizer-sanctuary.save-ceremony .aura-visualizer-glow {
-  animation: aura-save-settle var(--duration-soft-settle, 500ms) var(--ease-soft-settle) both;
+  animation: aura-save-settle var(--duration-soft-settle, 280ms) var(--ease-soft-settle) both;
 }
 
 @keyframes aura-save-settle {
@@ -161,7 +161,7 @@
 }
 
 .save-ceremony-surface.save-ceremony::after {
-  animation: save-ceremony-gold-line var(--duration-soft-settle, 500ms) var(--ease-soft-settle) both;
+  animation: save-ceremony-gold-line var(--duration-soft-settle, 280ms) var(--ease-soft-settle) both;
 }
 
 @keyframes save-ceremony-gold-line {
@@ -202,8 +202,8 @@
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
   padding: var(--spacing-xl);
-  transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-    border-color 0.4s ease;
+  transition: background-color var(--duration-normal) cubic-bezier(0.16, 1, 0.3, 1),
+    border-color var(--duration-normal) ease;
 }
 
 .emotional-weather-chart.empty {
@@ -286,7 +286,7 @@
   color: var(--fg-base);
 }
 
-/* One-shot projector beam + empty plaque enter (ceremonial, 600–900ms) */
+/* One-shot projector beam + empty plaque enter (ceremonial ease, ≤300ms) */
 @keyframes empty-projector-in {
   from {
     opacity: 0;
@@ -332,7 +332,7 @@
   text-align: center;
   padding: var(--spacing-2xl) var(--spacing-xl);
   color: var(--muted-fg);
-  animation: empty-projector-in 720ms var(--ease-focus-pull, cubic-bezier(0.25, 1, 0.5, 1)) both;
+  animation: empty-projector-in var(--duration-soft-settle, 280ms) var(--ease-focus-pull, cubic-bezier(0.25, 1, 0.5, 1)) both;
 }
 
 .empty-state-projection-beam {
@@ -353,7 +353,7 @@
     transparent 320deg
   );
   filter: blur(14px);
-  animation: empty-projector-beam 820ms var(--ease-focus-pull, cubic-bezier(0.25, 1, 0.5, 1)) both;
+  animation: empty-projector-beam var(--duration-soft-settle, 280ms) var(--ease-focus-pull, cubic-bezier(0.25, 1, 0.5, 1)) both;
 }
 
 .empty-state-projection-frame {
@@ -361,7 +361,7 @@
   z-index: 1;
   color: var(--primary);
   margin-bottom: var(--spacing-lg);
-  animation: empty-projector-frame 700ms var(--ease-focus-pull, cubic-bezier(0.25, 1, 0.5, 1)) both;
+  animation: empty-projector-frame var(--duration-soft-settle, 280ms) var(--ease-focus-pull, cubic-bezier(0.25, 1, 0.5, 1)) both;
 }
 
 .empty-state-projection-title {

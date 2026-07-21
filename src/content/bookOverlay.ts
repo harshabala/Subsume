@@ -68,10 +68,10 @@ const PLAQUE_STYLES = `
     letter-spacing: 0.02em;
     pointer-events: auto;
     cursor: default;
-    transition: background 450ms cubic-bezier(0.16, 1, 0.3, 1),
-      border-color 450ms cubic-bezier(0.16, 1, 0.3, 1),
-      box-shadow 450ms cubic-bezier(0.16, 1, 0.3, 1),
-      transform 450ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition: background 280ms cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 280ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 280ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
     white-space: nowrap;
   }
 

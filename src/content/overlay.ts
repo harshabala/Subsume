@@ -121,7 +121,7 @@ const PLAQUE_STYLES = `
     letter-spacing: 0.02em;
     cursor: pointer;
     pointer-events: auto;
-    transition: all 450ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 280ms cubic-bezier(0.16, 1, 0.3, 1);
     overflow: hidden;
     white-space: nowrap;
   }
@@ -146,7 +146,7 @@ const PLAQUE_STYLES = `
     gap: var(--spacing-sm);
     max-width: 0;
     opacity: 0;
-    transition: all 450ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 280ms cubic-bezier(0.16, 1, 0.3, 1);
     overflow: hidden;
   }
 

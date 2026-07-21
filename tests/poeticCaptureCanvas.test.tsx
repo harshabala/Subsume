@@ -161,7 +161,7 @@ describe('PoeticCaptureCanvas', () => {
     const saveBtn = container.querySelector('[data-testid="save-btn"]') as HTMLButtonElement;
     await act(async () => {
       saveBtn?.click();
-      // Persist messages immediately; ceremony delays onSave/onClose ~500ms
+      // Persist messages immediately; ceremony delays onSave/onClose ~280ms
       await new Promise((r) => setTimeout(r, 120));
     });
 
@@ -191,13 +191,13 @@ describe('PoeticCaptureCanvas', () => {
     const ratingCall = sendMessageCalls.find(c => (c[0] as any).type === MessageType.SET_USER_RATING);
     expect((ratingCall?.[0] as any).payload).toEqual({ mediaId: 'media_123', rating: 9 });
 
-    // Ceremony holds dismiss for ~500ms when PRM is off
+    // Ceremony holds dismiss for ~280ms when PRM is off
     expect(onSave).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
     expect(container.querySelector('.save-ceremony')).toBeTruthy();
 
     await act(async () => {
-      await new Promise((r) => setTimeout(r, 520));
+      await new Promise((r) => setTimeout(r, 320));
     });
 
     expect(onSave).toHaveBeenCalled();

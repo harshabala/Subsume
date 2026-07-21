@@ -210,7 +210,7 @@
   color: inherit;
   text-align: left;
   appearance: none;
-  animation: discoveryFeedIn 0.45s var(--ease-focus-pull, cubic-bezier(0.25, 1, 0.5, 1)) both;
+  animation: discoveryFeedIn var(--duration-curtain, 280ms) var(--ease-focus-pull, cubic-bezier(0.25, 1, 0.5, 1)) both;
   animation-delay: calc(min(var(--feed-index, 0), 5) * 60ms);
 }
 
@@ -402,7 +402,7 @@
 }
 
 .home-weekly-enter {
-  animation: home-digest-enter 480ms var(--ease-focus-pull, cubic-bezier(0.25, 1, 0.5, 1)) both;
+  animation: home-digest-enter var(--duration-curtain, 280ms) var(--ease-focus-pull, cubic-bezier(0.25, 1, 0.5, 1)) both;
 }
 
 @media (prefers-reduced-motion: reduce) {

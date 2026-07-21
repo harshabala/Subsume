@@ -150,7 +150,7 @@
   font-size: 15px;
   letter-spacing: 0.02em;
   outline: none;
-  transition: border-color 0.4s var(--ease-focus-pull), background 0.4s ease;
+  transition: border-color var(--duration-normal) var(--ease-focus-pull), background var(--duration-normal) ease;
   backdrop-filter: blur(16px);
 }
 
@@ -504,7 +504,7 @@
 }
 
 /* ── DetailModal Velvet Obscura Sanctuary Classes ── */
-/* Enter: Slow Dolly 450ms (--duration-curtain). Exit: Curtain Close ~300ms, subtler. */
+/* Enter: Slow Dolly ≤300ms (--duration-curtain). Exit: Curtain Close ≤300ms, subtler. */
 .sanctuary-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -515,7 +515,7 @@
   justify-content: center;
   z-index: 1000;
   padding: 24px;
-  animation: sanctuary-backdrop-enter var(--duration-curtain, 450ms) var(--ease-focus-pull, ease-out);
+  animation: sanctuary-backdrop-enter var(--duration-curtain, 280ms) var(--ease-focus-pull, ease-out);
 }
 
 .sanctuary-modal-backdrop.closing {
@@ -535,8 +535,8 @@
   color: var(--text-artwork);
   padding: 32px;
   box-sizing: border-box;
-  /* Slow Dolly: opacity + translateY + scale from ≥0.96 */
-  animation: sanctuary-modal-enter var(--duration-curtain, 450ms) var(--ease-focus-pull, ease-out);
+  /* Slow Dolly: opacity + translateY + scale from ≥0.96 (cinematic, ≤300ms) */
+  animation: sanctuary-modal-enter var(--duration-curtain, 280ms) var(--ease-focus-pull, ease-out);
 }
 
 .sanctuary-modal-content.closing {

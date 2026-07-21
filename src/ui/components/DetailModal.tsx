@@ -39,7 +39,7 @@ const SUGGESTED_TAGS = ["Rewatchable", "Festival", "Criterion", "Silent Era", "F
 
 
 const EXIT_FALLBACK_MS = 350;
-const SAVE_CEREMONY_MS = 500;
+const SAVE_CEREMONY_MS = 280; /* matches --duration-soft-settle; ≤300ms UI wiki */
 
 function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {

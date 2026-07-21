@@ -71,6 +71,8 @@
   --shadow-hero: 0 20px 60px hsla(240, 18%, 4%, 0.8);
 
   /* ─── Cinematic Motion ───────────────────────────────────────── */
+  /* Ceremony may feel cinematic (ease + scale) but user-facing motion
+     must stay ≤300ms per UI wiki — shorten, do not delete. */
   --ease-focus-pull: cubic-bezier(0.25, 1, 0.5, 1);
   /* Soft settle: decelerating linear() with no bounce/overshoot.
      Use for aura stop interpolation, save ceremony, rare settle moments. */
@@ -84,8 +86,8 @@
     0.98 96%,
     1
   );
-  --duration-soft-settle: 500ms;
-  --duration-curtain: 450ms; /* Slow Dolly enter */
+  --duration-soft-settle: 280ms;
+  --duration-curtain: 280ms; /* Slow Dolly enter (cinematic, ≤300ms) */
   --duration-curtain-close: 300ms; /* Curtain Close exit (subtler) */
   --blur-hero: blur(16px);
 

@@ -611,10 +611,10 @@
     radial-gradient(circle at 20% 90%, var(--color-tension) 0%, transparent var(--aura-tension, 50%)),
     radial-gradient(circle at 80% 80%, var(--color-warmth) 0%, transparent var(--aura-warmth, 50%));
   transition:
-    --aura-awe 0.45s var(--ease-soft-settle, ease),
-    --aura-melancholy 0.45s var(--ease-soft-settle, ease),
-    --aura-tension 0.45s var(--ease-soft-settle, ease),
-    --aura-warmth 0.45s var(--ease-soft-settle, ease);
+    --aura-awe var(--duration-soft-settle, 280ms) var(--ease-soft-settle, ease),
+    --aura-melancholy var(--duration-soft-settle, 280ms) var(--ease-soft-settle, ease),
+    --aura-tension var(--duration-soft-settle, 280ms) var(--ease-soft-settle, ease),
+    --aura-warmth var(--duration-soft-settle, 280ms) var(--ease-soft-settle, ease);
 }
 
 @media (prefers-reduced-motion: reduce) {
