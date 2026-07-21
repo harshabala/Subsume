@@ -180,3 +180,36 @@ describe('ADD_TO_ARCHIVE', () => {
     );
   });
 });
+
+describe('CHECK_ARCHIVE_STATUS', () => {
+  const handler = bookHandlers[MessageType.CHECK_ARCHIVE_STATUS]!;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns inLibrary false for invalid mediaId/workId', async () => {
+    await expect(
+      handler({ mediaId: 'javascript:alert(1)' }, sender),
+    ).resolves.toEqual({ inLibrary: false });
+    await expect(
+      handler({ workId: 'page_example.com' }, sender),
+    ).resolves.toEqual({ inLibrary: false });
+    await expect(handler({}, sender)).resolves.toEqual({ inLibrary: false });
+  });
+
+  it('returns scoped status when library item exists', async () => {
+    await putMediaItem(sampleBook);
+    await bookHandlers[MessageType.ADD_TO_ARCHIVE]!(
+      { mediaItem: sampleBook, status: 'watched' },
+      sender,
+    );
+
+    const result = await handler({ workId: sampleBook.id }, sender);
+    expect(result).toEqual({
+      inLibrary: true,
+      status: 'watched',
+      userRating: undefined,
+    });
+  });
+});

@@ -264,8 +264,16 @@ export const bookHandlers: MessageHandlerMap = {
 
   [MessageType.CHECK_ARCHIVE_STATUS]: async (payload) => {
     const req = payload as { workId?: string; mediaId?: string };
-    const id = req.workId ?? req.mediaId;
-    if (!id) return { inLibrary: false };
+    const id =
+      typeof req?.workId === 'string'
+        ? req.workId
+        : typeof req?.mediaId === 'string'
+          ? req.mediaId
+          : '';
+    // Content-script path — same ID rules as CHECK_LIBRARY_STATUS.
+    if (!id || !isValidMediaId(id)) {
+      return { inLibrary: false };
+    }
     const item = await getLibraryItem(id);
     return {
       inLibrary: Boolean(item),

@@ -91,7 +91,14 @@ vi.mock('@/background/contentPrefs', () => ({
 }));
 
 import { handlers } from '@/background/index';
-import { getLibraryItem, putLibraryItem, getMediaItem, getPreferences, savePreferences } from '@/background/storage';
+import {
+  getLibraryItem,
+  putLibraryItem,
+  getMediaItem,
+  getPreferences,
+  savePreferences,
+  removeLibraryItem,
+} from '@/background/storage';
 import { MediaItem } from '@/shared/types';
 
 const sender = {} as chrome.runtime.MessageSender;
@@ -269,6 +276,23 @@ describe('ADD_TO_LIST', () => {
       expect.objectContaining({ sanctuaryIntent: 'wishlist' })
     );
   });
+
+  it('rejects mediaItem with invalid mediaId pattern', async () => {
+    const handler = handlers[MessageType.ADD_TO_LIST]!;
+    await expect(
+      handler(
+        {
+          mediaItem: {
+            ...sampleMedia,
+            id: 'javascript:alert(1)',
+          },
+          type: 'movie',
+        },
+        sender,
+      ),
+    ).rejects.toThrow(/Invalid media item/);
+    expect(putLibraryItem).not.toHaveBeenCalled();
+  });
 });
 
 describe('CHECK_LIBRARY_STATUS', () => {
@@ -309,6 +333,50 @@ describe('CHECK_LIBRARY_STATUS', () => {
       status: 'watched',
       userRating: 9,
     });
+  });
+});
+
+describe('REMOVE_FROM_LIBRARY', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('throws for invalid mediaId and does not remove', async () => {
+    const handler = handlers[MessageType.REMOVE_FROM_LIBRARY]!;
+    await expect(
+      handler({ mediaId: 'javascript:alert(1)' }, sender),
+    ).rejects.toThrow(/Invalid mediaId/);
+    await expect(
+      handler({ mediaId: '../etc/passwd' }, sender),
+    ).rejects.toThrow(/Invalid mediaId/);
+    await expect(
+      handler({ mediaId: 'page_example.com' }, sender),
+    ).rejects.toThrow(/Invalid mediaId/);
+    await expect(handler({}, sender)).rejects.toThrow(/Invalid mediaId/);
+    expect(removeLibraryItem).not.toHaveBeenCalled();
+  });
+
+  it('removes a valid mediaId', async () => {
+    vi.mocked(removeLibraryItem).mockResolvedValue(undefined);
+
+    const handler = handlers[MessageType.REMOVE_FROM_LIBRARY]!;
+    const result = await handler({ mediaId: 'tmdb_movie_99' }, sender);
+
+    expect(result).toEqual({ removed: true });
+    expect(removeLibraryItem).toHaveBeenCalledWith('tmdb_movie_99');
+  });
+
+  it('accepts book work ids', async () => {
+    vi.mocked(removeLibraryItem).mockResolvedValue(undefined);
+
+    const handler = handlers[MessageType.REMOVE_FROM_LIBRARY]!;
+    const result = await handler(
+      { mediaId: 'openlibrary_work_OL468431W' },
+      sender,
+    );
+
+    expect(result).toEqual({ removed: true });
+    expect(removeLibraryItem).toHaveBeenCalledWith('openlibrary_work_OL468431W');
   });
 });
 

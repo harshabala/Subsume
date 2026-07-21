@@ -225,6 +225,10 @@ export const libraryHandlers: MessageHandlerMap = {
 
   [MessageType.REMOVE_FROM_LIBRARY]: async (payload) => {
     const req = payload as RemoveFromLibraryRequest;
+    // Content scripts can call this — reject injection / non-canonical IDs.
+    if (typeof req?.mediaId !== 'string' || !isSafeNavMediaId(req.mediaId)) {
+      throw new Error('Invalid mediaId');
+    }
     await removeLibraryItem(req.mediaId);
     invalidateProfileCache();
     await broadcastMessage({
