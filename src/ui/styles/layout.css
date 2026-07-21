@@ -224,7 +224,7 @@
 }
 
 .plaque-rating {
-  font-family: 'Geist Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--gold-text);
   background: var(--gold-soft-bg);
@@ -233,7 +233,7 @@
 }
 
 .plaque-index {
-  font-family: 'Geist Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 9px;
   color: var(--muted-fg);
   text-transform: uppercase;
@@ -315,7 +315,7 @@
 }
 
 .lobby-act {
-  font-family: 'Geist Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.25em;
@@ -360,7 +360,7 @@
 }
 
 .status-text {
-  font-family: 'Geist Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--status-text-fg);
 }

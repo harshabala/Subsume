@@ -9,6 +9,8 @@ import { AuraVisualizer } from './components/AuraVisualizer';
 import { FilmGrain } from './components/FilmGrain';
 import { InlineNotice } from './components/NoticeProvider';
 import { formatUserError } from './utils/formatUserError';
+import { mediumLabel } from '../shared/productCopy';
+import { legacyStatusLabel } from '../shared/statusLabels';
 import '../shared/tokens.css';
 import './styles/popup.css';
 import './styles/emotional-components.css';
@@ -572,7 +574,7 @@ function Popup() {
                     >
                       <div className="suggestion-item-main">
                         <span className="suggestion-title">{movie.canonicalTitle}</span>
-                        <span className="suggestion-meta">{movie.type === 'tv' ? 'TV Series' : 'Movie'}</span>
+                        <span className="suggestion-meta">{mediumLabel(movie.type)}</span>
                       </div>
                       <span className="suggestion-year">{movie.year || '—'}</span>
                     </li>
@@ -596,7 +598,7 @@ function Popup() {
               </div>
               <div className="selected-movie-preview-details">
                 <h4>{selectedMovie.canonicalTitle}</h4>
-                <p>{selectedMovie.year || '—'} · {selectedMovie.type === 'tv' ? 'TV Series' : 'Movie'}</p>
+                <p>{selectedMovie.year || '—'} · {mediumLabel(selectedMovie.type)}</p>
               </div>
               <button
                 className="selected-movie-deselect-btn"
@@ -628,30 +630,32 @@ function Popup() {
             placeholder="What resonance did this screening leave? A line, a scene, an afterglow..."
           />
 
-          {/* Sanctuary Status Intent Selector */}
+          {/* Sanctuary Status Intent Selector — medium-aware operational labels */}
           <div className="intent-selector-group">
-            <span className="intent-selector-label">Screening status</span>
+            <span className="intent-selector-label">
+              {selectedMovie?.type === 'book' ? 'Reading status' : 'Screening status'}
+            </span>
             <div className="intent-pills" role="group" aria-label="Sanctuary intent">
               <button
                 type="button"
                 className={`intent-pill ${sanctuaryIntent === 'keep_memory' ? 'active' : ''}`}
                 onClick={() => setSanctuaryIntent('keep_memory')}
               >
-                Watched
+                {legacyStatusLabel('watched', selectedMovie?.type ?? 'movie')}
               </button>
               <button
                 type="button"
                 className={`intent-pill ${sanctuaryIntent === 'revisit_this_month' ? 'active' : ''}`}
                 onClick={() => setSanctuaryIntent('revisit_this_month')}
               >
-                Watching
+                {legacyStatusLabel('watching', selectedMovie?.type ?? 'movie')}
               </button>
               <button
                 type="button"
                 className={`intent-pill ${sanctuaryIntent === 'wishlist' ? 'active' : ''}`}
                 onClick={() => setSanctuaryIntent('wishlist')}
               >
-                To Watch
+                {legacyStatusLabel('to-watch', selectedMovie?.type ?? 'movie')}
               </button>
             </div>
           </div>

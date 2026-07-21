@@ -1,5 +1,6 @@
 import { h } from 'preact';
 import { PersonalizedRecommendation, MediaItem } from '@/shared/types';
+import { mediumLabel, ADD_TO_ARCHIVE_LABEL, IN_ARCHIVE_LABEL } from '@/shared/productCopy';
 import '../styles/recommendations.css';
 
 interface RecommendationAiCardProps {
@@ -52,7 +53,7 @@ export function RecommendationAiCard({
     <>
       <div className="recommendation-ai-card-title">{rec.title}</div>
       <div className="recommendation-ai-card-meta">
-        {rec.year} · {rec.type === 'book' ? 'Book' : rec.type === 'tv' ? 'TV' : 'Movie'}
+        {rec.year} · {mediumLabel(rec.type)}
       </div>
       <div className="recommendation-ai-card-reason">{rec.reason}</div>
       {showSeedPill && rec.seedTitle && (
@@ -87,7 +88,7 @@ export function RecommendationAiCard({
             onClick={() => onAddClick(rec)}
             className={`sanctuary-acquire-btn recommendation-ai-card-acquire-btn ${isAdded ? 'recommendation-ai-card-add-button-added' : 'recommendation-ai-card-add-button-unadded'}`}
           >
-            {isAdded ? 'In library' : 'Add to library'}
+            {isAdded ? IN_ARCHIVE_LABEL : ADD_TO_ARCHIVE_LABEL}
           </button>
           {onDismiss && (
             <button

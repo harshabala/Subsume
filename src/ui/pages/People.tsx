@@ -1,5 +1,5 @@
-import { h, Fragment } from 'preact';
-import { useState, useEffect, useCallback, useMemo } from 'preact/hooks';
+import { h } from 'preact';
+import { useState, useEffect, useCallback } from 'preact/hooks';
 import { sendMessage } from '@/shared/messages';
 import { MessageType, PersonItem, CrewRole, UserPreferences } from '@/shared/types';
 import { FilmographyView } from '../components/FilmographyView';
@@ -59,6 +59,7 @@ export function People() {
   const [following, setFollowing] = useState<PersonItem[]>([]);
   const [loadingFollowing, setLoadingFollowing] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<PersonItem | null>(null);
+  const [unfollowConfirmId, setUnfollowConfirmId] = useState<string | null>(null);
 
   // Search view states
   const [query, setQuery] = useState('');
@@ -166,8 +167,7 @@ export function People() {
     }
   };
 
-  const handleUnfollow = async (id: string, e: MouseEvent) => {
-    e.stopPropagation();
+  const handleUnfollow = async (id: string) => {
     try {
       const res = await sendMessage<{ personId: string }, { success: boolean }>(
         MessageType.UNFOLLOW_PERSON,
@@ -180,6 +180,7 @@ export function People() {
           delete next[id];
           return next;
         });
+        setUnfollowConfirmId(null);
         if (selectedPerson && selectedPerson.id === id) {
           setSelectedPerson(null);
         }
@@ -190,7 +191,17 @@ export function People() {
   };
 
   if (selectedPerson) {
-    return <FilmographyView person={selectedPerson} onBack={() => { setSelectedPerson(null); loadFollowing(); }} onUnfollow={(e) => handleUnfollow(selectedPerson.id, e)} />;
+    return (
+      <FilmographyView
+        person={selectedPerson}
+        onBack={() => {
+          setSelectedPerson(null);
+          setUnfollowConfirmId(null);
+          loadFollowing();
+        }}
+        onUnfollow={() => handleUnfollow(selectedPerson.id)}
+      />
+    );
   }
 
   return (
@@ -207,12 +218,14 @@ export function People() {
 
       <div className="people-sanctuary-tabs">
         <button
+          type="button"
           onClick={() => setActiveView('following')}
           className={`people-sanctuary-tab${activeView === 'following' ? ' active' : ''}`}
         >
           Following ({following.length})
         </button>
         <button
+          type="button"
           onClick={() => setActiveView('search')}
           className={`people-sanctuary-tab${activeView === 'search' ? ' active' : ''}`}
         >
@@ -244,60 +257,103 @@ export function People() {
                     .slice(0, 2)
                     .join('')
                     .toUpperCase();
+                  const confirmId = `unfollow-confirm-${person.id}`;
+                  const isConfirming = unfollowConfirmId === person.id;
 
                   return (
-                    <div
-                      key={person.id}
-                      onClick={() => setSelectedPerson(person)}
-                      className="people-sanctuary-card"
-                    >
-                      <button
-                        onClick={(e) => handleUnfollow(person.id, e)}
-                        className="people-sanctuary-unfollow"
-                        title="Unfollow"
-                      >
-                        ×
-                      </button>
-
-                      {profileImageSrc(person.profileImageUrl) ? (
-                        <img
-                          src={profileImageSrc(person.profileImageUrl)!}
-                          alt={person.name}
-                          className="people-sanctuary-avatar"
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      ) : (
-                        <div className="people-sanctuary-avatar-fallback">
-                          {initials}
+                    <article key={person.id} className="people-sanctuary-card">
+                      {isConfirming ? (
+                        <div
+                          className="people-unfollow-confirm"
+                          role="group"
+                          aria-labelledby={confirmId}
+                          aria-describedby={`${confirmId}-desc`}
+                        >
+                          <span id={confirmId} className="people-unfollow-confirm-label">
+                            Unfollow?
+                          </span>
+                          <span id={`${confirmId}-desc`} className="sr-only">
+                            Stop following {person.name}
+                          </span>
+                          <button
+                            type="button"
+                            className="people-unfollow-confirm-btn"
+                            onClick={() => handleUnfollow(person.id)}
+                          >
+                            Unfollow
+                          </button>
+                          <button
+                            type="button"
+                            className="people-unfollow-cancel-btn"
+                            onClick={() => setUnfollowConfirmId(null)}
+                          >
+                            Cancel
+                          </button>
                         </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setUnfollowConfirmId(person.id);
+                          }}
+                          className="people-sanctuary-unfollow"
+                          title="Unfollow"
+                          aria-label={`Unfollow ${person.name}`}
+                        >
+                          ×
+                        </button>
                       )}
 
-                      <h3 className="people-sanctuary-name">
-                        {person.name}
-                      </h3>
+                      <button
+                        type="button"
+                        className="people-sanctuary-card-open"
+                        aria-label={`Open filmography for ${person.name}`}
+                        onClick={() => {
+                          setUnfollowConfirmId(null);
+                          setSelectedPerson(person);
+                        }}
+                      >
+                        {profileImageSrc(person.profileImageUrl) ? (
+                          <img
+                            src={profileImageSrc(person.profileImageUrl)!}
+                            alt=""
+                            className="people-sanctuary-avatar"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        ) : (
+                          <span className="people-sanctuary-avatar-fallback" aria-hidden="true">
+                            {initials}
+                          </span>
+                        )}
 
-                      <span className="people-sanctuary-role">
-                        {displayRoleLabel(person)}
-                      </span>
-
-                      <span className="people-sanctuary-count">
-                        {person.filmographyIds.length}{' '}
-                        {person.filmographyIds.length === 1
-                          ? isAuthorPerson(person)
-                            ? 'work'
-                            : 'archive record'
-                          : isAuthorPerson(person)
-                            ? 'works'
-                            : 'archive records'}
-                      </span>
-
-                      {person.lastSyncedAt === 0 && (
-                        <span className="people-sanctuary-sync">
-                          Syncing filmography…
+                        <span className="people-sanctuary-name">
+                          {person.name}
                         </span>
-                      )}
-                    </div>
+
+                        <span className="people-sanctuary-role">
+                          {displayRoleLabel(person)}
+                        </span>
+
+                        <span className="people-sanctuary-count">
+                          {person.filmographyIds.length}{' '}
+                          {person.filmographyIds.length === 1
+                            ? isAuthorPerson(person)
+                              ? 'work'
+                              : 'archive record'
+                            : isAuthorPerson(person)
+                              ? 'works'
+                              : 'archive records'}
+                        </span>
+
+                        {person.lastSyncedAt === 0 && (
+                          <span className="people-sanctuary-sync">
+                            Syncing filmography…
+                          </span>
+                        )}
+                      </button>
+                    </article>
                   );
                 })}
               </div>
@@ -395,6 +451,7 @@ export function People() {
                         )}
 
                         <button
+                          type="button"
                           onClick={() => handleFollow(person)}
                           disabled={isFollowed}
                           className={`people-enroll-btn${isFollowed ? ' enrolled' : ' active'}`}

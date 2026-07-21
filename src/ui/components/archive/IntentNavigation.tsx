@@ -117,7 +117,7 @@ export function IntentNavigation({
             className={`tab-item ${activeTab === 'tv' ? 'active' : ''}`}
             onClick={() => setActiveTab('tv')}
           >
-            TV Shows
+            Series
           </button>
         </div>
       )}

@@ -11,6 +11,7 @@ import { MessageType, type MediaItem } from '@/shared/types';
 import { logger } from '@/shared/logger';
 import { setupShadowStyles } from '@/shared/shadowTokens';
 import { truncateForExcerpt } from '@/shared/textTruncate';
+import { ADD_TO_ARCHIVE_LABEL, IN_ARCHIVE_LABEL } from '@/shared/productCopy';
 import { attachClosedShadow, isTrustedGesture } from '@/content/closedShadow';
 
 const HOST_ATTR = 'data-subsume-book-plaque';
@@ -398,7 +399,7 @@ export class BookPlaqueManager {
     if (match.inLibrary) {
       const label = document.createElement('span');
       label.className = 'plaque-archive-label';
-      label.textContent = 'In archive';
+      label.textContent = IN_ARCHIVE_LABEL;
       root.appendChild(label);
 
       const title = document.createElement('span');
@@ -450,7 +451,7 @@ export class BookPlaqueManager {
       add.type = 'button';
       add.className = 'plaque-add';
       add.textContent = 'Add';
-      add.title = 'Add to archive';
+      add.title = ADD_TO_ARCHIVE_LABEL;
       add.addEventListener('click', (e) => {
         if (!isTrustedGesture(e)) return;
         e.preventDefault();

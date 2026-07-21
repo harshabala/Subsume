@@ -187,7 +187,7 @@
 }
 
 .popup-status-ok {
-  color: var(--status-watched-fg, #34d399);
+  color: var(--success, #3d8b5f);
 }
 
 .popup-status-warn {
@@ -831,12 +831,12 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: rgba(52, 211, 153, 0.1);
+  background: var(--success-bg, rgba(61, 139, 95, 0.12));
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--status-watched-fg, #34d399);
-  border: 1px solid rgba(52, 211, 153, 0.2);
+  color: var(--success, #3d8b5f);
+  border: 1px solid var(--success-border, rgba(61, 139, 95, 0.28));
 }
 
 .success-title {

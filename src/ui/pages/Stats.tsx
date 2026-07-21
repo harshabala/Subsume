@@ -55,9 +55,14 @@ export function Stats() {
 
   const moviesCount = watchedItems.filter(i => i.media?.type === 'movie').length;
   const tvCount = watchedItems.filter(i => i.media?.type === 'tv').length;
-  const totalWatchedType = moviesCount + tvCount;
-  const moviePercent = totalWatchedType > 0 ? Math.round((moviesCount / totalWatchedType) * 100) : 50;
-  const tvPercent = totalWatchedType > 0 ? Math.round((tvCount / totalWatchedType) * 100) : 50;
+  const booksCount = watchedItems.filter(i => i.media?.type === 'book').length;
+  const screenCount = moviesCount + tvCount;
+  const totalMediumCount = moviesCount + tvCount + booksCount;
+  const moviePercent = totalMediumCount > 0 ? Math.round((moviesCount / totalMediumCount) * 100) : 0;
+  const tvPercent = totalMediumCount > 0 ? Math.round((tvCount / totalMediumCount) * 100) : 0;
+  const bookPercent = totalMediumCount > 0
+    ? Math.max(0, 100 - moviePercent - tvPercent)
+    : 0;
 
   return (
     <div className="page-container sanctuary-page-shell">
@@ -91,23 +96,29 @@ export function Stats() {
             className="stats-weather-chart"
           />
 
-          <div className="stats-grid">
-            <div className="stats-plaque-card">
-              <span className="sanctuary-plaque-index stats-plaque-index">I</span>
-              <span className="stat-value stats-plaque-value">{totalWatched}</span>
-              <span className="stats-plaque-label">Titles experienced</span>
+          <div className="stats-meta-row" role="list" aria-label="Programme summary">
+            <div className="stats-meta-item" role="listitem">
+              <span className="stats-meta-value">{totalWatched}</span>
+              <span className="stats-meta-label">experienced</span>
             </div>
-
-            <div className="stats-plaque-card">
-              <span className="sanctuary-plaque-index stats-plaque-index">II</span>
-              <span className="stat-value stats-plaque-value">{totalHours}</span>
-              <span className="stats-plaque-label">Hours on screen</span>
+            <span className="stats-meta-sep" aria-hidden="true">·</span>
+            <div className="stats-meta-item" role="listitem">
+              <span className="stats-meta-value">{totalHours}</span>
+              <span className="stats-meta-label">hrs on screen</span>
             </div>
-
-            <div className="stats-plaque-card">
-              <span className="sanctuary-plaque-index stats-plaque-index">III</span>
-              <span className="stat-value stats-plaque-value accent">{avgRating}</span>
-              <span className="stats-plaque-label">Average rating</span>
+            {booksCount > 0 && (
+              <>
+                <span className="stats-meta-sep" aria-hidden="true">·</span>
+                <div className="stats-meta-item" role="listitem">
+                  <span className="stats-meta-value">{booksCount}</span>
+                  <span className="stats-meta-label">{booksCount === 1 ? 'book' : 'books'}</span>
+                </div>
+              </>
+            )}
+            <span className="stats-meta-sep" aria-hidden="true">·</span>
+            <div className="stats-meta-item" role="listitem">
+              <span className="stats-meta-value accent">{avgRating}</span>
+              <span className="stats-meta-label">avg rating</span>
             </div>
           </div>
 
@@ -136,19 +147,24 @@ export function Stats() {
 
             <div className="stats-chart-panel flex-col">
               <h3 className="stats-chart-title">
-                Movies vs series
+                Screen vs page
               </h3>
 
               <div className="stats-mix-center">
                 <div className="stats-mix-bar">
                   {moviesCount > 0 && (
                     <div className="stats-mix-segment cinema" style={{ width: `${moviePercent}%` }}>
-                      {moviePercent}%
+                      {moviePercent > 8 ? `${moviePercent}%` : ''}
                     </div>
                   )}
                   {tvCount > 0 && (
                     <div className="stats-mix-segment series" style={{ width: `${tvPercent}%` }}>
-                      {tvPercent}%
+                      {tvPercent > 8 ? `${tvPercent}%` : ''}
+                    </div>
+                  )}
+                  {booksCount > 0 && (
+                    <div className="stats-mix-segment page" style={{ width: `${bookPercent}%` }}>
+                      {bookPercent > 8 ? `${bookPercent}%` : ''}
                     </div>
                   )}
                 </div>
@@ -162,7 +178,14 @@ export function Stats() {
                     <div className="stats-legend-swatch series" />
                     <span className="stats-legend-label">Series ({tvCount})</span>
                   </div>
+                  <div className="stats-legend-item">
+                    <div className="stats-legend-swatch page" />
+                    <span className="stats-legend-label">Books ({booksCount})</span>
+                  </div>
                 </div>
+                {screenCount > 0 && booksCount === 0 && (
+                  <p className="stats-mix-footnote">Screen only so far — books appear here when you mark them experienced.</p>
+                )}
               </div>
             </div>
           </div>

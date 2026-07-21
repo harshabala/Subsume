@@ -1,10 +1,9 @@
 import { h } from 'preact';
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { sendMessage } from '@/shared/messages';
 import {
   MessageType,
   MediaItem,
-  MediaType,
   LibraryItem,
   Recommendation,
   UserPreferences,
@@ -20,7 +19,6 @@ import { PlatformChips } from '../components/PlatformChips';
 import { EmotionalWeatherChart } from '../components/EmotionalWeatherChart';
 import { getEmotionalSpectrum, hasEmotionalData } from '@/shared/emotions';
 import { getPlatformNameById } from '@/shared/platforms';
-import '../styles/discovery-search.css';
 import '../styles/discovery-layout.css';
 import { ensureDemoLibraryIfEmpty } from '../lib/ensureDemoLibrary';
 import { getReflectionExcerpt } from '../components/archive/constants';
@@ -36,7 +34,7 @@ interface DigestPick extends WeeklyDigestItem {
 }
 
 interface HomeProps {
-  onNavigate: (page: 'library' | 'recommendations' | 'new-releases') => void;
+  onNavigate: (page: 'library' | 'recommendations' | 'new-releases' | 'search') => void;
   onOpenCapture?: (mediaId: string) => void;
 }
 
@@ -85,69 +83,21 @@ function feedItemToDigestPick(item: DiscoveryFeedItem): DigestPick {
   };
 }
 
-const DISCOVERY_TYPE_FILTERS: { value: MediaType | ''; label: string }[] = [
-  { value: '', label: 'All' },
-  { value: 'movie', label: 'Films' },
-  { value: 'tv', label: 'Series' },
-];
-
-const SEARCH_DEBOUNCE_MS = 350;
-
-interface CataloguePulseItem {
-  id: string;
-  label: string;
-  value: number | string;
-  onClick?: () => void;
-}
-
-function DiscoveryCataloguePulse({ items }: { items: CataloguePulseItem[] }) {
-  if (items.length === 0) return null;
-  return (
-    <ul className="discovery-catalogue-pulse" aria-label="Your catalogue at a glance">
-      {items.map((item) => (
-        <li key={item.id} style={{ display: 'contents' }}>
-          {item.onClick ? (
-            <button type="button" className="discovery-pulse-item" onClick={item.onClick}>
-              <span className="discovery-pulse-value">{item.value}</span>
-              <span className="discovery-pulse-label">{item.label}</span>
-            </button>
-          ) : (
-            <div className="discovery-pulse-item discovery-pulse-item--static">
-              <span className="discovery-pulse-value">{item.value}</span>
-              <span className="discovery-pulse-label">{item.label}</span>
-            </div>
-          )}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 export function Home({ onNavigate, onOpenCapture }: HomeProps) {
   const [loading, setLoading] = useState(true);
   const [refreshingDigest, setRefreshingDigest] = useState(false);
   const [libraryCount, setLibraryCount] = useState(0);
   const [watchedCount, setWatchedCount] = useState(0);
-  const [toWatchCount, setToWatchCount] = useState(0);
   const [weeklyDigest, setWeeklyDigest] = useState<WeeklyDigest | null>(null);
   const [weeklyPicks, setWeeklyPicks] = useState<DigestPick[]>([]);
   const [usingFreeFeed, setUsingFreeFeed] = useState(false);
   const [discoveryFeed, setDiscoveryFeed] = useState<DiscoveryFeed | null>(null);
-  const [feedCount, setFeedCount] = useState(0);
   const [picks, setPicks] = useState<(Recommendation & { media: MediaItem })[]>([]);
   const [prefs, setPrefs] = useState<UserPreferences | null>(null);
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchType, setSearchType] = useState<MediaType | ''>('');
-  const [searchResults, setSearchResults] = useState<MediaItem[]>([]);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [searchError, setSearchError] = useState<string | null>(null);
-  const [searchActive, setSearchActive] = useState(false);
   const [feedError, setFeedError] = useState<string | null>(null);
   const [libraryItems, setLibraryItems] = useState<JoinedItem[]>([]);
-  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const feedSectionRef = useRef<HTMLElement | null>(null);
 
   const hydrateDigestPicks = async (digest: WeeklyDigest) => {
     const items = digest.items.slice(0, 12);
@@ -171,7 +121,6 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
 
   const applyDiscoveryFeedFallback = (feed: DiscoveryFeed) => {
     setDiscoveryFeed(feed);
-    setFeedCount(feed.items.length);
     setUsingFreeFeed(true);
     setWeeklyDigest(null);
     setWeeklyPicks(feed.items.slice(0, 12).map(feedItemToDigestPick));
@@ -186,7 +135,6 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
       );
       if (feedRes.success && feedRes.data) {
         setDiscoveryFeed(feedRes.data);
-        setFeedCount(feedRes.data.items.length);
         if (feedRes.data.items.length === 0) {
           setFeedError('The wire returned no titles. Check your connection and try again.');
         }
@@ -250,11 +198,9 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
         setLibraryItems(libraryItems);
         setLibraryCount(libraryItems.length);
         setWatchedCount(libraryItems.filter((i) => i.library.status === 'watched').length);
-        setToWatchCount(libraryItems.filter((i) => i.library.status === 'to-watch').length);
 
         if (feedRes?.success && feedRes.data) {
           setDiscoveryFeed(feedRes.data);
-          setFeedCount(feedRes.data.items.length);
         }
 
         if (digestRes?.success && digestRes.data && digestRes.data.items.length > 0) {
@@ -290,50 +236,6 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
     load();
   }, []);
 
-  useEffect(() => {
-    const trimmed = searchQuery.trim();
-    if (!trimmed) {
-      setSearchResults([]);
-      setSearchLoading(false);
-      setSearchError(null);
-      setSearchActive(false);
-      return;
-    }
-
-    setSearchActive(true);
-    setSearchLoading(true);
-    setSearchError(null);
-
-    if (searchDebounceRef.current) {
-      clearTimeout(searchDebounceRef.current);
-    }
-
-    searchDebounceRef.current = setTimeout(async () => {
-      try {
-        const res = await sendMessage<
-          { query: string; type?: MediaType },
-          MediaItem[]
-        >(MessageType.DISCOVERY_SEARCH, {
-          query: trimmed,
-          type: searchType || undefined,
-        });
-        setSearchResults(res.data ?? []);
-      } catch (err) {
-        console.error('[Subsume] Discovery search failed', err);
-        setSearchResults([]);
-        setSearchError(err instanceof Error ? err.message : 'Search could not complete. Please try again.');
-      } finally {
-        setSearchLoading(false);
-      }
-    }, SEARCH_DEBOUNCE_MS);
-
-    return () => {
-      if (searchDebounceRef.current) {
-        clearTimeout(searchDebounceRef.current);
-      }
-    };
-  }, [searchQuery, searchType]);
-
   const handleRefreshDigest = async () => {
     setRefreshingDigest(true);
     try {
@@ -344,7 +246,6 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
 
       if (feedRes.success && feedRes.data) {
         setDiscoveryFeed(feedRes.data);
-        setFeedCount(feedRes.data.items.length);
       }
 
       if (digestRes.success && digestRes.data && digestRes.data.items.length > 0) {
@@ -367,7 +268,6 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
       await sendMessage(MessageType.ADD_TO_LIST, { mediaItem: media, type: media.type });
       setAddedIds((prev) => new Set(prev).add(media.id));
       setLibraryCount((c) => c + 1);
-      setToWatchCount((c) => c + 1);
     } catch (err) {
       console.error('Failed to add to library', err);
     }
@@ -400,10 +300,8 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
     ? truncateForExcerpt(heroReflection)
     : heroMedia?.overview
       ? truncateForExcerpt(heroMedia.overview)
-      : 'Browse the wire below or search the repertoire to find your first title.';
-  const heroPoster =
-    heroMedia?.posterUrl ||
-    'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=600&q=80';
+      : 'Browse the wire below or open Search to find your first title in the repertoire.';
+  const heroPoster = heroMedia?.posterUrl || '';
   const canReflect = Boolean(heroMedia);
 
   const recentlyReflected = libraryItems
@@ -411,52 +309,19 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
     .sort((a, b) => b.library.updatedAt - a.library.updatedAt)
     .slice(0, 6);
 
-  const pulseItems: CataloguePulseItem[] = [
-    {
-      id: 'sanctuary',
-      label: 'In the vault',
-      value: loading ? '—' : libraryCount,
-      onClick: () => onNavigate('library'),
-    },
-    {
-      id: 'anticipated',
-      label: 'Anticipated',
-      value: loading ? '—' : toWatchCount,
-      onClick: () => onNavigate('library'),
-    },
-    {
-      id: 'reflected',
-      label: 'Inscribed',
-      value: loading ? '—' : watchedCount,
-      onClick: () => onNavigate('library'),
-    },
-  ];
-
-  if (!loading && feedCount > 0) {
-    pulseItems.push({
-      id: 'feed',
-      label: 'On the wire',
-      value: feedCount,
-      onClick: () => feedSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
-    });
-  }
-
-  if (!loading && picks.length > 0) {
-    pulseItems.push({
-      id: 'picks',
-      label: 'Curated picks',
-      value: picks.length,
-      onClick: () => onNavigate('recommendations'),
-    });
-  }
-
   return (
     <div className="page-container sanctuary-page focus-pull-active">
       <div className="discovery-ambient-layer" aria-hidden="true" />
       <div className="lobby-container">
         <div className="hero-poster-column">
           <div className="hero-poster-frame">
-            <img src={heroPoster} alt={heroTitle} className="hero-poster-img" />
+            {heroPoster ? (
+              <img src={heroPoster} alt={heroTitle} className="hero-poster-img" />
+            ) : (
+              <div className="hero-poster-placeholder" role="img" aria-label={heroTitle}>
+                <span className="hero-poster-placeholder-label">{heroTitle}</span>
+              </div>
+            )}
             <div className="catalogue-plaque-card">
               <div className="plaque-header">
                 {heroRating && <span className="plaque-rating">{heroRating}</span>}
@@ -497,83 +362,38 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
           <p className="lobby-desc">
             The lobby of your picture palace. Search the vault, follow what is moving on the wire, and return to titles whose afterglow you have already inscribed.
           </p>
-          <DiscoveryCataloguePulse items={pulseItems} />
+          <div className="discovery-lobby-actions">
+            <button
+              type="button"
+              className="optical-button"
+              onClick={() => onNavigate('library')}
+            >
+              {loading ? 'Open vault' : `Open vault (${libraryCount})`}
+            </button>
+            <button
+              type="button"
+              className="optical-button sm"
+              onClick={() => onNavigate('search')}
+            >
+              Search the repertoire
+            </button>
+            <button
+              type="button"
+              className="optical-button sm"
+              onClick={() => onNavigate('recommendations')}
+            >
+              Recommendations
+            </button>
+            <button
+              type="button"
+              className="optical-button sm"
+              onClick={() => onNavigate('new-releases')}
+            >
+              Now Showing
+            </button>
+          </div>
         </div>
       </div>
-
-      <section className="discovery-search-section" aria-label="Discover films and series">
-        <div className="discovery-search-bar">
-          <input
-            type="search"
-            className="discovery-search-input"
-            placeholder="Search films and series in the repertoire..."
-            value={searchQuery}
-            onInput={(e) => setSearchQuery(e.currentTarget.value)}
-            aria-label="Search films and series"
-          />
-        </div>
-
-        <div className="discovery-search-filters" role="group" aria-label="Filter by media type">
-          {DISCOVERY_TYPE_FILTERS.map((filter) => (
-            <button
-              key={filter.value}
-              type="button"
-              className={`discovery-search-filter${searchType === filter.value ? ' active' : ''}`}
-              onClick={() => setSearchType(filter.value)}
-            >
-              {filter.label}
-            </button>
-          ))}
-        </div>
-
-        {searchLoading && (
-          <p className="discovery-search-status" role="status">Searching the repertoire…</p>
-        )}
-
-        {searchError && (
-          <p className="discovery-search-status error" role="alert">{searchError}</p>
-        )}
-
-        {searchActive && !searchLoading && !searchError && searchResults.length === 0 && (
-          <div className="sanctuary-empty-plaque discovery-search-empty">
-            <span className="sanctuary-plaque-index">No Matches</span>
-            <p className="sanctuary-plaque-text">
-              No titles matched your query. Films via Trakt; series via TVmaze and Trakt.
-            </p>
-          </div>
-        )}
-
-        {searchResults.length > 0 && (
-          <div className="discovery-search-results">
-            <div className="discovery-search-results-grid">
-              {searchResults.map((media) => (
-                <SanctuaryMediaCard
-                  key={media.id}
-                  media={media}
-                  synopsis={
-                    media.overview
-                      ? media.overview.length > 100
-                        ? `${media.overview.slice(0, 97)}…`
-                        : media.overview
-                      : undefined
-                  }
-                  onOpen={setSelectedMedia}
-                  onAdd={handleAdd}
-                  added={addedIds.has(media.id)}
-                  addLabel="Add to archive"
-                  addedLabel="Inscribed"
-                  meta={
-                    <div className="sanctuary-card-meta">
-                      <span>{media.year || '—'}</span>
-                      <span>{media.type === 'tv' ? 'Series' : 'Film'}</span>
-                    </div>
-                  }
-                />
-              ))}
-            </div>
-          </div>
-        )}
-      </section>
 
       {!loading && feedError && (
         <div className="sanctuary-empty-plaque home-feed-notice">
@@ -588,7 +408,6 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
       {!loading && discoveryFeed && discoveryFeed.items.length > 0 && (
         <section
           id="discovery-live-feed"
-          ref={feedSectionRef}
           className="discovery-feed-section"
           aria-labelledby="discovery-feed-heading"
         >

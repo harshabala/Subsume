@@ -28,13 +28,13 @@
 }
 
 .inline-notice--success {
-  border-color: var(--success, #3d8b5f);
-  background: color-mix(in srgb, var(--success, #3d8b5f) 12%, var(--bg-elevated));
+  border-color: var(--success-border, var(--success, #3d8b5f));
+  background: var(--success-bg, color-mix(in srgb, var(--success, #3d8b5f) 12%, var(--bg-elevated)));
 }
 
 .inline-notice--error {
-  border-color: var(--danger, #c45c5c);
-  background: color-mix(in srgb, var(--danger, #c45c5c) 12%, var(--bg-elevated));
+  border-color: var(--danger-border, var(--danger-fg, #ef4444));
+  background: var(--danger-bg, color-mix(in srgb, var(--danger-fg, #ef4444) 12%, var(--bg-elevated)));
 }
 
 .inline-notice--info {

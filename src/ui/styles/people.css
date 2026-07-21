@@ -636,7 +636,6 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  cursor: pointer;
   position: relative;
   backdrop-filter: var(--blur-hero);
   transition: border-color 0.2s ease;
@@ -646,17 +645,124 @@
   border-color: var(--border-hero);
 }
 
+.people-sanctuary-card-open {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.people-sanctuary-card-open:focus-visible {
+  outline: 2px solid var(--accent-gold, var(--border-hero));
+  outline-offset: 4px;
+}
+
 .people-sanctuary-unfollow {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 6px;
+  right: 6px;
+  z-index: 1;
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   color: var(--text-meta);
   font-size: 16px;
   cursor: pointer;
   font-family: var(--font-ui);
   line-height: 1;
+  min-width: 32px;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  padding: 0;
+}
+
+.people-sanctuary-unfollow:hover {
+  color: var(--danger-fg, var(--text-reflection));
+  border-color: var(--border-restraint);
+}
+
+.people-sanctuary-unfollow:focus-visible {
+  outline: 2px solid var(--accent-gold, var(--border-hero));
+  outline-offset: 2px;
+}
+
+.people-unfollow-confirm {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  left: 6px;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  background: var(--plaque-bg, var(--bg-plaque));
+  border: 1px solid var(--border-restraint);
+  border-radius: 2px;
+  box-shadow: var(--shadow-card, 0 4px 12px rgba(0, 0, 0, 0.35));
+}
+
+.people-unfollow-confirm-label {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-meta);
+  width: 100%;
+  text-align: center;
+}
+
+.people-unfollow-confirm-btn,
+.people-unfollow-cancel-btn {
+  min-height: 32px;
+  padding: 6px 12px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  border-radius: 2px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.people-unfollow-confirm-btn {
+  background: var(--danger-bg-solid, transparent);
+  color: var(--danger-on-fg, var(--danger-fg, #f0c0c0));
+  border: 1px solid var(--danger-fg, var(--border-restraint));
+}
+
+.people-unfollow-cancel-btn {
+  background: transparent;
+  color: var(--text-meta);
+  border: 1px solid var(--border-restraint);
+}
+
+.people-unfollow-confirm-btn:focus-visible,
+.people-unfollow-cancel-btn:focus-visible {
+  outline: 2px solid var(--accent-gold, var(--border-hero));
+  outline-offset: 2px;
+}
+
+.people-sanctuary-tab:focus-visible,
+.people-enroll-btn:focus-visible {
+  outline: 2px solid var(--accent-gold, var(--border-hero));
+  outline-offset: 2px;
 }
 
 .people-sanctuary-avatar {
@@ -685,6 +791,7 @@
 }
 
 .people-sanctuary-name {
+  display: block;
   font-family: var(--font-editorial);
   font-style: italic;
   font-size: 18px;

@@ -270,7 +270,7 @@
 }
 
 .side-menu-roman {
-  font-family: 'Geist Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   color: var(--nav-section-fg);
   width: 20px;

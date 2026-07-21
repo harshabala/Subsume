@@ -74,6 +74,7 @@ export function Alerts() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<CreateWatchAlertRequest>(EMPTY_FORM);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const isBookForm = form.type === 'book';
 
@@ -180,6 +181,7 @@ export function Alerts() {
     try {
       await sendMessage(MessageType.DELETE_WATCH_ALERT, { id });
       setAlerts((prev) => prev.filter((alert) => alert.id !== id));
+      setDeleteConfirmId(null);
     } catch (err) {
       console.error('Failed to delete alert', err);
       setActionError(err instanceof Error ? err.message : 'Failed to delete alert.');
@@ -412,12 +414,47 @@ export function Alerts() {
                       />
                       Active
                     </label>
-                    <button
-                      onClick={() => handleDelete(alert.id)}
-                      className="btn-sanctuary-danger"
-                    >
-                      Delete
-                    </button>
+                    {deleteConfirmId === alert.id ? (
+                      <div
+                        className="alerts-delete-confirm"
+                        role="group"
+                        aria-labelledby={`alert-delete-label-${alert.id}`}
+                        aria-describedby={`alert-delete-desc-${alert.id}`}
+                      >
+                        <span
+                          id={`alert-delete-label-${alert.id}`}
+                          className="alerts-delete-confirm-label"
+                        >
+                          Delete alert?
+                        </span>
+                        <span id={`alert-delete-desc-${alert.id}`} className="sr-only">
+                          Permanently remove the alert “{alert.name}”
+                        </span>
+                        <button
+                          type="button"
+                          className="btn-sanctuary-danger"
+                          onClick={() => handleDelete(alert.id)}
+                        >
+                          Delete
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-sanctuary-restraint sm"
+                          onClick={() => setDeleteConfirmId(null)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setDeleteConfirmId(alert.id)}
+                        className="btn-sanctuary-danger"
+                        aria-label={`Delete alert ${alert.name}`}
+                      >
+                        Delete
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

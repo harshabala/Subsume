@@ -1,4 +1,4 @@
-import { h, Fragment } from 'preact';
+import { h } from 'preact';
 import { useState, useEffect, useCallback, useMemo } from 'preact/hooks';
 import { sendMessage } from '@/shared/messages';
 import { MessageType, PersonItem, MediaItem, LibraryItem, LibraryStatus } from '@/shared/types';
@@ -7,7 +7,7 @@ import { DetailModal } from './DetailModal';
 export interface FilmographyProps {
   person: PersonItem;
   onBack: () => void;
-  onUnfollow: (e: MouseEvent) => void;
+  onUnfollow: () => void;
 }
 
 export function FilmographyView({ person: initialPerson, onBack, onUnfollow }: FilmographyProps) {
@@ -16,7 +16,8 @@ export function FilmographyView({ person: initialPerson, onBack, onUnfollow }: F
   const [loading, setLoading] = useState(false);
   const [libraryMap, setLibraryMap] = useState<Record<string, LibraryItem>>({});
   const [bioExpanded, setBioExpanded] = useState(false);
-  
+  const [confirmUnfollow, setConfirmUnfollow] = useState(false);
+
   // Modal selected item
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
 
@@ -213,13 +214,50 @@ export function FilmographyView({ person: initialPerson, onBack, onUnfollow }: F
     <div className="page-container filmography-container">
       {/* Topbar */}
       <div className="filmography-topbar">
-        <button onClick={onBack} className="filmography-filter-btn">
+        <button type="button" onClick={onBack} className="filmography-filter-btn">
           ← Back to filmmakers
         </button>
 
-        <button onClick={(e) => { onUnfollow(e); onBack(); }} className="filmography-filter-btn rescind">
-          Unfollow
-        </button>
+        {confirmUnfollow ? (
+          <div
+            className="filmography-unfollow-confirm"
+            role="group"
+            aria-labelledby="filmography-unfollow-label"
+            aria-describedby="filmography-unfollow-desc"
+          >
+            <span id="filmography-unfollow-label" className="filmography-unfollow-label">
+              Unfollow {person.name}?
+            </span>
+            <span id="filmography-unfollow-desc" className="sr-only">
+              Stop following this creator and remove them from your registry
+            </span>
+            <button
+              type="button"
+              className="filmography-filter-btn rescind"
+              onClick={() => {
+                onUnfollow();
+                onBack();
+              }}
+            >
+              Unfollow
+            </button>
+            <button
+              type="button"
+              className="filmography-filter-btn"
+              onClick={() => setConfirmUnfollow(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirmUnfollow(true)}
+            className="filmography-filter-btn rescind"
+          >
+            Unfollow
+          </button>
+        )}
       </div>
 
       {/* Person Bio Card */}
@@ -343,13 +381,15 @@ export function FilmographyView({ person: initialPerson, onBack, onUnfollow }: F
             const imdbRating = item.ratings.find((r) => r.provider === 'imdb');
 
             return (
-              <div
+              <button
                 key={item.id}
+                type="button"
                 onClick={() => setSelectedMedia(item)}
                 className="filmography-card"
+                aria-label={`Open ${item.canonicalTitle}${item.year ? `, ${item.year}` : ''}`}
               >
                 {/* Sprocket / Tick marks simulation border */}
-                <div className="filmography-sprockets">
+                <div className="filmography-sprockets" aria-hidden="true">
                   <span className="filmography-sprocket-hole" />
                   <span className="filmography-sprocket-hole" />
                   <span className="filmography-sprocket-hole" />
@@ -372,7 +412,7 @@ export function FilmographyView({ person: initialPerson, onBack, onUnfollow }: F
                   {item.posterUrl ? (
                     <img
                       src={item.posterUrl}
-                      alt={item.canonicalTitle}
+                      alt=""
                       loading="lazy"
                       decoding="async"
                       className="filmography-poster-img"
@@ -389,7 +429,7 @@ export function FilmographyView({ person: initialPerson, onBack, onUnfollow }: F
                 </div>
 
                 {/* Sprocket / Tick marks bottom simulation */}
-                <div className="filmography-sprockets bottom">
+                <div className="filmography-sprockets bottom" aria-hidden="true">
                   <span className="filmography-sprocket-hole" />
                   <span className="filmography-sprocket-hole" />
                   <span className="filmography-sprocket-hole" />
@@ -397,9 +437,9 @@ export function FilmographyView({ person: initialPerson, onBack, onUnfollow }: F
                 </div>
 
                 <div className="filmography-card-meta">
-                  <h4 className="filmography-card-title">
+                  <span className="filmography-card-title">
                     {item.canonicalTitle}
-                  </h4>
+                  </span>
                   <div className="filmography-card-info">
                     <span>{item.year || '—'}</span>
                     {libItem && libItem.status === 'watched' && libItem.userRating && (
@@ -409,7 +449,7 @@ export function FilmographyView({ person: initialPerson, onBack, onUnfollow }: F
                     )}
                   </div>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>

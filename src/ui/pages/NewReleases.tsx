@@ -4,6 +4,7 @@ import { sendMessage } from '@/shared/messages';
 import { MessageType, MediaItem } from '@/shared/types';
 import { DetailModal } from '../components/DetailModal';
 import { PlatformChips } from '../components/PlatformChips';
+import { ADD_TO_ARCHIVE_LABEL, IN_ARCHIVE_LABEL } from '@/shared/productCopy';
 
 export function NewReleases() {
   const [activeTab, setActiveTab] = useState<'movie' | 'tv'>('movie');
@@ -111,25 +112,25 @@ export function NewReleases() {
                   >
                     {media.canonicalTitle}
                   </button>
-                  <div style={{ marginTop: 8 }}>
+                  <div className="programme-chips-wrapper">
                     <PlatformChips availability={media.streamingAvailability} max={3} compact />
                   </div>
                 </div>
                 <div className="programme-meta">
                   {media.ratings?.find(r => r.provider === 'tmdb') && (
-                    <div style={{ color: 'var(--text-artwork)', marginBottom: 8 }}>
+                    <div className="programme-rating">
                       SCORE {media.ratings.find(r => r.provider === 'tmdb')!.score.toFixed(1)}
                     </div>
                   )}
                   {addedIds.has(media.id) ? (
-                    <span style={{ color: 'var(--text-meta)', fontSize: '10px' }}>In library</span>
+                    <span className="programme-archived">{IN_ARCHIVE_LABEL}</span>
                   ) : (
                     <button
+                      type="button"
                       className="optical-button"
-                      style={{ padding: '6px 12px', fontSize: '9px' }}
                       onClick={() => handleAddToLibrary(media)}
                     >
-                      Add to library
+                      {ADD_TO_ARCHIVE_LABEL}
                     </button>
                   )}
                 </div>

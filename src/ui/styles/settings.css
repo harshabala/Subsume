@@ -263,12 +263,16 @@
   border: 1px solid var(--border-restraint);
   color: var(--danger-fg);
   border-radius: 2px;
+  min-height: 32px;
   padding: 6px 14px;
   cursor: pointer;
   font-family: var(--font-ui);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.15em;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 /* ── Button Groups ──────────────────────────────────────────────────────── */
@@ -626,6 +630,31 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.alerts-delete-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.alerts-delete-confirm-label {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-meta);
+  width: 100%;
+  text-align: right;
+}
+
+.btn-sanctuary-danger:focus-visible,
+.alerts-delete-confirm .btn-sanctuary-restraint:focus-visible {
+  outline: 2px solid var(--accent-gold, var(--border-hero));
+  outline-offset: 2px;
 }
 
 .alerts-toggle-label {

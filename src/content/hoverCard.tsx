@@ -10,6 +10,8 @@ import {
 } from '@/shared/types';
 import { formatPlatformName } from '@/shared/platforms';
 import { setupShadowStyles } from '@/shared/shadowTokens';
+import { legacyStatusLabel } from '@/shared/statusLabels';
+import { mediumLabel, ADD_TO_ARCHIVE_LABEL } from '@/shared/productCopy';
 import { attachClosedShadow, isTrustedGesture } from '@/content/closedShadow';
 
 // ─── Positioning ─────────────────────────────────────────────────────
@@ -120,7 +122,7 @@ function HoverCard({
                   <span className="subsume-runtime">{mediaItem.runtimeMinutes} min</span>
                 )}
                 <span className="subsume-type-badge">
-                  {mediaItem.type === 'tv' ? 'TV Show' : 'Movie'}
+                  {mediumLabel(mediaItem.type)}
                 </span>
               </div>
             </div>
@@ -175,9 +177,7 @@ function HoverCard({
               <div className="subsume-library-status-left">
                 <span className="subsume-library-label">Status</span>
                 <span className={`subsume-status-badge status-${libraryItem.status}`}>
-                  {libraryItem.status === 'to-watch' ? 'To Watch' :
-                   libraryItem.status === 'watching' ? 'Watching' :
-                   libraryItem.status === 'watched' ? 'Watched' : 'Abandoned'}
+                  {legacyStatusLabel(libraryItem.status, mediaItem.type)}
                 </span>
               </div>
               {libraryItem.userRating !== undefined && (
@@ -218,7 +218,7 @@ function HoverCard({
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                   </svg>
-                  Add to archive
+                  {ADD_TO_ARCHIVE_LABEL}
                 </button>
                 <button
                   className="subsume-btn subsume-btn-secondary"
@@ -931,11 +931,11 @@ const HOVER_CARD_STYLES = `
   }
 
   .subsume-status-badge.status-watched {
-    color: #34d399;
+    color: var(--success, #3d8b5f);
   }
 
   .subsume-status-badge.status-abandoned {
-    color: #fca5a5;
+    color: var(--destructive, #ef4444);
   }
 
   .subsume-user-rating-badge {
@@ -1005,7 +1005,7 @@ const HOVER_CARD_STYLES = `
   .subsume-btn-danger {
     flex: 1;
     background: hsla(0, 84%, 60%, 0.1);
-    color: #fca5a5;
+    color: var(--destructive, #ef4444);
     border: 1px solid hsla(0, 84%, 60%, 0.2);
   }
 
@@ -1027,7 +1027,7 @@ const HOVER_CARD_STYLES = `
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
-    color: #34d399;
+    color: var(--success, #3d8b5f);
     font-size: 15px;
     font-weight: 600;
   }

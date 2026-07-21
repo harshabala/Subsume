@@ -4,6 +4,7 @@ import { sendMessage } from '@/shared/messages';
 import { MessageType, MediaItem, MediaType } from '@/shared/types';
 import { DetailModal } from '../components/DetailModal';
 import { SanctuaryMediaCard } from '../components/SanctuaryMediaCard';
+import { mediumLabel, ADD_TO_ARCHIVE_LABEL, IN_ARCHIVE_LABEL } from '@/shared/productCopy';
 
 const TYPE_OPTIONS: { value: MediaType | ''; label: string }[] = [
   { value: '', label: 'All works' },
@@ -169,12 +170,12 @@ export function Search() {
               onAdd={handleAdd}
               added={addedIds.has(item.id)}
               adding={addingId === item.id}
-              addLabel="Add to library"
-              addedLabel="In your library"
+              addLabel={ADD_TO_ARCHIVE_LABEL}
+              addedLabel={IN_ARCHIVE_LABEL}
               meta={
                 <div className="sanctuary-card-meta">
                   <span className="sanctuary-card-badge medium-badge" data-medium={item.type}>
-                    {item.type === 'book' ? 'Book' : item.type === 'tv' ? 'Series' : 'Film'}
+                    {mediumLabel(item.type)}
                   </span>
                   <span>{item.year || 'ARCHIVAL'}</span>
                   {item.ratings[0] && (

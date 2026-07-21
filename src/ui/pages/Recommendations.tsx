@@ -293,271 +293,282 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
 
       <header className="sanctuary-header">
         <div className="sanctuary-header-meta">
-          <span className="sanctuary-subtitle">Marquee Programme · Curated Selections</span>
+          <span className="sanctuary-subtitle">Marquee Programme · Ledger First</span>
         </div>
         <h1 className="sanctuary-title">Recommendations</h1>
         <p className="sanctuary-description">
-          Selections drawn from your viewing ledger, resonance notes, and favoured auteurs. A private programme, assembled for your picture palace.
+          Primary selections from your viewing ledger and resonance notes. Below, an optional house curator can deepen the programme when you ask.
         </p>
       </header>
 
-      {/* ── Existing rule-based section (soft crossfade loading ↔ content) ── */}
-      <div
-        key={loading ? 'rule-loading' : hasNoRecs ? 'rule-empty' : isGrouped ? 'rule-grouped' : 'rule-flat'}
-        className="recommendations-phase"
-      >
-        {loading ? (
-          <div className="sanctuary-empty-plaque">
-             <div className="subsume-spinner sanctuary-spinner-centered" />
-             <p className="sanctuary-plaque-text">Reviewing your repertoire...</p>
-          </div>
-        ) : hasNoRecs ? (
-          <div className="sanctuary-empty-plaque">
-            <span className="sanctuary-plaque-index">Programme awaiting</span>
-            <h3 className="sanctuary-plaque-title">Your Ledger Needs More Reels</h3>
-            <p className="sanctuary-plaque-text">
-              Curation grows with what you watch and remember. Add works to your archive, or mark screenings as complete.
-            </p>
-          </div>
-        ) : isGrouped ? (
-          <div className="recommendations-grouped-container">
-            {groupedRecs.map(({ seedTitle, recommendations }) => {
-              const isCollapsed = collapsedGroups[seedTitle] || false;
-              return (
-                <div key={seedTitle} className="recommendations-rule-group">
-                  <div 
-                    className="recommendations-rule-group-header"
-                    onClick={() => toggleGroup(seedTitle)}
-                    style={{ marginBottom: isCollapsed ? '0px' : '16px' }}
-                  >
-                    <span className="sanctuary-subtitle" style={{ marginRight: '4px' }}>[ {isCollapsed ? '+' : '–'} ]</span>
-                    <h3 className="recommendations-rule-group-title">
-                      Because you experienced <span className="recommendations-rule-group-title-highlight">{seedTitle}</span>
-                    </h3>
+      {/* ── Primary: rule-based / ledger recommendations (full width) ── */}
+      <section className="recommendations-ledger-section" aria-label="Ledger recommendations">
+        <div
+          key={loading ? 'rule-loading' : hasNoRecs ? 'rule-empty' : isGrouped ? 'rule-grouped' : 'rule-flat'}
+          className="recommendations-phase"
+        >
+          {loading ? (
+            <div className="sanctuary-empty-plaque">
+               <div className="subsume-spinner sanctuary-spinner-centered" />
+               <p className="sanctuary-plaque-text">Reviewing your repertoire...</p>
+            </div>
+          ) : hasNoRecs ? (
+            <div className="sanctuary-empty-plaque">
+              <span className="sanctuary-plaque-index">Programme awaiting</span>
+              <h3 className="sanctuary-plaque-title">Your Ledger Needs More Reels</h3>
+              <p className="sanctuary-plaque-text">
+                Ledger recommendations grow with what you watch and remember. Add works to your archive, or mark screenings as complete.
+              </p>
+            </div>
+          ) : isGrouped ? (
+            <div className="recommendations-grouped-container">
+              {groupedRecs.map(({ seedTitle, recommendations }) => {
+                const isCollapsed = collapsedGroups[seedTitle] || false;
+                return (
+                  <div key={seedTitle} className="recommendations-rule-group">
+                    <button
+                      type="button"
+                      className="recommendations-rule-group-header"
+                      onClick={() => toggleGroup(seedTitle)}
+                      aria-expanded={!isCollapsed}
+                      style={{ marginBottom: isCollapsed ? '0px' : '16px' }}
+                    >
+                      <span className="sanctuary-subtitle recommendations-rule-group-toggle" aria-hidden="true">
+                        [ {isCollapsed ? '+' : '–'} ]
+                      </span>
+                      <h3 className="recommendations-rule-group-title">
+                        Because you experienced <span className="recommendations-rule-group-title-highlight">{seedTitle}</span>
+                      </h3>
+                    </button>
+                    {!isCollapsed && (
+                      <div className="card-grid recommendations-rule-grid">
+                        {recommendations.map(r => (
+                          <RecommendationMediaCard
+                            key={r.media.id}
+                            media={r.media}
+                            explanation={r.explanation}
+                            onClick={() => setSelectedMedia(r.media)}
+                            onDismiss={dismissRecommendation}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  {!isCollapsed && (
-                    <div className="card-grid recommendations-rule-grid">
-                      {recommendations.map(r => (
-                        <RecommendationMediaCard
-                          key={r.media.id}
-                          media={r.media}
-                          explanation={r.explanation}
-                          onClick={() => setSelectedMedia(r.media)}
-                          onDismiss={dismissRecommendation}
-                        />
+                );
+              })}
+            </div>
+          ) : (
+            <div className="card-grid recommendations-rule-grid">
+              {recs.map(r => (
+                <RecommendationMediaCard
+                  key={r.media.id}
+                  media={r.media}
+                  explanation={r.explanation}
+                  onClick={() => setSelectedMedia(r.media)}
+                  onDismiss={dismissRecommendation}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ── Secondary: AI House Curator (progressive disclosure, closed by default) ── */}
+      <details className="recommendations-ai-section">
+        <summary className="recommendations-ai-summary">
+          <span className="recommendations-ai-summary-label">House Curator</span>
+          <span className="recommendations-ai-summary-hint">Optional · AI programme from your archive</span>
+        </summary>
+
+        <div className="recommendations-ai-body">
+          {/* Profile context strip */}
+          {watchProfile && (
+            <p className="sanctuary-subtitle recommendations-profile-summary">
+              Curated from {watchProfile.totalWatched} screening{watchProfile.totalWatched === 1 ? '' : 's'} in your ledger
+              {topGenres.length > 0 && ` · Favoured sensibilities: ${topGenres.join(', ')}`}
+            </p>
+          )}
+
+          <p className="recommendations-curator-explainer">
+            Your house curator reads ratings, emotional reflections, notes, wishlist entries, and favoured filmmakers from your archive,
+            then consults the programme service you configure in{' '}
+            {onOpenCuratorSettings ? (
+              <button type="button" className="recommendations-curator-link" onClick={onOpenCuratorSettings}>
+                Settings → AI curator
+              </button>
+            ) : (
+              <span>Settings → AI curator</span>
+            )}
+            .
+          </p>
+
+          {/* EMPTY STATE — AI history only, inside secondary section */}
+          {!hasEnoughHistory && !recsLoading && personalizedRecs.length === 0 && (
+            <div className="sanctuary-empty-plaque">
+              <span className="sanctuary-plaque-index">Three screenings to begin</span>
+              <h3 className="sanctuary-plaque-title">Personal Exhibition Portfolio</h3>
+              <p className="sanctuary-plaque-text">Rate at least three works so the house curator can sense your aesthetic inclinations.</p>
+            </div>
+          )}
+
+          {/* GENERATE BUTTON */}
+          {hasEnoughHistory && !recsLoading && personalizedRecs.length === 0 && !recsError && (
+            <div className="recommendations-action-container">
+              <button
+                type="button"
+                onClick={generatePersonalized}
+                className="sanctuary-action-button"
+              >
+                Curate my programme
+              </button>
+            </div>
+          )}
+
+          {/* NO KEY STATE — AI only */}
+          {recsError === 'no_key' && (
+            <div className="sanctuary-empty-plaque">
+              <span className="sanctuary-plaque-index">Curator key needed</span>
+              <h3 className="sanctuary-plaque-title">House Curator Awaiting Keys</h3>
+              <p className="sanctuary-plaque-text recommendations-plaque-text">
+                Add an API key in Settings to enable personalised curation from your archive.
+              </p>
+              <button
+                type="button"
+                onClick={generatePersonalized}
+                className="optical-button recommendations-retry-btn"
+              >
+                Try again
+              </button>
+            </div>
+          )}
+
+          {/* FAILED STATE — AI only */}
+          {recsError === 'failed' && (
+            <div className="sanctuary-empty-plaque">
+              <span className="sanctuary-plaque-index">Projection interrupted</span>
+              <h3 className="sanctuary-plaque-title">Curation Could Not Complete</h3>
+              <p className="sanctuary-plaque-text recommendations-plaque-text">
+                The programme service returned an error. Check your credentials or connection, then try again.
+              </p>
+              <button
+                type="button"
+                onClick={generatePersonalized}
+                className="optical-button recommendations-retry-btn"
+              >
+                Try again
+              </button>
+            </div>
+          )}
+
+          {/* LOADING STATE */}
+          {recsLoading && (
+            <div key="ai-loading" className="recommendations-phase">
+              <div className="recommendations-loading-grid">
+                {[0, 1, 2, 3].map(i => (
+                  <div key={i} className="recommendations-loading-card" style={{ animationDelay: `${i * 0.04}s` }} />
+                ))}
+              </div>
+              <p className="recommendations-loading-text recommendations-loading-text-editorial">
+                Curating exhibition from your aesthetic sensibilities...
+              </p>
+            </div>
+          )}
+
+          {/* RESULTS STATE */}
+          {!recsLoading && personalizedRecs.length > 0 && (
+            <div key="ai-results" className="recommendations-phase">
+              <div className="recommendations-results-header">
+                <span className="sanctuary-plaque-title recommendations-exhibition-title">Curator&apos;s programme</span>
+                <div className="recommendations-results-actions">
+                  {recGroups !== null && (
+                    <div className="recommendations-view-mode-toggle">
+                      {(['grouped', 'flat'] as const).map(mode => (
+                        <button
+                          type="button"
+                          key={mode}
+                          onClick={() => setViewMode(mode)}
+                          className={`recommendations-view-mode-btn ${viewMode === mode ? 'recommendations-view-mode-btn-active' : 'recommendations-view-mode-btn-inactive'}`}
+                        >
+                          {mode === 'grouped' ? 'By programme' : 'Full marquee'}
+                        </button>
                       ))}
                     </div>
                   )}
+                  <button
+                    type="button"
+                    onClick={generatePersonalized}
+                    className="optical-button recommendations-regen-btn"
+                  >
+                    Refresh programme
+                  </button>
                 </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="card-grid recommendations-rule-grid">
-            {recs.map(r => (
-              <RecommendationMediaCard
-                key={r.media.id}
-                media={r.media}
-                explanation={r.explanation}
-                onClick={() => setSelectedMedia(r.media)}
-                onDismiss={dismissRecommendation}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+              </div>
 
-      {/* ── Phase 4: AI Personalized Section ── */}
-      <div className="recommendations-ai-section">
+              {(viewMode === 'flat' || recGroups === null) && (
+                <div className="recommendations-flat-grid">
+                  {personalizedRecs.map(rec => (
+                    <RecommendationAiCard
+                      key={rec.tmdbId || rec.title}
+                      rec={rec}
+                      showSeedPill={true}
+                      isAdded={aiAddedIds.has(rec.tmdbId)}
+                      onCardClick={setSelectedMedia}
+                      onAddClick={addAiRecToLibrary}
+                      onDismiss={dismissRecommendation}
+                    />
+                  ))}
+                </div>
+              )}
 
-        {/* Profile context strip */}
-        {watchProfile && (
-          <p className="sanctuary-subtitle" style={{ textAlign: 'center', marginBottom: '24px' }}>
-            Curated from {watchProfile.totalWatched} screening{watchProfile.totalWatched === 1 ? '' : 's'} in your ledger
-            {topGenres.length > 0 && ` · Favoured sensibilities: ${topGenres.join(', ')}`}
-          </p>
-        )}
-
-        <p className="recommendations-curator-explainer">
-          Your house curator reads ratings, emotional reflections, notes, wishlist entries, and favoured filmmakers from your archive,
-          then consults the programme service you configure in{' '}
-          {onOpenCuratorSettings ? (
-            <button type="button" className="recommendations-curator-link" onClick={onOpenCuratorSettings}>
-              Settings → AI curator
-            </button>
-          ) : (
-            <span>Settings → AI curator</span>
+              {viewMode === 'grouped' && recGroups !== null && (
+                <div className="recommendations-grouped-container">
+                  {recGroups.map(group => (
+                    <div key={group.seedTitle}>
+                      <div className="recommendations-grouped-section-header">
+                        <span className="recommendations-grouped-section-bar" />
+                        <span className="recommendations-grouped-section-title">
+                          Curated around <span className="recommendations-grouped-seed-title">{group.seedTitle}</span>
+                        </span>
+                      </div>
+                      <div className="recommendations-grouped-section-scroll">
+                        {group.recommendations.map(rec => (
+                          <RecommendationAiCard
+                            key={rec.tmdbId || rec.title}
+                            rec={rec}
+                            showSeedPill={false}
+                            isAdded={aiAddedIds.has(rec.tmdbId)}
+                            onCardClick={setSelectedMedia}
+                            onAddClick={addAiRecToLibrary}
+                            onDismiss={dismissRecommendation}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  {ungroupedRecs.length > 0 && (
+                    <div>
+                      <div className="sanctuary-plaque-title recommendations-further-title">Further selections</div>
+                      <div className="recommendations-flat-grid">
+                        {ungroupedRecs.map(rec => (
+                          <RecommendationAiCard
+                            key={rec.tmdbId || rec.title}
+                            rec={rec}
+                            showSeedPill={true}
+                            isAdded={aiAddedIds.has(rec.tmdbId)}
+                            onCardClick={setSelectedMedia}
+                            onAddClick={addAiRecToLibrary}
+                            onDismiss={dismissRecommendation}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           )}
-          .
-        </p>
-
-        {/* EMPTY STATE */}
-        {!hasEnoughHistory && !recsLoading && personalizedRecs.length === 0 && (
-          <div className="sanctuary-empty-plaque">
-            <span className="sanctuary-plaque-index">Three screenings to begin</span>
-            <h3 className="sanctuary-plaque-title">Personal Exhibition Portfolio</h3>
-            <p className="sanctuary-plaque-text">Rate at least three works so Subsume can sense your aesthetic inclinations.</p>
-          </div>
-        )}
-
-        {/* GENERATE BUTTON */}
-        {hasEnoughHistory && !recsLoading && personalizedRecs.length === 0 && !recsError && (
-          <div className="recommendations-action-container">
-            <button
-              onClick={generatePersonalized}
-              className="sanctuary-action-button"
-            >
-              Curate my programme
-            </button>
-          </div>
-        )}
-
-        {/* NO KEY STATE */}
-        {recsError === 'no_key' && (
-          <div className="sanctuary-empty-plaque">
-            <span className="sanctuary-plaque-index">Curator key needed</span>
-            <h3 className="sanctuary-plaque-title">House Curator Awaiting Keys</h3>
-            <p className="sanctuary-plaque-text" style={{ marginBottom: '16px' }}>
-              Add an API key in Settings to enable personalised curation from your archive.
-            </p>
-            <button
-              onClick={generatePersonalized}
-              className="optical-button"
-              style={{ padding: '8px 20px' }}
-            >
-              Try again
-            </button>
-          </div>
-        )}
-
-        {/* FAILED STATE */}
-        {recsError === 'failed' && (
-          <div className="sanctuary-empty-plaque">
-            <span className="sanctuary-plaque-index">Projection interrupted</span>
-            <h3 className="sanctuary-plaque-title">Curation Could Not Complete</h3>
-            <p className="sanctuary-plaque-text" style={{ marginBottom: '16px' }}>
-              The programme service returned an error. Check your credentials or connection, then try again.
-            </p>
-            <button
-              onClick={generatePersonalized}
-              className="optical-button"
-              style={{ padding: '8px 20px' }}
-            >
-              Try again
-            </button>
-          </div>
-        )}
-
-        {/* LOADING STATE */}
-        {recsLoading && (
-          <div key="ai-loading" className="recommendations-phase">
-            <div className="recommendations-loading-grid">
-              {[0, 1, 2, 3].map(i => (
-                <div key={i} className="recommendations-loading-card" style={{ animationDelay: `${i * 0.04}s` }} />
-              ))}
-            </div>
-            <p className="recommendations-loading-text" style={{ fontFamily: 'var(--font-editorial)', fontStyle: 'italic' }}>
-              Curating exhibition from your aesthetic sensibilities...
-            </p>
-          </div>
-        )}
-
-        {/* RESULTS STATE */}
-        {!recsLoading && personalizedRecs.length > 0 && (
-          <div key="ai-results" className="recommendations-phase">
-            {/* Header row */}
-            <div className="recommendations-results-header">
-              <span className="sanctuary-plaque-title" style={{ margin: 0, fontSize: '20px' }}>Curator&apos;s programme</span>
-              <div className="recommendations-results-actions">
-                {recGroups !== null && (
-                  <div className="recommendations-view-mode-toggle">
-                    {(['grouped', 'flat'] as const).map(mode => (
-                      <button
-                        key={mode}
-                        onClick={() => setViewMode(mode)}
-                        className={`recommendations-view-mode-btn ${viewMode === mode ? 'recommendations-view-mode-btn-active' : 'recommendations-view-mode-btn-inactive'}`}
-                      >
-                        {mode === 'grouped' ? 'By programme' : 'Full marquee'}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                <button
-                  onClick={generatePersonalized}
-                  className="optical-button"
-                  style={{ padding: '6px 14px', fontSize: '10px' }}
-                >
-                  Refresh programme
-                </button>
-              </div>
-            </div>
-
-            {/* FLAT VIEW */}
-            {(viewMode === 'flat' || recGroups === null) && (
-              <div className="recommendations-flat-grid">
-                {personalizedRecs.map(rec => (
-                  <RecommendationAiCard
-                    key={rec.tmdbId || rec.title}
-                    rec={rec}
-                    showSeedPill={true}
-                    isAdded={aiAddedIds.has(rec.tmdbId)}
-                    onCardClick={setSelectedMedia}
-                    onAddClick={addAiRecToLibrary}
-                    onDismiss={dismissRecommendation}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* GROUPED VIEW */}
-            {viewMode === 'grouped' && recGroups !== null && (
-              <div className="recommendations-grouped-container">
-                {recGroups.map(group => (
-                  <div key={group.seedTitle}>
-                    <div className="recommendations-grouped-section-header">
-                      <span className="recommendations-grouped-section-bar" />
-                      <span className="recommendations-grouped-section-title">
-                        Curated around <span style={{ fontFamily: 'var(--font-editorial)', fontStyle: 'italic', color: 'var(--text-reflection)' }}>{group.seedTitle}</span>
-                      </span>
-                    </div>
-                    <div className="recommendations-grouped-section-scroll">
-                      {group.recommendations.map(rec => (
-                        <RecommendationAiCard
-                          key={rec.tmdbId || rec.title}
-                          rec={rec}
-                          showSeedPill={false}
-                          isAdded={aiAddedIds.has(rec.tmdbId)}
-                          onCardClick={setSelectedMedia}
-                          onAddClick={addAiRecToLibrary}
-                          onDismiss={dismissRecommendation}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-                {ungroupedRecs.length > 0 && (
-                  <div>
-                    <div className="sanctuary-plaque-title" style={{ fontSize: '18px', marginTop: '24px' }}>Further selections</div>
-                    <div className="recommendations-flat-grid">
-                      {ungroupedRecs.map(rec => (
-                        <RecommendationAiCard
-                          key={rec.tmdbId || rec.title}
-                          rec={rec}
-                          showSeedPill={true}
-                          isAdded={aiAddedIds.has(rec.tmdbId)}
-                          onCardClick={setSelectedMedia}
-                          onAddClick={addAiRecToLibrary}
-                          onDismiss={dismissRecommendation}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+        </div>
+      </details>
 
       {selectedMedia && (
         <DetailModal

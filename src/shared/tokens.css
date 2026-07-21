@@ -197,6 +197,11 @@
   --danger-border: rgba(239, 68, 68, 0.25);
   --danger-bg-solid: hsl(0, 70%, 50%);
   --danger-on-fg: #ffffff;
+  /* Subdued success green (literary chrome — not Tailwind emerald) */
+  --success: #3d8b5f;
+  --success-fg: #3d8b5f;
+  --success-bg: rgba(61, 139, 95, 0.12);
+  --success-border: rgba(61, 139, 95, 0.28);
   --warning: #fbbf24;
   --warning-fg: rgb(255, 153, 0);
   --warning-bg: rgba(255, 153, 0, 0.1);
@@ -437,6 +442,10 @@
     --danger-border: rgba(197, 48, 48, 0.25);
     --danger-bg-solid: #c53030;
     --danger-on-fg: #ffffff;
+    --success: #2f6b4a;
+    --success-fg: #2f6b4a;
+    --success-bg: rgba(47, 107, 74, 0.1);
+    --success-border: rgba(47, 107, 74, 0.28);
     --warning-fg: #b45309;
     --warning-bg: rgba(180, 83, 9, 0.08);
     --warning-border: rgba(180, 83, 9, 0.25);

@@ -33,11 +33,16 @@ interface NavItem {
   icon: string;
 }
 
+/** Primary explore strip — max 4 destinations in desktop subnav */
 const EXPLORE_NAV: NavItem[] = [
   { key: 'search', label: 'Search', icon: 'search' },
   { key: 'recommendations', label: 'Recommendations', icon: 'auto_awesome' },
   { key: 'new-releases', label: 'Now Showing', icon: 'new_releases' },
-  { key: 'people', label: 'Filmmakers', icon: 'movie' },
+  { key: 'people', label: 'Creators', icon: 'movie' },
+];
+
+/** Secondary destinations — drawer only under House tools */
+const HOUSE_TOOLS_NAV: NavItem[] = [
   { key: 'stats', label: 'House Stats', icon: 'bar_chart' },
   { key: 'alerts', label: 'Premiere Alerts', icon: 'notifications' },
 ];
@@ -52,7 +57,16 @@ function getInitialPage(): Page {
   const page = new URLSearchParams(window.location.search).get('page');
   if (page === 'alerts') return 'alerts';
   if (page === 'logs') return 'settings';
-  return 'home';
+  // Returning users land in Archive unless deep-linked via ?page=
+  if (page === 'home' || page === 'discovery') return 'home';
+  if (page === 'library' || page === 'archive') return 'library';
+  if (page === 'search') return 'search';
+  if (page === 'recommendations') return 'recommendations';
+  if (page === 'new-releases' || page === 'now-showing') return 'new-releases';
+  if (page === 'people' || page === 'creators') return 'people';
+  if (page === 'stats') return 'stats';
+  if (page === 'settings') return 'settings';
+  return 'library';
 }
 
 function NavIcon({ item }: { item: NavItem }) {
@@ -358,8 +372,23 @@ export function App() {
             ))}
           </div>
           <div className="side-menu-section">
-            <div className="side-menu-section-label">Further out</div>
+            <div className="side-menu-section-label">Explore</div>
             {EXPLORE_NAV.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                className={`side-menu-item ${currentPage === item.key ? 'active' : ''}`}
+                onClick={() => goToPage(item.key)}
+                {...prefetchProps(item.key)}
+              >
+                <span className="material-symbols-outlined side-menu-roman" aria-hidden="true">{item.icon}</span>
+                <span className="side-menu-label">{item.label}</span>
+              </button>
+            ))}
+          </div>
+          <div className="side-menu-section">
+            <div className="side-menu-section-label">House tools</div>
+            {HOUSE_TOOLS_NAV.map((item) => (
               <button
                 key={item.key}
                 type="button"

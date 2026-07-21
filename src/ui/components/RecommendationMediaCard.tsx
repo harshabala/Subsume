@@ -1,5 +1,6 @@
 import { h } from 'preact';
 import { MediaItem } from '@/shared/types';
+import { mediumLabel } from '@/shared/productCopy';
 import '../styles/recommendations.css';
 
 interface RecommendationMediaCardProps {
@@ -16,7 +17,7 @@ export function RecommendationMediaCard({
   onDismiss,
 }: RecommendationMediaCardProps) {
   const tmdbRating = media.ratings?.find(r => r.provider === 'tmdb');
-  const isBook = media.type === 'book';
+  const typeLabel = mediumLabel(media.type);
 
   return (
     <div className="media-card recommendation-media-card">
@@ -33,15 +34,13 @@ export function RecommendationMediaCard({
              ) : (
                <div className="empty-poster recommendation-media-card-poster-empty">No Image</div>
              )}
-             {isBook && (
-               <span className="recommendation-type-badge" aria-label="Book">Book</span>
-             )}
+             <span className="recommendation-type-badge" aria-label={typeLabel}>{typeLabel}</span>
            </div>
            <div>
              <h4 className="media-card-title">{media.canonicalTitle}</h4>
              <div className="media-card-meta">
                <span>{media.year}</span>
-               {isBook && <span className="recommendation-type-badge-inline">Book</span>}
+               <span className="recommendation-type-badge-inline">{typeLabel}</span>
                {tmdbRating && (
                   <span className="media-card-rating">
                     SCORE {tmdbRating.score.toFixed(1)}

@@ -1,5 +1,6 @@
 import { h, ComponentChildren } from 'preact';
 import { MediaItem } from '@/shared/types';
+import { mediumLabel, ADD_TO_ARCHIVE_LABEL, IN_ARCHIVE_LABEL } from '@/shared/productCopy';
 
 export interface SanctuaryMediaCardProps {
   media: MediaItem;
@@ -27,8 +28,8 @@ export function SanctuaryMediaCard({
   onAdd,
   added = false,
   adding = false,
-  addLabel = 'Add to archive',
-  addedLabel = 'In archive',
+  addLabel = ADD_TO_ARCHIVE_LABEL,
+  addedLabel = IN_ARCHIVE_LABEL,
   afterSynopsis,
   meta,
 }: SanctuaryMediaCardProps) {
@@ -47,8 +48,7 @@ export function SanctuaryMediaCard({
     </div>
   );
 
-  const mediumLabel =
-    media.type === 'book' ? 'Book' : media.type === 'tv' ? 'Series' : 'Film';
+  const typeLabel = mediumLabel(media.type);
 
   const body = (
     <div className="sanctuary-card-content">
@@ -59,7 +59,7 @@ export function SanctuaryMediaCard({
             className="sanctuary-card-badge medium-badge"
             data-medium={media.type}
           >
-            {mediumLabel}
+            {typeLabel}
           </span>
           {media.year ? <span>{media.year}</span> : null}
         </div>
