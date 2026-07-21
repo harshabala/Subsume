@@ -11,6 +11,7 @@ import { MessageType, type MediaItem } from '@/shared/types';
 import { logger } from '@/shared/logger';
 import { setupShadowStyles } from '@/shared/shadowTokens';
 import { truncateForExcerpt } from '@/shared/textTruncate';
+import { attachClosedShadow, isTrustedGesture } from '@/content/closedShadow';
 
 const HOST_ATTR = 'data-subsume-book-plaque';
 const STACK_HOST_ID = 'subsume-book-plaque-stack';
@@ -238,7 +239,7 @@ export class BookPlaqueManager {
       'position:absolute;bottom:8px;right:8px;z-index:2147483645;pointer-events:none;width:auto;height:auto;';
     positionParent.appendChild(host);
 
-    const shadowRoot = host.attachShadow({ mode: 'open' });
+    const shadowRoot = attachClosedShadow(host);
     setupShadowStyles(shadowRoot, PLAQUE_STYLES);
 
     const state: PlaqueState = {
@@ -269,7 +270,7 @@ export class BookPlaqueManager {
     ].join(';');
     document.documentElement.appendChild(host);
 
-    const shadowRoot = host.attachShadow({ mode: 'open' });
+    const shadowRoot = attachClosedShadow(host);
     setupShadowStyles(shadowRoot, PLAQUE_STYLES);
 
     const state: PlaqueState = {
@@ -305,7 +306,7 @@ export class BookPlaqueManager {
     ].join(';');
     document.documentElement.appendChild(host);
 
-    const shadowRoot = host.attachShadow({ mode: 'open' });
+    const shadowRoot = attachClosedShadow(host);
     setupShadowStyles(
       shadowRoot,
       `${PLAQUE_STYLES}
@@ -345,7 +346,7 @@ export class BookPlaqueManager {
     plaqueHost.style.cssText = 'pointer-events:auto;';
     slot.appendChild(plaqueHost);
 
-    const shadowRoot = plaqueHost.attachShadow({ mode: 'open' });
+    const shadowRoot = attachClosedShadow(plaqueHost);
     setupShadowStyles(shadowRoot, PLAQUE_STYLES);
 
     const state: PlaqueState = {
@@ -383,6 +384,7 @@ export class BookPlaqueManager {
 
       root.style.cursor = 'pointer';
       root.addEventListener('click', (e) => {
+        if (!isTrustedGesture(e)) return;
         e.preventDefault();
         e.stopPropagation();
         this.handleOpenDetail(state);
@@ -406,6 +408,7 @@ export class BookPlaqueManager {
       reflect.textContent = 'Reflect';
       reflect.title = 'Inscribe what stayed with you';
       reflect.addEventListener('click', (e) => {
+        if (!isTrustedGesture(e)) return;
         e.preventDefault();
         e.stopPropagation();
         this.handleReflect(state);
@@ -424,6 +427,7 @@ export class BookPlaqueManager {
       add.textContent = 'Add';
       add.title = 'Add to archive';
       add.addEventListener('click', (e) => {
+        if (!isTrustedGesture(e)) return;
         e.preventDefault();
         e.stopPropagation();
         void this.handleAdd(state, add);

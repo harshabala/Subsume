@@ -1,7 +1,7 @@
 /**
  * Act I Discovery Plaque Injection
  *
- * Injects Sleek Museum Catalogue Plaques encapsulated inside open Shadow DOM
+ * Injects Sleek Museum Catalogue Plaques encapsulated inside closed Shadow DOM
  * onto detected poster images on host webpages.
  */
 
@@ -10,6 +10,7 @@ import { sendMessage } from '@/shared/messages';
 import { MessageType, MediaRating, PosterMatch } from '@/shared/types';
 import { logger } from '@/shared/logger';
 import { setupShadowStyles } from '@/shared/shadowTokens';
+import { attachClosedShadow, isTrustedGesture } from '@/content/closedShadow';
 
 const BADGE_ATTR = 'data-subsume-badge';
 const WRAP_CLASS = 'subsume-poster-wrap';
@@ -65,6 +66,7 @@ function MuseumPlaqueOverlay({ match, onReflect }: PlaqueProps) {
       {
         className: 'museum-plaque',
         onClick: (e: MouseEvent) => {
+          if (!isTrustedGesture(e)) return;
           e.preventDefault();
           e.stopPropagation();
           onReflect();
@@ -245,7 +247,7 @@ export class MuseumPlaqueManager {
     host.style.cssText = 'position:absolute;inset:0;pointer-events:none;';
     wrapper.appendChild(host);
 
-    const shadowRoot = host.attachShadow({ mode: 'open' });
+    const shadowRoot = attachClosedShadow(host);
     setupShadowStyles(shadowRoot, PLAQUE_STYLES);
 
     const mount = document.createElement('div');

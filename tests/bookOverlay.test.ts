@@ -1,7 +1,15 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { BookPlaqueManager, findBookPlaqueAnchor } from '@/content/bookOverlay';
 import type { BookPlaqueMatch } from '@/content/bookOverlay';
+import {
+  getClosedShadowRoot,
+  dispatchTrustedClick,
+} from '@/content/closedShadow';
 import { MessageType } from '@/shared/types';
+
+function plaqueShadow(host: Element | null): ShadowRoot | undefined {
+  return host instanceof HTMLElement ? getClosedShadowRoot(host) : undefined;
+}
 
 describe('BookPlaqueManager (bookOverlay.ts)', () => {
   afterEach(() => {
@@ -20,7 +28,7 @@ describe('BookPlaqueManager (bookOverlay.ts)', () => {
     ...overrides,
   });
 
-  it('creates a manager, attaches a plaque near an element, and destroy cleans DOM', () => {
+  it('creates a manager, attaches a plaque in closed Shadow DOM, and destroy cleans DOM', () => {
     const manager = new BookPlaqueManager();
     const img = document.createElement('img');
     img.src = 'https://example.com/gatsby.jpg';
@@ -29,11 +37,14 @@ describe('BookPlaqueManager (bookOverlay.ts)', () => {
     manager.attachNear(img, baseMatch());
 
     expect(manager.size).toBe(1);
-    const host = document.querySelector('[data-subsume-book-plaque]');
+    const host = document.querySelector('[data-subsume-book-plaque]') as HTMLElement | null;
     expect(host).not.toBeNull();
-    expect(host?.shadowRoot).not.toBeNull();
+    // Closed mode: host.shadowRoot is null to the page
+    expect(host?.shadowRoot).toBeNull();
+    const shadow = plaqueShadow(host);
+    expect(shadow).toBeDefined();
 
-    const plaque = host?.shadowRoot?.querySelector('.book-plaque');
+    const plaque = shadow?.querySelector('.book-plaque');
     expect(plaque).not.toBeNull();
     expect(plaque?.textContent).toContain('★');
     expect(plaque?.textContent).toContain('Reflect');
@@ -54,8 +65,8 @@ describe('BookPlaqueManager (bookOverlay.ts)', () => {
 
     manager.attachNear(el, baseMatch({ title: 'Beloved', inLibrary: true, status: 'watched' }));
 
-    const host = document.querySelector('[data-subsume-book-plaque]');
-    const plaque = host?.shadowRoot?.querySelector('.book-plaque');
+    const host = document.querySelector('[data-subsume-book-plaque]') as HTMLElement | null;
+    const plaque = plaqueShadow(host)?.querySelector('.book-plaque');
     expect(plaque?.textContent).toContain('In archive');
     expect(plaque?.textContent).toContain('Beloved');
     expect(plaque?.querySelector('.plaque-add')).toBeNull();
@@ -71,6 +82,8 @@ describe('BookPlaqueManager (bookOverlay.ts)', () => {
     expect(manager.size).toBe(2);
     const stack = document.getElementById('subsume-book-plaque-stack');
     expect(stack).not.toBeNull();
+    expect(stack?.shadowRoot).toBeNull();
+    expect(getClosedShadowRoot(stack!)).toBeDefined();
 
     manager.destroy();
     expect(document.getElementById('subsume-book-plaque-stack')).toBeNull();
@@ -86,7 +99,7 @@ describe('BookPlaqueManager (bookOverlay.ts)', () => {
     manager.destroy();
   });
 
-  it('dispatches OPEN_CAPTURE_CANVAS on Reflect click', () => {
+  it('dispatches OPEN_CAPTURE_CANVAS on trusted Reflect click', () => {
     vi.mocked(chrome.runtime.sendMessage).mockImplementation((_msg, cb) => {
       if (typeof cb === 'function') cb({ success: true, data: { success: true } });
       return true as unknown as void;
@@ -97,10 +110,10 @@ describe('BookPlaqueManager (bookOverlay.ts)', () => {
     document.body.appendChild(el);
     manager.attachNear(el, baseMatch());
 
-    const host = document.querySelector('[data-subsume-book-plaque]');
-    const reflect = host?.shadowRoot?.querySelector('.plaque-action') as HTMLButtonElement;
+    const host = document.querySelector('[data-subsume-book-plaque]') as HTMLElement | null;
+    const reflect = plaqueShadow(host)?.querySelector('.plaque-action') as HTMLButtonElement;
     expect(reflect).not.toBeNull();
-    reflect.click();
+    dispatchTrustedClick(reflect);
 
     expect(chrome.runtime.sendMessage).toHaveBeenCalled();
     const sent = vi.mocked(chrome.runtime.sendMessage).mock.calls[0][0] as {
@@ -113,7 +126,7 @@ describe('BookPlaqueManager (bookOverlay.ts)', () => {
     manager.destroy();
   });
 
-  it('Add sends ADD_TO_ARCHIVE with to-watch status', async () => {
+  it('Add sends ADD_TO_ARCHIVE with to-watch status on trusted click', async () => {
     vi.mocked(chrome.runtime.sendMessage).mockImplementation((_msg, cb) => {
       if (typeof cb === 'function') cb({ success: true, data: { added: true } });
       return true as unknown as void;
@@ -136,9 +149,9 @@ describe('BookPlaqueManager (bookOverlay.ts)', () => {
     };
     manager.attachNear(el, baseMatch({ media }));
 
-    const host = document.querySelector('[data-subsume-book-plaque]');
-    const add = host?.shadowRoot?.querySelector('.plaque-add') as HTMLButtonElement;
-    add.click();
+    const host = document.querySelector('[data-subsume-book-plaque]') as HTMLElement | null;
+    const add = plaqueShadow(host)?.querySelector('.plaque-add') as HTMLButtonElement;
+    dispatchTrustedClick(add);
 
     // allow async handler
     await vi.waitFor(() => {
@@ -154,6 +167,64 @@ describe('BookPlaqueManager (bookOverlay.ts)', () => {
     expect(archiveCall?.payload.status).toBe('to-watch');
     expect(archiveCall?.payload.workId).toBe('openlibrary_work_OL123W');
 
+    manager.destroy();
+  });
+
+  it('ignores untrusted Add click (no ADD_TO_ARCHIVE)', async () => {
+    vi.mocked(chrome.runtime.sendMessage).mockImplementation((_msg, cb) => {
+      if (typeof cb === 'function') cb({ success: true, data: { added: true } });
+      return true as unknown as void;
+    });
+
+    const manager = new BookPlaqueManager();
+    const el = document.createElement('div');
+    document.body.appendChild(el);
+    manager.attachNear(
+      el,
+      baseMatch({
+        media: {
+          id: 'openlibrary_work_OL123W',
+          canonicalTitle: 'The Great Gatsby',
+          type: 'book',
+          year: 1925,
+          genres: [],
+          ratings: [],
+          cast: [],
+          directors: [],
+          createdAt: 0,
+          updatedAt: 0,
+        },
+      })
+    );
+
+    const host = document.querySelector('[data-subsume-book-plaque]') as HTMLElement | null;
+    const add = plaqueShadow(host)?.querySelector('.plaque-add') as HTMLButtonElement;
+    // jsdom .click() / dispatchEvent produce isTrusted=false
+    add.click();
+
+    // Give async handler a chance if it wrongly fired
+    await new Promise((r) => setTimeout(r, 30));
+
+    expect(chrome.runtime.sendMessage).not.toHaveBeenCalled();
+    manager.destroy();
+  });
+
+  it('ignores untrusted Reflect click', () => {
+    vi.mocked(chrome.runtime.sendMessage).mockImplementation((_msg, cb) => {
+      if (typeof cb === 'function') cb({ success: true, data: { success: true } });
+      return true as unknown as void;
+    });
+
+    const manager = new BookPlaqueManager();
+    const el = document.createElement('div');
+    document.body.appendChild(el);
+    manager.attachNear(el, baseMatch());
+
+    const host = document.querySelector('[data-subsume-book-plaque]') as HTMLElement | null;
+    const reflect = plaqueShadow(host)?.querySelector('.plaque-action') as HTMLButtonElement;
+    reflect.click();
+
+    expect(chrome.runtime.sendMessage).not.toHaveBeenCalled();
     manager.destroy();
   });
 });

@@ -10,6 +10,7 @@ import {
 } from '@/shared/types';
 import { formatPlatformName } from '@/shared/platforms';
 import { setupShadowStyles } from '@/shared/shadowTokens';
+import { attachClosedShadow, isTrustedGesture } from '@/content/closedShadow';
 
 // ─── Positioning ─────────────────────────────────────────────────────
 
@@ -190,10 +191,16 @@ function HoverCard({
             </div>
           )}
 
-          {/* Actions */}
+          {/* Actions — only real user gestures (ignore synthetic page clicks) */}
           <div className="subsume-actions">
             {inLibrary ? (
-              <button className="subsume-btn subsume-btn-danger" onClick={onRemove}>
+              <button
+                className="subsume-btn subsume-btn-danger"
+                onClick={(e) => {
+                  if (!isTrustedGesture(e)) return;
+                  onRemove();
+                }}
+              >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                 </svg>
@@ -201,13 +208,25 @@ function HoverCard({
               </button>
             ) : (
               <>
-                <button className="subsume-btn subsume-btn-primary" onClick={() => onAdd('movie')}>
+                <button
+                  className="subsume-btn subsume-btn-primary"
+                  onClick={(e) => {
+                    if (!isTrustedGesture(e)) return;
+                    onAdd('movie');
+                  }}
+                >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                   </svg>
                   Add to archive
                 </button>
-                <button className="subsume-btn subsume-btn-secondary" onClick={() => onAdd('tv')}>
+                <button
+                  className="subsume-btn subsume-btn-secondary"
+                  onClick={(e) => {
+                    if (!isTrustedGesture(e)) return;
+                    onAdd('tv');
+                  }}
+                >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                   </svg>
@@ -246,10 +265,10 @@ export class HoverCardManager {
   private syncListener: ((message: unknown, sender: chrome.runtime.MessageSender) => void) | null = null;
 
   constructor() {
-    // Create shadow DOM container
+    // Create closed shadow DOM container (page cannot reach privileged buttons)
     this.container = document.createElement('div');
     this.container.id = 'subsume-hover-root';
-    this.shadowRoot = this.container.attachShadow({ mode: 'open' });
+    this.shadowRoot = attachClosedShadow(this.container);
 
     setupShadowStyles(this.shadowRoot, HOVER_CARD_STYLES);
 

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { MuseumPlaqueManager, pickDisplayRating } from '@/content/overlay';
+import { getClosedShadowRoot, dispatchTrustedClick } from '@/content/closedShadow';
 import { PosterMatch } from '@/shared/types';
 
 describe('Act I Discovery Plaque Injection (overlay.ts)', () => {
@@ -13,7 +14,7 @@ describe('Act I Discovery Plaque Injection (overlay.ts)', () => {
     document.body.innerHTML = '';
   });
 
-  it('encapsulates museum plaques in open Shadow DOM and dispatches OPEN_CAPTURE_CANVAS on click', () => {
+  it('encapsulates museum plaques in closed Shadow DOM and dispatches OPEN_CAPTURE_CANVAS on trusted click', () => {
     const manager = new MuseumPlaqueManager();
     const img = document.createElement('img');
     document.body.appendChild(img);
@@ -33,12 +34,13 @@ describe('Act I Discovery Plaque Injection (overlay.ts)', () => {
     // Check wrapper & shadow host
     const wrapper = img.parentElement;
     expect(wrapper).not.toBeNull();
-    const host = wrapper?.querySelector('div[data-subsume-badge]');
+    const host = wrapper?.querySelector('div[data-subsume-badge]') as HTMLElement | null;
     expect(host).not.toBeNull();
 
-    // Check open shadow root
-    const shadowRoot = host?.shadowRoot;
-    expect(shadowRoot).not.toBeNull();
+    // Closed shadow root: not visible via host.shadowRoot
+    expect(host?.shadowRoot).toBeNull();
+    const shadowRoot = getClosedShadowRoot(host!);
+    expect(shadowRoot).toBeDefined();
 
     // Check plaque rendering inside shadow root
     const plaque = shadowRoot?.querySelector('.museum-plaque') as HTMLElement;
@@ -57,11 +59,41 @@ describe('Act I Discovery Plaque Injection (overlay.ts)', () => {
     captureListener = eventListener;
     window.addEventListener('OPEN_CAPTURE_CANVAS', eventListener);
 
-    plaque.click();
+    dispatchTrustedClick(plaque);
 
     expect(eventListener).toHaveBeenCalledTimes(1);
     const customEvent = eventListener.mock.calls[0][0] as CustomEvent;
     expect(customEvent.detail.match.tmdbId).toBe('12345');
+
+    manager.destroy();
+  });
+
+  it('ignores untrusted Reflect click on museum plaque', () => {
+    const manager = new MuseumPlaqueManager();
+    const img = document.createElement('img');
+    document.body.appendChild(img);
+
+    manager.attachBadge(img, {
+      tmdbId: '99',
+      title: 'Test',
+      year: 2000,
+      type: 'movie',
+      posterPath: '/x.jpg',
+      ratings: [{ provider: 'tmdb', score: 7 }],
+      inLibrary: false,
+    });
+
+    const host = img.parentElement?.querySelector('div[data-subsume-badge]') as HTMLElement;
+    const plaque = getClosedShadowRoot(host)?.querySelector('.museum-plaque') as HTMLElement;
+
+    const eventListener = vi.fn();
+    captureListener = eventListener;
+    window.addEventListener('OPEN_CAPTURE_CANVAS', eventListener);
+
+    plaque.click(); // untrusted
+
+    expect(eventListener).not.toHaveBeenCalled();
+    manager.destroy();
   });
 
   describe('pickDisplayRating', () => {
