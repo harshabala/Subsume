@@ -78,7 +78,7 @@ export const bookHandlers: MessageHandlerMap = {
           if (hit.work.bookDetails?.authors) {
             media.authors = hit.work.bookDetails.authors;
           }
-          await putMediaItem(media);
+          // Do not putMediaItem for every search hit — persist on archive/resolve only.
           results.push({ work: media, score: hit.matchScore });
         }
       } catch (err) {
@@ -104,7 +104,7 @@ export const bookHandlers: MessageHandlerMap = {
             if (hit.work.bookDetails?.authors) {
               media.authors = hit.work.bookDetails.authors;
             }
-            await putMediaItem(media);
+            // Do not putMediaItem for every search hit — persist on archive/resolve only.
             results.push({ work: media, score: hit.matchScore * 0.95 });
           }
         }

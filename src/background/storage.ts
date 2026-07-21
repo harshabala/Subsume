@@ -559,9 +559,13 @@ async function dualWriteLibrary(db: IDBPDatabase<SubsumeDB>, item: LibraryItem):
   const media = await db.get('media', item.mediaId);
   const medium = media ? mediaTypeToMedium(media.type) : 'movie';
 
+  // Only seed migrated reflections if none exist yet (don't rewrite every put).
   if (db.objectStoreNames.contains('reflections')) {
-    for (const reflection of libraryItemToReflections(item)) {
-      await db.put('reflections', reflection);
+    const existingRefs = await db.getAllFromIndex('reflections', 'by-work', item.mediaId);
+    if (existingRefs.length === 0) {
+      for (const reflection of libraryItemToReflections(item)) {
+        await db.put('reflections', reflection);
+      }
     }
   }
 
@@ -732,6 +736,19 @@ export async function removeLibraryItem(mediaId: string): Promise<void> {
   await db.delete('library', mediaId);
   if (db.objectStoreNames.contains('relationships')) {
     await db.delete('relationships', mediaId);
+  }
+  // Best-effort cascade: clear experiences + reflections for this workId.
+  try {
+    if (db.objectStoreNames.contains('experiences')) {
+      const experiences = await db.getAllFromIndex('experiences', 'by-work', mediaId);
+      await Promise.all(experiences.map((e) => db.delete('experiences', e.id)));
+    }
+    if (db.objectStoreNames.contains('reflections')) {
+      const reflections = await db.getAllFromIndex('reflections', 'by-work', mediaId);
+      await Promise.all(reflections.map((r) => db.delete('reflections', r.id)));
+    }
+  } catch {
+    // Cascade is best-effort; library + relationship already removed.
   }
 }
 
