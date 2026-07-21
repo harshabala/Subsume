@@ -426,9 +426,10 @@
 }
 
 .search-results-grid {
-  padding: 0 32px;
-  max-width: 1200px;
-  margin: 0 auto 48px;
+  /* Shell gutter from .page-container */
+  padding: 0;
+  max-width: 100%;
+  margin: 0 0 48px;
 }
 
 .sanctuary-card-score {
@@ -1952,7 +1953,7 @@ select.sanctuary-input option {
   font-weight: 600;
 }
 
-/* Home */
+/* Home — horizontal inset from .page-container shell only */
 .home-main-content {
   padding: 0 0 32px;
   display: flex;

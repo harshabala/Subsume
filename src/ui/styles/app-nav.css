@@ -8,6 +8,8 @@
   max-width: 100%;
   background: var(--bg-sanctuary, var(--bg-primary));
   border-bottom: 1px solid var(--border-restraint, var(--border));
+  /* Same horizontal math as .page-container: full-bleed bar, inset column inside */
+  flex-shrink: 0;
 }
 
 /* Primary + explore share the same max-width column as .page-container */
@@ -40,16 +42,18 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  /* Optical: serif italic starts slightly left of capital S; nudge to match Search label */
   margin-left: 0;
-  padding-left: 0;
+  /* Optical: italic Newsreader capital slightly overhangs — nudge to shell gutter */
+  padding-left: 1px;
 }
 
 .fixed-top-nav {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px var(--app-shell-gutter, 32px) 8px;
+  /* Horizontal padding only via .app-nav-shell .fixed-top-nav (avoid double-padding) */
+  padding-top: 10px;
+  padding-bottom: 8px;
   flex-wrap: nowrap;
   min-width: 0;
 }
@@ -68,10 +72,9 @@
   overscroll-behavior-x: contain;
 }
 
-/* First explore item label aligns with logo / page titles (icons hang left of label) */
+/* Keep first explore chip flush to shell gutter (no negative margin — that broke 100% zoom) */
 .app-subnav-link:first-child {
-  margin-left: -6px; /* cancel half of icon gap so "Search" text matches logo stem */
-  padding-left: 8px;
+  margin-left: 0;
 }
 
 .app-subnav-link {
@@ -81,7 +84,7 @@
   gap: 6px;
   min-height: 44px;
   min-width: 44px;
-  padding: 8px 14px;
+  padding: 8px 12px;
   border: none;
   border-radius: 4px;
   background: transparent;
@@ -159,11 +162,6 @@
     padding-bottom: 10px;
     /* left/right from shared shell gutter */
     gap: 2px;
-  }
-
-  .app-subnav-link:first-child {
-    margin-left: 0;
-    padding-left: 10px;
   }
 
   .app-subnav-link span.app-subnav-label-full {

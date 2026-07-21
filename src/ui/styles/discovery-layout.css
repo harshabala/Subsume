@@ -207,14 +207,15 @@
 .home-main-content {
   gap: var(--discovery-gap-section);
   margin-top: var(--discovery-gap-loose) !important;
-  padding-inline: clamp(16px, 4vw, 32px);
+  /* Horizontal inset from .page-container shell gutter only */
+  padding-inline: 0;
 }
 
 .discovery-search-section {
   position: relative;
   z-index: 2;
   margin-bottom: var(--discovery-gap-section);
-  padding-inline: clamp(16px, 4vw, 32px);
+  padding-inline: 0;
 }
 
 .home-discovery-section {
@@ -454,7 +455,7 @@
   .home-main-content,
   .discovery-search-section,
   .discovery-feed-section {
-    padding-inline: 16px;
+    padding-inline: 0;
   }
 }
 
@@ -462,12 +463,12 @@
   .home-main-content,
   .discovery-search-section,
   .discovery-feed-section {
-    padding-inline: 12px;
+    padding-inline: 0;
   }
 }
 
 .home-feed-notice {
-  margin: 0 clamp(16px, 4vw, 32px) var(--discovery-gap-section, 32px);
+  margin: 0 0 var(--discovery-gap-section, 32px);
 }
 
 .home-feed-notice .optical-button.sm {

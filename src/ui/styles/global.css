@@ -12,7 +12,19 @@
   padding: 0;
 }
 
+/*
+ * Single scrollport for nav + pages so max-width columns share one center line.
+ * Nested main scroll + full-bleed sticky nav causes ~scrollbar-width misalignment
+ * (and “looks fine at 90% zoom” flakiness).
+ */
+html {
+  height: 100%;
+  scrollbar-gutter: stable;
+}
+
 body {
+  height: 100%;
+  overflow: hidden;
   font-family: var(--font-sans);
   background-color: var(--bg-base);
   color: var(--fg-base);

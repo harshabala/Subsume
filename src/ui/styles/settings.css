@@ -729,7 +729,8 @@
 }
 
 .home-main-content {
-  padding: 0 32px 32px;
+  /* Shell gutter is on .page-container — do not double-pad */
+  padding: 0 0 32px;
   display: flex;
   flex-direction: column;
   gap: 32px;
