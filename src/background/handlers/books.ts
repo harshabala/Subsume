@@ -21,8 +21,20 @@ import {
   putEdition,
   getRelationship,
   putRelationship,
+  isValidMediaItem,
+  intentForStatus,
 } from '../storage';
+import { isValidMediaId } from '@/shared/mediaIds';
+import { mergeMediaItems } from '../mediaMerge';
+import type { LibraryStatus, MediaItem } from '@/shared/types';
 import { logger } from '@/shared/logger';
+
+const ARCHIVE_STATUSES = new Set<LibraryStatus>([
+  'to-watch',
+  'watching',
+  'watched',
+  'abandoned',
+]);
 
 async function loadOpenLibrary() {
   return import('../openLibrary');
@@ -183,24 +195,67 @@ export const bookHandlers: MessageHandlerMap = {
   },
 
   [MessageType.ADD_TO_ARCHIVE]: async (payload) => {
-    // Alias of ADD_TO_LIST with book-friendly naming
-    const req = payload as { mediaItem?: { id: string; type?: string }; workId?: string; status?: string };
-    let mediaId = req.workId ?? req.mediaItem?.id;
-    if (!mediaId && req.mediaItem) {
-      await putMediaItem(req.mediaItem as never);
-      mediaId = req.mediaItem.id;
+    // Book-friendly alias of ADD_TO_LIST: always persist validated media when provided.
+    const req = (payload || {}) as {
+      mediaItem?: unknown;
+      workId?: string;
+      status?: string;
+    };
+
+    if (req.status !== undefined && req.status !== null) {
+      if (
+        typeof req.status !== 'string' ||
+        !ARCHIVE_STATUSES.has(req.status as LibraryStatus)
+      ) {
+        throw new Error('Invalid ADD_TO_ARCHIVE status');
+      }
     }
-    if (!mediaId) throw new Error('ADD_TO_ARCHIVE requires workId or mediaItem');
+
+    let mediaId: string | undefined;
+
+    if (req.mediaItem !== undefined && req.mediaItem !== null) {
+      if (!isValidMediaItem(req.mediaItem)) {
+        throw new Error('Invalid media item payload');
+      }
+      const mediaItem = req.mediaItem as MediaItem;
+      // Prefer trusted DB row over untrusted content-script blobs (merge like ADD_TO_LIST).
+      const existingMedia = await getMediaItem(mediaItem.id);
+      const mediaToStore = existingMedia
+        ? mergeMediaItems(mediaItem, existingMedia)
+        : mediaItem;
+      await putMediaItem(mediaToStore);
+      mediaId = mediaItem.id;
+    } else {
+      const workId =
+        typeof req.workId === 'string' ? req.workId.trim() : '';
+      if (!workId) {
+        throw new Error('ADD_TO_ARCHIVE requires workId or mediaItem');
+      }
+      if (!isValidMediaId(workId)) {
+        throw new Error('Invalid workId');
+      }
+      // workId-only: media must already be in store (e.g. after resolve).
+      const existingMedia = await getMediaItem(workId);
+      if (!existingMedia) {
+        throw new Error(
+          'ADD_TO_ARCHIVE: media not found for workId; provide mediaItem or resolve first',
+        );
+      }
+      mediaId = workId;
+    }
 
     const existing = await getLibraryItem(mediaId);
     const now = Date.now();
-    const status = (req.status as 'to-watch' | 'watching' | 'watched' | 'abandoned') || existing?.status || 'to-watch';
+    const status: LibraryStatus =
+      (req.status as LibraryStatus | undefined) ||
+      existing?.status ||
+      'to-watch';
     await putLibraryItem({
       mediaId,
       status,
       addedAt: existing?.addedAt ?? now,
       updatedAt: now,
-      sanctuaryIntent: existing?.sanctuaryIntent,
+      sanctuaryIntent: existing?.sanctuaryIntent ?? intentForStatus(status),
       notes: existing?.notes,
       emotionalRecall: existing?.emotionalRecall,
     });
