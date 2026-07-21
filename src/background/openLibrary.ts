@@ -9,6 +9,7 @@
 import type {
   BookEdition,
   CatalogWork,
+  Creator,
   CreatorCredit,
   SourceProvenance,
 } from '@/shared/catalogTypes';
@@ -102,6 +103,47 @@ interface OlEditionResponse {
   subjects?: string[];
 }
 
+interface OlAuthorSearchDoc {
+  key?: string;
+  name?: string;
+  birth_date?: string;
+  top_work?: string;
+  work_count?: number;
+  top_subjects?: string[];
+  alternate_names?: string[];
+}
+
+interface OlAuthorSearchResponse {
+  numFound?: number;
+  docs?: OlAuthorSearchDoc[];
+}
+
+interface OlAuthorResponse {
+  key?: string;
+  name?: string;
+  personal_name?: string;
+  bio?: string | OlDescription;
+  photos?: number[];
+  birth_date?: string;
+  death_date?: string;
+  remote_ids?: Record<string, string>;
+}
+
+interface OlAuthorWorksEntry {
+  key?: string;
+  title?: string;
+  subtitle?: string;
+  covers?: number[];
+  first_publish_date?: string;
+  subjects?: string[];
+  description?: string | OlDescription;
+}
+
+interface OlAuthorWorksResponse {
+  size?: number;
+  entries?: OlAuthorWorksEntry[];
+}
+
 // ─── Cache ──────────────────────────────────────────────────────────────────
 
 function cacheGet<T>(key: string): T | undefined {
@@ -125,14 +167,14 @@ export function clearOpenLibraryCache(): void {
 
 // ─── ID helpers ─────────────────────────────────────────────────────────────
 
-/** Canonical bare OL id casing: OL45804W / OL7353617M. */
+/** Canonical bare OL id casing: OL45804W / OL7353617M / OL23919A. */
 function formatOlBareId(id: string): string | null {
-  const m = id.match(/^OL(\d+)([WM])$/i);
+  const m = id.match(/^OL(\d+)([WMA])$/i);
   if (!m) return null;
   return `OL${m[1]}${m[2].toUpperCase()}`;
 }
 
-/** Normalize OL key/id to bare OL id (e.g. OL45804W). */
+/** Normalize OL key/id to bare OL id (e.g. OL45804W). Work/edition only. */
 export function extractOlId(raw: string): string | null {
   const trimmed = raw.trim();
   if (!trimmed) return null;
@@ -147,10 +189,42 @@ export function extractOlId(raw: string): string | null {
   const path = trimmed.match(/\/(?:works|books|editions)\/(OL\d+[WM])(?:\.json)?$/i);
   if (path) return formatOlBareId(path[1]);
 
-  // Bare id
+  // Bare work/edition id
   if (/^OL\d+[WM]$/i.test(trimmed)) return formatOlBareId(trimmed);
 
   return null;
+}
+
+/** Normalize OL author key/id to bare OL…A id. */
+export function extractOlAuthorId(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+
+  const ns = trimmed.match(/^openlibrary_author_(OL\d+A)$/i);
+  if (ns) return formatOlBareId(ns[1]);
+
+  const path = trimmed.match(/\/authors\/(OL\d+A)(?:\.json)?$/i);
+  if (path) return formatOlBareId(path[1]);
+
+  if (/^OL\d+A$/i.test(trimmed)) return formatOlBareId(trimmed);
+
+  return null;
+}
+
+export function toOpenLibraryAuthorId(olAuthorId: string): string {
+  const id = extractOlAuthorId(olAuthorId);
+  if (!id || !id.endsWith('A')) {
+    throw new Error(`Invalid Open Library author id: ${olAuthorId}`);
+  }
+  return `openlibrary_author_${id}`;
+}
+
+function authorSourceUrl(olAuthorId: string): string {
+  return `${OL_BASE}/authors/${olAuthorId}`;
+}
+
+export function authorPhotoUrl(photoId: number, size: 'S' | 'M' | 'L' = 'M'): string {
+  return `${COVERS_BASE}/a/id/${photoId}-${size}.jpg`;
 }
 
 export function toOpenLibraryWorkId(olWorkId: string): string {
@@ -642,4 +716,182 @@ export async function getOpenLibraryEdition(
   const edition = mapEditionResponse(data, linkedWorkId, Date.now());
   cacheSet(cacheKey, edition);
   return edition;
+}
+
+// ─── Authors / creators ─────────────────────────────────────────────────────
+
+function mapAuthorSearchDoc(doc: OlAuthorSearchDoc, fetchedAt: number): Creator | null {
+  if (!doc.key || !doc.name) return null;
+  const olId = extractOlAuthorId(doc.key);
+  if (!olId) return null;
+
+  return {
+    id: `openlibrary_author_${olId}`,
+    name: doc.name,
+    roles: ['author'],
+    knownForWorkIds: [],
+    biography: doc.top_work
+      ? `Known for ${doc.top_work}${doc.work_count ? ` · ${doc.work_count} works` : ''}`
+      : undefined,
+    externalIds: [
+      {
+        provider: 'openlibrary',
+        externalId: olId,
+        url: authorSourceUrl(olId),
+      },
+    ],
+    lastSyncedAt: fetchedAt,
+  };
+}
+
+function mapAuthorResponse(data: OlAuthorResponse, fetchedAt: number): Creator | null {
+  if (!data.key && !data.name) return null;
+  const olId = extractOlAuthorId(data.key || '');
+  if (!olId) return null;
+
+  const bio = extractDescription(data.bio);
+  const photo =
+    Array.isArray(data.photos) && typeof data.photos[0] === 'number'
+      ? authorPhotoUrl(data.photos[0])
+      : undefined;
+
+  return {
+    id: `openlibrary_author_${olId}`,
+    name: data.name || data.personal_name || 'Unknown author',
+    roles: ['author'],
+    biography: bio,
+    profileImageUrl: photo,
+    knownForWorkIds: [],
+    externalIds: [
+      {
+        provider: 'openlibrary',
+        externalId: olId,
+        url: authorSourceUrl(olId),
+      },
+    ],
+    lastSyncedAt: fetchedAt,
+  };
+}
+
+function mapAuthorWorkEntry(
+  entry: OlAuthorWorksEntry,
+  authorName: string,
+  fetchedAt: number
+): CatalogWork | null {
+  if (!entry.key || !entry.title) return null;
+  const olId = extractOlId(entry.key);
+  if (!olId || !olId.endsWith('W')) return null;
+
+  const workId = `openlibrary_work_${olId}`;
+  const year = parseYear(entry.first_publish_date);
+  const subjects = entry.subjects?.slice(0, 20);
+  const description = extractDescription(entry.description);
+  const cover =
+    Array.isArray(entry.covers) && typeof entry.covers[0] === 'number'
+      ? coverUrlFromId(entry.covers[0])
+      : undefined;
+
+  const fields: string[] = ['canonicalTitle', 'medium', 'externalIds', 'creatorCredits'];
+  if (year) fields.push('firstReleaseYear');
+  if (subjects?.length) fields.push('subjects');
+  if (description) fields.push('description');
+  if (cover) fields.push('images.primary');
+  if (entry.subtitle) fields.push('subtitle');
+
+  return {
+    id: workId,
+    medium: 'book',
+    canonicalTitle: entry.title,
+    subtitle: entry.subtitle,
+    firstReleaseYear: year,
+    description,
+    genres: [],
+    subjects,
+    images: { primary: cover },
+    externalIds: [
+      {
+        provider: 'openlibrary',
+        externalId: olId,
+        url: workSourceUrl(olId),
+      },
+    ],
+    creatorCredits: authorsFromNames([authorName]),
+    bookDetails: {
+      authors: [authorName],
+      firstPublishedYear: year,
+      primarySubjects: subjects?.slice(0, 10),
+    },
+    sourceProvenance: [provenance(olId, workSourceUrl(olId), fields, fetchedAt)],
+    sourceConfidence: 'high',
+    createdAt: fetchedAt,
+    updatedAt: fetchedAt,
+    lastEnrichedAt: fetchedAt,
+  };
+}
+
+/**
+ * Search Open Library authors. Keys map to `openlibrary_author_OL…A`.
+ */
+export async function searchOpenLibraryAuthors(query: string): Promise<Creator[]> {
+  const q = query?.trim();
+  if (!q) return [];
+
+  const cacheKey = `ol_author_search_${q.toLowerCase()}`;
+  const cached = cacheGet<Creator[]>(cacheKey);
+  if (cached) return cached;
+
+  const url = `${OL_BASE}/search/authors.json?q=${encodeURIComponent(q)}`;
+  const data = await fetchJson<OlAuthorSearchResponse>(url);
+  if (!data?.docs?.length) {
+    cacheSet(cacheKey, []);
+    return [];
+  }
+
+  const fetchedAt = Date.now();
+  const results: Creator[] = [];
+  for (const doc of data.docs.slice(0, 20)) {
+    const creator = mapAuthorSearchDoc(doc, fetchedAt);
+    if (creator) results.push(creator);
+  }
+
+  cacheSet(cacheKey, results);
+  return results;
+}
+
+/**
+ * Fetch catalog works credited to an Open Library author.
+ * Accepts bare OL…A, namespaced openlibrary_author_OL…A, or /authors/ path.
+ */
+export async function getOpenLibraryAuthorWorks(
+  authorId: string
+): Promise<CatalogWork[]> {
+  const olId = extractOlAuthorId(authorId);
+  if (!olId) return [];
+
+  const cacheKey = `ol_author_works_${olId}`;
+  const cached = cacheGet<CatalogWork[]>(cacheKey);
+  if (cached) return cached;
+
+  // Resolve author name for credits (best-effort)
+  let authorName = 'Unknown author';
+  const authorData = await fetchJson<OlAuthorResponse>(`${OL_BASE}/authors/${olId}.json`);
+  if (authorData?.name) authorName = authorData.name;
+
+  const data = await fetchJson<OlAuthorWorksResponse>(
+    `${OL_BASE}/authors/${olId}/works.json?limit=50`
+  );
+  if (!data?.entries?.length) {
+    cacheSet(cacheKey, []);
+    return [];
+  }
+
+  const fetchedAt = Date.now();
+  const works: CatalogWork[] = [];
+  for (const entry of data.entries) {
+    const work = mapAuthorWorkEntry(entry, authorName, fetchedAt);
+    if (work) works.push(work);
+  }
+
+  cacheSet(cacheKey, works);
+  return works;
 }

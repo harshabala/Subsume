@@ -1,73 +1,81 @@
 import { getAllLibraryItems, getMediaItem, getAllPeople, getPreferences } from './storage';
-import { WatchProfile, WatchProfileEntry, CrewRole } from '@/shared/types';
+import { WatchProfile, WatchProfileEntry, CrewRole, MediaItem, LibraryItem } from '@/shared/types';
 import { resolveGenreNames } from '@/shared/genres';
 
 // ─── In-memory cache ────────────────────────────────────────────────────────
 
-let profileCache: WatchProfile | null = null;
-let profileCacheBuiltAt: number = 0;
+export type TasteMedium = 'screen' | 'book' | 'all';
+
+const profileCache = new Map<TasteMedium, { profile: WatchProfile; builtAt: number }>();
 const PROFILE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-// ─── buildWatchProfile ───────────────────────────────────────────────────────
+function matchesMedium(media: MediaItem, medium: TasteMedium): boolean {
+  if (medium === 'all') return true;
+  if (medium === 'book') return media.type === 'book';
+  // screen
+  return media.type === 'movie' || media.type === 'tv';
+}
+
+// ─── buildTasteProfileForMedium ──────────────────────────────────────────────
 
 /**
- * Builds a structured WatchProfile from the user's library and followed people.
- * Results are cached for PROFILE_CACHE_TTL ms to avoid redundant IDB reads
- * across rapid GET_PERSONALIZED_RECS calls.
+ * Builds a structured WatchProfile filtered by medium.
+ * - screen: movies + TV only
+ * - book: books only
+ * - all: everything (legacy buildWatchProfile behaviour)
  */
-export async function buildWatchProfile(): Promise<WatchProfile> {
-  // Return cached profile if still fresh
-  if (profileCache !== null && Date.now() - profileCacheBuiltAt < PROFILE_CACHE_TTL) {
-    return profileCache;
+export async function buildTasteProfileForMedium(medium: TasteMedium): Promise<WatchProfile> {
+  const cached = profileCache.get(medium);
+  if (cached && Date.now() - cached.builtAt < PROFILE_CACHE_TTL) {
+    return cached.profile;
   }
 
-  // Fetch all data in parallel
   const [allLibraryItems, allPeople, prefs] = await Promise.all([
     getAllLibraryItems(),
     getAllPeople(),
     getPreferences(),
   ]);
 
-  // Separate watched items (cap at 100 for IDB fetches)
-  const watchedItems = allLibraryItems
-    .filter(l => l.status === 'watched')
+  // Completed experiences (watched / read)
+  const completedItems = allLibraryItems
+    .filter((l) => l.status === 'watched')
     .sort((a, b) => b.updatedAt - a.updatedAt)
     .slice(0, 100);
 
   const wishlistItems = allLibraryItems
-    .filter(l => l.status === 'to-watch' || l.status === 'watching')
+    .filter((l) => l.status === 'to-watch' || l.status === 'watching')
     .sort((a, b) => b.addedAt - a.addedAt)
     .slice(0, 15);
 
-  const totalWatched = allLibraryItems.filter(l => l.status === 'watched').length;
+  type Pair = { libraryItem: LibraryItem; media: MediaItem };
 
-  // Resolve MediaItems for all watched library items
-  const resolvedPairs = await Promise.all(
-    watchedItems.map(async (libraryItem) => {
-      const media = await getMediaItem(libraryItem.mediaId);
-      if (!media) return null;
-      return { libraryItem, media };
-    })
-  );
+  const resolvePairs = async (items: LibraryItem[]): Promise<Pair[]> => {
+    const resolved = await Promise.all(
+      items.map(async (libraryItem) => {
+        const media = await getMediaItem(libraryItem.mediaId);
+        if (!media || !matchesMedium(media, medium)) return null;
+        return { libraryItem, media };
+      })
+    );
+    return resolved.filter((p): p is Pair => p !== null);
+  };
 
-  const wishlistPairs = await Promise.all(
-    wishlistItems.map(async (libraryItem) => {
-      const media = await getMediaItem(libraryItem.mediaId);
-      if (!media) return null;
-      return { libraryItem, media };
-    })
-  );
+  const validPairs = await resolvePairs(completedItems);
+  const validWishlist = await resolvePairs(wishlistItems);
 
-  const validPairs = resolvedPairs.filter(
-    (p): p is { libraryItem: NonNullable<typeof watchedItems[0]>; media: NonNullable<Awaited<ReturnType<typeof getMediaItem>>> } => p !== null
-  );
+  // Count all completed of this medium (not just the capped slice used for buckets)
+  const totalCompleted = (
+    await Promise.all(
+      allLibraryItems
+        .filter((l) => l.status === 'watched')
+        .map(async (l) => {
+          const media = await getMediaItem(l.mediaId);
+          return media && matchesMedium(media, medium) ? 1 : 0;
+        })
+    )
+  ).reduce((a: number, b: number) => a + b, 0);
 
-  const validWishlist = wishlistPairs.filter(
-    (p): p is { libraryItem: NonNullable<typeof wishlistItems[0]>; media: NonNullable<Awaited<ReturnType<typeof getMediaItem>>> } => p !== null
-  );
-
-  // Build WatchProfileEntry from each pair
-  function toEntry(pair: typeof validPairs[0]): WatchProfileEntry {
+  function toEntry(pair: Pair): WatchProfileEntry {
     const { libraryItem, media } = pair;
     const noteSource =
       libraryItem.emotionalRecall ||
@@ -90,9 +98,8 @@ export async function buildWatchProfile(): Promise<WatchProfile> {
     };
   }
 
-  // Bucket into rating tiers
   const topRatedRaw = validPairs
-    .filter(p => p.libraryItem.userRating !== undefined && p.libraryItem.userRating >= 8)
+    .filter((p) => p.libraryItem.userRating !== undefined && p.libraryItem.userRating >= 8)
     .sort((a, b) => {
       const ratingDiff = (b.libraryItem.userRating ?? 0) - (a.libraryItem.userRating ?? 0);
       if (ratingDiff !== 0) return ratingDiff;
@@ -101,15 +108,20 @@ export async function buildWatchProfile(): Promise<WatchProfile> {
     .slice(0, 20);
 
   const likedRaw = validPairs
-    .filter(p => p.libraryItem.userRating !== undefined && p.libraryItem.userRating >= 6 && p.libraryItem.userRating <= 7)
+    .filter(
+      (p) =>
+        p.libraryItem.userRating !== undefined &&
+        p.libraryItem.userRating >= 6 &&
+        p.libraryItem.userRating <= 7
+    )
     .slice(0, 15);
 
   const dislikedRaw = validPairs
-    .filter(p => p.libraryItem.userRating !== undefined && p.libraryItem.userRating <= 4)
+    .filter((p) => p.libraryItem.userRating !== undefined && p.libraryItem.userRating <= 4)
     .slice(0, 10);
 
   const unratedRaw = validPairs
-    .filter(p => p.libraryItem.userRating === undefined)
+    .filter((p) => p.libraryItem.userRating === undefined)
     .slice(0, 10);
 
   const topRated = topRatedRaw.map(toEntry);
@@ -125,13 +137,25 @@ export async function buildWatchProfile(): Promise<WatchProfile> {
     noteExcerpt: pair.libraryItem.emotionalRecall?.slice(0, 100),
   }));
 
-  // Followed creators — cap at 10
+  // Followed creators — for book medium prefer authors (writer role + openlibrary ids)
   const followedCreators = allPeople
+    .filter((p) => {
+      if (medium === 'book') {
+        return p.role === 'writer' || p.id.startsWith('openlibrary_author_');
+      }
+      if (medium === 'screen') {
+        return !p.id.startsWith('openlibrary_author_');
+      }
+      return true;
+    })
     .slice(0, 10)
-    .map(p => ({ name: p.name, role: p.role as CrewRole }));
+    .map((p) => ({ name: p.name, role: p.role as CrewRole }));
 
-  // Favorite genres — use preferences or derive from topRated
   let favoriteGenres: string[] = resolveGenreNames(prefs.favoriteGenres || []);
+  if (medium === 'book') {
+    // Prefer subjects derived from top-rated books over screen genre prefs
+    favoriteGenres = [];
+  }
   if (favoriteGenres.length === 0 && topRated.length > 0) {
     const genreCount: Record<string, number> = {};
     for (const entry of topRated) {
@@ -152,14 +176,23 @@ export async function buildWatchProfile(): Promise<WatchProfile> {
     unrated,
     followedCreators,
     favoriteGenres,
-    totalWatched,
+    totalWatched: totalCompleted,
     wishlist,
   };
 
-  profileCache = profile;
-  profileCacheBuiltAt = Date.now();
-
+  profileCache.set(medium, { profile, builtAt: Date.now() });
   return profile;
+}
+
+// ─── buildWatchProfile ───────────────────────────────────────────────────────
+
+/**
+ * Builds a structured WatchProfile from the user's library and followed people.
+ * Results are cached for PROFILE_CACHE_TTL ms to avoid redundant IDB reads
+ * across rapid GET_PERSONALIZED_RECS calls.
+ */
+export async function buildWatchProfile(): Promise<WatchProfile> {
+  return buildTasteProfileForMedium('all');
 }
 
 // ─── invalidateProfileCache ─────────────────────────────────────────────────
@@ -170,5 +203,5 @@ export async function buildWatchProfile(): Promise<WatchProfile> {
  * next getPersonalizedRecommendations call rebuilds from fresh IDB data.
  */
 export function invalidateProfileCache(): void {
-  profileCache = null;
+  profileCache.clear();
 }

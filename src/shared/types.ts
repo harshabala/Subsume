@@ -386,13 +386,38 @@ export interface ContentPrefs {
   coverOverlaysEnabled: boolean;
 }
 
+/**
+ * Library backup payload.
+ * - v1 (legacy): no schemaVersion; library/media/people arrays
+ * - v2: multi-medium export with works/relationships/reflections + legacy arrays
+ * Never includes API keys.
+ */
 export interface ImportLibraryData {
+  /** 2 = multi-medium SubsumeExportV2 shape. Omitted = legacy v1. */
+  schemaVersion?: number;
+  exportedAt?: number;
+
+  // Legacy cinema stores (always preferred for round-trip of movies/TV)
   library?: LibraryItem[];
   media?: MediaItem[];
   people?: PersonItem[];
   alerts?: WatchAlert[];
   weeklyDigest?: WeeklyDigest;
+
+  // Multi-medium catalog (v2+)
+  works?: import('./catalogTypes').CatalogWork[];
+  bookEditions?: import('./catalogTypes').BookEdition[];
+  relationships?: import('./catalogTypes').LibraryRelationship[];
+  experiences?: import('./catalogTypes').Experience[];
+  reflections?: import('./catalogTypes').Reflection[];
+  creators?: import('./catalogTypes').Creator[];
 }
+
+/** Explicit v2 export shape (schemaVersion always 2). */
+export type SubsumeExportV2 = ImportLibraryData & {
+  schemaVersion: 2;
+  exportedAt: number;
+};
 
 export interface Recommendation {
   mediaId: string;

@@ -4,7 +4,7 @@
 
 This privacy policy describes how **Subsume**, a Chrome browser extension developed by **Harsha Balakrishnan** (“we,” “us,” or “the developer”), handles information when you install and use the extension.
 
-Subsume is a private cinematic sanctuary: a client-side tool for tracking films and television you care about, recording notes and emotional ratings, and optionally enriching metadata or recommendations through third-party services you choose. There is **no Subsume backend server**. Your library lives on your device unless you explicitly enable optional cloud backup.
+Subsume is a private multi-medium sanctuary: a client-side tool for tracking films, television, and books you care about, recording notes and emotional ratings, and optionally enriching metadata or recommendations through third-party services you choose. There is **no Subsume backend server**. Your library lives on your device unless you explicitly enable optional cloud backup.
 
 ---
 
@@ -36,7 +36,7 @@ Subsume processes data **on your device** and, when you enable features that req
 
 ### Personal media library
 
-Titles you save (films and TV shows), status (for example watched, wishlist, or sanctuary intents), ratings, emotional scales, free-text notes and reflections, people you follow (directors, cast, crew), alerts, and related preferences.
+Titles you save (films, TV shows, and books), status (for example watched, wishlist, reading progress, or sanctuary intents), ratings, emotional scales, free-text notes and reflections, people you follow (directors, cast, crew, authors), alerts, and related preferences.
 
 ### Preferences and settings
 
@@ -44,7 +44,7 @@ Feature toggles, theme choices, disabled domains (content-script blacklist), pla
 
 ### Optional API keys
 
-If you supply them in Settings, Subsume stores keys you provide for services such as TMDb, OMDb, and large language model providers (OpenAI, Anthropic, and/or Google Gemini). These keys are stored in local extension storage (including IndexedDB as part of user preferences). **They are not encrypted at rest.** They are used only to call the providers you configure, from the extension’s background context.
+If you supply them in Settings, Subsume stores keys you provide for services such as TMDb, OMDb, optional Google Books, and large language model providers (OpenAI, Anthropic, and/or Google Gemini). These keys are stored in local extension storage (including IndexedDB as part of user preferences). **They are not encrypted at rest.** They are used only to call the providers you configure, from the extension’s background context.
 
 **API keys are never sent to content scripts.** Content scripts receive feature toggles and limited library lookup results only, not credentials.
 
@@ -54,7 +54,9 @@ If you connect Google Drive, Subsume may back up library-related data to Google 
 
 ### Page context for discovery (content scripts)
 
-To detect posters and titles while you browse, content scripts may run on **http** and **https** pages. They inspect page content for media titles and poster images so Subsume can show quiet overlays (for example rating plaques or hover cards). You can disable Subsume on specific domains via **Settings → Disabled Domains**. Uninstalling the extension removes the scripts entirely.
+To detect posters, titles, and books while you browse, content scripts may run on **http** and **https** pages. They inspect page content for media titles, poster or cover images, structured book data, and ISBNs so Subsume can show quiet overlays (for example rating plaques or hover cards). You can turn book or screen detection off in **Settings → Books & detection**, and disable Subsume on specific domains via **Settings → Disabled Domains**. Uninstalling the extension removes the scripts entirely.
+
+When a book candidate is found, the extension may send **titles, authors, and/or ISBNs** to Open Library (and optionally Google Books if you supply a key) for resolution. **Full page HTML is not sent** to those providers—only the identifiers needed to match a work or edition.
 
 Content scripts do not receive your API keys. Sensitive library export and settings operations are restricted to the extension UI and background service worker, not arbitrary page scripts.
 
@@ -82,15 +84,17 @@ Subsume does not send your library to a Subsume-operated server. Network traffic
 | :--- | :--- |
 | **[TMDb](https://www.themoviedb.org/)** (The Movie Database) | Film/TV metadata, posters, people, search, and related catalogue data. Requires your TMDb API key when configured. |
 | **OMDb** (optional) | Supplemental title metadata when you provide an OMDb API key. |
+| **[Open Library](https://openlibrary.org/)** | Default book catalogue: search, work/edition resolution, covers. No user API key required. May receive ISBNs, titles, and authors for lookups—not full page HTML. |
+| **Google Books** (optional) | Optional book enrichment (covers, descriptions, recent titles) when you provide a Google Books API key. Lookups use the same limited identifiers (ISBN/title/author), not full page HTML. |
 | **OpenAI / Anthropic / Google Gemini** (optional) | AI recommendations or digests using **your** API keys, from the background service worker. Prompt material may include short excerpts of your notes and taste profile built from your local library—not arbitrary full page DOM dumps. |
 | **Trakt** | Public or API-backed media metadata/discovery where used by the extension. |
 | **TVMaze** | Television metadata. |
 | **Wikidata / Wikipedia** | Structured and encyclopedic metadata for titles or people. |
-| **Google APIs** | OAuth identity and Google Drive appData backup when you connect Drive. |
+| **Google APIs** | OAuth identity and Google Drive appData backup when you connect Drive; Google Books API when a Books key is configured. |
 
 Each third party processes requests under **its own** privacy policy and terms. Subsume does not control those services. Review their policies before enabling optional integrations or providing API keys.
 
-This product uses the TMDb API but is not endorsed or certified by TMDb.
+This product uses the TMDb API but is not endorsed or certified by TMDb. Book data may come from Open Library; Subsume is not affiliated with the Internet Archive or Open Library.
 
 ---
 
@@ -113,7 +117,7 @@ You can:
 1. **Export** your library from the extension (exports are designed to exclude API keys; media and library records are included).
 2. **Disable domains** so content scripts do not run their discovery UI on sites you blacklist.
 3. **Disconnect Google Drive** to stop optional backup via the extension’s Settings.
-4. **Clear or change API keys** in Settings; stop using optional LLM or OMDb features at any time.
+4. **Clear or change API keys** in Settings; stop using optional LLM, OMDb, or Google Books features at any time. Turn off book detection or Open Library under **Books & detection**.
 5. **Uninstall** the extension to remove it and its local Chrome extension data from the browser.
 6. **Contact** the developer at the email above with privacy questions.
 
@@ -129,7 +133,7 @@ Chrome may show that Subsume requests permissions such as:
 - **Alarms** — schedule periodic tasks such as digests.
 - **Identity** — sign in to Google for optional Drive backup.
 - **Host access** — call the metadata and AI endpoints listed above.
-- **Content scripts on web pages** — detect titles/posters for discovery overlays; controllable via domain blacklist.
+- **Content scripts on web pages** — detect titles, posters, covers, and book identifiers for discovery overlays; controllable via detection toggles and domain blacklist.
 
 Detailed justifications for Chrome Web Store review are maintained in the project’s store documentation.
 
@@ -167,5 +171,5 @@ This policy is provided to describe Subsume’s actual architecture: a client-si
 
 ---
 
-*Subsume — a private cinematic sanctuary on your device.*  
+*Subsume — a private sanctuary for screen and page, on your device.*  
 Developer: Harsha Balakrishnan · [harsha16balakrishnan@proton.me](mailto:harsha16balakrishnan@proton.me)

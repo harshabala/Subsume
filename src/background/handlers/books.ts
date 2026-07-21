@@ -1,17 +1,41 @@
 /**
- * Book catalog handlers — Open Library + ISBN resolution.
+ * Book catalog handlers — Open Library + optional Google Books + ISBN resolution.
  * Legacy movie/TV handlers remain elsewhere; these add multi-medium paths.
  */
 import { MessageType } from '@/shared/types';
 import type { MessageHandlerMap } from '@/shared/messages';
-import type { DetectionCandidate } from '@/shared/catalogTypes';
+import type {
+  CatalogWork,
+  DetectionCandidate,
+} from '@/shared/catalogTypes';
 import { catalogWorkToMediaItem } from '@/shared/compatibility';
 import { isValidIsbn, toIsbn13 } from '@/shared/isbn';
-import { putMediaItem, getMediaItem, putLibraryItem, getLibraryItem } from '../storage';
+import {
+  putMediaItem,
+  getMediaItem,
+  putLibraryItem,
+  getLibraryItem,
+  getPreferences,
+} from '../storage';
 import { logger } from '@/shared/logger';
 
 async function loadOpenLibrary() {
   return import('../openLibrary');
+}
+
+async function loadGoogleBooks() {
+  return import('../googleBooks');
+}
+
+/** Dedupe key: lowercased title + sorted authors. */
+function bookDedupeKey(work: CatalogWork): string {
+  const title = (work.canonicalTitle || '').toLowerCase().trim();
+  const authors = (work.bookDetails?.authors ?? [])
+    .map((a) => a.toLowerCase().trim())
+    .filter(Boolean)
+    .sort()
+    .join('|');
+  return `${title}::${authors}`;
 }
 
 export const bookHandlers: MessageHandlerMap = {
@@ -21,13 +45,17 @@ export const bookHandlers: MessageHandlerMap = {
     if (!query) return { works: [] as unknown[] };
 
     const medium = req.medium ?? 'all';
+    const limit = req.limit ?? 12;
     const results: Array<{ work: ReturnType<typeof catalogWorkToMediaItem>; score: number }> = [];
+    const seenKeys = new Set<string>();
 
     if (medium === 'book' || medium === 'all') {
       try {
         const ol = await loadOpenLibrary();
-        const books = await ol.searchOpenLibrary({ query, limit: req.limit ?? 12 });
+        const books = await ol.searchOpenLibrary({ query, limit });
         for (const hit of books) {
+          const key = bookDedupeKey(hit.work);
+          seenKeys.add(key);
           const media = catalogWorkToMediaItem(hit.work);
           media.type = 'book';
           if (hit.work.bookDetails?.authors) {
@@ -38,6 +66,33 @@ export const bookHandlers: MessageHandlerMap = {
         }
       } catch (err) {
         logger.warn('[Subsume] Open Library search failed:', err);
+      }
+
+      // Optional Google Books enrichment when the user has a key
+      try {
+        const prefs = await getPreferences();
+        if (prefs.googleBooksApiKey?.trim()) {
+          const gb = await loadGoogleBooks();
+          const gbHits = await gb.searchGoogleBooks(
+            query,
+            prefs.googleBooksApiKey,
+            limit
+          );
+          for (const hit of gbHits) {
+            const key = bookDedupeKey(hit.work);
+            if (seenKeys.has(key)) continue;
+            seenKeys.add(key);
+            const media = catalogWorkToMediaItem(hit.work);
+            media.type = 'book';
+            if (hit.work.bookDetails?.authors) {
+              media.authors = hit.work.bookDetails.authors;
+            }
+            await putMediaItem(media);
+            results.push({ work: media, score: hit.matchScore * 0.95 });
+          }
+        }
+      } catch (err) {
+        logger.warn('[Subsume] Google Books search failed:', err);
       }
     }
 

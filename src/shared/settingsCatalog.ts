@@ -32,13 +32,13 @@ export const SETTINGS_SECTIONS: SettingsSectionMeta[] = [
     id: 'discovery',
     title: 'Discovery sources',
     description:
-      'Which catalogues Subsume can query for search and new releases. Free sources work without keys; TMDb and OMDb deepen metadata when you add keys.',
+      'Which catalogues Subsume can query for search and new releases. Open Library covers books without a key; free screen sources work out of the box; TMDb, OMDb, and Google Books deepen metadata when you add keys.',
   },
   {
     id: 'credentials',
     title: 'API keys',
     description:
-      'Optional keys stored locally in your browser. TMDb unlocks full poster and cast sync; OMDb adds extra ratings; LLM keys power personalized curation.',
+      'Optional keys stored locally in your browser. TMDb unlocks full poster and cast sync for screen; OMDb adds extra ratings; Google Books enriches books; LLM keys power personalized curation.',
   },
   {
     id: 'ai',
@@ -50,7 +50,7 @@ export const SETTINGS_SECTIONS: SettingsSectionMeta[] = [
     id: 'browsing',
     title: 'Browsing & overlays',
     description:
-      'How Subsume behaves on streaming and review sites: hover cards, poster badges, reflection dock, and sites where overlays are turned off.',
+      'How Subsume behaves on the web: hover cards, poster badges, book and screen detection, Open Library, reflection dock, and sites where overlays are turned off.',
   },
   {
     id: 'data',

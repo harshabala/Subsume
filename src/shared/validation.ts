@@ -3,6 +3,8 @@ import { ImportLibraryData, PersonItem } from './types';
 const VALID_CREW_ROLES = new Set([
   'director', 'writer', 'cinematographer', 'actor',
   'composer', 'producer', 'editor',
+  // Books expansion — stored as writer/author-compatible roles
+  'author', 'translator', 'illustrator', 'narrator',
 ]);
 
 export function isValidPersonItem(p: unknown): p is PersonItem {
@@ -41,10 +43,19 @@ export const validateImportData = (data: unknown): ImportLibraryData => {
   if (d.weeklyDigest !== undefined && (typeof d.weeklyDigest !== 'object' || d.weeklyDigest === null)) {
     throw new Error('"weeklyDigest" must be an object');
   }
+  // v2 multi-medium optional arrays
+  for (const key of ['works', 'bookEditions', 'relationships', 'experiences', 'reflections', 'creators'] as const) {
+    if (d[key] !== undefined && !Array.isArray(d[key])) {
+      throw new Error(`"${key}" must be an array`);
+    }
+  }
+  if (d.schemaVersion !== undefined && typeof d.schemaVersion !== 'number') {
+    throw new Error('"schemaVersion" must be a number');
+  }
 
   const validStatuses = ['to-watch', 'watching', 'watched', 'abandoned'];
-  const validTypes = ['movie', 'tv'];
-  const validAlertTypes = ['movie', 'tv', 'both'];
+  const validTypes = ['movie', 'tv', 'book'];
+  const validAlertTypes = ['movie', 'tv', 'both', 'book'];
 
   if (Array.isArray(d.library)) {
     for (let i = 0; i < d.library.length; i++) {
@@ -188,11 +199,24 @@ export const validateImportData = (data: unknown): ImportLibraryData => {
     }
   }
 
-  return {
+  const result: ImportLibraryData = {
     library: d.library as ImportLibraryData['library'],
     media: d.media as ImportLibraryData['media'],
     people: d.people as ImportLibraryData['people'],
     alerts: d.alerts as ImportLibraryData['alerts'],
     weeklyDigest: d.weeklyDigest as ImportLibraryData['weeklyDigest'],
   };
+  if (typeof d.schemaVersion === 'number') {
+    result.schemaVersion = d.schemaVersion;
+  }
+  if (typeof d.exportedAt === 'number') {
+    result.exportedAt = d.exportedAt;
+  }
+  if (Array.isArray(d.works)) result.works = d.works as ImportLibraryData['works'];
+  if (Array.isArray(d.bookEditions)) result.bookEditions = d.bookEditions as ImportLibraryData['bookEditions'];
+  if (Array.isArray(d.relationships)) result.relationships = d.relationships as ImportLibraryData['relationships'];
+  if (Array.isArray(d.experiences)) result.experiences = d.experiences as ImportLibraryData['experiences'];
+  if (Array.isArray(d.reflections)) result.reflections = d.reflections as ImportLibraryData['reflections'];
+  if (Array.isArray(d.creators)) result.creators = d.creators as ImportLibraryData['creators'];
+  return result;
 };

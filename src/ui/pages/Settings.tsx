@@ -532,17 +532,19 @@ export function Settings() {
               <span className="settings-discovery-badge free">Free</span>
               <h4 className="settings-discovery-title">No key required</h4>
               <ul className="settings-discovery-list">
+                <li><strong>Open Library</strong> · Book search, works, editions, and covers</li>
                 <li><strong>TVmaze</strong> · TV series metadata, cast, and schedules</li>
                 <li><strong>Trakt</strong> · Film &amp; TV search, ratings, and trending</li>
-                <li><strong>Wikidata / Wikipedia</strong> · Plot summaries and director bios</li>
+                <li><strong>Wikidata / Wikipedia</strong> · Plot summaries and creator bios</li>
               </ul>
             </div>
             <div className="settings-discovery-card">
               <span className="settings-discovery-badge key">Key required</span>
               <h4 className="settings-discovery-title">Your credentials</h4>
               <ul className="settings-discovery-list">
-                <li><strong>TMDb</strong> · Full movie &amp; TV catalogue sync (recommended)</li>
+                <li><strong>TMDb</strong> · Full film &amp; TV catalogue sync (recommended for screen)</li>
                 <li><strong>OMDb</strong> · Optional reception and ratings enrichment</li>
+                <li><strong>Google Books</strong> · Optional book covers, descriptions, and recent titles</li>
                 <li><strong>LLM provider</strong> · Personalized recommendations when enabled</li>
               </ul>
             </div>
@@ -598,6 +600,23 @@ export function Settings() {
                 <a href="https://www.omdbapi.com/apikey.aspx" target="_blank" rel="noopener" className="settings-api-link">omdbapi.com</a>.
               </p>
             </div>
+
+            <div>
+              <label className="settings-field-label">Google Books API key (optional)</label>
+              <input
+                type="password"
+                placeholder="Paste your Google Books API key"
+                value={prefs.googleBooksApiKey || ''}
+                onChange={(e) => handleChange('googleBooksApiKey', e.currentTarget.value)}
+                className="settings-input"
+              />
+              <p className="settings-help-text">
+                Optional enrichment for covers, recent releases, and descriptions. Open Library works without a key.
+                Create a key in{' '}
+                <a href="https://console.cloud.google.com/apis/library/books.googleapis.com" target="_blank" rel="noopener" className="settings-api-link">Google Cloud</a>
+                {' '}(Books API).
+              </p>
+            </div>
           </div>
         </div>
         )}
@@ -621,7 +640,7 @@ export function Settings() {
               <span className="settings-toggle-text-lg">Enable AI-powered recommendations</span>
             </label>
             <p className="settings-toggle-help">
-              Uses your ratings, reflections, and wishlist to suggest films via your chosen provider.
+              Uses your ratings, reflections, and wishlist to suggest works via your chosen provider.
             </p>
           </div>
 
@@ -774,10 +793,11 @@ export function Settings() {
         )}
 
         {activeSection === 'browsing' && (
+        <>
         <div className="settings-panel">
           <h3 className="settings-panel-heading">Browsing &amp; overlays</h3>
           <p className="settings-panel-description">
-            Controls how Subsume appears on other websites when you browse Netflix, Letterboxd, and similar pages.
+            Controls how Subsume appears on other websites — streaming catalogues, review sites, retailers, essays, and more.
           </p>
 
           <div className="settings-field-stack">
@@ -836,6 +856,56 @@ export function Settings() {
             </div>
           </div>
         </div>
+
+        <div className="settings-panel">
+          <h3 className="settings-panel-heading">Books &amp; detection</h3>
+          <p className="settings-panel-description">
+            Choose what Subsume notices on the page. Open Library resolves book titles and ISBNs without a key;
+            full page HTML is never sent to providers.
+          </p>
+
+          <div className="settings-field-stack">
+            <label className="settings-toggle-label">
+              <input
+                type="checkbox"
+                checked={prefs.detectBooks ?? true}
+                onChange={(e) => handleChange('detectBooks', e.currentTarget.checked)}
+                className="settings-toggle-checkbox"
+              />
+              <span className="settings-toggle-text-sm">Detect books on pages</span>
+            </label>
+            <p className="settings-toggle-help">
+              Looks for titles, authors, and ISBNs while you browse. Resolution may send those identifiers to Open Library — not the full page.
+            </p>
+
+            <label className="settings-toggle-label">
+              <input
+                type="checkbox"
+                checked={prefs.detectScreenWorks ?? true}
+                onChange={(e) => handleChange('detectScreenWorks', e.currentTarget.checked)}
+                className="settings-toggle-checkbox"
+              />
+              <span className="settings-toggle-text-sm">Detect films &amp; shows on pages</span>
+            </label>
+            <p className="settings-toggle-help">
+              Poster and title detection for movies and television.
+            </p>
+
+            <label className="settings-toggle-label">
+              <input
+                type="checkbox"
+                checked={prefs.openLibraryEnabled ?? true}
+                onChange={(e) => handleChange('openLibraryEnabled', e.currentTarget.checked)}
+                className="settings-toggle-checkbox"
+              />
+              <span className="settings-toggle-text-sm">Use Open Library for books</span>
+            </label>
+            <p className="settings-toggle-help">
+              Default catalogue for search and resolution. No API key required. Turn off only if you prefer another source.
+            </p>
+          </div>
+        </div>
+        </>
         )}
 
         {activeSection === 'data' && (

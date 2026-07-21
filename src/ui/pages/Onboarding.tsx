@@ -154,15 +154,16 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             </h1>
             <div className="onboarding-divider" />
             <p className="onboarding-body">
-              Not a tracker. Not a spreadsheet. A place to hold what you watch,
-              where your afterglow and memory matter more than any algorithm's tally.
+              Not a tracker. Not a spreadsheet. A place to hold films, shows, and
+              books that take hold of you — where afterglow and memory matter more
+              than any algorithm&apos;s tally.
             </p>
             <div className="onboarding-pillars">
               {[
                 {
                   label: 'Discover',
                   description:
-                    'Marquee plaques on the pages you browse, with ratings woven in, without breaking your flow.',
+                    'Quiet plaques on the pages you browse — screen and page — without breaking your flow.',
                 },
                 {
                   label: 'Capture',
@@ -172,7 +173,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 {
                   label: 'Archive',
                   description:
-                    'An editorial ledger of your taste, arranged by intent, not date filed.',
+                    'An editorial ledger of screen and books, arranged by intent, not date filed.',
                 },
               ].map((item) => (
                 <div key={item.label} className="onboarding-pillar">
@@ -198,8 +199,14 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             </h1>
             <div className="onboarding-divider" />
             <p className="onboarding-body onboarding-body--compact">
-              TMDb powers posters, search, and the house programme. Paste your
-              API Read Access Token (Bearer), not the short API Key.
+              TMDb powers screen discovery — posters, search, and the house
+              programme. Paste your API Read Access Token (Bearer), not the short
+              API Key.
+            </p>
+            <p className="onboarding-body onboarding-body--compact">
+              Books use Open Library by default with no key. TMDb remains required
+              for film and TV features; you can finish setup with TMDb alone and
+              read with Open Library immediately.
             </p>
             <div className="onboarding-form">
               <label className="onboarding-label" htmlFor="onboarding-tmdb-key">
@@ -227,7 +234,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 >
                   themoviedb.org/settings/api
                 </a>
-                .
+                . Optional Google Books enrichment lives later under Settings.
               </p>
               {error && (
                 <p className="onboarding-error" role="alert">

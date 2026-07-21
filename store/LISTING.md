@@ -12,15 +12,15 @@ Paste-ready fields for the Chrome Web Store Developer Dashboard. Keep tone calm 
 ≤132 characters (count carefully before paste):
 
 ```
-Private film & TV sanctuary: capture what you watch while browsing, notes & ratings, optional AI taste—data stays on your device.
+Save films, shows, and books from any page. Capture what stayed with you and discover what fits your taste.
 ```
 
-Character count: 128.
+Character count: 108.
 
-Alternate (if you prefer metadata-first wording):
+Alternate (if you prefer privacy-first wording):
 
 ```
-Track films & shows you discover while browsing. Personal library, notes, ratings; optional AI. Client-side—no Subsume cloud.
+Private film, TV & book sanctuary: capture while browsing, notes & ratings, optional AI—data stays on your device.
 ```
 
 ---
@@ -28,20 +28,21 @@ Track films & shows you discover while browsing. Personal library, notes, rating
 ## Detailed description
 
 ```
-Subsume is a private cinematic sanctuary in your browser—not a social feed, not an ad surface.
+Subsume is a private sanctuary for films, shows, and books in your browser—not a social feed, not an ad surface.
 
-While you browse, Subsume can quietly notice film and TV posters and titles, and offer a restrained plaque or hover card so you can reflect without leaving the page. When something stays with you, capture it with notes, emotional ratings, and living intents (memory, revisit, wishlist). Your archive is organized like a hardcover catalogue, not a spreadsheet of algorithmic scores.
+While you browse, Subsume can quietly notice posters, titles, and books (including ISBNs on the page), and offer a restrained plaque or hover card so you can reflect without leaving the page. When something stays with you, capture it with notes, emotional ratings, and living intents (memory, revisit, wishlist). Your archive is organized like a hardcover catalogue, not a spreadsheet of algorithmic scores.
 
 What you can do
-• Discover titles on the web pages you already visit, with optional domain blacklist
-• Save a personal library of films and TV with notes and emotional scales
-• Follow people—directors, cast, crew—and explore filmography-style context
+• Discover films, shows, and books on the web pages you already visit, with optional domain blacklist
+• Save a personal library with notes and emotional scales
+• Follow people—directors, cast, crew, authors—and explore their body of work
+• Resolve books via Open Library by default (no key); optional Google Books key for enrichment
 • Optionally request AI recommendations using your own OpenAI, Anthropic, or Gemini API keys
 • Optionally back up library data to Google Drive appData (you connect; you disconnect)
 • Export your library; uninstall removes local extension data
 
 How it works (honestly)
-Subsume is client-side only. There is no Subsume backend that stores your taste profile. Your library and settings live in IndexedDB and chrome.storage.local on your device. Local data is not encrypted at rest—treat your browser profile as trusted. Optional API keys you paste in Settings never go to content scripts; network calls to metadata and AI providers use the background service worker.
+Subsume is client-side only. There is no Subsume backend that stores your taste profile. Your library and settings live in IndexedDB and chrome.storage.local on your device. Local data is not encrypted at rest—treat your browser profile as trusted. Optional API keys you paste in Settings never go to content scripts; network calls to metadata and AI providers use the background service worker. Book resolution may send titles, authors, or ISBNs to Open Library (not full page HTML).
 
 Permissions in plain language
 • Storage — keep your library and preferences on this device
@@ -49,11 +50,11 @@ Permissions in plain language
 • Notifications — optional digests or alerts you enable
 • Alarms — schedule those digests
 • Identity — optional Google sign-in for Drive backup
-• Host access — TMDb, optional OMDb/LLM providers, Trakt, TVMaze, Wikidata/Wikipedia, Google APIs
-• Content scripts on http/https — poster and title detection; disable per domain in Settings
+• Host access — TMDb, Open Library, optional OMDb/Google Books/LLM providers, Trakt, TVMaze, Wikidata/Wikipedia, Google APIs
+• Content scripts on http/https — poster, title, and book detection; disable per domain in Settings
 
 Attribution
-This product uses the TMDb API but is not endorsed or certified by TMDb.
+This product uses the TMDb API but is not endorsed or certified by TMDb. Book metadata may come from Open Library; Subsume is not affiliated with the Internet Archive or Open Library.
 
 Privacy
 No ads. No analytics SDKs. No selling your data. Full policy:
@@ -69,7 +70,7 @@ Developer contact: harsha16balakrishnan@proton.me
 One sentence (CWS “single purpose”):
 
 ```
-Subsume helps users keep a private film and TV library—capturing titles discovered while browsing, with notes, ratings, and optional on-device AI and Drive backup—without a Subsume cloud backend.
+Subsume helps users keep a private library of films, shows, and books—capturing titles discovered while browsing, with notes, ratings, and optional on-device AI and Drive backup—without a Subsume cloud backend.
 ```
 
 ---
@@ -104,6 +105,9 @@ Used solely for optional Google OAuth via `chrome.identity` (e.g. `launchWebAuth
 | :--- | :--- |
 | `https://api.themoviedb.org/*` | TMDb API for film/TV metadata, search, people, posters. |
 | `https://www.omdbapi.com/*` | Optional OMDb metadata when the user supplies an OMDb API key. |
+| `https://openlibrary.org/*` | Open Library book search, work/edition resolution (titles, authors, ISBNs—not full page HTML). |
+| `https://covers.openlibrary.org/*` | Open Library cover images for books. |
+| `https://www.googleapis.com/books/*` | Optional Google Books API when the user supplies a Books API key. |
 | `https://api.openai.com/*` | Optional OpenAI API calls with the user’s key for recommendations/digests. |
 | `https://api.anthropic.com/*` | Optional Anthropic API calls with the user’s key. |
 | `https://generativelanguage.googleapis.com/*` | Optional Google Gemini API calls with the user’s key. |
@@ -115,7 +119,7 @@ Used solely for optional Google OAuth via `chrome.identity` (e.g. `launchWebAuth
 
 ### content_scripts (all http/https URLs)
 
-Content scripts match `http://*/*` and `https://*/*` so poster and title detection works on any site the user browses (streaming catalogues, reviews, articles, etc.). Scripts inject isolated UI (Shadow DOM plaques/cards/dock). Users can blacklist domains in Settings. API keys are never exposed to content scripts; message surface to the background is allowlisted. Broad matches are required for cross-site discovery; they are not used for advertising or unrelated scraping.
+Content scripts match `http://*/*` and `https://*/*` so poster, title, and book detection works on any site the user browses (streaming catalogues, reviews, retailers, articles, etc.). Scripts inject isolated UI (Shadow DOM plaques/cards/dock). Users can blacklist domains and toggle book/screen detection in Settings. API keys are never exposed to content scripts; message surface to the background is allowlisted. Broad matches are required for cross-site discovery; they are not used for advertising or unrelated scraping.
 
 ---
 

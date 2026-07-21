@@ -66,7 +66,9 @@ export function Stats() {
           <span className="sanctuary-subtitle">Statistics</span>
         </div>
         <h2 className="sanctuary-title">Your programme</h2>
-        <p className="sanctuary-description">A snapshot of what you have watched, rated, and what stayed with you.</p>
+        <p className="sanctuary-description">
+          A snapshot of what you have watched, read, rated, and what stayed with you.
+        </p>
       </header>
 
       {loading ? (
@@ -77,9 +79,9 @@ export function Stats() {
       ) : totalWatched === 0 ? (
         <div className="sanctuary-empty-plaque">
           <span className="sanctuary-plaque-index">Index 00</span>
-          <h3 className="sanctuary-plaque-title">No screenings logged yet</h3>
+          <h3 className="sanctuary-plaque-title">No works logged yet</h3>
           <p className="sanctuary-plaque-text">
-            Mark titles as Watched and add reflections to see your afterglow, genres, and hours on the silver screen.
+            Mark titles as experienced and add reflections to see your afterglow, genres, and time with screen and page.
           </p>
         </div>
       ) : (
@@ -93,13 +95,13 @@ export function Stats() {
             <div className="stats-plaque-card">
               <span className="sanctuary-plaque-index stats-plaque-index">I</span>
               <span className="stat-value stats-plaque-value">{totalWatched}</span>
-              <span className="stats-plaque-label">Titles watched</span>
+              <span className="stats-plaque-label">Titles experienced</span>
             </div>
 
             <div className="stats-plaque-card">
               <span className="sanctuary-plaque-index stats-plaque-index">II</span>
               <span className="stat-value stats-plaque-value">{totalHours}</span>
-              <span className="stats-plaque-label">Hours watched</span>
+              <span className="stats-plaque-label">Hours on screen</span>
             </div>
 
             <div className="stats-plaque-card">

@@ -7,17 +7,25 @@
 
 import { scanPage, startObserving, stopObserving, scanImages, setImageScanConfig, DetectedTitle } from './scanner';
 import { detectCatalogRegions } from './catalogDetector';
-import { detectBookCandidates } from './bookDetection';
+import { detectBookCandidates, HIGH_CONFIDENCE } from './bookDetection';
 import { HoverCardManager } from './hoverCard';
 import { MuseumPlaqueManager as PosterBadgeManager } from './overlay';
+import { BookPlaqueManager, findBookPlaqueAnchor } from './bookOverlay';
 import { AuteurScreenplayDock } from './dock';
 import { sendMessage } from '@/shared/messages';
-import { MessageType, PosterMatch, ContentPrefs } from '@/shared/types';
+import { MessageType, PosterMatch, ContentPrefs, type MediaItem } from '@/shared/types';
+import type { DetectionCandidate } from '@/shared/catalogTypes';
 import { logger } from '@/shared/logger';
 import './content.css';
 
+/** Consider at most this many high-confidence book candidates for plaques. */
+const MAX_BOOK_PLAQUE_CANDIDATES = 8;
+/** Cap Open Library / catalog resolves per page load. */
+const MAX_BOOK_RESOLVE_CALLS = 5;
+
 let hoverManagerRef: HoverCardManager | null = null;
 let badgeManagerRef: PosterBadgeManager | null = null;
+let bookPlaqueManagerRef: BookPlaqueManager | null = null;
 let dockManagerRef: AuteurScreenplayDock | null = null;
 
 function teardownContentScript(): void {
@@ -26,8 +34,59 @@ function teardownContentScript(): void {
   hoverManagerRef = null;
   badgeManagerRef?.destroy();
   badgeManagerRef = null;
+  bookPlaqueManagerRef?.destroy();
+  bookPlaqueManagerRef = null;
   dockManagerRef?.destroy();
   dockManagerRef = null;
+}
+
+type ResolvePageCandidateResult =
+  | {
+      resolved: true;
+      media: MediaItem;
+      inLibrary?: boolean;
+      libraryStatus?: string;
+    }
+  | { resolved: false; reason?: string };
+
+/**
+ * Resolve high-confidence book candidates and attach sanctuary plaques.
+ * Mid-band confidence (0.65–0.84) is intentionally skipped (no auto-plaque).
+ * Only minimal DetectionCandidate fields are sent — never full page HTML.
+ */
+async function resolveAndAttachBookPlaques(
+  candidates: DetectionCandidate[],
+  manager: BookPlaqueManager
+): Promise<void> {
+  const high = candidates
+    .filter((c) => c.confidence >= HIGH_CONFIDENCE)
+    .slice(0, MAX_BOOK_PLAQUE_CANDIDATES)
+    .slice(0, MAX_BOOK_RESOLVE_CALLS);
+
+  for (const candidate of high) {
+    try {
+      const res = await sendMessage<DetectionCandidate, ResolvePageCandidateResult>(
+        MessageType.RESOLVE_PAGE_CANDIDATE,
+        candidate
+      );
+      if (!res.success || !res.data || !res.data.resolved || !res.data.media) {
+        continue;
+      }
+      const { media, inLibrary, libraryStatus } = res.data;
+      const anchor = findBookPlaqueAnchor(candidate) ?? document.documentElement;
+      manager.attachNear(anchor, {
+        mediaId: media.id,
+        title: media.canonicalTitle || candidate.title || 'Untitled',
+        authors: media.authors ?? candidate.authorOrCreator,
+        year: media.year ?? candidate.year,
+        inLibrary: Boolean(inLibrary),
+        status: libraryStatus,
+        media,
+      });
+    } catch (err) {
+      logger.warn('[Subsume] Book candidate resolve skipped:', err);
+    }
+  }
 }
 
 async function init(): Promise<void> {
@@ -47,6 +106,7 @@ async function init(): Promise<void> {
   // Default discovery features on; only disable when prefs explicitly say so.
   const hoverEnabled = prefs?.hoverCardsEnabled ?? true;
   const overlaysEnabled = prefs?.posterOverlaysEnabled ?? true;
+  const coverOverlaysEnabled = prefs?.coverOverlaysEnabled ?? true;
   const dockEnabled = prefs?.screenplayDockEnabled ?? false;
   const sensitivity = prefs?.detectionSensitivity || 'medium';
 
@@ -56,24 +116,23 @@ async function init(): Promise<void> {
   }
 
   // Book detection on arbitrary pages (JSON-LD, ISBN, adapters, heuristics).
-  // Resolve only high-confidence candidates against Open Library (budgeted).
+  // High confidence (≥0.85) only: resolve + plaque when cover overlays on.
+  // Mid-band (0.65–0.84) is detected but not auto-plaqued (precision first).
   const detectBooksEnabled = prefs?.detectBooks !== false;
   if (detectBooksEnabled) {
     try {
       const bookCandidates = detectBookCandidates(document, new URL(window.location.href));
       logger.log(`[Subsume] Book detection found ${bookCandidates.length} candidate(s).`);
-      const high = bookCandidates.filter((c) => c.confidence >= 0.85).slice(0, 5);
-      for (const candidate of high) {
-        sendMessage(MessageType.RESOLVE_PAGE_CANDIDATE, candidate).catch((err) => {
-          logger.warn('[Subsume] Book candidate resolve skipped:', err);
-        });
+      if (coverOverlaysEnabled) {
+        bookPlaqueManagerRef = new BookPlaqueManager();
+        void resolveAndAttachBookPlaques(bookCandidates, bookPlaqueManagerRef);
       }
     } catch (err) {
       logger.error('[Subsume] Book detection failed:', err);
     }
   }
 
-  if (!hoverEnabled && !overlaysEnabled && !dockEnabled) {
+  if (!hoverEnabled && !overlaysEnabled && !dockEnabled && !coverOverlaysEnabled) {
     logger.log('[Subsume] Page scanning and dock disabled in preferences. Exiting.');
     return;
   }

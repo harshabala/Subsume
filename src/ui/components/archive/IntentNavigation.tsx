@@ -11,12 +11,28 @@ const INTENT_TABS: { id: IntentFilterOption; label: string }[] = [
 
 export type CollectionFilter = 'all' | LibraryStatus;
 
-const COLLECTION_TABS: { id: CollectionFilter; label: string }[] = [
+const COLLECTION_TABS_SCREEN: { id: CollectionFilter; label: string }[] = [
   { id: 'all', label: 'Full programme' },
   { id: 'watched', label: 'Screened' },
   { id: 'to-watch', label: 'Anticipated' },
   { id: 'watching', label: 'Now showing' },
   { id: 'abandoned', label: 'Shelved' },
+];
+
+const COLLECTION_TABS_BOOKS: { id: CollectionFilter; label: string }[] = [
+  { id: 'all', label: 'All books' },
+  { id: 'watched', label: 'Read' },
+  { id: 'to-watch', label: 'Want to read' },
+  { id: 'watching', label: 'Reading' },
+  { id: 'abandoned', label: 'Did not finish' },
+];
+
+const COLLECTION_TABS_ALL: { id: CollectionFilter; label: string }[] = [
+  { id: 'all', label: 'Everything' },
+  { id: 'watched', label: 'Completed' },
+  { id: 'to-watch', label: 'Planned' },
+  { id: 'watching', label: 'In progress' },
+  { id: 'abandoned', label: 'Stopped' },
 ];
 
 /** Primary medium filter: All | Screen | Books (spec §8.2) */
@@ -39,6 +55,13 @@ export function IntentNavigation({
   collectionFilter,
   setCollectionFilter,
 }: IntentNavigationProps) {
+  const collectionTabs =
+    activeTab === 'books'
+      ? COLLECTION_TABS_BOOKS
+      : activeTab === 'all'
+        ? COLLECTION_TABS_ALL
+        : COLLECTION_TABS_SCREEN;
+
   return (
     <Fragment>
       <div className="tab-bar" role="tablist" aria-label="Medium">
@@ -85,7 +108,7 @@ export function IntentNavigation({
       )}
 
       <div className="collection-filter-bar" role="tablist" aria-label="Library by status">
-        {COLLECTION_TABS.map((tab) => (
+        {collectionTabs.map((tab) => (
           <button
             key={tab.id}
             type="button"
@@ -98,7 +121,11 @@ export function IntentNavigation({
         ))}
       </div>
 
-      <p className="intent-filter-hint">Optional: refine screened titles by how you want to remember them.</p>
+      <p className="intent-filter-hint">
+        {activeTab === 'books'
+          ? 'Optional: refine by how you want to remember each book.'
+          : 'Optional: refine by how you want to remember each work.'}
+      </p>
       <div className="intent-filter-bar">
         {INTENT_TABS.map((tab) => (
           <button

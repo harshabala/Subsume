@@ -1,0 +1,33 @@
+{
+  "kind": "books#volumes",
+  "totalItems": 1,
+  "items": [
+    {
+      "kind": "books#volume",
+      "id": "iXn5U2IzVHMC",
+      "selfLink": "https://www.googleapis.com/books/v1/volumes/iXn5U2IzVHMC",
+      "volumeInfo": {
+        "title": "The Great Gatsby",
+        "authors": ["F. Scott Fitzgerald"],
+        "publisher": "Scribner",
+        "publishedDate": "2004-09-30",
+        "description": "The story of the mysteriously wealthy Jay Gatsby and his love for the beautiful Daisy Buchanan.",
+        "industryIdentifiers": [
+          { "type": "ISBN_13", "identifier": "9780743273565" },
+          { "type": "ISBN_10", "identifier": "0743273567" }
+        ],
+        "pageCount": 180,
+        "categories": ["Fiction", "Classics"],
+        "averageRating": 3.9,
+        "ratingsCount": 1200,
+        "language": "en",
+        "imageLinks": {
+          "smallThumbnail": "http://books.google.com/books/content?id=iXn5U2IzVHMC&printsec=frontcover&img=1&zoom=5",
+          "thumbnail": "http://books.google.com/books/content?id=iXn5U2IzVHMC&printsec=frontcover&img=1&zoom=1"
+        },
+        "infoLink": "https://books.google.com/books?id=iXn5U2IzVHMC",
+        "canonicalVolumeLink": "https://books.google.com/books/about/The_Great_Gatsby.html?id=iXn5U2IzVHMC"
+      }
+    }
+  ]
+}

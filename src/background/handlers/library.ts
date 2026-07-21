@@ -12,6 +12,8 @@ import {
   CheckLibraryStatusResponse,
   LibraryItem,
 } from '@/shared/types';
+import { v4 as uuidv4 } from 'uuid';
+import type { Reflection } from '@/shared/catalogTypes';
 import {
   getMediaItem,
   putMediaItem,
@@ -21,6 +23,10 @@ import {
   getAllLibraryItems,
   getLibraryPage,
   getAllMediaMap,
+  getReflectionsForWork,
+  putReflection,
+  getRelationship,
+  putRelationship,
   intentForStatus,
   isValidMediaItem,
   seedDemoLibraryIfEmpty,
@@ -30,6 +36,48 @@ import { isSafeNavMediaId } from '@/shared/mediaIds';
 import { invalidateProfileCache } from '../context';
 import { mergeMediaItems } from '../mediaMerge';
 import { broadcastMessage, parseSetUserNotesRequest, parseUpdateStatusRequest } from './utils';
+
+/** Append a reflection from notes/emotionalRecall when body is new vs latest. */
+async function appendReflectionFromNotes(
+  workId: string,
+  emotionalRecall: string | undefined,
+  notes: string | undefined,
+): Promise<void> {
+  const body = (emotionalRecall?.trim() || notes?.trim() || '');
+  if (!body) return;
+
+  const existing = await getReflectionsForWork(workId);
+  const sorted = [...existing].sort(
+    (a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id),
+  );
+  const latest = sorted[sorted.length - 1];
+  if (latest && latest.body.trim() === body) {
+    return;
+  }
+
+  const hasFirstImpression = sorted.some((r) => r.kind === 'first_impression');
+  const kind: Reflection['kind'] = hasFirstImpression ? 'later_reflection' : 'first_impression';
+  const now = Date.now();
+  const reflection: Reflection = {
+    id: uuidv4(),
+    workId,
+    kind,
+    body,
+    createdAt: now,
+    updatedAt: now,
+  };
+  await putReflection(reflection);
+
+  const rel = await getRelationship(workId);
+  if (rel) {
+    const excerpt = body.length <= 280 ? body : `${body.slice(0, 279)}…`;
+    await putRelationship({
+      ...rel,
+      latestReflectionExcerpt: excerpt,
+      updatedAt: now,
+    });
+  }
+}
 
 export const libraryHandlers: MessageHandlerMap = {
   [MessageType.ADD_TO_LIST]: async (payload) => {
@@ -152,6 +200,19 @@ export const libraryHandlers: MessageHandlerMap = {
     existing.warmth = req.warmth !== undefined ? req.warmth : existing.warmth;
     existing.updatedAt = Date.now();
     await putLibraryItem(existing);
+
+    // Appendable reflections: also write a Reflection when notes/recall are non-empty
+    // and not a duplicate of the latest first_impression / later_reflection body.
+    try {
+      await appendReflectionFromNotes(
+        existing.mediaId,
+        existing.emotionalRecall,
+        existing.notes,
+      );
+    } catch (err) {
+      logger.warn('[Subsume] SET_USER_NOTES reflection append failed:', err);
+    }
+
     invalidateProfileCache();
     await broadcastMessage({
       type: 'LIBRARY_UPDATED',

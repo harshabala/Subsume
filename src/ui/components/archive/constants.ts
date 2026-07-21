@@ -1,4 +1,5 @@
-import { LibraryStatus, SanctuaryIntent, LibraryItem } from '@/shared/types';
+import { LibraryStatus, SanctuaryIntent, LibraryItem, MediaType } from '@/shared/types';
+import { legacyStatusLabel } from '@/shared/statusLabels';
 
 export const STATUS_OPTIONS: { value: LibraryStatus; label: string }[] = [
   { value: 'to-watch', label: 'Anticipated' },
@@ -6,6 +7,18 @@ export const STATUS_OPTIONS: { value: LibraryStatus; label: string }[] = [
   { value: 'watched', label: 'Screened' },
   { value: 'abandoned', label: 'Shelved' },
 ];
+
+/** Medium-aware operational status options for detail/capture UI */
+export function statusOptionsForMedium(medium: MediaType | 'movie' | 'tv' | 'book'): {
+  value: LibraryStatus;
+  label: string;
+}[] {
+  const m = medium === 'book' ? 'book' : medium;
+  return (['to-watch', 'watching', 'watched', 'abandoned'] as LibraryStatus[]).map((value) => ({
+    value,
+    label: legacyStatusLabel(value, m),
+  }));
+}
 
 export const INTENT_CHIP_LABELS: Record<SanctuaryIntent, string> = {
   keep_memory: 'Keep This Memory',

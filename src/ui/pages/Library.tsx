@@ -325,7 +325,21 @@ export function Library() {
         ) : items.length === 0 ? (
           <EmptyStateProjection
             className="library-empty-state"
-            hint="Browse titles on the web or capture a moment to enrol your first frame."
+            title={
+              activeTab === 'books'
+                ? 'No books here yet'
+                : undefined
+            }
+            message={
+              activeTab === 'books'
+                ? 'When a title catches you, save it before the moment passes.'
+                : undefined
+            }
+            hint={
+              activeTab === 'books'
+                ? 'Browse any page for a title that holds you, or search the catalogue.'
+                : 'Browse titles on the web or capture a moment to enrol your first frame.'
+            }
           />
         ) : (
           <Fragment>

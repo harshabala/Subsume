@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Privacy policy for Subsume, a client-side Chrome extension for personal film and TV libraries. No Subsume backend; data stays on your device unless you enable optional Drive backup." />
+  <meta name="description" content="Privacy policy for Subsume, a client-side Chrome extension for personal film, TV, and book libraries. No Subsume backend; data stays on your device unless you enable optional Drive backup." />
   <title>Privacy Policy — Subsume</title>
   <style>
     :root {
@@ -250,7 +250,7 @@
         <strong>Harsha Balakrishnan</strong> (“we,” “us,” or “the developer”), handles information when you install and use the extension.
       </p>
       <p>
-        Subsume is a private cinematic sanctuary: a client-side tool for tracking films and television you care about,
+        Subsume is a private multi-medium sanctuary: a client-side tool for tracking films, television, and books you care about,
         recording notes and emotional ratings, and optionally enriching metadata or recommendations through third-party
         services you choose. There is <strong>no Subsume backend server</strong>. Your library lives on your device unless
         you explicitly enable optional cloud backup.
@@ -307,8 +307,8 @@
 
       <h3 style="font-size:1.05rem;color:var(--text-muted);font-weight:500;margin:1.5rem 0 0.5rem;">Personal media library</h3>
       <p>
-        Titles you save (films and TV shows), status (for example watched, wishlist, or sanctuary intents), ratings,
-        emotional scales, free-text notes and reflections, people you follow (directors, cast, crew), alerts, and related preferences.
+        Titles you save (films, TV shows, and books), status (for example watched, wishlist, reading progress, or sanctuary intents), ratings,
+        emotional scales, free-text notes and reflections, people you follow (directors, cast, crew, authors), alerts, and related preferences.
       </p>
 
       <h3 style="font-size:1.05rem;color:var(--text-muted);font-weight:500;margin:1.5rem 0 0.5rem;">Preferences and settings</h3>
@@ -319,7 +319,7 @@
 
       <h3 style="font-size:1.05rem;color:var(--text-muted);font-weight:500;margin:1.5rem 0 0.5rem;">Optional API keys</h3>
       <p>
-        If you supply them in Settings, Subsume stores keys you provide for services such as TMDb, OMDb, and large language
+        If you supply them in Settings, Subsume stores keys you provide for services such as TMDb, OMDb, optional Google Books, and large language
         model providers (OpenAI, Anthropic, and/or Google Gemini). These keys are stored in local extension storage
         (including IndexedDB as part of user preferences). <strong>They are not encrypted at rest.</strong> They are used
         only to call the providers you configure, from the extension’s background context.
@@ -338,10 +338,16 @@
 
       <h3 style="font-size:1.05rem;color:var(--text-muted);font-weight:500;margin:1.5rem 0 0.5rem;">Page context for discovery (content scripts)</h3>
       <p>
-        To detect posters and titles while you browse, content scripts may run on <strong>http</strong> and
-        <strong>https</strong> pages. They inspect page content for media titles and poster images so Subsume can show
-        quiet overlays (for example rating plaques or hover cards). You can disable Subsume on specific domains via
+        To detect posters, titles, and books while you browse, content scripts may run on <strong>http</strong> and
+        <strong>https</strong> pages. They inspect page content for media titles, poster or cover images, structured book data,
+        and ISBNs so Subsume can show quiet overlays (for example rating plaques or hover cards). You can turn book or screen
+        detection off in <strong>Settings → Books &amp; detection</strong>, and disable Subsume on specific domains via
         <strong>Settings → Disabled Domains</strong>. Uninstalling the extension removes the scripts entirely.
+      </p>
+      <p>
+        When a book candidate is found, the extension may send <strong>titles, authors, and/or ISBNs</strong> to Open Library
+        (and optionally Google Books if you supply a key) for resolution. <strong>Full page HTML is not sent</strong> to those
+        providers—only the identifiers needed to match a work or edition.
       </p>
       <p>
         Content scripts do not receive your API keys. Sensitive library export and settings operations are restricted to
@@ -403,6 +409,14 @@
             <td>Supplemental title metadata when you provide an OMDb API key.</td>
           </tr>
           <tr>
+            <td><strong>Open Library</strong></td>
+            <td>Default book catalogue: search, work/edition resolution, covers. No user API key required. May receive ISBNs, titles, and authors for lookups—not full page HTML.</td>
+          </tr>
+          <tr>
+            <td><strong>Google Books</strong> (optional)</td>
+            <td>Optional book enrichment (covers, descriptions, recent titles) when you provide a Google Books API key. Lookups use limited identifiers (ISBN/title/author), not full page HTML.</td>
+          </tr>
+          <tr>
             <td><strong>OpenAI / Anthropic / Google Gemini</strong> (optional)</td>
             <td>AI recommendations or digests using <strong>your</strong> API keys, from the background service worker. Prompt material may include short excerpts of your notes and taste profile built from your local library—not arbitrary full page DOM dumps.</td>
           </tr>
@@ -420,7 +434,7 @@
           </tr>
           <tr>
             <td><strong>Google APIs</strong></td>
-            <td>OAuth identity and Google Drive appData backup when you connect Drive.</td>
+            <td>OAuth identity and Google Drive appData backup when you connect Drive; Google Books API when a Books key is configured.</td>
           </tr>
         </tbody>
       </table>
@@ -429,7 +443,8 @@
         those services. Review their policies before enabling optional integrations or providing API keys.
       </p>
       <p>
-        This product uses the TMDb API but is not endorsed or certified by TMDb.
+        This product uses the TMDb API but is not endorsed or certified by TMDb. Book data may come from Open Library;
+        Subsume is not affiliated with the Internet Archive or Open Library.
       </p>
 
       <h2 id="not-do">What we do not do</h2>
@@ -450,7 +465,7 @@
         <li><strong>Export</strong> your library from the extension (exports are designed to exclude API keys; media and library records are included).</li>
         <li><strong>Disable domains</strong> so content scripts do not run their discovery UI on sites you blacklist.</li>
         <li><strong>Disconnect Google Drive</strong> to stop optional backup via the extension’s Settings.</li>
-        <li><strong>Clear or change API keys</strong> in Settings; stop using optional LLM or OMDb features at any time.</li>
+        <li><strong>Clear or change API keys</strong> in Settings; stop using optional LLM, OMDb, or Google Books features at any time. Turn off book detection or Open Library under <strong>Books &amp; detection</strong>.</li>
         <li><strong>Uninstall</strong> the extension to remove it and its local Chrome extension data from the browser.</li>
         <li><strong>Contact</strong> the developer at the email above with privacy questions.</li>
       </ol>
@@ -464,7 +479,7 @@
         <li><strong>Alarms</strong> — schedule periodic tasks such as digests.</li>
         <li><strong>Identity</strong> — sign in to Google for optional Drive backup.</li>
         <li><strong>Host access</strong> — call the metadata and AI endpoints listed above.</li>
-        <li><strong>Content scripts on web pages</strong> — detect titles/posters for discovery overlays; controllable via domain blacklist.</li>
+        <li><strong>Content scripts on web pages</strong> — detect titles, posters, covers, and book identifiers for discovery overlays; controllable via detection toggles and domain blacklist.</li>
       </ul>
 
       <h2 id="children">Children’s privacy</h2>
@@ -503,7 +518,7 @@
     </main>
 
     <footer>
-      <p><em>Subsume — a private cinematic sanctuary on your device.</em></p>
+      <p><em>Subsume — a private sanctuary for screen and page, on your device.</em></p>
       <p>
         Developer: Harsha Balakrishnan ·
         <a href="mailto:harsha16balakrishnan@proton.me">harsha16balakrishnan@proton.me</a>

@@ -11,6 +11,7 @@ const API_KEY_FIELDS: (keyof UserPreferences)[] = [
   'omdbApiKey',
   'llmApiKey',
   'llmSecondaryApiKey',
+  'googleBooksApiKey',
 ];
 
 /**
@@ -20,8 +21,18 @@ const API_KEY_FIELDS: (keyof UserPreferences)[] = [
  */
 function sanitizePreferencesForContentScript(
   prefs: UserPreferences
-): Omit<UserPreferences, 'tmdbApiKey' | 'omdbApiKey' | 'llmApiKey' | 'llmSecondaryApiKey'> {
-  const { tmdbApiKey: _tmdb, omdbApiKey: _omdb, llmApiKey: _llm, llmSecondaryApiKey: _llmSec, ...safe } = prefs;
+): Omit<
+  UserPreferences,
+  'tmdbApiKey' | 'omdbApiKey' | 'llmApiKey' | 'llmSecondaryApiKey' | 'googleBooksApiKey'
+> {
+  const {
+    tmdbApiKey: _tmdb,
+    omdbApiKey: _omdb,
+    llmApiKey: _llm,
+    llmSecondaryApiKey: _llmSec,
+    googleBooksApiKey: _gb,
+    ...safe
+  } = prefs;
   return safe;
 }
 
@@ -39,6 +50,7 @@ function maskPreferencesApiKeys(prefs: UserPreferences): UserPreferences {
     omdbApiKey: maskApiKey(prefs.omdbApiKey),
     llmApiKey: maskApiKey(prefs.llmApiKey),
     llmSecondaryApiKey: maskApiKey(prefs.llmSecondaryApiKey),
+    googleBooksApiKey: maskApiKey(prefs.googleBooksApiKey),
   };
 }
 
@@ -77,6 +89,7 @@ function isValidUserPreferences(prefs: any): prefs is UserPreferences {
   if (prefs.llmSecondaryApiKey !== undefined && typeof prefs.llmSecondaryApiKey !== 'string') return false;
   if (prefs.tmdbApiKey !== undefined && typeof prefs.tmdbApiKey !== 'string') return false;
   if (prefs.omdbApiKey !== undefined && typeof prefs.omdbApiKey !== 'string') return false;
+  if (prefs.googleBooksApiKey !== undefined && typeof prefs.googleBooksApiKey !== 'string') return false;
   if (typeof prefs.hoverCardsEnabled !== 'boolean') return false;
   if (typeof prefs.posterOverlaysEnabled !== 'boolean') return false;
   if (!Array.isArray(prefs.disabledDomains) || !prefs.disabledDomains.every((d: any) => typeof d === 'string')) return false;

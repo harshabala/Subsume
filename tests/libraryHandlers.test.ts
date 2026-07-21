@@ -54,6 +54,10 @@ vi.mock('@/background/storage', async () => {
     deleteWatchAlert: vi.fn(),
     mergeSeedCatalog: vi.fn(),
     mergeSeedCatalogIfVersionBehind: vi.fn().mockResolvedValue(undefined),
+    getReflectionsForWork: vi.fn().mockResolvedValue([]),
+    putReflection: vi.fn().mockResolvedValue(undefined),
+    getRelationship: vi.fn().mockResolvedValue(undefined),
+    putRelationship: vi.fn().mockResolvedValue(undefined),
     intentForStatus,
     isValidMediaItem,
   };

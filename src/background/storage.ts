@@ -692,9 +692,30 @@ export async function saveWeeklyDigest(digest: WeeklyDigest): Promise<void> {
   await db.put('preferences', digest, 'digest');
 }
 
+/**
+ * Export library backup as SubsumeExportV2.
+ * Includes legacy arrays AND multi-medium stores when populated.
+ * NEVER includes preferences/API keys.
+ */
 export async function exportLibraryData(): Promise<ImportLibraryData> {
   const db = await getDb();
-  const tx = db.transaction(['library', 'media', 'people', 'alerts', 'preferences'], 'readonly');
+  const tx = db.transaction(
+    [
+      'library',
+      'media',
+      'people',
+      'alerts',
+      'preferences',
+      'works',
+      'book_editions',
+      'relationships',
+      'experiences',
+      'reflections',
+      'creators',
+    ],
+    'readonly'
+  );
+
   const library = await tx.objectStore('library').getAll();
   const people = await tx.objectStore('people').getAll();
   const alerts = await tx.objectStore('alerts').getAll();
@@ -714,13 +735,35 @@ export async function exportLibraryData(): Promise<ImportLibraryData> {
   );
 
   const media = Object.values(mediaMap);
-  const result: ImportLibraryData = { library, media, people };
+
+  // Multi-medium stores (only include when non-empty to keep backups lean)
+  const works = await tx.objectStore('works').getAll();
+  const bookEditions = await tx.objectStore('book_editions').getAll();
+  const relationships = await tx.objectStore('relationships').getAll();
+  const experiences = await tx.objectStore('experiences').getAll();
+  const reflections = await tx.objectStore('reflections').getAll();
+  const creators = await tx.objectStore('creators').getAll();
+
+  const result: ImportLibraryData = {
+    schemaVersion: 2,
+    exportedAt: Date.now(),
+    library,
+    media,
+    people,
+  };
   if (alerts.length > 0) {
     result.alerts = alerts;
   }
   if (weeklyDigest) {
     result.weeklyDigest = weeklyDigest;
   }
+  if (works.length > 0) result.works = works;
+  if (bookEditions.length > 0) result.bookEditions = bookEditions;
+  if (relationships.length > 0) result.relationships = relationships;
+  if (experiences.length > 0) result.experiences = experiences;
+  if (reflections.length > 0) result.reflections = reflections;
+  if (creators.length > 0) result.creators = creators;
+
   return result;
 }
 
@@ -812,10 +855,79 @@ function isValidWeeklyDigest(d: unknown): d is WeeklyDigest {
   });
 }
 
+function isValidCatalogWork(w: unknown): w is CatalogWork {
+  if (!w || typeof w !== 'object') return false;
+  const item = w as Record<string, unknown>;
+  if (typeof item.id !== 'string' || !item.id) return false;
+  if (typeof item.canonicalTitle !== 'string' || !item.canonicalTitle) return false;
+  if (!['movie', 'tv', 'book'].includes(item.medium as string)) return false;
+  return true;
+}
+
+function isValidBookEdition(e: unknown): e is BookEdition {
+  if (!e || typeof e !== 'object') return false;
+  const item = e as Record<string, unknown>;
+  if (typeof item.id !== 'string' || !item.id) return false;
+  if (typeof item.workId !== 'string' || !item.workId) return false;
+  if (typeof item.title !== 'string' || !item.title) return false;
+  return true;
+}
+
+function isValidRelationship(r: unknown): r is LibraryRelationship {
+  if (!r || typeof r !== 'object') return false;
+  const item = r as Record<string, unknown>;
+  if (typeof item.workId !== 'string' || !item.workId) return false;
+  if (typeof item.status !== 'string') return false;
+  return true;
+}
+
+function isValidReflection(r: unknown): r is Reflection {
+  if (!r || typeof r !== 'object') return false;
+  const item = r as Record<string, unknown>;
+  if (typeof item.id !== 'string' || !item.id) return false;
+  if (typeof item.workId !== 'string' || !item.workId) return false;
+  return true;
+}
+
+function isValidExperience(e: unknown): e is Experience {
+  if (!e || typeof e !== 'object') return false;
+  const item = e as Record<string, unknown>;
+  if (typeof item.id !== 'string' || !item.id) return false;
+  if (typeof item.workId !== 'string' || !item.workId) return false;
+  return true;
+}
+
+function isValidCreator(c: unknown): c is Creator {
+  if (!c || typeof c !== 'object') return false;
+  const item = c as Record<string, unknown>;
+  if (typeof item.id !== 'string' || !item.id) return false;
+  if (typeof item.name !== 'string' || !item.name) return false;
+  return true;
+}
+
+/**
+ * Import library backup.
+ * Accepts legacy v1 (no schemaVersion) and v2 multi-medium exports.
+ * Imports works/relationships/reflections/editions/creators when present;
+ * still imports legacy media/library/people.
+ * Ignores any preferences or API key fields if present.
+ */
 export async function importLibraryData(data: ImportLibraryData) {
   const db = await getDb();
   const tx = db.transaction(
-    ['library', 'media', 'people', 'alerts', 'preferences'],
+    [
+      'library',
+      'media',
+      'people',
+      'alerts',
+      'preferences',
+      'works',
+      'book_editions',
+      'relationships',
+      'experiences',
+      'reflections',
+      'creators',
+    ],
     'readwrite'
   );
   try {
@@ -862,6 +974,63 @@ export async function importLibraryData(data: ImportLibraryData) {
         console.warn('[Subsume] Import skipped invalid weekly digest:', data.weeklyDigest);
       }
     }
+
+    // v2 multi-medium stores
+    if (Array.isArray(data.works)) {
+      for (const w of data.works) {
+        if (isValidCatalogWork(w)) {
+          await tx.objectStore('works').put(w);
+        } else {
+          console.warn('[Subsume] Import skipped invalid work:', w);
+        }
+      }
+    }
+    if (Array.isArray(data.bookEditions)) {
+      for (const e of data.bookEditions) {
+        if (isValidBookEdition(e)) {
+          await tx.objectStore('book_editions').put(e);
+        } else {
+          console.warn('[Subsume] Import skipped invalid book edition:', e);
+        }
+      }
+    }
+    if (Array.isArray(data.relationships)) {
+      for (const r of data.relationships) {
+        if (isValidRelationship(r)) {
+          await tx.objectStore('relationships').put(r);
+        } else {
+          console.warn('[Subsume] Import skipped invalid relationship:', r);
+        }
+      }
+    }
+    if (Array.isArray(data.experiences)) {
+      for (const e of data.experiences) {
+        if (isValidExperience(e)) {
+          await tx.objectStore('experiences').put(e);
+        } else {
+          console.warn('[Subsume] Import skipped invalid experience:', e);
+        }
+      }
+    }
+    if (Array.isArray(data.reflections)) {
+      for (const r of data.reflections) {
+        if (isValidReflection(r)) {
+          await tx.objectStore('reflections').put(r);
+        } else {
+          console.warn('[Subsume] Import skipped invalid reflection:', r);
+        }
+      }
+    }
+    if (Array.isArray(data.creators)) {
+      for (const c of data.creators) {
+        if (isValidCreator(c)) {
+          await tx.objectStore('creators').put(c);
+        } else {
+          console.warn('[Subsume] Import skipped invalid creator:', c);
+        }
+      }
+    }
+
     await tx.done;
     // Keep multi-medium stores in sync with imported legacy rows.
     await copyLegacyStoresToV4(db);
@@ -1040,6 +1209,11 @@ export async function getReflectionsForWork(workId: string): Promise<Reflection[
 export async function putExperience(experience: Experience): Promise<void> {
   const db = await getDb();
   await db.put('experiences', experience);
+}
+
+export async function getExperience(id: string): Promise<Experience | undefined> {
+  const db = await getDb();
+  return db.get('experiences', id);
 }
 
 export async function getExperiencesForWork(workId: string): Promise<Experience[]> {

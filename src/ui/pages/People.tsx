@@ -23,7 +23,27 @@ const ROLE_OPTIONS: { value: CrewRole; label: string }[] = [
   { value: 'editor', label: 'Editor' },
 ];
 
+function isAuthorPerson(person: { id: string; knownForDepartment?: string; role?: string }): boolean {
+  return (
+    person.id.startsWith('openlibrary_author_') ||
+    person.knownForDepartment === 'Author' ||
+    person.role === 'writer' && person.id.startsWith('openlibrary_author_')
+  );
+}
+
+function displayRoleLabel(person: { id: string; role?: string; knownForDepartment?: string }): string {
+  if (isAuthorPerson(person) || person.knownForDepartment === 'Author') return 'Author';
+  return person.role || person.knownForDepartment || 'Creator';
+}
+
+function profileImageSrc(path: string | null | undefined): string | null {
+  if (!path) return null;
+  if (/^https?:\/\//i.test(path)) return path;
+  return `https://image.tmdb.org/t/p/w185${path}`;
+}
+
 function getRoleFromDepartment(dept: string): CrewRole {
+  if (dept === 'Author') return 'writer';
   if (dept === 'Acting') return 'actor';
   if (dept === 'Directing') return 'director';
   if (dept === 'Writing') return 'writer';
@@ -45,8 +65,11 @@ export function People() {
   const [searchResults, setSearchResults] = useState<PersonSearchItem[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [hasApiKey, setHasApiKey] = useState(true);
+  const [openLibraryEnabled, setOpenLibraryEnabled] = useState(true);
   const [followingMap, setFollowingMap] = useState<Record<string, boolean>>({});
   const [selectedRoles, setSelectedRoles] = useState<Record<string, CrewRole>>({});
+
+  const canSearch = hasApiKey || openLibraryEnabled;
 
   const loadFollowing = useCallback(async () => {
     setLoadingFollowing(true);
@@ -71,6 +94,7 @@ export function People() {
     sendMessage<Record<string, unknown>, UserPreferences>(MessageType.GET_PREFERENCES, {}).then((res) => {
       if (res.success && res.data) {
         setHasApiKey(!!res.data.tmdbApiKey);
+        setOpenLibraryEnabled(res.data.openLibraryEnabled !== false);
       }
     }).catch(() => {});
     loadFollowing();
@@ -175,8 +199,10 @@ export function People() {
         <div className="sanctuary-header-meta">
           <span className="sanctuary-subtitle">Filmmakers</span>
         </div>
-        <h2 className="sanctuary-title">Filmmakers</h2>
-        <p className="sanctuary-description">Follow the filmmakers you care about and keep their full repertoire in your private archive.</p>
+        <h2 className="sanctuary-title">Creators</h2>
+        <p className="sanctuary-description">
+          Follow filmmakers and authors you care about and keep their repertoire in your private archive.
+        </p>
       </header>
 
       <div className="people-sanctuary-tabs">
@@ -233,9 +259,9 @@ export function People() {
                         ×
                       </button>
 
-                      {person.profileImageUrl ? (
+                      {profileImageSrc(person.profileImageUrl) ? (
                         <img
-                          src={`https://image.tmdb.org/t/p/w185${person.profileImageUrl}`}
+                          src={profileImageSrc(person.profileImageUrl)!}
                           alt={person.name}
                           className="people-sanctuary-avatar"
                           loading="lazy"
@@ -252,11 +278,18 @@ export function People() {
                       </h3>
 
                       <span className="people-sanctuary-role">
-                        {person.role}
+                        {displayRoleLabel(person)}
                       </span>
 
                       <span className="people-sanctuary-count">
-                        {person.filmographyIds.length} {person.filmographyIds.length === 1 ? 'archive record' : 'archive records'}
+                        {person.filmographyIds.length}{' '}
+                        {person.filmographyIds.length === 1
+                          ? isAuthorPerson(person)
+                            ? 'work'
+                            : 'archive record'
+                          : isAuthorPerson(person)
+                            ? 'works'
+                            : 'archive records'}
                       </span>
 
                       {person.lastSyncedAt === 0 && (
@@ -272,18 +305,23 @@ export function People() {
           </div>
         ) : (
           <div className="people-search-stack">
-            {!hasApiKey && (
+            {!canSearch && (
               <div className="people-api-notice">
-                Add your TMDb API key in Settings to search the catalogue.
+                Add your TMDb API key in Settings to search filmmakers, or enable Open Library for authors.
+              </div>
+            )}
+            {!hasApiKey && openLibraryEnabled && (
+              <div className="people-api-notice">
+                Searching authors via Open Library. Add a TMDb key to also search filmmakers.
               </div>
             )}
 
             <input
               type="text"
-              placeholder="Search director, actor, cinematographer, composer…"
+              placeholder="Search director, actor, author, cinematographer…"
               value={query}
               onInput={(e) => setQuery(e.currentTarget.value)}
-              disabled={!hasApiKey}
+              disabled={!canSearch}
               className="people-sanctuary-search"
             />
 
@@ -292,16 +330,18 @@ export function People() {
             ) : searchResults.length > 0 ? (
               <div className="people-search-results">
                 {searchResults.map((person) => {
+                  const isAuthor = isAuthorPerson(person);
                   const defaultRole = getRoleFromDepartment(person.knownForDepartment);
                   const selectedRole = selectedRoles[person.id] || defaultRole;
                   const isFollowed = followingMap[person.id];
+                  const imgSrc = profileImageSrc(person.profilePath);
 
                   return (
                     <div key={person.id} className="people-search-result">
                       <div className="people-search-result-info">
-                        {person.profilePath ? (
+                        {imgSrc ? (
                           <img
-                            src={`https://image.tmdb.org/t/p/w185${person.profilePath}`}
+                            src={imgSrc}
                             alt={person.name}
                             className="people-search-avatar"
                             loading="lazy"
@@ -323,7 +363,7 @@ export function People() {
                           </h4>
                           <div className="people-search-meta">
                             <span className="people-search-dept">
-                              {person.knownForDepartment}
+                              {isAuthor ? 'Author' : person.knownForDepartment}
                             </span>
                             {person.knownFor && person.knownFor.length > 0 && (
                               <span className="people-search-known">
@@ -335,18 +375,24 @@ export function People() {
                       </div>
 
                       <div className="people-search-actions">
-                        <select
-                          value={selectedRole}
-                          onChange={(e) => setSelectedRoles((prev) => ({ ...prev, [person.id]: (e.target as HTMLSelectElement).value as CrewRole }))}
-                          disabled={isFollowed}
-                          className="people-role-select"
-                        >
-                          {ROLE_OPTIONS.map((opt) => (
-                            <option value={opt.value} key={opt.value}>
-                              {opt.label}
-                            </option>
-                          ))}
-                        </select>
+                        {isAuthor ? (
+                          <span className="people-search-dept" style={{ alignSelf: 'center' }}>
+                            Author
+                          </span>
+                        ) : (
+                          <select
+                            value={selectedRole}
+                            onChange={(e) => setSelectedRoles((prev) => ({ ...prev, [person.id]: (e.target as HTMLSelectElement).value as CrewRole }))}
+                            disabled={isFollowed}
+                            className="people-role-select"
+                          >
+                            {ROLE_OPTIONS.map((opt) => (
+                              <option value={opt.value} key={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                        )}
 
                         <button
                           onClick={() => handleFollow(person)}
@@ -361,7 +407,7 @@ export function People() {
                 })}
               </div>
             ) : query.trim() ? (
-              <div className="sanctuary-empty-plaque">No filmmakers matched your search.</div>
+              <div className="sanctuary-empty-plaque">No creators matched your search.</div>
             ) : null}
           </div>
         )}

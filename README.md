@@ -1,6 +1,6 @@
 # Subsume
 
-> A Chrome extension for cinephiles who want to own their taste — not just consume it.
+> A Chrome extension for people who want to own their taste across films, shows, and books — not just consume it.
 
 <!-- Add a screenshot or short GIF here of the Poetic Capture Canvas or the museum plaque hover reveal.
      This is the single highest-leverage addition to this README — a portfolio reader decides
@@ -11,7 +11,7 @@
 
 ## Table of Contents
 
-- [The Philosophy](#the-philosophy-a-private-cinematic-sanctuary)
+- [The Philosophy](#the-philosophy-a-private-sanctuary-for-screen-and-page)
 - [What Makes Subsume Unique](#what-makes-subsume-unique)
 - [Three Acts of Interaction](#three-acts-of-interaction)
 - [Feature Overview](#comprehensive-feature-overview)
@@ -24,15 +24,15 @@
 
 ---
 
-## The Philosophy: A Private Cinematic Sanctuary
+## The Philosophy: A Private Sanctuary for Screen and Page
 
-Modern content discovery is built to maximize aggregate runtime, not authentic taste. Recommendations get flattened into demographic clusters — "people who watched X also watched Y" — and the individual eye that noticed the lighting, the cut, the performance, gets lost.
+Modern content discovery is built to maximize aggregate runtime, not authentic taste. Recommendations get flattened into demographic clusters — "people who watched X also watched Y" — and the individual eye that noticed the lighting, the cut, the performance, or the sentence that stopped the room, gets lost.
 
-**Subsume** is not a tracker. It's not a notes app. It's a **private cinematic sanctuary** — built to feel like stepping into a theatre lobby: anticipation, immersion, reflection, memory.
+**Subsume** is not a tracker. It's not a notes app. It's a **private sanctuary for films, shows, and books** — built to feel like stepping into a theatre lobby or a quiet reading room: anticipation, immersion, reflection, memory.
 
 The goal isn't feature usage or data entry. It's quality of reflection.
 
-> *If you leave a film with a deeper emotional connection to it than when you walked in, Subsume did its job.*
+> *If you leave a film or a book with a deeper emotional connection to it than when you walked in, Subsume did its job.*
 
 ---
 
@@ -40,7 +40,7 @@ The goal isn't feature usage or data entry. It's quality of reflection.
 
 1. **Auteur-First Discovery** — Traditional apps sort by genre (Drama, Action). Subsume treats filmmakers and key crew — directors, cinematographers, writers, actors — as the primary artistic unit. Track Roger Deakins' lighting arc or Charlie Kaufman's thematic throughline, with your own scores layered across their full body of work.
 
-2. **Museum Catalogue Plaques** — Discovery happens everywhere you already browse. Subsume scans posters on any webpage and injects a quiet, typographically refined rating badge (`★ 8.4 │ Reflect`) with a spring-expansion hover reveal. Every injection lives in its own isolated Shadow DOM container, so it never touches or breaks host-site CSS.
+2. **Museum Catalogue Plaques** — Discovery happens everywhere you already browse. Subsume scans posters and book covers on any webpage and injects a quiet, typographically refined rating badge (`★ 8.4 │ Reflect`) with a spring-expansion hover reveal. Every injection lives in its own isolated Shadow DOM container, so it never touches or breaks host-site CSS.
 
 3. **Poetic Capture Canvas** — Adding something to your sanctuary starts with one question: *"What stayed with you?"* Only after you write does the interface reveal intent buckets and a rating scale. Your emotional recall is the primary artifact here — not the IMDb score.
 
@@ -59,7 +59,7 @@ The goal isn't feature usage or data entry. It's quality of reflection.
 ## Three Acts of Interaction
 
 ### Act I — Discovery
-Subsume scans any webpage for posters and injects a museum catalogue plaque: title, rating, and a `Reflect` trigger. Hover any detected title for an instant card — no tab switching.
+Subsume scans any webpage for posters, titles, and books (including ISBNs) and injects a museum catalogue plaque: title, rating, and a `Reflect` trigger. Hover any detected work for an instant card — no tab switching.
 
 ### Act II — Capture
 `Reflect` opens the **Poetic Capture Canvas** — full-screen, the poster art blurred softly behind a single centred prompt: *"What stayed with you?"* Only once you start writing does the canvas reveal intent selectors and a 1–10 scale. Emotion before metadata, always.
@@ -73,12 +73,13 @@ The **Hardcover Library Archive** organizes everything you've captured — each 
 
 | Feature | What It Accomplishes | Technical Implementation |
 | :--- | :--- | :--- |
-| **Museum Catalogue Plaques** | Rating badges with hover expansion on any webpage poster | Open Shadow DOM, MutationObserver, spring CSS transitions |
+| **Museum Catalogue Plaques** | Rating badges with hover expansion on any webpage poster or cover | Open Shadow DOM, MutationObserver, spring CSS transitions |
 | **Poetic Capture Canvas** | Emotion-first capture with progressive disclosure | Preact, URL param routing (`?act=capture`), focus-pull blur keyframes |
-| **Hardcover Library Archive** | Editorial archive grouped by `sanctuaryIntent` with `emotionalRecall` excerpts | Preact, `useMemo` intent filtering, `isMountedRef` async safety |
+| **Hardcover Library Archive** | Editorial archive grouped by `sanctuaryIntent` with `emotionalRecall` excerpts; All / Screen / Books filters | Preact, `useMemo` intent filtering, medium filter, `isMountedRef` async safety |
+| **Book detection & catalogue** | Notice books on any page; resolve works via Open Library (no key) with optional Google Books enrichment | Content-script stages (JSON-LD, ISBN, domain adapters), Open Library + Google Books background clients |
 | **Auteur Screenplay Dock** | Floating reflection notepad on any page | Shadow DOM, toggle collapse/expand, `destroy()` lifecycle |
 | **Chronological Filmography Tracking** | Follow directors, DPs, actors, writers across their full body of work | TMDb Person API, IndexedDB people store |
-| **Cross-Site Hover Cards** | Instant synopsis and status on any movie title | Isolated DOM injection, debounced pointer controllers, O(1) cache |
+| **Cross-Site Hover Cards** | Instant synopsis and status on film, show, or book titles | Isolated DOM injection, debounced pointer controllers, O(1) cache |
 | **Contextual LLM Recommendations** | AI discovery from your actual taste profile and notes | Two-stage prompting pipeline, OpenAI / Anthropic / Gemini adapters |
 | **Weekly Automated Digests** | Curated new release picks across streaming subscriptions | Chrome background alarms, dynamic rule/AI hybrid curation |
 | **Google Drive Sync** | Full library backup and restore via Google Drive | OAuth 2.0, multipart Drive API upload/download |
@@ -128,7 +129,7 @@ Subsume is a client-side Chrome extension. There is no backend proxy — API key
 
 | Topic | Behavior |
 | :--- | :--- |
-| **Where keys live** | TMDb, OMDb, and LLM API keys are stored in **IndexedDB** (`subsume-db`) as part of `UserPreferences`. They are **not encrypted at rest**. |
+| **Where keys live** | TMDb, OMDb, optional Google Books, and LLM API keys are stored in **IndexedDB** (`subsume-db`) as part of `UserPreferences`. They are **not encrypted at rest**. |
 | **Who is responsible** | You. Keys never leave your browser except when the extension calls the providers you configure. Treat your machine and Chrome profile as trusted. |
 | **Content-script exposure** | API keys are **never** sent to content scripts. `GET_CONTENT_PREFS` returns feature toggles only (see `buildContentPrefs()`). |
 | **Export/backup** | Library export excludes API keys. Only media and library records are included. |
@@ -172,8 +173,10 @@ You can blacklist domains in **Settings → Disabled Domains** to disable all co
 ### Prerequisites
 - Node.js 18+ & npm
 - Google Chrome or Brave Browser (v120+)
-- **TMDb API Key** (Free at [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api))
+- **TMDb API Key** (Free at [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api)) — required for film/TV catalogue features
+- **Open Library** — books work out of the box with no key
 - **OMDb API Key** *(Optional)* (Free at [omdbapi.com/apikey.aspx](https://www.omdbapi.com/apikey.aspx))
+- **Google Books API Key** *(Optional)* — cover and description enrichment
 - **LLM API Key** *(Optional)* (OpenAI, Anthropic, or Google Gemini)
 
 ### Installation
@@ -237,6 +240,8 @@ Issues and PRs are welcome. Please open an issue before submitting larger change
 Subsume stands on the shoulders of incredible open-source tools and open data providers:
 
 - **[TMDb (The Movie Database)](https://www.themoviedb.org/):** For comprehensive cinematic metadata, cast/crew hierarchies, and high-resolution poster imagery. *(Notice: This product uses the TMDb API but is not endorsed or certified by TMDb.)*
+- **[Open Library](https://openlibrary.org/):** For book works, editions, search, and covers (default book catalogue; no user key required). *(Subsume is not affiliated with the Internet Archive or Open Library.)*
+- **[Google Books](https://developers.google.com/books)** *(optional):* For cover and description enrichment when the user supplies an API key.
 - **[OMDb API](https://www.omdbapi.com/):** For supplementary IMDb score aggregation.
 - **[Preact](https://preactjs.com/) & [Vite](https://vitejs.dev/):** For ultra-fast, lightweight UI rendering and bundle optimisation.
 - **[idb](https://github.com/jakearchibald/idb):** For robust Promise-based IndexedDB transaction wrapping.
@@ -256,7 +261,7 @@ MIT — see [`LICENSE`](./LICENSE) for the full text.
 
 **Subsume** was conceived, architected, and directed by **Harsha Balakrishnan**.
 
-I made this because I wanted it to exist. Not for a market, not for a metric — for me, and as my thanks to cinema for keeping the park alive inside of me.
+I made this because I wanted it to exist. Not for a market, not for a metric — for me, and as my thanks to cinema and the page for keeping the park alive inside of me.
 
 Every architectural pattern, SOLID abstraction, defensive boundary, and Shadow DOM interaction was directed, reviewed, and refined by hand — AI-assisted development was the hands on the keyboard, not the eye behind the decisions.
 
@@ -265,4 +270,4 @@ Every architectural pattern, SOLID abstraction, defensive boundary, and Shadow D
 
 ---
 
-*Cinephilia is an active pursuit. Own your taste.*
+*Taste is an active pursuit — on the screen and on the page. Own it.*

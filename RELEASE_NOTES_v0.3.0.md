@@ -49,3 +49,16 @@ npm ci && npm run ci
 npm run build
 # Load unpacked → dist/
 ```
+
+## Follow-up tranche (same release train)
+
+- Appendable **ReflectionTimeline** in DetailModal; SET_USER_NOTES dual-writes reflections
+- Abandon prompts for “Did not finish”
+- Book **page plaques** (high-confidence only, max 5 resolves)
+- **Google Books** optional provider + Settings key
+- **Export/import v2** multi-medium (no API keys)
+- Open Library **author** search/follow
+- Reading **progress** (page/total) for books
+- Taste profile **screen vs reading** split in LLM prompts
+- Archive collection labels medium-aware
+- Privacy, listing, README, onboarding, settings for multi-medium

@@ -9,7 +9,7 @@ import {
 } from '@/shared/types';
 import { getAllLibraryItems, getAllMediaMap, getPreferences, putMediaItem, findMediaByTitle } from './storage';
 import { searchTitle } from './tmdb';
-import { buildWatchProfile } from './context';
+import { buildWatchProfile, buildTasteProfileForMedium } from './context';
 import {
   DEFAULT_PROMPTS,
   getEffectivePrompt,
@@ -408,11 +408,36 @@ export async function generateLLMRecommendations(): Promise<Recommendation[] | G
 
 /**
  * Builds a structured prompt string from the user's WatchProfile.
+ * When a separate book profile is provided and has history, labels
+ * SCREEN TASTE vs READING TASTE so the curator can distinguish mediums.
  * Pure function — no side effects, no network calls.
  */
-function buildPersonalizedPrompt(profile: WatchProfile, prefs: UserPreferences): string {
-  const tasteProfile = buildTasteProfilePayload(profile);
+function buildPersonalizedPrompt(
+  profile: WatchProfile,
+  prefs: UserPreferences,
+  bookProfile?: WatchProfile | null,
+  screenProfile?: WatchProfile | null
+): string {
+  const hasBookTaste = Boolean(bookProfile && bookProfile.totalWatched > 0);
+  const hasScreenSplit = Boolean(screenProfile && hasBookTaste);
 
+  if (hasScreenSplit && screenProfile && bookProfile) {
+    return [
+      'SCREEN TASTE (JSON):',
+      JSON.stringify(buildTasteProfilePayload(screenProfile), null, 2),
+      '',
+      'READING TASTE (JSON):',
+      JSON.stringify(buildTasteProfilePayload(bookProfile), null, 2),
+      '',
+      'Notes: Prefer film/TV recommendations grounded in SCREEN TASTE.',
+      'Do not invent book titles unless the task explicitly asks for books and they can be validated against a catalog.',
+      '',
+      'TASK:',
+      getEffectivePrompt('recommendation', prefs),
+    ].join('\n');
+  }
+
+  const tasteProfile = buildTasteProfilePayload(profile);
   return [
     'TASTE PROFILE (JSON):',
     JSON.stringify(tasteProfile, null, 2),
@@ -462,11 +487,15 @@ export async function buildCuratorPromptPreview(prefs: UserPreferences): Promise
   tasteProfileJson: string;
   taskPrompt: string;
 }> {
-  const profile = await buildWatchProfile();
+  const [profile, screenProfile, bookProfile] = await Promise.all([
+    buildWatchProfile(),
+    buildTasteProfileForMedium('screen'),
+    buildTasteProfileForMedium('book'),
+  ]);
   const tasteProfile = buildTasteProfilePayload(profile);
   const tasteProfileJson = JSON.stringify(tasteProfile, null, 2);
   const taskPrompt = getEffectivePrompt('recommendation', prefs);
-  const userPrompt = buildPersonalizedPrompt(profile, prefs);
+  const userPrompt = buildPersonalizedPrompt(profile, prefs, bookProfile, screenProfile);
   const systemPrompt = getEffectivePrompt('curatorSystem', prefs);
   return { systemPrompt, userPrompt, tasteProfileJson, taskPrompt };
 }
@@ -483,16 +512,23 @@ export async function getPersonalizedRecommendations(
   flat: PersonalizedRecommendation[];
   grouped: RecommendationGroup[] | null;
 }> {
-  // Step 1 — Build profile
-  const profile = await buildWatchProfile();
+  // Step 1 — Build profiles (all + medium-split when books exist)
+  const [profile, screenProfile, bookProfile] = await Promise.all([
+    buildWatchProfile(),
+    buildTasteProfileForMedium('screen'),
+    buildTasteProfileForMedium('book'),
+  ]);
 
-  if (profile.totalWatched < 3) {
-    // Not enough watch history to personalize
+  // Enough history either overall or on screen; book-only libraries need ≥3 reads
+  const screenCount = screenProfile.totalWatched;
+  const bookCount = bookProfile.totalWatched;
+  if (profile.totalWatched < 3 && screenCount < 3 && bookCount < 3) {
     return { flat: [], grouped: null };
   }
 
-  // Step 2 — Build prompt
-  const prompt = buildPersonalizedPrompt(profile, prefs);
+  // Without LLM we never invent book recommendations (caller already requires LLM key).
+  // Step 2 — Build prompt with SCREEN / READING split when both present
+  const prompt = buildPersonalizedPrompt(profile, prefs, bookProfile, screenProfile);
 
   const systemMessage = getEffectivePrompt('curatorSystem', prefs);
   const fullPrompt = `${systemMessage}\n\n${prompt}`;

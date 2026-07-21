@@ -178,7 +178,48 @@ function mapCrewRole(role: CrewRole): CreatorRole {
   return role as CreatorRole;
 }
 
+function mapCreatorRoleToCrew(role: CreatorRole | undefined): CrewRole {
+  if (!role) return 'director';
+  if (role === 'screenwriter' || role === 'author') return 'writer';
+  if (
+    role === 'director' ||
+    role === 'cinematographer' ||
+    role === 'actor' ||
+    role === 'composer' ||
+    role === 'producer' ||
+    role === 'editor'
+  ) {
+    return role;
+  }
+  return 'writer';
+}
+
+export function isOpenLibraryAuthorId(id: string): boolean {
+  return id.startsWith('openlibrary_author_');
+}
+
 export function personItemToCreator(person: PersonItem): Creator {
+  if (isOpenLibraryAuthorId(person.id)) {
+    const olId = person.id.replace(/^openlibrary_author_/, '');
+    return {
+      id: person.id,
+      name: person.name,
+      roles: ['author'],
+      biography: person.biography,
+      profileImageUrl: person.profileImageUrl,
+      knownForWorkIds: person.filmographyIds ?? [],
+      followedAt: person.followedAt,
+      lastSyncedAt: person.lastSyncedAt,
+      externalIds: [
+        {
+          provider: 'openlibrary',
+          externalId: olId,
+          url: `https://openlibrary.org/authors/${olId}`,
+        },
+      ],
+    };
+  }
+
   const id = person.id.startsWith('tmdb_person_') ? person.id : `tmdb_person_${person.id}`;
   return {
     id,
@@ -199,13 +240,29 @@ export function personItemToCreator(person: PersonItem): Creator {
 }
 
 export function creatorToPersonItem(creator: Creator): PersonItem {
+  if (isOpenLibraryAuthorId(creator.id) || creator.externalIds.some((e) => e.provider === 'openlibrary')) {
+    const id = isOpenLibraryAuthorId(creator.id)
+      ? creator.id
+      : `openlibrary_author_${creator.externalIds.find((e) => e.provider === 'openlibrary')!.externalId}`;
+    return {
+      id,
+      name: creator.name,
+      role: 'writer',
+      profileImageUrl: creator.profileImageUrl,
+      biography: creator.biography,
+      knownFor: [],
+      filmographyIds: creator.knownForWorkIds,
+      followedAt: creator.followedAt ?? Date.now(),
+      lastSyncedAt: creator.lastSyncedAt ?? Date.now(),
+    };
+  }
+
   const tmdb = creator.externalIds.find((e) => e.provider === 'tmdb');
   const rawId = tmdb?.externalId ?? creator.id.replace(/^tmdb_person_/, '');
-  const role = (creator.roles[0] === 'screenwriter' ? 'writer' : creator.roles[0]) as CrewRole;
   return {
     id: rawId,
     name: creator.name,
-    role: role || 'director',
+    role: mapCreatorRoleToCrew(creator.roles[0]),
     profileImageUrl: creator.profileImageUrl,
     biography: creator.biography,
     knownFor: [],

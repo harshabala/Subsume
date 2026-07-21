@@ -1,12 +1,14 @@
 import { h } from 'preact';
 import { useEffect, useState, useRef } from 'preact/hooks';
-import { MediaItem, LibraryItem, LibraryStatus } from '@/shared/types';
+import { MediaItem, LibraryItem, LibraryStatus, MessageType } from '@/shared/types';
+import { sendMessage } from '@/shared/messages';
 import { DEFAULT_EMOTIONS, getEmotionalSpectrum, type EmotionalSpectrum } from '@/shared/emotions';
 import { PlatformChips } from './PlatformChips';
 import { EmotionalSliders } from './EmotionalSliders';
 import { AuraVisualizer } from './AuraVisualizer';
 import { ExpandableReflection } from './ExpandableReflection';
-import { STATUS_OPTIONS, getReflectionExcerpt } from './archive/constants';
+import { ReflectionTimeline } from './ReflectionTimeline';
+import { STATUS_OPTIONS, statusOptionsForMedium, getReflectionExcerpt } from './archive/constants';
 
 interface DetailModalProps {
   media: MediaItem;
@@ -56,11 +58,16 @@ export function DetailModal({
   const [detailsExpanded, setDetailsExpanded] = useState(false);
   const [closing, setClosing] = useState(false);
   const [saveCeremony, setSaveCeremony] = useState(false);
+  const [pageProgress, setPageProgress] = useState<number | ''>('');
+  const [totalPages, setTotalPages] = useState<number | ''>(media.pageCount ?? '');
   const notesDebounceRef = useRef<ReturnType<typeof setTimeout>>();
   const ceremonyTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const progressDebounceRef = useRef<ReturnType<typeof setTimeout>>();
   const modalRef = useRef<HTMLDivElement>(null);
   const closedRef = useRef(false);
   const titleId = `detail-title-${media.id}`;
+  const isBook = media.type === 'book';
+  const statusOptions = isBook ? statusOptionsForMedium('book') : STATUS_OPTIONS;
 
   const reflectionExcerpt = libraryItem ? getReflectionExcerpt(libraryItem) : undefined;
 
@@ -79,6 +86,27 @@ export function DetailModal({
     libraryItem?.warmth,
   ]);
 
+  // Load reading progress for books
+  useEffect(() => {
+    if (!isBook || !libraryItem) return;
+    let cancelled = false;
+    sendMessage<{ workId: string }, { experience?: { progress?: { value?: number; total?: number } } | null }>(
+      MessageType.UPDATE_EXPERIENCE,
+      { workId: media.id },
+    )
+      .then((res) => {
+        if (cancelled || !res.success) return;
+        const prog = res.data?.experience?.progress;
+        if (prog?.value !== undefined) setPageProgress(prog.value);
+        if (prog?.total !== undefined) setTotalPages(prog.total);
+        else if (media.pageCount) setTotalPages(media.pageCount);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isBook, libraryItem?.mediaId, media.id, media.pageCount]);
+
   useEffect(() => {
     return () => {
       if (notesDebounceRef.current) {
@@ -87,8 +115,37 @@ export function DetailModal({
       if (ceremonyTimerRef.current) {
         clearTimeout(ceremonyTimerRef.current);
       }
+      if (progressDebounceRef.current) {
+        clearTimeout(progressDebounceRef.current);
+      }
     };
   }, []);
+
+  const persistReadingProgress = (page: number | '', total: number | '') => {
+    if (!isBook || !libraryItem) return;
+    if (progressDebounceRef.current) clearTimeout(progressDebounceRef.current);
+    progressDebounceRef.current = setTimeout(() => {
+      progressDebounceRef.current = undefined;
+      const value = typeof page === 'number' ? page : parseInt(String(page), 10);
+      if (!Number.isFinite(value) || value < 0) return;
+      const totalVal =
+        typeof total === 'number'
+          ? total
+          : total === ''
+            ? undefined
+            : parseInt(String(total), 10);
+      sendMessage(MessageType.UPDATE_EXPERIENCE, {
+        workId: media.id,
+        progress: {
+          unit: 'page' as const,
+          value,
+          ...(Number.isFinite(totalVal as number) && (totalVal as number) > 0
+            ? { total: totalVal as number }
+            : {}),
+        },
+      }).catch(() => {});
+    }, 400);
+  };
 
   const finishClose = () => {
     if (closedRef.current) return;
@@ -258,29 +315,39 @@ export function DetailModal({
 
           <div className="sanctuary-detail-main">
             <div className="sanctuary-detail-inscription">
-              {media.type === 'tv' ? 'TV series' : 'Film'}
+              {isBook ? 'Book' : media.type === 'tv' ? 'TV series' : 'Film'}
             </div>
             <h2 id={titleId} className="sanctuary-detail-title">
               {media.canonicalTitle}
             </h2>
 
+            {isBook && media.authors && media.authors.length > 0 && (
+              <p className="sanctuary-detail-authors" style={{ margin: '0.25rem 0 0', opacity: 0.85 }}>
+                {media.authors.join(', ')}
+              </p>
+            )}
+
             <div className="sanctuary-detail-ratings">
               <span className="sanctuary-detail-year">{media.year || '·'}</span>
-              <span>·</span>
-              {tmdbRating && (
-                <span className="sanctuary-detail-rating-chip">
-                  TMDb <strong className="sanctuary-detail-rating-val">{tmdbRating.score.toFixed(1)}</strong>
-                </span>
-              )}
-              {imdbRating && (
-                <span className="sanctuary-detail-rating-chip">
-                  IMDb <strong className="sanctuary-detail-rating-val">{imdbRating.score}</strong>
-                </span>
-              )}
-              {rtRating && (
-                <span className="sanctuary-detail-rating-chip">
-                  RT <strong className="sanctuary-detail-rating-val">{rtRating.score}%</strong>
-                </span>
+              {!isBook && (
+                <>
+                  <span>·</span>
+                  {tmdbRating && (
+                    <span className="sanctuary-detail-rating-chip">
+                      TMDb <strong className="sanctuary-detail-rating-val">{tmdbRating.score.toFixed(1)}</strong>
+                    </span>
+                  )}
+                  {imdbRating && (
+                    <span className="sanctuary-detail-rating-chip">
+                      IMDb <strong className="sanctuary-detail-rating-val">{imdbRating.score}</strong>
+                    </span>
+                  )}
+                  {rtRating && (
+                    <span className="sanctuary-detail-rating-chip">
+                      RT <strong className="sanctuary-detail-rating-val">{rtRating.score}%</strong>
+                    </span>
+                  )}
+                </>
               )}
             </div>
 
@@ -351,11 +418,53 @@ export function DetailModal({
                       onChange={(e) => onUpdateStatus?.((e.target as HTMLSelectElement).value as LibraryStatus)}
                       className="sanctuary-detail-input sanctuary-detail-select"
                     >
-                      {STATUS_OPTIONS.map((opt) => (
+                      {statusOptions.map((opt) => (
                         <option value={opt.value} key={opt.value}>{opt.label}</option>
                       ))}
                     </select>
                   </div>
+
+                  {isBook && (
+                    <div className="sanctuary-detail-control-row" data-testid="reading-progress">
+                      <span className="sanctuary-detail-control-label">Progress:</span>
+                      <input
+                        type="number"
+                        min={0}
+                        inputMode="numeric"
+                        placeholder="Page"
+                        value={pageProgress}
+                        onInput={(e) => {
+                          const raw = (e.target as HTMLInputElement).value;
+                          const next = raw === '' ? '' : Math.max(0, parseInt(raw, 10) || 0);
+                          setPageProgress(next);
+                          persistReadingProgress(next, totalPages);
+                        }}
+                        className="sanctuary-detail-input"
+                        style={{ width: '5rem' }}
+                        aria-label="Current page"
+                      />
+                      <span style={{ opacity: 0.6 }}>/</span>
+                      <input
+                        type="number"
+                        min={0}
+                        inputMode="numeric"
+                        placeholder="Total"
+                        value={totalPages}
+                        onInput={(e) => {
+                          const raw = (e.target as HTMLInputElement).value;
+                          const next = raw === '' ? '' : Math.max(0, parseInt(raw, 10) || 0);
+                          setTotalPages(next);
+                          persistReadingProgress(pageProgress, next);
+                        }}
+                        className="sanctuary-detail-input"
+                        style={{ width: '5rem' }}
+                        aria-label="Total pages"
+                      />
+                      <span className="sanctuary-detail-control-label" style={{ opacity: 0.7 }}>
+                        pages
+                      </span>
+                    </div>
+                  )}
 
                   {libraryItem.status === 'watched' && (
                     <div className="sanctuary-detail-control-row">
@@ -489,6 +598,12 @@ export function DetailModal({
                       <AuraVisualizer values={emotions} variant="sanctuary" ceremony={saveCeremony} />
                     </div>
                   </div>
+
+                  <ReflectionTimeline
+                    workId={media.id}
+                    medium={media.type === 'book' ? 'book' : media.type === 'tv' ? 'tv' : 'movie'}
+                    showAbandonPrompts={libraryItem.status === 'abandoned'}
+                  />
                 </div>
               )}
             </div>
