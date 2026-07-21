@@ -6,9 +6,10 @@ import { DetailModal } from '../components/DetailModal';
 import { SanctuaryMediaCard } from '../components/SanctuaryMediaCard';
 
 const TYPE_OPTIONS: { value: MediaType | ''; label: string }[] = [
-  { value: '', label: 'Complete Archive' },
-  { value: 'movie', label: 'Feature Films' },
-  { value: 'tv', label: 'Series / Television' },
+  { value: '', label: 'All works' },
+  { value: 'movie', label: 'Films' },
+  { value: 'tv', label: 'Series' },
+  { value: 'book', label: 'Books' },
 ];
 
 export function Search() {
@@ -28,11 +29,36 @@ export function Search() {
     setSearched(true);
     setError(null);
     try {
-      const res = await sendMessage<
-        { query: string; type?: MediaType },
-        MediaItem[]
-      >(MessageType.DISCOVERY_SEARCH, { query: query.trim(), type: typeFilter || undefined });
-      setResults(res.data ?? []);
+      const q = query.trim();
+      if (typeFilter === 'book') {
+        const res = await sendMessage<
+          { query: string; medium?: 'book' | 'all'; limit?: number },
+          { works: MediaItem[] }
+        >(MessageType.SEARCH_WORKS, { query: q, medium: 'book', limit: 20 });
+        setResults(res.data?.works ?? []);
+      } else {
+        const res = await sendMessage<
+          { query: string; type?: MediaType },
+          MediaItem[]
+        >(MessageType.DISCOVERY_SEARCH, { query: q, type: typeFilter || undefined });
+        const screen = res.data ?? [];
+        // When searching all works, also pull Open Library hits
+        if (!typeFilter) {
+          try {
+            const books = await sendMessage<
+              { query: string; medium?: 'book' | 'all'; limit?: number },
+              { works: MediaItem[] }
+            >(MessageType.SEARCH_WORKS, { query: q, medium: 'book', limit: 8 });
+            const bookWorks = books.data?.works ?? [];
+            const seen = new Set(screen.map((m) => m.id));
+            setResults([...screen, ...bookWorks.filter((b) => !seen.has(b.id))]);
+          } catch {
+            setResults(screen);
+          }
+        } else {
+          setResults(screen);
+        }
+      }
     } catch (err) {
       console.error('[Subsume] Search failed:', err);
       setResults([]);
@@ -73,7 +99,7 @@ export function Search() {
         </div>
         <h1 className="sanctuary-title">Search Archive</h1>
         <p className="sanctuary-description">
-          Search films and series across Trakt, TVmaze, and your local archive. No keys required for a first pass; add a TMDb key in Settings for richer posters and sync.
+          Search films, series, and books. Screen discovery uses Trakt, TVmaze, and TMDb when configured; books use Open Library by default.
         </p>
       </header>
 
@@ -87,7 +113,7 @@ export function Search() {
         <div className="sanctuary-filter-row">
           <input
             type="text"
-            placeholder="Title, director, or cast..."
+            placeholder="Title, author, director, or cast..."
             value={query}
             onInput={(e) => setQuery(e.currentTarget.value)}
             onKeyDown={handleKeyDown}

@@ -1,0 +1,21 @@
+{
+  "numFound": 1,
+  "start": 0,
+  "numFoundExact": true,
+  "docs": [
+    {
+      "key": "/works/OL468431W",
+      "title": "The Great Gatsby",
+      "author_name": ["F. Scott Fitzgerald"],
+      "author_key": ["OL27349A"],
+      "first_publish_year": 1925,
+      "cover_i": 8432047,
+      "cover_edition_key": "OL24347578M",
+      "edition_count": 120,
+      "isbn": ["9780743273565", "0743273567"],
+      "subject": ["Fiction", "American literature", "Jazz Age"],
+      "language": ["eng"],
+      "publisher": ["Scribner"]
+    }
+  ]
+}

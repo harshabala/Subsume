@@ -1,8 +1,24 @@
 // ─── Media & Library Types ───────────────────────────────────────────
 
-export type MediaType = 'movie' | 'tv';
+/** Screen media only (TMDb-shaped paths). */
+export type ScreenMediaType = 'movie' | 'tv';
 
-export type MediaProvider = 'imdb' | 'tmdb' | 'rt' | 'trakt' | 'tvmaze' | 'other';
+/** Screen + books. Prefer WorkMedium from catalogTypes for new code. */
+export type MediaType = ScreenMediaType | 'book';
+
+export function isScreenMediaType(type: MediaType): type is ScreenMediaType {
+  return type === 'movie' || type === 'tv';
+}
+
+export type MediaProvider =
+  | 'imdb'
+  | 'tmdb'
+  | 'rt'
+  | 'trakt'
+  | 'tvmaze'
+  | 'openlibrary'
+  | 'googlebooks'
+  | 'other';
 
 export interface MediaRating {
   provider: MediaProvider;
@@ -38,6 +54,11 @@ export interface MediaItem {
   streamingAvailability?: StreamingInfo[];
   wikidataSummary?: string;
   wikidataDirectorBio?: string;
+  /** Book-only convenience fields (also stored on CatalogWork.bookDetails). */
+  authors?: string[];
+  subtitle?: string;
+  pageCount?: number;
+  preferredEditionId?: string;
 }
 
 export type LibraryStatus = 'to-watch' | 'watching' | 'watched' | 'abandoned';
@@ -141,6 +162,22 @@ export interface UserPreferences {
   llmPromptDigest?: string;
   /** Second-pass grouping instructions (Because you experienced…). */
   llmPromptGrouping?: string;
+
+  // ─── Multi-medium / books expansion ─────────────────────────────
+  enabledMedia?: { movie: boolean; tv: boolean; book: boolean };
+  googleBooksApiKey?: string;
+  openLibraryEnabled?: boolean;
+  detectScreenWorks?: boolean;
+  detectBooks?: boolean;
+  coverOverlaysEnabled?: boolean;
+  crossMediumRecommendationsEnabled?: boolean;
+  recommendationPrivacyMode?: 'ratings_only' | 'summarized_reflections' | 'full_selected_reflections';
+  dispatchEnabled?: boolean;
+  dispatchWeekday?: number;
+  dispatchLocalTime?: string;
+  dispatchTimezone?: string;
+  dispatchWebSearchEnabled?: boolean;
+  dispatchMaxSearches?: number;
 }
 
 // ─── Message Types ───────────────────────────────────────────────────
@@ -148,6 +185,19 @@ export interface UserPreferences {
 export enum MessageType {
   // Metadata
   GET_TITLE_DETAILS = 'GET_TITLE_DETAILS',
+
+  // Multi-medium catalog (books expansion) — aliases for legacy types where noted
+  GET_WORK_DETAILS = 'GET_WORK_DETAILS',
+  SEARCH_WORKS = 'SEARCH_WORKS',
+  RESOLVE_PAGE_CANDIDATE = 'RESOLVE_PAGE_CANDIDATE',
+  GET_BOOK_EDITIONS = 'GET_BOOK_EDITIONS',
+  SET_PREFERRED_EDITION = 'SET_PREFERRED_EDITION',
+  ADD_TO_ARCHIVE = 'ADD_TO_ARCHIVE',
+  CHECK_ARCHIVE_STATUS = 'CHECK_ARCHIVE_STATUS',
+  GET_ARCHIVE = 'GET_ARCHIVE',
+  ADD_REFLECTION = 'ADD_REFLECTION',
+  GET_REFLECTIONS = 'GET_REFLECTIONS',
+  UPDATE_EXPERIENCE = 'UPDATE_EXPERIENCE',
 
   // Library
   ADD_TO_LIST = 'ADD_TO_LIST',
@@ -331,6 +381,9 @@ export interface ContentPrefs {
   detectionSensitivity: 'low' | 'medium' | 'high';
   disabledDomains: string[];
   domainDisabled: boolean;
+  detectScreenWorks: boolean;
+  detectBooks: boolean;
+  coverOverlaysEnabled: boolean;
 }
 
 export interface ImportLibraryData {
@@ -415,7 +468,7 @@ export interface WeeklyDigestItem {
   mediaId: string;
   title: string;
   year: number;
-  type: 'movie' | 'tv';
+  type: MediaType;
   reason: string;
   platforms: string[];
 }
@@ -505,7 +558,7 @@ export interface PosterMatch {
   tmdbId: string;
   title: string;
   year: number;
-  type: 'movie' | 'tv';
+  type: MediaType;
   posterPath: string | null;
   ratings: MediaItem['ratings'];
   inLibrary: boolean;

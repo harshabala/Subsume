@@ -1,0 +1,18 @@
+{
+  "key": "/books/OL24347578M",
+  "title": "The Great Gatsby",
+  "authors": [{ "key": "/authors/OL27349A", "name": "F. Scott Fitzgerald" }],
+  "works": [{ "key": "/works/OL468431W" }],
+  "isbn_10": ["0743273567"],
+  "isbn_13": ["9780743273565"],
+  "publishers": ["Scribner"],
+  "publish_date": "2004",
+  "number_of_pages": 180,
+  "covers": [8432047],
+  "languages": [{ "key": "/languages/eng" }],
+  "physical_format": "Paperback",
+  "description": {
+    "type": "/type/text",
+    "value": "A classic novel of the Jazz Age."
+  }
+}

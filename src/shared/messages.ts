@@ -74,10 +74,14 @@ export function createMessageRouter(handlers: MessageHandlerMap): void {
       const ALLOWED_CONTENT_SCRIPT_MESSAGES = new Set<string>([
         MessageType.GET_CONTENT_PREFS,
         MessageType.RESOLVE_POSTER,
+        MessageType.RESOLVE_PAGE_CANDIDATE,
         MessageType.GET_TITLE_DETAILS,
+        MessageType.GET_WORK_DETAILS,
         MessageType.ADD_TO_LIST,
+        MessageType.ADD_TO_ARCHIVE,
         MessageType.REMOVE_FROM_LIBRARY,
         MessageType.CHECK_LIBRARY_STATUS,
+        MessageType.CHECK_ARCHIVE_STATUS,
         MessageType.OPEN_DETAIL,
         MessageType.OPEN_CAPTURE_CANVAS,
       ]);

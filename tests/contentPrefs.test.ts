@@ -34,6 +34,9 @@ describe('buildContentPrefs', () => {
       detectionSensitivity: 'high',
       disabledDomains: ['blocked.com'],
       domainDisabled: false,
+      detectScreenWorks: true,
+      detectBooks: true,
+      coverOverlaysEnabled: true,
     });
 
     for (const key of SECRET_KEYS) {

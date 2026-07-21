@@ -69,16 +69,19 @@ export async function discoverySearch(query: string, type?: MediaType): Promise<
     setTmdbApiKey(prefs.tmdbApiKey!);
   }
 
+  const screenType = type === 'movie' || type === 'tv' ? type : undefined;
   const tasks: Promise<MediaItem[]>[] = [
     searchMediaByQuery(trimmed, type, 10),
     searchTvMazeMulti(trimmed)
       .then((items) => (type ? items.filter((item) => item.type === type) : items))
       .catch(() => []),
-    searchTrakt(trimmed, type).catch(() => []),
   ];
+  if (type !== 'book') {
+    tasks.push(searchTrakt(trimmed, screenType).catch(() => []));
+  }
 
-  if (hasTmdbKey) {
-    tasks.push(searchTitles(trimmed, type).catch(() => []));
+  if (hasTmdbKey && type !== 'book') {
+    tasks.push(searchTitles(trimmed, screenType).catch(() => []));
   }
 
   const settled = await Promise.allSettled(tasks);

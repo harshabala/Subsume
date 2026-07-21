@@ -1,0 +1,17 @@
+{
+  "key": "/works/OL468431W",
+  "title": "The Great Gatsby",
+  "description": {
+    "type": "/type/text",
+    "value": "The Great Gatsby is a 1925 novel by American writer F. Scott Fitzgerald."
+  },
+  "authors": [
+    {
+      "author": { "key": "/authors/OL27349A", "name": "F. Scott Fitzgerald" },
+      "type": { "key": "/type/author_role" }
+    }
+  ],
+  "covers": [8432047],
+  "subjects": ["Fiction", "American literature", "Jazz Age", "Long Island"],
+  "first_publish_date": "1925"
+}

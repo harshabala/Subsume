@@ -7,6 +7,7 @@
 
 import { scanPage, startObserving, stopObserving, scanImages, setImageScanConfig, DetectedTitle } from './scanner';
 import { detectCatalogRegions } from './catalogDetector';
+import { detectBookCandidates } from './bookDetection';
 import { HoverCardManager } from './hoverCard';
 import { MuseumPlaqueManager as PosterBadgeManager } from './overlay';
 import { AuteurScreenplayDock } from './dock';
@@ -52,6 +53,24 @@ async function init(): Promise<void> {
   if (prefs?.domainDisabled) {
     logger.log(`[Subsume] Domain ${hostname} is blacklisted. Exiting.`);
     return;
+  }
+
+  // Book detection on arbitrary pages (JSON-LD, ISBN, adapters, heuristics).
+  // Resolve only high-confidence candidates against Open Library (budgeted).
+  const detectBooksEnabled = prefs?.detectBooks !== false;
+  if (detectBooksEnabled) {
+    try {
+      const bookCandidates = detectBookCandidates(document, new URL(window.location.href));
+      logger.log(`[Subsume] Book detection found ${bookCandidates.length} candidate(s).`);
+      const high = bookCandidates.filter((c) => c.confidence >= 0.85).slice(0, 5);
+      for (const candidate of high) {
+        sendMessage(MessageType.RESOLVE_PAGE_CANDIDATE, candidate).catch((err) => {
+          logger.warn('[Subsume] Book candidate resolve skipped:', err);
+        });
+      }
+    } catch (err) {
+      logger.error('[Subsume] Book detection failed:', err);
+    }
   }
 
   if (!hoverEnabled && !overlaysEnabled && !dockEnabled) {

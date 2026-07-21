@@ -1,8 +1,8 @@
 {
   "name": "subsume",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
-  "description": "A private film journal for Chrome. Capture what stayed with you, follow filmmakers, and discover titles as you browse.",
+  "description": "Private sanctuary for films, shows, and books that stay with you.",
   "type": "module",
   "scripts": {
     "dev": "vite build --watch",

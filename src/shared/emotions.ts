@@ -21,12 +21,26 @@ export const EMOTION_KEYS: (keyof EmotionalSpectrum)[] = [
   'warmth',
 ];
 
+/** Default (screen) labels. Prefer emotionLabel(key, medium) from statusLabels for medium-aware UI. */
 export const EMOTION_LABELS: Record<keyof EmotionalSpectrum, string> = {
   awe: 'Awe · the sublime frame',
   melancholy: 'Melancholy · sorrow in the cut',
   tension: 'Tension · the held breath',
   warmth: 'Warmth · afterglow and return',
 };
+
+export const EMOTION_LABELS_BOOK: Record<keyof EmotionalSpectrum, string> = {
+  awe: 'Awe · the world it opened',
+  melancholy: 'Melancholy · what lingered between the lines',
+  tension: 'Tension · the pull to turn the page',
+  warmth: 'Warmth · the company it kept',
+};
+
+export function emotionLabelsForMedium(
+  medium: 'movie' | 'tv' | 'book'
+): Record<keyof EmotionalSpectrum, string> {
+  return medium === 'book' ? EMOTION_LABELS_BOOK : EMOTION_LABELS;
+}
 
 export function hasEmotionalData(item: LibraryItem): boolean {
   return (

@@ -10,6 +10,25 @@ import {
   ImportLibraryData,
   SanctuaryIntent,
 } from '@/shared/types';
+import type {
+  CatalogWork,
+  BookEdition,
+  LibraryRelationship,
+  Experience,
+  Reflection,
+  Creator,
+  WorkRelation,
+  CatalogIdRedirect,
+  ArchivePair,
+} from '@/shared/catalogTypes';
+import {
+  mediaItemToCatalogWork,
+  libraryItemToRelationship,
+  libraryItemToReflections,
+  libraryItemToExperience,
+  personItemToCreator,
+  mediaTypeToMedium,
+} from '@/shared/compatibility';
 import { isValidPersonItem } from '@/shared/validation';
 import { MEDIA_ID_PATTERN } from '@/shared/mediaIds';
 import {
@@ -75,10 +94,76 @@ interface SubsumeDB extends DBSchema {
       'by-created': number;
     };
   };
+  // Multi-medium catalog stores (v4). Legacy media/library/people retained.
+  works: {
+    key: string;
+    value: CatalogWork;
+    indexes: {
+      'by-medium': string;
+      'by-canonical': string;
+      'by-year': number;
+    };
+  };
+  book_editions: {
+    key: string;
+    value: BookEdition;
+    indexes: {
+      'by-work': string;
+      'by-isbn13': string;
+    };
+  };
+  relationships: {
+    key: string;
+    value: LibraryRelationship;
+    indexes: {
+      'by-status': string;
+      'by-intent': string;
+      'by-added': number;
+      'by-updated': number;
+    };
+  };
+  experiences: {
+    key: string;
+    value: Experience;
+    indexes: {
+      'by-work': string;
+    };
+  };
+  reflections: {
+    key: string;
+    value: Reflection;
+    indexes: {
+      'by-work': string;
+      'by-created': number;
+      'by-kind': string;
+    };
+  };
+  creators: {
+    key: string;
+    value: Creator;
+    indexes: {
+      'by-followed': number;
+      'by-name': string;
+    };
+  };
+  work_relations: {
+    key: string;
+    value: WorkRelation;
+    indexes: {
+      'by-from': string;
+      'by-to': string;
+    };
+  };
+  id_redirects: {
+    key: string;
+    value: CatalogIdRedirect;
+  };
 }
 
 const DB_NAME = 'subsume-db';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
+/** chrome.storage.local flag set after v3→v4 domain migration completes. */
+export const MIGRATION_V4_COMPLETE_KEY = 'subsume_migration_v4_complete';
 
 let dbPromise: Promise<IDBPDatabase<SubsumeDB>> | null = null;
 
@@ -107,6 +192,7 @@ export async function mergeSeedCatalog(): Promise<{
     const existing = await db.get('media', m.id);
     if (!existing) {
       await db.put('media', m);
+      await dualWriteMedia(db, m);
       mediaAdded++;
     }
   }
@@ -115,7 +201,9 @@ export async function mergeSeedCatalog(): Promise<{
     const existing = await db.get('media', patch.id);
     if (existing) {
       const { id: _id, ...fields } = patch;
-      await db.put('media', { ...existing, ...fields });
+      const merged = { ...existing, ...fields };
+      await db.put('media', merged);
+      await dualWriteMedia(db, merged);
       mediaAdded++;
     }
   }
@@ -124,25 +212,30 @@ export async function mergeSeedCatalog(): Promise<{
     const existing = await db.get('library', item.mediaId);
     if (!existing) {
       await db.put('library', item);
+      await dualWriteLibrary(db, item);
       libraryAdded++;
     } else {
       const legacyNotes = (existing as unknown as Record<string, unknown>).userNotes;
       if (!existing.notes && typeof legacyNotes === 'string' && legacyNotes.length > 0) {
-        await db.put('library', {
+        const updated = {
           ...existing,
           notes: legacyNotes,
           updatedAt: Date.now(),
-        });
+        };
+        await db.put('library', updated);
+        await dualWriteLibrary(db, updated);
         libraryUpdated++;
       } else if (item.notes && !existing.notes) {
-        await db.put('library', {
+        const updated = {
           ...existing,
           status: item.status ?? existing.status,
           userRating: item.userRating ?? existing.userRating,
           notes: item.notes,
           sanctuaryIntent: item.sanctuaryIntent ?? existing.sanctuaryIntent,
           updatedAt: Date.now(),
-        });
+        };
+        await db.put('library', updated);
+        await dualWriteLibrary(db, updated);
         libraryUpdated++;
       }
     }
@@ -152,10 +245,11 @@ export async function mergeSeedCatalog(): Promise<{
     const existing = await db.get('people', person.id);
     if (!existing) {
       await db.put('people', person);
+      await dualWritePerson(db, person);
       peopleUpserted++;
     } else {
       // Catalogue identity is authoritative (name + face + filmography).
-      await db.put('people', {
+      const merged = {
         ...existing,
         name: person.name,
         role: person.role,
@@ -163,7 +257,9 @@ export async function mergeSeedCatalog(): Promise<{
         knownFor: person.knownFor,
         biography: person.biography,
         profileImageUrl: person.profileImageUrl,
-      });
+      };
+      await db.put('people', merged);
+      await dualWritePerson(db, merged);
       peopleUpserted++;
     }
   }
@@ -222,6 +318,177 @@ async function seedDatabaseIfEmpty(db: IDBPDatabase<SubsumeDB>) {
   }
 }
 
+function createV4Stores(db: IDBPDatabase<SubsumeDB>): void {
+  if (!db.objectStoreNames.contains('works')) {
+    const worksStore = db.createObjectStore('works', { keyPath: 'id' });
+    worksStore.createIndex('by-medium', 'medium');
+    worksStore.createIndex('by-canonical', 'canonicalTitle');
+    worksStore.createIndex('by-year', 'firstReleaseYear');
+  }
+
+  if (!db.objectStoreNames.contains('book_editions')) {
+    const editionsStore = db.createObjectStore('book_editions', { keyPath: 'id' });
+    editionsStore.createIndex('by-work', 'workId');
+    editionsStore.createIndex('by-isbn13', 'isbn13', { multiEntry: true });
+  }
+
+  if (!db.objectStoreNames.contains('relationships')) {
+    const relStore = db.createObjectStore('relationships', { keyPath: 'workId' });
+    relStore.createIndex('by-status', 'status');
+    relStore.createIndex('by-intent', 'sanctuaryIntent');
+    relStore.createIndex('by-added', 'addedAt');
+    relStore.createIndex('by-updated', 'updatedAt');
+  }
+
+  if (!db.objectStoreNames.contains('experiences')) {
+    const expStore = db.createObjectStore('experiences', { keyPath: 'id' });
+    expStore.createIndex('by-work', 'workId');
+  }
+
+  if (!db.objectStoreNames.contains('reflections')) {
+    const refStore = db.createObjectStore('reflections', { keyPath: 'id' });
+    refStore.createIndex('by-work', 'workId');
+    refStore.createIndex('by-created', 'createdAt');
+    refStore.createIndex('by-kind', 'kind');
+  }
+
+  if (!db.objectStoreNames.contains('creators')) {
+    const creatorsStore = db.createObjectStore('creators', { keyPath: 'id' });
+    creatorsStore.createIndex('by-followed', 'followedAt');
+    creatorsStore.createIndex('by-name', 'name');
+  }
+
+  if (!db.objectStoreNames.contains('work_relations')) {
+    const wrStore = db.createObjectStore('work_relations', { keyPath: 'id' });
+    wrStore.createIndex('by-from', 'fromWorkId');
+    wrStore.createIndex('by-to', 'toWorkId');
+  }
+
+  if (!db.objectStoreNames.contains('id_redirects')) {
+    db.createObjectStore('id_redirects', { keyPath: 'oldId' });
+  }
+}
+
+/** Copy legacy media/library/people into v4 multi-medium stores. Idempotent puts. */
+async function copyLegacyStoresToV4(db: IDBPDatabase<SubsumeDB>): Promise<void> {
+  const allMedia = await db.getAll('media');
+  for (const item of allMedia) {
+    await db.put('works', mediaItemToCatalogWork(item));
+  }
+
+  const allLibrary = await db.getAll('library');
+  for (const item of allLibrary) {
+    await db.put('relationships', libraryItemToRelationship(item));
+
+    const media = await db.get('media', item.mediaId);
+    const medium = media ? mediaTypeToMedium(media.type) : 'movie';
+
+    for (const reflection of libraryItemToReflections(item)) {
+      await db.put('reflections', reflection);
+    }
+
+    const experience = libraryItemToExperience(item, medium);
+    if (experience) {
+      await db.put('experiences', experience);
+    }
+  }
+
+  const allPeople = await db.getAll('people');
+  for (const person of allPeople) {
+    await db.put('creators', personItemToCreator(person));
+  }
+}
+
+/**
+ * Migrate v3 legacy stores into multi-medium v4 stores when needed.
+ * Safe to call repeatedly: skips when flag is set or works already match media.
+ */
+export async function migrateV3ToV4IfNeeded(
+  db?: IDBPDatabase<SubsumeDB>
+): Promise<void> {
+  const database = db ?? (await getDb());
+
+  try {
+    const flagBag = await chrome.storage.local.get(MIGRATION_V4_COMPLETE_KEY);
+    if (flagBag[MIGRATION_V4_COMPLETE_KEY]) {
+      return;
+    }
+  } catch {
+    // chrome.storage may be unavailable in some test contexts; continue with count check.
+  }
+
+  if (!database.objectStoreNames.contains('works')) {
+    return;
+  }
+
+  const mediaCount = await database.count('media');
+  const worksCount = await database.count('works');
+
+  // Already migrated (or dual-written enough that works covers media).
+  if (mediaCount > 0 && worksCount >= mediaCount) {
+    try {
+      await chrome.storage.local.set({ [MIGRATION_V4_COMPLETE_KEY]: true });
+    } catch {
+      /* ignore */
+    }
+    return;
+  }
+
+  // Empty legacy DB — still mark complete so we don't re-check forever.
+  if (mediaCount === 0 && worksCount === 0) {
+    // Library/people may still exist without media; copy what we can.
+    const libraryCount = await database.count('library');
+    const peopleCount = await database.count('people');
+    if (libraryCount === 0 && peopleCount === 0) {
+      try {
+        await chrome.storage.local.set({ [MIGRATION_V4_COMPLETE_KEY]: true });
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
+  }
+
+  await copyLegacyStoresToV4(database);
+
+  try {
+    await chrome.storage.local.set({ [MIGRATION_V4_COMPLETE_KEY]: true });
+  } catch {
+    /* ignore */
+  }
+}
+
+async function dualWriteMedia(db: IDBPDatabase<SubsumeDB>, item: MediaItem): Promise<void> {
+  if (!db.objectStoreNames.contains('works')) return;
+  await db.put('works', mediaItemToCatalogWork(item));
+}
+
+async function dualWriteLibrary(db: IDBPDatabase<SubsumeDB>, item: LibraryItem): Promise<void> {
+  if (!db.objectStoreNames.contains('relationships')) return;
+  await db.put('relationships', libraryItemToRelationship(item));
+
+  const media = await db.get('media', item.mediaId);
+  const medium = media ? mediaTypeToMedium(media.type) : 'movie';
+
+  if (db.objectStoreNames.contains('reflections')) {
+    for (const reflection of libraryItemToReflections(item)) {
+      await db.put('reflections', reflection);
+    }
+  }
+
+  if (db.objectStoreNames.contains('experiences')) {
+    const experience = libraryItemToExperience(item, medium);
+    if (experience) {
+      await db.put('experiences', experience);
+    }
+  }
+}
+
+async function dualWritePerson(db: IDBPDatabase<SubsumeDB>, person: PersonItem): Promise<void> {
+  if (!db.objectStoreNames.contains('creators')) return;
+  await db.put('creators', personItemToCreator(person));
+}
+
 function getDb() {
   if (!dbPromise) {
     dbPromise = openDB<SubsumeDB>(DB_NAME, DB_VERSION, {
@@ -251,9 +518,15 @@ function getDb() {
           const alertsStore = db.createObjectStore('alerts', { keyPath: 'id' });
           alertsStore.createIndex('by-created', 'createdAt');
         }
+
+        if (oldVersion < 4) {
+          createV4Stores(db);
+        }
       },
     }).then(async (db) => {
+      // Seed legacy stores first so migration can copy them into v4 stores.
       await seedDatabaseIfEmpty(db);
+      await migrateV3ToV4IfNeeded(db);
       return db;
     });
     dbPromise.catch(() => {
@@ -268,13 +541,15 @@ function getDb() {
 export async function putMediaItem(item: MediaItem): Promise<void> {
   const db = await getDb();
   await db.put('media', item);
+  await dualWriteMedia(db, item);
 }
 
 export async function putMediaItems(items: MediaItem[]): Promise<void> {
   const db = await getDb();
-  const tx = db.transaction('media', 'readwrite');
+  const tx = db.transaction(['media', 'works'], 'readwrite');
   for (const item of items) {
-    await tx.store.put(item);
+    await tx.objectStore('media').put(item);
+    await tx.objectStore('works').put(mediaItemToCatalogWork(item));
   }
   await tx.done;
 }
@@ -346,6 +621,7 @@ export async function putLibraryItem(item: LibraryItem): Promise<void> {
   normalizeLibraryItem(item);
   item.updatedAt = Date.now();
   await db.put('library', item);
+  await dualWriteLibrary(db, item);
 }
 
 export async function getLibraryItem(mediaId: string): Promise<LibraryItem | undefined> {
@@ -357,6 +633,9 @@ export async function getLibraryItem(mediaId: string): Promise<LibraryItem | und
 export async function removeLibraryItem(mediaId: string): Promise<void> {
   const db = await getDb();
   await db.delete('library', mediaId);
+  if (db.objectStoreNames.contains('relationships')) {
+    await db.delete('relationships', mediaId);
+  }
 }
 
 export async function getAllLibraryItems(): Promise<LibraryItem[]> {
@@ -380,6 +659,15 @@ const DEFAULT_PREFS: UserPreferences = {
   screenplayDockEnabled: false,
   onboardingComplete: false,
   omdbApiKey: undefined,
+  // Books expansion defaults (all media on)
+  enabledMedia: { movie: true, tv: true, book: true },
+  openLibraryEnabled: true,
+  detectScreenWorks: true,
+  detectBooks: true,
+  coverOverlaysEnabled: true,
+  crossMediumRecommendationsEnabled: false,
+  recommendationPrivacyMode: 'summarized_reflections',
+  dispatchEnabled: false,
 };
 
 export async function getPreferences(): Promise<UserPreferences> {
@@ -437,7 +725,7 @@ export async function exportLibraryData(): Promise<ImportLibraryData> {
 }
 
 const VALID_LIBRARY_STATUSES = new Set(['to-watch', 'watching', 'watched', 'abandoned']);
-const VALID_MEDIA_TYPES = new Set(['movie', 'tv']);
+const VALID_MEDIA_TYPES = new Set(['movie', 'tv', 'book']);
 const VALID_SANCTUARY_INTENTS = new Set(['keep_memory', 'revisit_this_month', 'wishlist']);
 
 export function intentForStatus(status: LibraryItem['status']): SanctuaryIntent {
@@ -575,6 +863,8 @@ export async function importLibraryData(data: ImportLibraryData) {
       }
     }
     await tx.done;
+    // Keep multi-medium stores in sync with imported legacy rows.
+    await copyLegacyStoresToV4(db);
   } catch (err) {
     console.error('[Subsume] Import failed:', err);
     throw err;
@@ -585,7 +875,7 @@ export async function importLibraryData(data: ImportLibraryData) {
 export async function getLibraryPage(
   limit: number,
   offset: number,
-  type?: 'movie' | 'tv'
+  type?: 'movie' | 'tv' | 'book'
 ): Promise<LibraryItem[]> {
   const db = await getDb();
   const tx = db.transaction(['library', 'media'], 'readonly');
@@ -640,11 +930,20 @@ export async function getPersonById(id: string): Promise<PersonItem | undefined>
 export async function savePerson(person: PersonItem): Promise<void> {
   const db = await getDb();
   await db.put('people', person);
+  await dualWritePerson(db, person);
 }
 
 export async function deletePerson(id: string): Promise<void> {
   const db = await getDb();
   await db.delete('people', id);
+  if (db.objectStoreNames.contains('creators')) {
+    const creatorId = id.startsWith('tmdb_person_') ? id : `tmdb_person_${id}`;
+    await db.delete('creators', creatorId);
+    // Also try raw id in case it was stored without prefix in creators.
+    if (creatorId !== id) {
+      await db.delete('creators', id);
+    }
+  }
 }
 
 export async function updatePersonSync(id: string, filmographyIds: string[]): Promise<void> {
@@ -657,6 +956,10 @@ export async function updatePersonSync(id: string, filmographyIds: string[]): Pr
     await tx.store.put(person);
   }
   await tx.done;
+  const updated = await getPersonById(id);
+  if (updated) {
+    await dualWritePerson(db, updated);
+  }
 }
 
 // ─── Watch Alerts Interface ───────────────────────────────────────────
@@ -680,6 +983,106 @@ export async function putWatchAlert(alert: WatchAlert): Promise<void> {
 export async function deleteWatchAlert(id: string): Promise<void> {
   const db = await getDb();
   await db.delete('alerts', id);
+}
+
+// ─── Multi-medium catalog Interface (v4) ──────────────────────────────
+
+export async function putWork(work: CatalogWork): Promise<void> {
+  const db = await getDb();
+  await db.put('works', work);
+}
+
+export async function getWork(id: string): Promise<CatalogWork | undefined> {
+  const db = await getDb();
+  return db.get('works', id);
+}
+
+export async function getAllWorks(): Promise<CatalogWork[]> {
+  const db = await getDb();
+  return db.getAll('works');
+}
+
+export async function putRelationship(rel: LibraryRelationship): Promise<void> {
+  const db = await getDb();
+  await db.put('relationships', rel);
+}
+
+export async function getRelationship(workId: string): Promise<LibraryRelationship | undefined> {
+  const db = await getDb();
+  return db.get('relationships', workId);
+}
+
+export async function getAllRelationships(): Promise<LibraryRelationship[]> {
+  const db = await getDb();
+  return db.getAll('relationships');
+}
+
+export async function putEdition(edition: BookEdition): Promise<void> {
+  const db = await getDb();
+  await db.put('book_editions', edition);
+}
+
+export async function getEditionsForWork(workId: string): Promise<BookEdition[]> {
+  const db = await getDb();
+  return db.getAllFromIndex('book_editions', 'by-work', workId);
+}
+
+export async function putReflection(reflection: Reflection): Promise<void> {
+  const db = await getDb();
+  await db.put('reflections', reflection);
+}
+
+export async function getReflectionsForWork(workId: string): Promise<Reflection[]> {
+  const db = await getDb();
+  return db.getAllFromIndex('reflections', 'by-work', workId);
+}
+
+export async function putExperience(experience: Experience): Promise<void> {
+  const db = await getDb();
+  await db.put('experiences', experience);
+}
+
+export async function getExperiencesForWork(workId: string): Promise<Experience[]> {
+  const db = await getDb();
+  return db.getAllFromIndex('experiences', 'by-work', workId);
+}
+
+export async function putCreator(creator: Creator): Promise<void> {
+  const db = await getDb();
+  await db.put('creators', creator);
+}
+
+export async function getAllCreators(): Promise<Creator[]> {
+  const db = await getDb();
+  return db.getAll('creators');
+}
+
+/** Resolve a possibly-legacy id through id_redirects; returns the input if no redirect. */
+export async function resolveCanonicalId(oldId: string): Promise<string> {
+  const db = await getDb();
+  const redirect = await db.get('id_redirects', oldId);
+  return redirect?.canonicalId ?? oldId;
+}
+
+/** Join relationships with their catalog works (and preferred edition when set). */
+export async function getArchivePairs(): Promise<ArchivePair[]> {
+  const db = await getDb();
+  const relationships = await db.getAll('relationships');
+  const pairs: ArchivePair[] = [];
+
+  for (const relationship of relationships) {
+    const work = await db.get('works', relationship.workId);
+    if (!work) continue;
+
+    let preferredEdition: BookEdition | undefined;
+    if (relationship.preferredEditionId) {
+      preferredEdition = await db.get('book_editions', relationship.preferredEditionId);
+    }
+
+    pairs.push({ relationship, work, preferredEdition });
+  }
+
+  return pairs;
 }
 
 

@@ -19,9 +19,12 @@ const COLLECTION_TABS: { id: CollectionFilter; label: string }[] = [
   { id: 'abandoned', label: 'Shelved' },
 ];
 
+/** Primary medium filter: All | Screen | Books (spec §8.2) */
+export type MediumFilter = 'all' | 'screen' | 'books' | 'movies' | 'tv';
+
 export interface IntentNavigationProps {
-  activeTab: 'movies' | 'tv';
-  setActiveTab: (tab: 'movies' | 'tv') => void;
+  activeTab: MediumFilter;
+  setActiveTab: (tab: MediumFilter) => void;
   intentFilter: IntentFilterOption;
   setIntentFilter: (intent: IntentFilterOption) => void;
   collectionFilter: CollectionFilter;
@@ -38,20 +41,48 @@ export function IntentNavigation({
 }: IntentNavigationProps) {
   return (
     <Fragment>
-      <div className="tab-bar">
+      <div className="tab-bar" role="tablist" aria-label="Medium">
         <button
-          className={`tab-item ${activeTab === 'movies' ? 'active' : ''}`}
-          onClick={() => setActiveTab('movies')}
+          type="button"
+          className={`tab-item ${activeTab === 'all' ? 'active' : ''}`}
+          onClick={() => setActiveTab('all')}
         >
-          Movies
+          All
         </button>
         <button
-          className={`tab-item ${activeTab === 'tv' ? 'active' : ''}`}
-          onClick={() => setActiveTab('tv')}
+          type="button"
+          className={`tab-item ${activeTab === 'screen' || activeTab === 'movies' || activeTab === 'tv' ? 'active' : ''}`}
+          onClick={() => setActiveTab('screen')}
         >
-          TV Shows
+          Screen
+        </button>
+        <button
+          type="button"
+          className={`tab-item ${activeTab === 'books' ? 'active' : ''}`}
+          onClick={() => setActiveTab('books')}
+        >
+          Books
         </button>
       </div>
+
+      {(activeTab === 'screen' || activeTab === 'movies' || activeTab === 'tv') && (
+        <div className="tab-bar tab-bar-secondary" role="tablist" aria-label="Screen type">
+          <button
+            type="button"
+            className={`tab-item ${activeTab === 'screen' || activeTab === 'movies' ? 'active' : ''}`}
+            onClick={() => setActiveTab('movies')}
+          >
+            Movies
+          </button>
+          <button
+            type="button"
+            className={`tab-item ${activeTab === 'tv' ? 'active' : ''}`}
+            onClick={() => setActiveTab('tv')}
+          >
+            TV Shows
+          </button>
+        </div>
+      )}
 
       <div className="collection-filter-bar" role="tablist" aria-label="Library by status">
         {COLLECTION_TABS.map((tab) => (

@@ -1,10 +1,16 @@
 {
   "manifest_version": 3,
   "name": "Subsume",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvpBKX48nciipq5BoDjIWbg0g0L6D0yvbE2rUcaPIIe84oBfUZQe83RlSk/48YNdAJ2eZ87sRrrOO09xrYl2RMxVXq5HDE48xEd9DvBbSOFT8zQuZ/C7xJe3X5Zm/nJA+rqHcmPT7cx65D7VhqnZhPQz84KOTt1+QTI52GCQ3cQGoSbQ2zm8y0U7eDtXKHJx8im8XBJNrwRhLH2dP5uYn4UAV2yNPywQb0E1XRnd9WINXpW82UVWgzGu7Mj2PVMQQLndd0EpFmWYkYng1SqwOV6jd151lOw+Nbcyvr+9Mmljws02w8OQiVGJWK5pJ9rIdFnQiI8uX6KTRmilwkGzclwIDAQAB",
-  "description": "A private film journal for Chrome. Capture what stayed with you, follow filmmakers, and discover titles as you browse.",
-  "permissions": ["storage", "activeTab", "notifications", "alarms", "identity"],
+  "description": "A private sanctuary for films, shows, and books that stay with you.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "notifications",
+    "alarms",
+    "identity"
+  ],
   "host_permissions": [
     "https://api.themoviedb.org/*",
     "https://api.openai.com/*",
@@ -15,7 +21,10 @@
     "https://api.tvmaze.com/*",
     "https://query.wikidata.org/*",
     "https://en.wikipedia.org/*",
-    "https://www.googleapis.com/*"
+    "https://www.googleapis.com/*",
+    "https://openlibrary.org/*",
+    "https://covers.openlibrary.org/*",
+    "https://www.googleapis.com/books/*"
   ],
   "background": {
     "service_worker": "background.js",
@@ -23,9 +32,16 @@
   },
   "content_scripts": [
     {
-      "matches": ["http://*/*", "https://*/*"],
-      "js": ["content.js"],
-      "css": ["content.css"],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
       "run_at": "document_idle"
     }
   ],

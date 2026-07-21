@@ -14,13 +14,22 @@ import {
   TagFilterBar,
   HardcoverSpineCard,
 } from '../components/archive';
-import type { CollectionFilter } from '../components/archive/IntentNavigation';
+import type { CollectionFilter, MediumFilter } from '../components/archive/IntentNavigation';
 import { resolveSanctuaryIntent } from '../components/archive/constants';
 import { EmptyStateProjection } from '../components/EmptyStateProjection';
 import type { EmotionalSpectrum } from '@/shared/emotions';
+import type { MediaType } from '@/shared/types';
+
+function mediumFilterToType(filter: MediumFilter): MediaType | undefined {
+  if (filter === 'movies') return 'movie';
+  if (filter === 'tv') return 'tv';
+  if (filter === 'books') return 'book';
+  // 'all' and 'screen' — no single type; client-side filter for screen
+  return undefined;
+}
 
 export function Library() {
-  const [activeTab, setActiveTab] = useState<'movies' | 'tv'>('movies');
+  const [activeTab, setActiveTab] = useState<MediumFilter>('all');
   const [intentFilter, setIntentFilter] = useState<IntentFilterOption>('all');
   const [collectionFilter, setCollectionFilter] = useState<CollectionFilter>('all');
   const [items, setItems] = useState<JoinedItem[]>([]);
@@ -52,20 +61,28 @@ export function Library() {
     try {
       const limit = 40;
       const offset = page * limit;
+      const type = mediumFilterToType(activeTab);
       const res = await sendMessage<GetLibraryPageRequest, JoinedItem[]>(MessageType.GET_LIBRARY_PAGE, {
         limit,
         offset,
-        type: activeTab === 'movies' ? 'movie' : 'tv',
+        type,
       });
       if (!isMountedRef.current || (isCancelled && isCancelled())) {
         return;
       }
       if (res.success && res.data) {
         setLoadError(false);
+        let pageItems = res.data;
+        // Client-side medium filters when type is broad
+        if (activeTab === 'screen') {
+          pageItems = pageItems.filter((i) => i.media?.type === 'movie' || i.media?.type === 'tv');
+        } else if (activeTab === 'all') {
+          // keep all
+        }
         if (append) {
-          setItems((prev) => [...prev, ...res.data!]);
+          setItems((prev) => [...prev, ...pageItems]);
         } else {
-          setItems(res.data);
+          setItems(pageItems);
         }
 
         if (res.data.length < limit) {

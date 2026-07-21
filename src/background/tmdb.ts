@@ -333,6 +333,8 @@ export async function enrichMediaWithStreaming(
     }
   }
 
+  if (item.type === 'book') return item;
+
   const availability = await fetchWatchProviders(
     tmdbProvider.externalId,
     item.type,
@@ -350,6 +352,7 @@ export async function enrichMediaWithStreaming(
  * Merges OMDb IMDb/RT ratings into a MediaItem without duplicating providers.
  */
 export async function enrichMediaWithOmdbRatings(item: MediaItem): Promise<MediaItem> {
+  if (item.type === 'book') return item;
   const omdbRatings = await fetchOmdbRatings(item.canonicalTitle, item.year, item.type);
   if (omdbRatings.length === 0) {
     return item;

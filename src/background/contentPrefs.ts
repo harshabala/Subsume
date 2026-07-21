@@ -25,5 +25,8 @@ export function buildContentPrefs(prefs: UserPreferences, hostname: string): Con
     detectionSensitivity: prefs.detectionSensitivity || 'medium',
     disabledDomains,
     domainDisabled,
+    detectScreenWorks: !domainDisabled && (prefs.detectScreenWorks ?? true),
+    detectBooks: !domainDisabled && (prefs.detectBooks ?? true),
+    coverOverlaysEnabled: !domainDisabled && (prefs.coverOverlaysEnabled ?? true),
   };
 }
