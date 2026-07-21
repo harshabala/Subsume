@@ -401,7 +401,10 @@ async function copyLegacyStoresToV4(db: IDBPDatabase<SubsumeDB>): Promise<void> 
 
 /**
  * Migrate v3 legacy stores into multi-medium v4 stores when needed.
- * Safe to call repeatedly: skips when flag is set or works already match media.
+ * Safe to call repeatedly: skips when the completion flag is set, or when
+ * media→works, library→relationships, and people→creators are all covered.
+ * Only sets `subsume_migration_v4_complete` after a full copy (or when nothing
+ * remains to copy) — never after works-only dual-write coverage.
  */
 export async function migrateV3ToV4IfNeeded(
   db?: IDBPDatabase<SubsumeDB>
@@ -423,30 +426,30 @@ export async function migrateV3ToV4IfNeeded(
 
   const mediaCount = await database.count('media');
   const worksCount = await database.count('works');
+  const libraryCount = await database.count('library');
+  const relationshipsCount = database.objectStoreNames.contains('relationships')
+    ? await database.count('relationships')
+    : 0;
+  const peopleCount = await database.count('people');
+  const creatorsCount = database.objectStoreNames.contains('creators')
+    ? await database.count('creators')
+    : 0;
 
-  // Already migrated (or dual-written enough that works covers media).
-  if (mediaCount > 0 && worksCount >= mediaCount) {
+  // All legacy domains already represented in v4 (including empty DB).
+  // Do not treat worksCount >= mediaCount alone as complete — dual-write may
+  // have filled works while library/people still need copying.
+  const worksCovered = mediaCount === 0 || worksCount >= mediaCount;
+  const relationshipsCovered =
+    libraryCount === 0 || relationshipsCount >= libraryCount;
+  const creatorsCovered = peopleCount === 0 || creatorsCount >= peopleCount;
+
+  if (worksCovered && relationshipsCovered && creatorsCovered) {
     try {
       await chrome.storage.local.set({ [MIGRATION_V4_COMPLETE_KEY]: true });
     } catch {
       /* ignore */
     }
     return;
-  }
-
-  // Empty legacy DB — still mark complete so we don't re-check forever.
-  if (mediaCount === 0 && worksCount === 0) {
-    // Library/people may still exist without media; copy what we can.
-    const libraryCount = await database.count('library');
-    const peopleCount = await database.count('people');
-    if (libraryCount === 0 && peopleCount === 0) {
-      try {
-        await chrome.storage.local.set({ [MIGRATION_V4_COMPLETE_KEY]: true });
-      } catch {
-        /* ignore */
-      }
-      return;
-    }
   }
 
   await copyLegacyStoresToV4(database);

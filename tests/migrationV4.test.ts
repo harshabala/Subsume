@@ -270,11 +270,42 @@ describe('IndexedDB v4 multi-medium migration', () => {
       reflectionsBefore.length
     );
 
-    // Clear flag and re-run: still idempotent via puts / count check.
+    // Clear flag and re-run: still idempotent via puts / full-coverage check.
     await chrome.storage.local.set({ [storage.MIGRATION_V4_COMPLETE_KEY]: false });
-    // Force works-count short-circuit path: works already match media.
     await storage.migrateV3ToV4IfNeeded();
     expect(await storage.getAllWorks()).toHaveLength(worksBefore.length);
+    expect(await storage.getAllRelationships()).toHaveLength(relsBefore.length);
+    expect(await storage.getAllCreators()).toHaveLength(creatorsBefore.length);
+  });
+
+  it('copies library when works are dual-written but relationships empty and flag is false', async () => {
+    // Simulate dual-write of media→works without library→relationships.
+    const storage = await loadStorage();
+    await storage.putMediaItem(sampleMedia);
+    expect(await storage.getWork('tmdb_movie_42')).toBeDefined();
+    expect(await storage.getAllRelationships()).toHaveLength(0);
+
+    // Write library only into the legacy store (skip dual-write path).
+    const db = openConnections[openConnections.length - 1];
+    await db.put('library', libraryWatched);
+    expect(await storage.getAllRelationships()).toHaveLength(0);
+
+    // Incomplete state must not be treated as done.
+    await chrome.storage.local.set({ [storage.MIGRATION_V4_COMPLETE_KEY]: false });
+    await storage.migrateV3ToV4IfNeeded();
+
+    const rels = await storage.getAllRelationships();
+    expect(rels).toHaveLength(1);
+    expect(rels[0].workId).toBe('tmdb_movie_42');
+    expect(rels[0].status).toBe('completed');
+
+    // Reflections derived from library notes should also land.
+    const reflections = await storage.getReflectionsForWork('tmdb_movie_42');
+    expect(reflections.length).toBeGreaterThan(0);
+
+    expect(chrome.storage.local.set).toHaveBeenCalledWith(
+      expect.objectContaining({ [storage.MIGRATION_V4_COMPLETE_KEY]: true })
+    );
   });
 
   it('maps legacy statuses correctly (to-watch→planned, watching→in_progress, watched→completed)', async () => {
