@@ -211,7 +211,7 @@
   text-align: left;
   appearance: none;
   animation: discoveryFeedIn var(--duration-curtain, 280ms) var(--ease-focus-pull, cubic-bezier(0.25, 1, 0.5, 1)) both;
-  animation-delay: calc(min(var(--feed-index, 0), 5) * 60ms);
+  animation-delay: calc(min(var(--feed-index, 0), 5) * 40ms);
 }
 
 .discovery-feed-card:focus-visible {

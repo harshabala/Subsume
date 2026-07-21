@@ -22,7 +22,7 @@
 .card-grid > .media-card {
   /* backwards only: avoid holding transform after enter so hover lift still works */
   animation: libraryCardIn var(--duration-curtain, 280ms) var(--ease-focus-pull, cubic-bezier(0.25, 1, 0.5, 1)) backwards;
-  animation-delay: calc(min(var(--feed-index, 0), 5) * 60ms);
+  animation-delay: calc(min(var(--feed-index, 0), 5) * 40ms);
 }
 
 @media (prefers-reduced-motion: reduce) {
