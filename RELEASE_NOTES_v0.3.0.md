@@ -62,3 +62,21 @@ npm run build
 - Taste profile **screen vs reading** split in LLM prompts
 - Archive collection labels medium-aware
 - Privacy, listing, README, onboarding, settings for multi-medium
+
+## Phase 2 — Recommendations, dispatch, alerts
+
+- LLM capability registry (honest catalog-only; no false web-search claims)
+- Catalog validation for every LLM recommendation candidate
+- Open Library catalog book recommendations from your reading taste
+- Recommendation dismiss feedback (local)
+- Multi-medium **Subsume Dispatch** (opt-in weekly; screen + books; idempotent)
+- Settings: Weekly selection toggle + Generate now
+- **Release Alerts** support type Book (Open Library keyword/author)
+
+## Phase 3 — Relations & experiences
+
+- Work relations: adaptation_of / adapted_as (user assert + optional Wikidata)
+- DetailModal Related works + Link adaptation
+- Read again / Watch again multi-session experiences
+- Edition picker + preferred edition
+- Archive medium badges (Book / Film / Series)

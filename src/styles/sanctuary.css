@@ -357,6 +357,18 @@
   font-size: 9px;
 }
 
+.sanctuary-card-badge.medium-badge {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+  border-color: var(--color-accent-border, var(--border-restraint));
+  color: var(--accent-gold, var(--text-artwork));
+}
+
+.sanctuary-card-badge.medium-badge[data-medium='book'] {
+  color: var(--text-artwork);
+}
+
 .sanctuary-card-synopsis {
   font-family: var(--font-ui);
   font-size: 12px;
@@ -712,6 +724,135 @@
   margin: 0 0 12px 0;
 }
 
+.sanctuary-detail-related-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sanctuary-detail-related-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-restraint);
+  border-radius: 2px;
+}
+
+.sanctuary-detail-related-label {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-meta);
+}
+
+.sanctuary-detail-related-title {
+  font-family: var(--font-editorial);
+  font-size: 15px;
+  color: var(--text-reflection);
+}
+
+.sanctuary-detail-related-year,
+.sanctuary-detail-related-medium {
+  opacity: 0.7;
+  font-size: 0.9em;
+}
+
+.sanctuary-detail-related-empty,
+.sanctuary-detail-related-note {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text-meta);
+  margin: 0 0 10px;
+  line-height: 1.45;
+}
+
+.sanctuary-detail-related-error {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: #c97b7b;
+  margin: 0 0 8px;
+}
+
+.sanctuary-detail-related-link-btn,
+.sanctuary-detail-related-cancel {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  background: transparent;
+  border: 1px solid var(--border-restraint);
+  color: var(--border-hero);
+  padding: 8px 12px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.sanctuary-detail-related-link-btn:hover,
+.sanctuary-detail-related-cancel:hover {
+  border-color: var(--border-hero);
+}
+
+.sanctuary-detail-related-search-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.sanctuary-detail-related-candidates {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.sanctuary-detail-related-candidate {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  background: transparent;
+  border: 1px solid var(--border-restraint);
+  border-radius: 2px;
+  cursor: pointer;
+  color: inherit;
+}
+
+.sanctuary-detail-related-candidate:hover:not(:disabled) {
+  border-color: var(--border-hero);
+}
+
+.sanctuary-detail-related-candidate:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.sanctuary-detail-related-candidate-title {
+  font-family: var(--font-editorial);
+  font-size: 14px;
+}
+
+.sanctuary-detail-related-candidate-meta {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-meta);
+}
+
 .sanctuary-detail-synopsis {
   font-family: var(--font-editorial);
   font-size: 16px;
@@ -969,6 +1110,90 @@
   font-size: 14px;
   line-height: 1.6;
   min-height: 100px;
+}
+
+/* ── Experience history (reread / rewatch sessions) ── */
+.experience-history {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+}
+
+.experience-history-empty,
+.experience-history-error {
+  font-family: var(--font-editorial);
+  font-size: 13px;
+  color: var(--muted-fg);
+  margin: 0;
+  font-style: italic;
+}
+
+.experience-history-error {
+  color: var(--color-danger, #c45c5c);
+  font-style: normal;
+}
+
+.experience-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.experience-history-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
+}
+
+.experience-history-item:last-child {
+  border-bottom: none;
+}
+
+.experience-history-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+
+.experience-history-pass {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 10px;
+  color: var(--accent-gold, var(--text-artwork));
+}
+
+.experience-history-date {
+  color: var(--muted-fg);
+  font-size: 11px;
+}
+
+.experience-history-status {
+  font-size: 11px;
+  color: var(--text-meta, var(--muted-fg));
+}
+
+.experience-history-stats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text-meta, var(--muted-fg));
+}
+
+.experience-history-stat strong {
+  color: var(--card-fg, inherit);
+  font-weight: 600;
 }
 
 /* ── Reflection timeline (appendable inscriptions) ── */

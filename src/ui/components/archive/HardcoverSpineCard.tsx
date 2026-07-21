@@ -78,6 +78,12 @@ export function HardcoverSpineCard({
           {media?.canonicalTitle || 'Untitled'}
         </h4>
         <div className="media-card-meta">
+          <span
+            className="sanctuary-card-badge medium-badge"
+            data-medium={media?.type || 'movie'}
+          >
+            {media?.type === 'book' ? 'Book' : media?.type === 'tv' ? 'Series' : 'Film'}
+          </span>
           <span>{media?.year}</span>
           {media?.ratings?.find((r) => r.provider === 'tmdb') && (
             <span className="sanctuary-card-badge">

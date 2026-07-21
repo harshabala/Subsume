@@ -5,6 +5,7 @@
 import { MessageType } from '@/shared/types';
 import type { MessageHandlerMap } from '@/shared/messages';
 import type {
+  BookEdition,
   CatalogWork,
   DetectionCandidate,
 } from '@/shared/catalogTypes';
@@ -16,6 +17,10 @@ import {
   putLibraryItem,
   getLibraryItem,
   getPreferences,
+  getEditionsForWork,
+  putEdition,
+  getRelationship,
+  putRelationship,
 } from '../storage';
 import { logger } from '@/shared/logger';
 
@@ -230,5 +235,99 @@ export const bookHandlers: MessageHandlerMap = {
       joined = joined.filter((j) => j.library.status === req.status);
     }
     return joined;
+  },
+
+  /**
+   * List editions for a book work. Uses local store first; for Open Library works
+   * with no cached editions, fetches from OL and persists.
+   */
+  [MessageType.GET_BOOK_EDITIONS]: async (payload) => {
+    const req = payload as { workId?: string };
+    const workId = typeof req?.workId === 'string' ? req.workId.trim() : '';
+    if (!workId) {
+      throw new Error('Invalid GET_BOOK_EDITIONS payload: workId is required');
+    }
+
+    let editions: BookEdition[] = await getEditionsForWork(workId);
+
+    if (editions.length === 0 && workId.startsWith('openlibrary_work_')) {
+      try {
+        const ol = await loadOpenLibrary();
+        const fetched = await ol.getOpenLibraryEditionsForWork(workId);
+        for (const ed of fetched) {
+          await putEdition(ed);
+        }
+        editions = await getEditionsForWork(workId);
+      } catch (err) {
+        logger.warn('[Subsume] GET_BOOK_EDITIONS OL fetch failed:', err);
+      }
+    }
+
+    // Prefer preferred edition first when set
+    const media = await getMediaItem(workId);
+    const rel = await getRelationship(workId);
+    const preferred =
+      rel?.preferredEditionId ?? media?.preferredEditionId ?? undefined;
+    if (preferred && editions.length > 1) {
+      editions = [
+        ...editions.filter((e) => e.id === preferred),
+        ...editions.filter((e) => e.id !== preferred),
+      ];
+    }
+
+    return {
+      editions,
+      preferredEditionId: preferred ?? null,
+    };
+  },
+
+  [MessageType.SET_PREFERRED_EDITION]: async (payload) => {
+    const req = payload as { workId?: string; editionId?: string };
+    const workId = typeof req?.workId === 'string' ? req.workId.trim() : '';
+    const editionId =
+      typeof req?.editionId === 'string' ? req.editionId.trim() : '';
+    if (!workId || !editionId) {
+      throw new Error(
+        'Invalid SET_PREFERRED_EDITION payload: workId and editionId are required',
+      );
+    }
+
+    const now = Date.now();
+    const rel = await getRelationship(workId);
+    if (rel) {
+      await putRelationship({
+        ...rel,
+        preferredEditionId: editionId,
+        updatedAt: now,
+      });
+    } else {
+      await putRelationship({
+        workId,
+        status: 'planned',
+        addedAt: now,
+        updatedAt: now,
+        preferredEditionId: editionId,
+      });
+    }
+
+    const lib = await getLibraryItem(workId);
+    if (lib) {
+      await putLibraryItem({
+        ...lib,
+        preferredEditionId: editionId,
+        updatedAt: now,
+      });
+    }
+
+    const media = await getMediaItem(workId);
+    if (media) {
+      await putMediaItem({
+        ...media,
+        preferredEditionId: editionId,
+      });
+    }
+
+    logger.log('[Subsume] SET_PREFERRED_EDITION:', workId, editionId);
+    return { updated: true as const, workId, preferredEditionId: editionId };
   },
 };

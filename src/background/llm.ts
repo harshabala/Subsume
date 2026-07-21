@@ -546,7 +546,7 @@ export async function getPersonalizedRecommendations(
   let parsedItems: Array<{
     title: string;
     year: number;
-    type?: 'movie' | 'tv';
+    type?: 'movie' | 'tv' | 'book';
     reason?: string;
     seedTitle?: string;
     confidenceSignal?: 'high' | 'medium' | 'low';
@@ -560,57 +560,61 @@ export async function getPersonalizedRecommendations(
     return { flat: [], grouped: null };
   }
 
-  // Map parsed items to PersonalizedRecommendation with empty tmdbId to be filled in Step 5
-  const prelimRecs: PersonalizedRecommendation[] = parsedItems.map(item => ({
-    tmdbId: '',
-    title: item.title || '',
-    year: item.year || 0,
-    type: item.type ?? 'movie',
-    reason: item.reason ?? 'Recommended based on your taste',
-    seedTitle: item.seedTitle,
-    confidenceSignal: item.confidenceSignal ?? 'medium',
-    ratings: [],
-    posterUrl: undefined,
-  })).filter(r => r.title.length > 0);
+  // Map parsed items — only real catalog works survive resolution (Step 5)
+  const candidates = parsedItems
+    .map((item) => ({
+      title: (item.title || '').trim(),
+      year: item.year || undefined,
+      type: (item.type === 'book' || item.type === 'tv' || item.type === 'movie'
+        ? item.type
+        : 'movie') as 'movie' | 'tv' | 'book',
+      reason: item.reason ?? 'Recommended based on your taste',
+      seedTitle: item.seedTitle,
+      confidenceSignal: item.confidenceSignal ?? ('medium' as const),
+    }))
+    .filter((r) => r.title.length > 0);
 
-  // Step 5 — Resolve TMDb IDs concurrently
-  const resolvedResults = await Promise.all(
-    prelimRecs.map(async (rec): Promise<PersonalizedRecommendation | null> => {
-      try {
-        // Check local DB cache first
-        const cached = await findMediaByTitle(rec.title, rec.year);
-        if (cached) {
-          return {
-            ...rec,
-            tmdbId: cached.id,
-            posterUrl: cached.posterUrl || undefined,
-            ratings: cached.ratings,
-          };
-        }
-
-        // Fall back to TMDb search
-        const mediaItem = await searchTitle(rec.title, rec.year, rec.type);
-        if (mediaItem) {
-          await putMediaItem(mediaItem);
-          return {
-            ...rec,
-            tmdbId: mediaItem.id,
-            posterUrl: mediaItem.posterUrl || undefined,
-            ratings: mediaItem.ratings,
-          };
-        }
-
-        return null;
-      } catch (innerErr) {
-        logger.warn(`[Subsume] Failed to resolve personalized rec "${rec.title}":`, innerErr);
-        return null;
-      }
-    })
+  // Step 5 — Resolve against real catalogs (TMDb / Open Library / discovery).
+  // Unresolved titles are dropped — never invent catalog works.
+  const { resolveRecommendationCandidates } = await import('./catalogValidate');
+  const catalogResolved = await resolveRecommendationCandidates(
+    candidates.map((c) => ({
+      title: c.title,
+      year: c.year,
+      type: c.type,
+      reason: c.reason,
+      seedTitle: c.seedTitle,
+    })),
+    prefs
   );
 
-  const resolvedRecs = resolvedResults.filter(
-    (r): r is PersonalizedRecommendation => r !== null && r.tmdbId.length > 0
+  const confidenceByTitle = new Map(
+    candidates.map((c) => [c.title.toLowerCase(), c.confidenceSignal] as const)
   );
+
+  const resolvedRecs: PersonalizedRecommendation[] = catalogResolved.map((r) => {
+    const reasonKey = r.reason;
+    const matchCandidate = candidates.find(
+      (c) =>
+        c.reason === reasonKey &&
+        (c.seedTitle === r.seedTitle || (!c.seedTitle && !r.seedTitle))
+    );
+    const conf =
+      (matchCandidate && confidenceByTitle.get(matchCandidate.title.toLowerCase())) ||
+      confidenceByTitle.get(r.media.canonicalTitle.toLowerCase()) ||
+      'medium';
+    return {
+      tmdbId: r.workId,
+      title: r.media.canonicalTitle,
+      year: r.media.year,
+      type: r.media.type === 'book' || r.media.type === 'tv' ? r.media.type : 'movie',
+      posterUrl: r.media.posterUrl || undefined,
+      ratings: r.media.ratings,
+      reason: r.reason,
+      seedTitle: r.seedTitle,
+      confidenceSignal: conf as 'high' | 'medium' | 'low',
+    };
+  });
 
   // Step 6 — Seed grouping (conditional — only when enough data exists)
   let grouped: RecommendationGroup[] | null = null;

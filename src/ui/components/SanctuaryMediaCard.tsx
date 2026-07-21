@@ -47,10 +47,23 @@ export function SanctuaryMediaCard({
     </div>
   );
 
+  const mediumLabel =
+    media.type === 'book' ? 'Book' : media.type === 'tv' ? 'Series' : 'Film';
+
   const body = (
     <div className="sanctuary-card-content">
       <h4 className="sanctuary-card-title">{displayTitle}</h4>
-      {meta}
+      {meta ?? (
+        <div className="sanctuary-card-meta">
+          <span
+            className="sanctuary-card-badge medium-badge"
+            data-medium={media.type}
+          >
+            {mediumLabel}
+          </span>
+          {media.year ? <span>{media.year}</span> : null}
+        </div>
+      )}
       {synopsis ? <p className="sanctuary-card-synopsis">{synopsis}</p> : null}
     </div>
   );

@@ -6,6 +6,7 @@ import {
 } from '@/shared/types';
 import { AVAILABLE_GENRES, hasGenreMatch } from '@/shared/genres';
 import { AVAILABLE_PLATFORMS, formatPlatformName } from '@/shared/platforms';
+import { catalogWorkToMediaItem } from '@/shared/compatibility';
 import { getLatestReleases } from './tmdb';
 import {
   getAllWatchAlerts,
@@ -54,15 +55,43 @@ function matchesKeyword(alert: WatchAlert, media: MediaItem): boolean {
   return media.canonicalTitle.toLowerCase().includes(keyword.toLowerCase());
 }
 
+/** Optional author substring match (books). Empty authorKeyword always matches. */
+function matchesAuthor(alert: WatchAlert, media: MediaItem): boolean {
+  const authorKeyword = alert.authorKeyword?.trim();
+  if (!authorKeyword) return true;
+  const needle = authorKeyword.toLowerCase();
+  const authors = media.authors ?? [];
+  return authors.some((name) => name.toLowerCase().includes(needle));
+}
+
+/**
+ * Type matching:
+ * - book → media must be book
+ * - movie / tv → exact
+ * - both (default) → movie or tv only (not books)
+ */
 function matchesType(alert: WatchAlert, media: MediaItem): boolean {
   const alertType = alert.type ?? 'both';
-  if (alertType === 'both') return true;
+  if (alertType === 'both') {
+    return media.type === 'movie' || media.type === 'tv';
+  }
+  if (alertType === 'book') {
+    return media.type === 'book';
+  }
   return media.type === alertType;
 }
 
 export function mediaMatchesWatchAlert(alert: WatchAlert, media: MediaItem): boolean {
   if (!alert.enabled) return false;
   if (!matchesType(alert, media)) return false;
+
+  // Book alerts: keyword on title + optional author; skip TMDb genre/platform chips
+  if (alert.type === 'book' || media.type === 'book') {
+    if (!matchesKeyword(alert, media)) return false;
+    if (!matchesAuthor(alert, media)) return false;
+    return true;
+  }
+
   if (!hasGenreOverlap(genreNamesForAlert(alert), media)) return false;
   if (!hasPlatformMatch(platformNamesForAlert(alert), media)) return false;
   if (!matchesKeyword(alert, media)) return false;
@@ -90,27 +119,65 @@ export function findNewAlertMatches(
   return matches;
 }
 
-export async function checkWatchAlerts(
-  prefs: UserPreferences,
-  prefetchedReleases?: MediaItem[]
+function bookSearchQuery(alert: WatchAlert): string {
+  const parts = [alert.keyword?.trim(), alert.authorKeyword?.trim()].filter(
+    (p): p is string => Boolean(p)
+  );
+  if (parts.length > 0) return parts.join(' ');
+  return alert.name.trim();
+}
+
+/**
+ * Search Open Library for each book alert and return new matches.
+ * Does not touch TMDb. Persists discovered book media for later display.
+ */
+export async function checkBookAlerts(
+  bookAlerts: WatchAlert[]
 ): Promise<WatchAlertMatch[]> {
-  const alerts = await getAllWatchAlerts();
-  const enabledAlerts = alerts.filter((alert) => alert.enabled);
-  if (enabledAlerts.length === 0) {
-    return [];
+  const enabled = bookAlerts.filter((a) => a.enabled && a.type === 'book');
+  if (enabled.length === 0) return [];
+
+  const { searchOpenLibrary } = await import('./openLibrary');
+  const allMedia: MediaItem[] = [];
+  const seen = new Set<string>();
+
+  for (const alert of enabled) {
+    const query = bookSearchQuery(alert);
+    if (!query) continue;
+
+    try {
+      const results = await searchOpenLibrary({ query, limit: 15 });
+      for (const hit of results) {
+        const media = catalogWorkToMediaItem(hit.work);
+        media.type = 'book';
+        if (hit.work.bookDetails?.authors?.length) {
+          media.authors = hit.work.bookDetails.authors;
+        } else if (hit.work.creatorCredits?.length) {
+          media.authors = hit.work.creatorCredits
+            .filter((c) => c.role === 'author' || !c.role)
+            .map((c) => c.name);
+        }
+        media.subtitle = hit.work.subtitle;
+        if (seen.has(media.id)) continue;
+        seen.add(media.id);
+        allMedia.push(media);
+      }
+    } catch {
+      // Provider failures should not block other alerts
+    }
   }
 
-  let allMedia: MediaItem[];
-  if (prefetchedReleases) {
-    allMedia = prefetchedReleases;
-  } else {
-    const [movies, tv] = await Promise.all([
-      getLatestReleases('movie', prefs, 7),
-      getLatestReleases('tv', prefs, 7),
-    ]);
-    allMedia = [...movies, ...tv];
+  if (allMedia.length > 0) {
+    await putMediaItems(allMedia);
   }
-  const matches = findNewAlertMatches(enabledAlerts, allMedia);
+
+  return findNewAlertMatches(enabled, allMedia);
+}
+
+async function persistAlertCheckResults(
+  enabledAlerts: WatchAlert[],
+  matches: WatchAlertMatch[]
+): Promise<void> {
   const now = Date.now();
   const updatedAlerts = new Map<string, WatchAlert>();
 
@@ -135,6 +202,47 @@ export async function checkWatchAlerts(
   if (matches.length > 0) {
     await putMediaItems(matches.map((match) => match.media));
   }
+}
+
+export async function checkWatchAlerts(
+  prefs: UserPreferences,
+  prefetchedReleases?: MediaItem[]
+): Promise<WatchAlertMatch[]> {
+  const alerts = await getAllWatchAlerts();
+  const enabledAlerts = alerts.filter((alert) => alert.enabled);
+  if (enabledAlerts.length === 0) {
+    return [];
+  }
+
+  const screenAlerts = enabledAlerts.filter((alert) => alert.type !== 'book');
+  const bookAlerts = enabledAlerts.filter((alert) => alert.type === 'book');
+
+  const screenPromise = (async (): Promise<WatchAlertMatch[]> => {
+    if (screenAlerts.length === 0) return [];
+
+    let allMedia: MediaItem[];
+    if (prefetchedReleases) {
+      allMedia = prefetchedReleases.filter((m) => m.type !== 'book');
+    } else {
+      const [movies, tv] = await Promise.all([
+        getLatestReleases('movie', prefs, 7),
+        getLatestReleases('tv', prefs, 7),
+      ]);
+      allMedia = [...movies, ...tv];
+    }
+    return findNewAlertMatches(screenAlerts, allMedia);
+  })();
+
+  const bookPromise =
+    bookAlerts.length > 0 ? checkBookAlerts(bookAlerts) : Promise.resolve([]);
+
+  const [screenMatches, bookMatches] = await Promise.all([
+    screenPromise,
+    bookPromise,
+  ]);
+  const matches = [...screenMatches, ...bookMatches];
+
+  await persistAlertCheckResults(enabledAlerts, matches);
 
   return matches;
 }

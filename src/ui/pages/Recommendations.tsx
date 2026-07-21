@@ -112,7 +112,10 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
           const traktHydrated: (Recommendation & { media: MediaItem })[] = mediaItems.map(item => ({
             mediaId: item.id,
             media: item,
-            explanation: 'Now showing on Trakt',
+            explanation:
+              item.type === 'book'
+                ? 'Related to books in your archive'
+                : 'Now showing on Trakt',
           }));
 
           if (mediaIds.length === 0) {
@@ -175,6 +178,37 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
     } catch (err) {
       console.error('Failed to add to library', err);
       setActionError(err instanceof Error ? err.message : 'Failed to add title to your library.');
+    }
+  }
+
+  async function dismissRecommendation(workId: string) {
+    try {
+      await sendMessage(MessageType.SUBMIT_RECOMMENDATION_FEEDBACK, {
+        workId,
+        action: 'dismiss',
+      });
+      setRecs((prev) => prev.filter((r) => r.media.id !== workId));
+      setGroupedRecs((prev) =>
+        prev
+          .map((g) => ({
+            ...g,
+            recommendations: g.recommendations.filter((r) => r.media.id !== workId),
+          }))
+          .filter((g) => g.recommendations.length > 0)
+      );
+      setPersonalizedRecs((prev) => prev.filter((r) => r.tmdbId !== workId));
+      setRecGroups((prev) =>
+        prev
+          ? prev
+              .map((g) => ({
+                ...g,
+                recommendations: g.recommendations.filter((r) => r.tmdbId !== workId),
+              }))
+              .filter((g) => g.recommendations.length > 0)
+          : null
+      );
+    } catch (err) {
+      console.error('Failed to dismiss recommendation', err);
     }
   }
 
@@ -309,6 +343,7 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
                           media={r.media}
                           explanation={r.explanation}
                           onClick={() => setSelectedMedia(r.media)}
+                          onDismiss={dismissRecommendation}
                         />
                       ))}
                     </div>
@@ -325,6 +360,7 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
                 media={r.media}
                 explanation={r.explanation}
                 onClick={() => setSelectedMedia(r.media)}
+                onDismiss={dismissRecommendation}
               />
             ))}
           </div>
@@ -467,6 +503,7 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
                     isAdded={aiAddedIds.has(rec.tmdbId)}
                     onCardClick={setSelectedMedia}
                     onAddClick={addAiRecToLibrary}
+                    onDismiss={dismissRecommendation}
                   />
                 ))}
               </div>
@@ -492,6 +529,7 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
                           isAdded={aiAddedIds.has(rec.tmdbId)}
                           onCardClick={setSelectedMedia}
                           onAddClick={addAiRecToLibrary}
+                          onDismiss={dismissRecommendation}
                         />
                       ))}
                     </div>
@@ -509,6 +547,7 @@ export function Recommendations({ onOpenCuratorSettings }: RecommendationsProps 
                           isAdded={aiAddedIds.has(rec.tmdbId)}
                           onCardClick={setSelectedMedia}
                           onAddClick={addAiRecToLibrary}
+                          onDismiss={dismissRecommendation}
                         />
                       ))}
                     </div>

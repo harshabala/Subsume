@@ -39,6 +39,10 @@ const chromeMock = {
   alarms: {
     create: vi.fn(),
     get: vi.fn(),
+    clear: vi.fn((_name: string, cb?: () => void) => {
+      if (cb) cb();
+      return Promise.resolve(true);
+    }),
     onAlarm: { addListener: vi.fn() },
   },
   notifications: {

@@ -5,6 +5,8 @@ import { setTmdbApiKey } from '../tmdb';
 import { setOmdbApiKey } from '../omdb';
 import { buildContentPrefs } from '../contentPrefs';
 import { getFreeDataSourceStatuses } from '../dataSources';
+import { reconcileDispatchAlarm } from '../dispatch';
+import { logger } from '@/shared/logger';
 
 const API_KEY_FIELDS: (keyof UserPreferences)[] = [
   'tmdbApiKey',
@@ -121,6 +123,11 @@ export const settingHandlers: MessageHandlerMap = {
     await savePreferences(merged);
     setTmdbApiKey(merged.tmdbApiKey ?? '');
     setOmdbApiKey(merged.omdbApiKey ?? '');
+    try {
+      await reconcileDispatchAlarm(merged);
+    } catch (err) {
+      logger.warn('[Subsume] reconcileDispatchAlarm after prefs save failed:', err);
+    }
     return { updated: true };
   },
 

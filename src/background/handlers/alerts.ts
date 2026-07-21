@@ -16,13 +16,18 @@ import {
 export const alertHandlers: MessageHandlerMap = {
   [MessageType.CREATE_WATCH_ALERT]: async (payload) => {
     const req = payload as CreateWatchAlertRequest;
+    const isBook = req.type === 'book';
     const alert: WatchAlert = {
       id: `alert_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
       name: req.name.trim(),
       type: req.type ?? 'both',
-      genres: req.genres?.length ? req.genres : undefined,
-      platforms: req.platforms?.length ? req.platforms : undefined,
+      // TMDb chips only apply to screen alerts
+      genres: !isBook && req.genres?.length ? req.genres : undefined,
+      platforms: !isBook && req.platforms?.length ? req.platforms : undefined,
       keyword: req.keyword?.trim() || undefined,
+      authorKeyword: isBook
+        ? req.authorKeyword?.trim() || undefined
+        : undefined,
       createdAt: Date.now(),
       enabled: req.enabled ?? true,
       lastNotifiedMediaIds: [],

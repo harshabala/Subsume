@@ -98,6 +98,9 @@ export interface LibraryItem {
   melancholy?: number;
   tension?: number;
   warmth?: number;
+
+  /** Book-only: preferred physical/digital edition for this relationship. */
+  preferredEditionId?: string;
 }
 
 export interface LibraryMediaPair {
@@ -198,6 +201,19 @@ export enum MessageType {
   ADD_REFLECTION = 'ADD_REFLECTION',
   GET_REFLECTIONS = 'GET_REFLECTIONS',
   UPDATE_EXPERIENCE = 'UPDATE_EXPERIENCE',
+  CREATE_EXPERIENCE = 'CREATE_EXPERIENCE',
+  GET_EXPERIENCES = 'GET_EXPERIENCES',
+
+  // Work relations (adaptations)
+  GET_RELATED_WORKS = 'GET_RELATED_WORKS',
+  ASSERT_WORK_RELATION = 'ASSERT_WORK_RELATION',
+  SEARCH_ADAPTATION_CANDIDATES = 'SEARCH_ADAPTATION_CANDIDATES',
+
+  // Dispatch / capabilities / feedback (Phase 2)
+  GET_SUBSUME_DISPATCH = 'GET_SUBSUME_DISPATCH',
+  REGENERATE_SUBSUME_DISPATCH = 'REGENERATE_SUBSUME_DISPATCH',
+  GET_LLM_PROVIDER_CAPABILITIES = 'GET_LLM_PROVIDER_CAPABILITIES',
+  SUBMIT_RECOMMENDATION_FEEDBACK = 'SUBMIT_RECOMMENDATION_FEEDBACK',
 
   // Library
   ADD_TO_LIST = 'ADD_TO_LIST',
@@ -250,10 +266,12 @@ export enum MessageType {
 
   // Personalized Discovery (Phase 4)
   BUILD_WATCH_PROFILE = 'BUILD_WATCH_PROFILE',
+  /** Alias semantic for multi-medium taste profiles (same handler as BUILD_WATCH_PROFILE). */
+  BUILD_TASTE_PROFILE = 'BUILD_TASTE_PROFILE',
   GET_PERSONALIZED_RECS = 'GET_PERSONALIZED_RECS',
   GET_CURATOR_PROMPT_PREVIEW = 'GET_CURATOR_PROMPT_PREVIEW',
 
-  // Weekly Digest
+  // Weekly Digest (aliases GET/REGENERATE_SUBSUME_DISPATCH declared above)
   GET_WEEKLY_DIGEST = 'GET_WEEKLY_DIGEST',
   REGENERATE_WEEKLY_DIGEST = 'REGENERATE_WEEKLY_DIGEST',
 
@@ -431,10 +449,12 @@ export interface GroupedRecommendation {
 
 export interface CreateWatchAlertRequest {
   name: string;
-  type?: 'movie' | 'tv' | 'both';
+  type?: 'movie' | 'tv' | 'both' | 'book';
   genres?: string[];
   platforms?: string[];
   keyword?: string;
+  /** Book alerts: match author name substring */
+  authorKeyword?: string;
   enabled?: boolean;
 }
 
@@ -471,15 +491,29 @@ export interface WatchProfile {
 }
 
 export interface PersonalizedRecommendation {
+  /** Catalog work id (TMDb / Open Library / other) — historical field name. */
   tmdbId: string;
   title: string;
   year: number;
-  type: 'movie' | 'tv';
+  type: 'movie' | 'tv' | 'book';
   posterUrl?: string;
   ratings: MediaItem['ratings'];
   reason: string;           // LLM-generated explanation
   seedTitle?: string;       // which watched title connects to this
   confidenceSignal: 'high' | 'medium' | 'low';
+}
+
+export type RecommendationFeedbackAction = 'save' | 'dismiss' | 'not_interested';
+
+export interface RecommendationFeedbackEntry {
+  workId: string;
+  action: RecommendationFeedbackAction;
+  at: number;
+}
+
+export interface SubmitRecommendationFeedbackRequest {
+  workId: string;
+  action: RecommendationFeedbackAction;
 }
 
 export interface RecommendationGroup {
@@ -536,10 +570,13 @@ export interface GetDiscoveryFeedRequest {
 export interface WatchAlert {
   id: string;
   name: string;
-  type?: 'movie' | 'tv' | 'both';
-  genres?: string[];  // TMDb genre IDs
-  platforms?: string[]; // TMDb provider IDs
+  /** Screen: movie|tv|both. Books: book. */
+  type?: 'movie' | 'tv' | 'both' | 'book';
+  genres?: string[];  // TMDb genre IDs (screen)
+  platforms?: string[]; // TMDb provider IDs (screen)
   keyword?: string;  // title must contain
+  /** Book alerts: match author name substring */
+  authorKeyword?: string;
   createdAt: number;
   lastCheckedAt?: number;
   lastMatchAt?: number;

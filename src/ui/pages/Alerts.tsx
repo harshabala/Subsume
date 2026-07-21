@@ -10,42 +10,53 @@ import { AVAILABLE_GENRES } from '@/shared/genres';
 import { AVAILABLE_PLATFORMS } from '@/shared/platforms';
 import '../styles/settings.css';
 
+type AlertFormType = NonNullable<CreateWatchAlertRequest['type']>;
+
 const EMPTY_FORM: CreateWatchAlertRequest = {
   name: '',
   type: 'both',
   genres: [],
   platforms: [],
   keyword: '',
+  authorKeyword: '',
   enabled: true,
 };
 
 function formatAlertCriteria(alert: WatchAlert): string {
   const parts: string[] = [];
 
-  if (alert.type && alert.type !== 'both') {
+  if (alert.type === 'book') {
+    parts.push('Books');
+  } else if (alert.type && alert.type !== 'both') {
     parts.push(alert.type === 'movie' ? 'Movies' : 'TV');
   }
 
-  if (alert.genres && alert.genres.length > 0) {
-    const names = alert.genres
-      .map((id) => AVAILABLE_GENRES.find((genre) => genre.id === id)?.name)
-      .filter(Boolean);
-    if (names.length > 0) {
-      parts.push(names.join(', '));
+  if (alert.type !== 'book') {
+    if (alert.genres && alert.genres.length > 0) {
+      const names = alert.genres
+        .map((id) => AVAILABLE_GENRES.find((genre) => genre.id === id)?.name)
+        .filter(Boolean);
+      if (names.length > 0) {
+        parts.push(names.join(', '));
+      }
     }
-  }
 
-  if (alert.platforms && alert.platforms.length > 0) {
-    const names = alert.platforms
-      .map((id) => AVAILABLE_PLATFORMS.find((platform) => platform.id === id)?.name)
-      .filter(Boolean);
-    if (names.length > 0) {
-      parts.push(names.join(', '));
+    if (alert.platforms && alert.platforms.length > 0) {
+      const names = alert.platforms
+        .map((id) => AVAILABLE_PLATFORMS.find((platform) => platform.id === id)?.name)
+        .filter(Boolean);
+      if (names.length > 0) {
+        parts.push(names.join(', '));
+      }
     }
   }
 
   if (alert.keyword?.trim()) {
     parts.push(`"${alert.keyword.trim()}"`);
+  }
+
+  if (alert.authorKeyword?.trim()) {
+    parts.push(`author: "${alert.authorKeyword.trim()}"`);
   }
 
   return parts.length > 0 ? parts.join(' · ') : 'All new releases';
@@ -63,6 +74,8 @@ export function Alerts() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<CreateWatchAlertRequest>(EMPTY_FORM);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  const isBookForm = form.type === 'book';
 
   const loadAlerts = async () => {
     setLoading(true);
@@ -93,9 +106,31 @@ export function Alerts() {
     setForm({ ...form, [key]: updated });
   };
 
+  const handleTypeChange = (type: AlertFormType) => {
+    if (type === 'book') {
+      setForm({
+        ...form,
+        type,
+        genres: [],
+        platforms: [],
+      });
+    } else {
+      setForm({
+        ...form,
+        type,
+        authorKeyword: '',
+      });
+    }
+  };
+
   const handleCreate = async () => {
     if (!form.name.trim()) {
       setActionError('Please enter an alert name.');
+      return;
+    }
+
+    if (form.type === 'book' && !form.keyword?.trim() && !form.authorKeyword?.trim()) {
+      setActionError('Book alerts need a title keyword or author name.');
       return;
     }
 
@@ -108,6 +143,12 @@ export function Alerts() {
           ...form,
           name: form.name.trim(),
           keyword: form.keyword?.trim() || undefined,
+          authorKeyword:
+            form.type === 'book'
+              ? form.authorKeyword?.trim() || undefined
+              : undefined,
+          genres: form.type === 'book' ? [] : form.genres,
+          platforms: form.type === 'book' ? [] : form.platforms,
         }
       );
       if (res.success && res.data) {
@@ -151,8 +192,11 @@ export function Alerts() {
         <div className="sanctuary-header-meta">
           <span className="sanctuary-subtitle">Alerts</span>
         </div>
-        <h2 className="sanctuary-title">Watch Alerts</h2>
-        <p className="sanctuary-description">Set a programme of genres, platforms, and keywords. We will notify you when new releases fit your marquee.</p>
+        <h2 className="sanctuary-title">Release Alerts</h2>
+        <p className="sanctuary-description">
+          Set a programme of genres, platforms, keywords, or book authors. We will
+          notify you when new screen releases or matching books appear.
+        </p>
       </header>
 
       {actionError && (
@@ -174,7 +218,7 @@ export function Alerts() {
         {showForm && (
           <div className="alerts-form-panel">
             <h3 className="alerts-form-heading">
-              New watch alert
+              New release alert
             </h3>
 
             <div className="alerts-form-fields">
@@ -184,7 +228,11 @@ export function Alerts() {
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. A24 Cinema Releases"
+                  placeholder={
+                    isBookForm
+                      ? 'e.g. New Murakami'
+                      : 'e.g. A24 Cinema Releases'
+                  }
                   value={form.name}
                   onInput={(e) =>
                     setForm({ ...form, name: (e.target as HTMLInputElement).value })
@@ -200,78 +248,86 @@ export function Alerts() {
                 <select
                   value={form.type || 'both'}
                   onChange={(e) =>
-                    setForm({
-                      ...form,
-                      type: (e.target as HTMLSelectElement).value as 'movie' | 'tv' | 'both',
-                    })
+                    handleTypeChange(
+                      (e.target as HTMLSelectElement).value as AlertFormType
+                    )
                   }
                   className="settings-input"
                 >
                   <option value="both" className="sanctuary-select-option">Cinema &amp; Series</option>
                   <option value="movie" className="sanctuary-select-option">Cinema Only</option>
                   <option value="tv" className="sanctuary-select-option">Series Only</option>
+                  <option value="book" className="sanctuary-select-option">Books</option>
                 </select>
               </div>
 
-              <div>
-                <label className="alerts-field-label">
-                  Genres
-                </label>
-                <div className="alerts-chip-grid">
-                  {AVAILABLE_GENRES.map((genre) => {
-                    const active = (form.genres || []).includes(genre.id);
-                    return (
-                      <label
-                        key={genre.id}
-                        className={`alerts-chip ${active ? 'active' : 'inactive'}`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={active}
-                          onChange={() => toggleFormArrayItem('genres', genre.id)}
-                          className="alerts-chip-hidden-input"
-                        />
-                        <span className={`alerts-chip-dot ${active ? 'active' : 'inactive'}`} />
-                        {genre.name}
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
+              {!isBookForm && (
+                <>
+                  <div>
+                    <label className="alerts-field-label">
+                      Genres
+                    </label>
+                    <div className="alerts-chip-grid">
+                      {AVAILABLE_GENRES.map((genre) => {
+                        const active = (form.genres || []).includes(genre.id);
+                        return (
+                          <label
+                            key={genre.id}
+                            className={`alerts-chip ${active ? 'active' : 'inactive'}`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={active}
+                              onChange={() => toggleFormArrayItem('genres', genre.id)}
+                              className="alerts-chip-hidden-input"
+                            />
+                            <span className={`alerts-chip-dot ${active ? 'active' : 'inactive'}`} />
+                            {genre.name}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="alerts-field-label">
+                      Platforms
+                    </label>
+                    <div className="alerts-chip-grid">
+                      {AVAILABLE_PLATFORMS.map((platform) => {
+                        const active = (form.platforms || []).includes(platform.id);
+                        return (
+                          <label
+                            key={platform.id}
+                            className={`alerts-chip ${active ? 'active' : 'inactive'}`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={active}
+                              onChange={() => toggleFormArrayItem('platforms', platform.id)}
+                              className="alerts-chip-hidden-input"
+                            />
+                            <span className={`alerts-chip-dot ${active ? 'active' : 'inactive'}`} />
+                            {platform.name}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
 
               <div>
                 <label className="alerts-field-label">
-                  Platforms
-                </label>
-                <div className="alerts-chip-grid">
-                  {AVAILABLE_PLATFORMS.map((platform) => {
-                    const active = (form.platforms || []).includes(platform.id);
-                    return (
-                      <label
-                        key={platform.id}
-                        className={`alerts-chip ${active ? 'active' : 'inactive'}`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={active}
-                          onChange={() => toggleFormArrayItem('platforms', platform.id)}
-                          className="alerts-chip-hidden-input"
-                        />
-                        <span className={`alerts-chip-dot ${active ? 'active' : 'inactive'}`} />
-                        {platform.name}
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div>
-                <label className="alerts-field-label">
-                  Keyword (optional)
+                  {isBookForm ? 'Title keyword (optional)' : 'Keyword (optional)'}
                 </label>
                 <input
                   type="text"
-                  placeholder="Title must include…"
+                  placeholder={
+                    isBookForm
+                      ? 'Title must include…'
+                      : 'Title must include…'
+                  }
                   value={form.keyword || ''}
                   onInput={(e) =>
                     setForm({ ...form, keyword: (e.target as HTMLInputElement).value })
@@ -279,6 +335,26 @@ export function Alerts() {
                   className="settings-input"
                 />
               </div>
+
+              {isBookForm && (
+                <div>
+                  <label className="alerts-field-label">
+                    Author (optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Author name must include…"
+                    value={form.authorKeyword || ''}
+                    onInput={(e) =>
+                      setForm({
+                        ...form,
+                        authorKeyword: (e.target as HTMLInputElement).value,
+                      })
+                    }
+                    className="settings-input"
+                  />
+                </div>
+              )}
 
               <div>
                 <button
@@ -302,7 +378,7 @@ export function Alerts() {
             <span className="sanctuary-plaque-index">Programme index 00</span>
             <h3 className="sanctuary-plaque-title">No alerts yet</h3>
             <p className="sanctuary-plaque-text">
-              Create an alert and we will let you know when new releases match your programme.
+              Create an alert and we will let you know when new releases or books match your programme.
             </p>
           </div>
         ) : (

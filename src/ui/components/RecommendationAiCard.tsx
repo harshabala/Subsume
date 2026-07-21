@@ -8,9 +8,17 @@ interface RecommendationAiCardProps {
   isAdded: boolean;
   onCardClick: (media: MediaItem) => void;
   onAddClick: (rec: PersonalizedRecommendation) => void;
+  onDismiss?: (workId: string) => void;
 }
 
-export function RecommendationAiCard({ rec, showSeedPill, isAdded, onCardClick, onAddClick }: RecommendationAiCardProps) {
+export function RecommendationAiCard({
+  rec,
+  showSeedPill,
+  isAdded,
+  onCardClick,
+  onAddClick,
+  onDismiss,
+}: RecommendationAiCardProps) {
   const tmdbRating = rec.ratings.find((r) => r.provider === 'tmdb');
   const openable = Boolean(rec.tmdbId);
 
@@ -44,7 +52,7 @@ export function RecommendationAiCard({ rec, showSeedPill, isAdded, onCardClick, 
     <>
       <div className="recommendation-ai-card-title">{rec.title}</div>
       <div className="recommendation-ai-card-meta">
-        {rec.year} · {rec.type === 'movie' ? 'Movie' : 'TV'}
+        {rec.year} · {rec.type === 'book' ? 'Book' : rec.type === 'tv' ? 'TV' : 'Movie'}
       </div>
       <div className="recommendation-ai-card-reason">{rec.reason}</div>
       {showSeedPill && rec.seedTitle && (
@@ -81,6 +89,16 @@ export function RecommendationAiCard({ rec, showSeedPill, isAdded, onCardClick, 
           >
             {isAdded ? 'In library' : 'Add to library'}
           </button>
+          {onDismiss && (
+            <button
+              type="button"
+              className="recommendation-dismiss-btn"
+              onClick={() => onDismiss(rec.tmdbId)}
+              aria-label={`Dismiss ${rec.title}`}
+            >
+              Dismiss
+            </button>
+          )}
         </div>
       )}
     </article>

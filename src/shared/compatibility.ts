@@ -130,6 +130,7 @@ export function libraryItemToRelationship(item: LibraryItem): LibraryRelationshi
     currentRating: item.userRating,
     userTags: item.userTags,
     sanctuaryIntent: legacyIntentToV2(item.sanctuaryIntent) ?? defaultIntentForStatus(status),
+    preferredEditionId: item.preferredEditionId,
     emotionalSnapshot: {
       awe: item.awe,
       melancholy: item.melancholy,
@@ -164,6 +165,7 @@ export function relationshipToLibraryItem(rel: LibraryRelationship): LibraryItem
     sanctuaryIntent: intentV2ToLegacy(rel.sanctuaryIntent) as SanctuaryIntent | undefined,
     emotionalRecall: rel.legacy?.emotionalRecall ?? rel.latestReflectionExcerpt,
     qualitativeNotes: rel.legacy?.qualitativeNotes,
+    preferredEditionId: rel.preferredEditionId,
     awe: rel.emotionalSnapshot?.awe,
     melancholy: rel.emotionalSnapshot?.melancholy,
     tension: rel.emotionalSnapshot?.tension,

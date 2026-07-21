@@ -523,6 +523,49 @@ export function Settings() {
         {activeSection === 'discovery' && (
         <>
         <div className="settings-panel">
+          <h3 className="settings-panel-heading">Weekly selection</h3>
+          <p className="settings-panel-description">
+            Catalog-based picks for films and books from your archive and connected catalogs.
+            No web search unless you enable it later. Notifications never include private notes.
+          </p>
+
+          <div className="settings-field-group">
+            <label className="settings-toggle-label">
+              <input
+                type="checkbox"
+                checked={!!prefs.dispatchEnabled}
+                onChange={(e) => handleChange('dispatchEnabled', e.currentTarget.checked)}
+                className="settings-toggle-checkbox"
+              />
+              <span className="settings-toggle-text-lg">Enable weekly Subsume Dispatch</span>
+            </label>
+            <p className="settings-toggle-help">
+              Default schedule: Thursday at 7:00 PM local time. Opt-in only — off until you enable it.
+            </p>
+          </div>
+
+          <div className="settings-field-group">
+            <button
+              type="button"
+              className="btn-sanctuary-restraint"
+              onClick={async () => {
+                try {
+                  await sendMessage(MessageType.REGENERATE_WEEKLY_DIGEST, {});
+                  showNotice('Weekly selection generated.', 'success');
+                } catch (err) {
+                  showNotice(`Failed to generate: ${formatUserError(err)}`, 'error');
+                }
+              }}
+            >
+              Generate now
+            </button>
+            <p className="settings-help-text-italic">
+              Builds a fresh multi-medium selection when dispatch is enabled; otherwise regenerates the screen digest.
+            </p>
+          </div>
+        </div>
+
+        <div className="settings-panel">
           <h3 className="settings-panel-heading">Discovery sources</h3>
           <p className="settings-discovery-intro">
             Subsume layers multiple data sources so discovery works out of the box, with optional keys for deeper catalogue sync.

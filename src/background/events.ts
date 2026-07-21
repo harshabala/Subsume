@@ -8,6 +8,11 @@ import { getPreferences, saveWeeklyDigest } from './storage';
 import { checkWatchAlerts } from './alerts';
 import { generateWeeklyDigest } from './digest';
 import {
+  generateSubsumeDispatch,
+  reconcileDispatchAlarm,
+  DISPATCH_ALARM_NAME,
+} from './dispatch';
+import {
   setNotificationBadge,
   clearNotificationBadge,
   NotificationBadgeKind,
@@ -48,19 +53,24 @@ async function notifyWatchAlertMatches(
   }
 }
 
-async function notifyWeeklyDigestReady(digest: WeeklyDigest) {
+/** OS notification — no private notes or reflection text. */
+async function notifyWeeklyDigestReady(digest: WeeklyDigest, multiMedium: boolean) {
   if (digest.items.length === 0) return;
 
   setNotificationBadge('weekly-digest');
+  const count = digest.items.length;
+  const title = multiMedium
+    ? 'Subsume — your weekly selection'
+    : 'Subsume — weekly curator digest';
+  const message = multiMedium
+    ? `${count} pick${count === 1 ? '' : 's'} from your archive and catalogs — open Subsume`
+    : `${count} personalized pick${count === 1 ? '' : 's'} from your background curator — open Recommendations in Subsume`;
+
   chrome.notifications.create('weekly-digest', {
     type: 'basic',
     iconUrl: 'icons/icon128.png',
-    title: 'Subsume — weekly curator digest',
-    message:
-      digest.items.length +
-      ' personalized pick' +
-      (digest.items.length === 1 ? '' : 's') +
-      ' from your background curator — open Recommendations in Subsume',
+    title,
+    message,
     priority: 1,
   });
 }
@@ -125,15 +135,37 @@ export function setupLifecycleAndAlarms(): void {
       }
     }
 
+    // Legacy weekly digest: when dispatch is off, keep screen-only path.
+    // When dispatch is on, use multi-medium Subsume Dispatch (idempotent).
     if (alarm.name === 'weeklyDigest') {
       try {
         logger.info('[Subsume] Weekly digest alarm triggered.');
         const prefs = await getPreferences();
-        const digest = await generateWeeklyDigest(prefs);
-        await saveWeeklyDigest(digest);
-        await notifyWeeklyDigestReady(digest);
+        if (prefs.dispatchEnabled) {
+          const digest = await generateSubsumeDispatch(prefs);
+          await notifyWeeklyDigestReady(digest, true);
+        } else {
+          const digest = await generateWeeklyDigest(prefs);
+          await saveWeeklyDigest(digest);
+          await notifyWeeklyDigestReady(digest, false);
+        }
       } catch (err) {
         logger.error('[Subsume] Weekly digest generation failed:', err);
+      }
+    }
+
+    if (alarm.name === DISPATCH_ALARM_NAME) {
+      try {
+        logger.info('[Subsume] Subsume Dispatch alarm triggered.');
+        const prefs = await getPreferences();
+        if (!prefs.dispatchEnabled) {
+          logger.info('[Subsume] Dispatch disabled — skipping subsumeDispatch alarm.');
+          return;
+        }
+        const digest = await generateSubsumeDispatch(prefs);
+        await notifyWeeklyDigestReady(digest, true);
+      } catch (err) {
+        logger.error('[Subsume] Subsume Dispatch generation failed:', err);
       }
     }
   });
@@ -158,10 +190,17 @@ export function setupLifecycleAndAlarms(): void {
     }
   });
 
-  // Run once every 7 days (guarded to prevent resetting the schedule on MV3 restart)
+  // Legacy weekly digest alarm (backward compatible for users with dispatch off)
   chrome.alarms.get('weeklyDigest', (alarm) => {
     if (!alarm) {
       chrome.alarms.create('weeklyDigest', { periodInMinutes: 10080 });
     }
   });
+
+  // Opt-in multi-medium dispatch alarm (Thursday 19:00 local by default)
+  getPreferences()
+    .then((prefs) => reconcileDispatchAlarm(prefs))
+    .catch((err) => {
+      logger.error('[Subsume] Failed to reconcile dispatch alarm:', err);
+    });
 }

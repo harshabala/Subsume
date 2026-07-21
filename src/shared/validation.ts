@@ -188,7 +188,7 @@ export const validateImportData = (data: unknown): ImportLibraryData => {
         throw new Error(`weeklyDigest.items[${i}].year must be a number`);
       }
       if (!validTypes.includes(entry.type as string)) {
-        throw new Error(`weeklyDigest.items[${i}].type must be "movie" or "tv"`);
+        throw new Error(`weeklyDigest.items[${i}].type must be "movie", "tv", or "book"`);
       }
       if (typeof entry.reason !== 'string') {
         throw new Error(`weeklyDigest.items[${i}].reason must be a string`);

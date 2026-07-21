@@ -465,7 +465,16 @@ async function dualWriteMedia(db: IDBPDatabase<SubsumeDB>, item: MediaItem): Pro
 
 async function dualWriteLibrary(db: IDBPDatabase<SubsumeDB>, item: LibraryItem): Promise<void> {
   if (!db.objectStoreNames.contains('relationships')) return;
-  await db.put('relationships', libraryItemToRelationship(item));
+  const mapped = libraryItemToRelationship(item);
+  const existingRel = await db.get('relationships', item.mediaId);
+  // Preserve multi-session / edition fields that live only on the relationship.
+  await db.put('relationships', {
+    ...mapped,
+    preferredEditionId: item.preferredEditionId ?? existingRel?.preferredEditionId,
+    currentExperienceId: existingRel?.currentExperienceId,
+    latestReflectionExcerpt:
+      existingRel?.latestReflectionExcerpt ?? mapped.latestReflectionExcerpt,
+  });
 
   const media = await db.get('media', item.mediaId);
   const medium = media ? mediaTypeToMedium(media.type) : 'movie';
@@ -479,7 +488,11 @@ async function dualWriteLibrary(db: IDBPDatabase<SubsumeDB>, item: LibraryItem):
   if (db.objectStoreNames.contains('experiences')) {
     const experience = libraryItemToExperience(item, medium);
     if (experience) {
-      await db.put('experiences', experience);
+      // Only seed a migrated experience if none exist yet (don't clobber multi-session).
+      const existing = await db.getAllFromIndex('experiences', 'by-work', item.mediaId);
+      if (existing.length === 0) {
+        await db.put('experiences', experience);
+      }
     }
   }
 }
@@ -668,6 +681,10 @@ const DEFAULT_PREFS: UserPreferences = {
   crossMediumRecommendationsEnabled: false,
   recommendationPrivacyMode: 'summarized_reflections',
   dispatchEnabled: false,
+  dispatchWeekday: 4, // Thursday (0 = Sunday)
+  dispatchLocalTime: '19:00',
+  dispatchMaxSearches: 5,
+  dispatchWebSearchEnabled: false,
 };
 
 export async function getPreferences(): Promise<UserPreferences> {
@@ -814,7 +831,7 @@ export function isValidMediaItem(m: unknown): m is MediaItem {
   return true;
 }
 
-const VALID_ALERT_TYPES = new Set(['movie', 'tv', 'both']);
+const VALID_ALERT_TYPES = new Set(['movie', 'tv', 'both', 'book']);
 
 export function isValidWatchAlert(a: unknown): a is WatchAlert {
   if (!a || typeof a !== 'object') return false;
@@ -827,6 +844,7 @@ export function isValidWatchAlert(a: unknown): a is WatchAlert {
   if (item.genres !== undefined && !Array.isArray(item.genres)) return false;
   if (item.platforms !== undefined && !Array.isArray(item.platforms)) return false;
   if (item.keyword !== undefined && typeof item.keyword !== 'string') return false;
+  if (item.authorKeyword !== undefined && typeof item.authorKeyword !== 'string') return false;
   if (item.lastCheckedAt !== undefined && !Number.isFinite(item.lastCheckedAt)) return false;
   if (item.lastMatchAt !== undefined && !Number.isFinite(item.lastMatchAt)) return false;
   if (item.lastNotifiedMediaIds !== undefined && !Array.isArray(item.lastNotifiedMediaIds)) {
@@ -1229,6 +1247,29 @@ export async function putCreator(creator: Creator): Promise<void> {
 export async function getAllCreators(): Promise<Creator[]> {
   const db = await getDb();
   return db.getAll('creators');
+}
+
+// ─── Work relations (adaptations / related works) ─────────────────────
+
+export async function putWorkRelation(rel: WorkRelation): Promise<void> {
+  const db = await getDb();
+  await db.put('work_relations', rel);
+}
+
+/** Relations where this work is either the source (from) or target (to). */
+export async function getWorkRelationsForWork(workId: string): Promise<WorkRelation[]> {
+  const db = await getDb();
+  const from = await db.getAllFromIndex('work_relations', 'by-from', workId);
+  const to = await db.getAllFromIndex('work_relations', 'by-to', workId);
+  const byId = new Map<string, WorkRelation>();
+  for (const rel of from) byId.set(rel.id, rel);
+  for (const rel of to) byId.set(rel.id, rel);
+  return Array.from(byId.values());
+}
+
+export async function deleteWorkRelation(id: string): Promise<void> {
+  const db = await getDb();
+  await db.delete('work_relations', id);
 }
 
 /** Resolve a possibly-legacy id through id_redirects; returns the input if no redirect. */

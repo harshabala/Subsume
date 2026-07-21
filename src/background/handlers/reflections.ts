@@ -84,7 +84,115 @@ function parseStatus(
   return fallback;
 }
 
+function sortExperiencesDesc(experiences: Experience[]): Experience[] {
+  return [...experiences].sort(
+    (a, b) => b.updatedAt - a.updatedAt || b.createdAt - a.createdAt || b.id.localeCompare(a.id),
+  );
+}
+
 export const reflectionHandlers: MessageHandlerMap = {
+  /**
+   * Start a new read/watch session (reread / rewatch).
+   * Payload: { workId, kind?: 'read'|'watch', status? }
+   */
+  [MessageType.CREATE_EXPERIENCE]: async (payload) => {
+    const req = payload as {
+      workId?: string;
+      kind?: Experience['kind'];
+      status?: RelationshipStatus | 'to-watch' | 'watching' | 'watched' | 'abandoned';
+      editionId?: string;
+    };
+
+    const workId = typeof req?.workId === 'string' ? req.workId.trim() : '';
+    if (!workId) {
+      throw new Error('Invalid CREATE_EXPERIENCE payload: workId is required');
+    }
+
+    const media = await getMediaItem(workId);
+    const isBook = media?.type === 'book' || workId.startsWith('openlibrary_');
+    const kind: Experience['kind'] =
+      req.kind === 'read' || req.kind === 'watch' ? req.kind : isBook ? 'read' : 'watch';
+    const status = parseStatus(req.status, 'in_progress');
+    const now = Date.now();
+
+    const experience: Experience = {
+      id: `exp_${workId}_${now}_${Math.random().toString(36).slice(2, 8)}`,
+      workId,
+      kind,
+      status,
+      editionId:
+        typeof req.editionId === 'string' && req.editionId.trim()
+          ? req.editionId.trim()
+          : media?.preferredEditionId,
+      startedAt:
+        status === 'in_progress' || status === 'completed' || status === 'abandoned'
+          ? now
+          : undefined,
+      completedAt: status === 'completed' ? now : undefined,
+      abandonedAt: status === 'abandoned' ? now : undefined,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    logger.log('[Subsume] CREATE_EXPERIENCE:', experience.id, experience.workId, experience.kind);
+    await putExperience(experience);
+
+    // Point relationship at this session
+    const rel = await getRelationship(workId);
+    const relStatus = status;
+    await putRelationship({
+      workId,
+      status: relStatus,
+      addedAt: rel?.addedAt ?? now,
+      updatedAt: now,
+      statusChangedAt: now,
+      currentRating: rel?.currentRating,
+      userTags: rel?.userTags,
+      sanctuaryIntent: rel?.sanctuaryIntent ?? (status === 'in_progress' ? 'return_soon' : rel?.sanctuaryIntent),
+      preferredEditionId: experience.editionId ?? rel?.preferredEditionId,
+      currentExperienceId: experience.id,
+      emotionalSnapshot: rel?.emotionalSnapshot,
+      latestReflectionExcerpt: rel?.latestReflectionExcerpt,
+      legacy: rel?.legacy,
+    });
+
+    // Keep legacy library in sync (watching / in_progress)
+    const lib = await getLibraryItem(workId);
+    const legacyStatus = relationshipToLegacyStatus(status);
+    await putLibraryItem({
+      mediaId: workId,
+      status: legacyStatus,
+      addedAt: lib?.addedAt ?? now,
+      updatedAt: now,
+      userRating: lib?.userRating,
+      userTags: lib?.userTags,
+      notes: lib?.notes,
+      sanctuaryIntent: status === 'in_progress' ? 'revisit_this_month' : lib?.sanctuaryIntent,
+      emotionalRecall: lib?.emotionalRecall,
+      qualitativeNotes: lib?.qualitativeNotes,
+      atmosphere: lib?.atmosphere,
+      lingeringThought: lib?.lingeringThought,
+      awe: lib?.awe,
+      melancholy: lib?.melancholy,
+      tension: lib?.tension,
+      warmth: lib?.warmth,
+      preferredEditionId: experience.editionId ?? lib?.preferredEditionId,
+    });
+    invalidateProfileCache();
+
+    return experience;
+  },
+
+  [MessageType.GET_EXPERIENCES]: async (payload) => {
+    const req = payload as { workId?: string };
+    const workId = typeof req?.workId === 'string' ? req.workId.trim() : '';
+    if (!workId) {
+      throw new Error('Invalid GET_EXPERIENCES payload: workId is required');
+    }
+    const list = await getExperiencesForWork(workId);
+    return sortExperiencesDesc(list);
+  },
+
   [MessageType.ADD_REFLECTION]: async (payload) => {
     const req = payload as {
       workId?: string;
@@ -260,8 +368,21 @@ export const reflectionHandlers: MessageHandlerMap = {
     logger.log('[Subsume] UPDATE_EXPERIENCE:', experience.id, experience.workId);
     await putExperience(experience);
 
-    // Keep legacy library status in sync when status was provided
+    // Keep relationship currentExperienceId + status in sync when status mutates
     if (req.status !== undefined) {
+      const rel = await getRelationship(resolvedWorkId);
+      if (rel) {
+        await putRelationship({
+          ...rel,
+          status,
+          currentExperienceId: experience.id,
+          updatedAt: now,
+          statusChangedAt: now,
+          currentRating: rating ?? rel.currentRating,
+          preferredEditionId: experience.editionId ?? rel.preferredEditionId,
+        });
+      }
+
       const lib = await getLibraryItem(resolvedWorkId);
       const legacyStatus = relationshipToLegacyStatus(status);
       const libNow = Date.now();
@@ -282,6 +403,7 @@ export const reflectionHandlers: MessageHandlerMap = {
         melancholy: lib?.melancholy,
         tension: lib?.tension,
         warmth: lib?.warmth,
+        preferredEditionId: experience.editionId ?? lib?.preferredEditionId,
       });
       invalidateProfileCache();
     }

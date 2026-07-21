@@ -1,6 +1,7 @@
 import { h } from 'preact';
-import { useEffect, useState, useRef } from 'preact/hooks';
+import { useEffect, useState, useRef, useCallback } from 'preact/hooks';
 import { MediaItem, LibraryItem, LibraryStatus, MessageType } from '@/shared/types';
+import type { BookEdition, WorkRelationType } from '@/shared/catalogTypes';
 import { sendMessage } from '@/shared/messages';
 import { DEFAULT_EMOTIONS, getEmotionalSpectrum, type EmotionalSpectrum } from '@/shared/emotions';
 import { PlatformChips } from './PlatformChips';
@@ -8,7 +9,15 @@ import { EmotionalSliders } from './EmotionalSliders';
 import { AuraVisualizer } from './AuraVisualizer';
 import { ExpandableReflection } from './ExpandableReflection';
 import { ReflectionTimeline } from './ReflectionTimeline';
+import { ExperienceHistory } from './ExperienceHistory';
 import { STATUS_OPTIONS, statusOptionsForMedium, getReflectionExcerpt } from './archive/constants';
+
+type RelatedWorkRow = {
+  relation: { id: string; relation: WorkRelationType; fromWorkId: string; toWorkId: string };
+  label: string;
+  linkedWorkId: string;
+  linkedWork?: MediaItem;
+};
 
 interface DetailModalProps {
   media: MediaItem;
@@ -60,6 +69,21 @@ export function DetailModal({
   const [saveCeremony, setSaveCeremony] = useState(false);
   const [pageProgress, setPageProgress] = useState<number | ''>('');
   const [totalPages, setTotalPages] = useState<number | ''>(media.pageCount ?? '');
+  const [editions, setEditions] = useState<BookEdition[]>([]);
+  const [preferredEditionId, setPreferredEditionId] = useState<string>(
+    libraryItem?.preferredEditionId ?? media.preferredEditionId ?? '',
+  );
+  const [editionSaving, setEditionSaving] = useState(false);
+  const [againBusy, setAgainBusy] = useState(false);
+  const [experienceRefreshKey, setExperienceRefreshKey] = useState(0);
+  const [relatedWorks, setRelatedWorks] = useState<RelatedWorkRow[]>([]);
+  const [relatedLoading, setRelatedLoading] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [candidates, setCandidates] = useState<MediaItem[]>([]);
+  const [candidatesLoading, setCandidatesLoading] = useState(false);
+  const [candidatesDirection, setCandidatesDirection] = useState<'adaptation_of' | 'adapted_as' | null>(null);
+  const [linkError, setLinkError] = useState<string | null>(null);
+  const [linkingId, setLinkingId] = useState<string | null>(null);
   const notesDebounceRef = useRef<ReturnType<typeof setTimeout>>();
   const ceremonyTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const progressDebounceRef = useRef<ReturnType<typeof setTimeout>>();
@@ -68,8 +92,75 @@ export function DetailModal({
   const titleId = `detail-title-${media.id}`;
   const isBook = media.type === 'book';
   const statusOptions = isBook ? statusOptionsForMedium('book') : STATUS_OPTIONS;
+  const againLabel = isBook ? 'Read again' : 'Watch again';
 
   const reflectionExcerpt = libraryItem ? getReflectionExcerpt(libraryItem) : undefined;
+
+  const loadRelatedWorks = useCallback(() => {
+    setRelatedLoading(true);
+    sendMessage<{ workId: string }, { related: RelatedWorkRow[] }>(
+      MessageType.GET_RELATED_WORKS,
+      { workId: media.id },
+    )
+      .then((res) => {
+        if (res.success && res.data?.related) {
+          setRelatedWorks(res.data.related);
+        }
+      })
+      .catch(() => {
+        setRelatedWorks([]);
+      })
+      .finally(() => setRelatedLoading(false));
+  }, [media.id]);
+
+  useEffect(() => {
+    loadRelatedWorks();
+  }, [loadRelatedWorks]);
+
+  const openLinkAdaptation = () => {
+    setLinkOpen(true);
+    setLinkError(null);
+    setCandidates([]);
+    setCandidatesLoading(true);
+    sendMessage<
+      { workId: string },
+      { candidates: MediaItem[]; direction: 'adaptation_of' | 'adapted_as' | null }
+    >(MessageType.SEARCH_ADAPTATION_CANDIDATES, { workId: media.id })
+      .then((res) => {
+        if (res.success && res.data) {
+          setCandidates(res.data.candidates || []);
+          setCandidatesDirection(res.data.direction);
+        }
+      })
+      .catch((err) => {
+        setLinkError(err instanceof Error ? err.message : 'Search failed');
+      })
+      .finally(() => setCandidatesLoading(false));
+  };
+
+  const assertAdaptation = async (candidate: MediaItem) => {
+    setLinkingId(candidate.id);
+    setLinkError(null);
+    const relation: WorkRelationType =
+      candidatesDirection || (isBook ? 'adapted_as' : 'adaptation_of');
+    try {
+      await sendMessage(MessageType.ASSERT_WORK_RELATION, {
+        fromWorkId: media.id,
+        toWorkId: candidate.id,
+        relation,
+        confidence: 'user_asserted' as const,
+        fromMedia: media,
+        toMedia: candidate,
+      });
+      setLinkOpen(false);
+      setCandidates([]);
+      loadRelatedWorks();
+    } catch (err) {
+      setLinkError(err instanceof Error ? err.message : 'Could not link works');
+    } finally {
+      setLinkingId(null);
+    }
+  };
 
   useEffect(() => {
     setNotes(libraryItem?.notes || '');
@@ -106,6 +197,64 @@ export function DetailModal({
       cancelled = true;
     };
   }, [isBook, libraryItem?.mediaId, media.id, media.pageCount]);
+
+  // Load book editions for preferred-edition picker
+  useEffect(() => {
+    if (!isBook) return;
+    let cancelled = false;
+    sendMessage<
+      { workId: string },
+      { editions: BookEdition[]; preferredEditionId?: string | null }
+    >(MessageType.GET_BOOK_EDITIONS, { workId: media.id })
+      .then((res) => {
+        if (cancelled || !res.success || !res.data) return;
+        setEditions(Array.isArray(res.data.editions) ? res.data.editions : []);
+        if (res.data.preferredEditionId) {
+          setPreferredEditionId(res.data.preferredEditionId);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isBook, media.id]);
+
+  const handlePreferredEditionChange = async (editionId: string) => {
+    setPreferredEditionId(editionId);
+    if (!editionId) return;
+    setEditionSaving(true);
+    try {
+      await sendMessage(MessageType.SET_PREFERRED_EDITION, {
+        workId: media.id,
+        editionId,
+      });
+    } catch {
+      /* non-fatal */
+    } finally {
+      setEditionSaving(false);
+    }
+  };
+
+  const handleReadOrWatchAgain = async () => {
+    if (againBusy || !libraryItem) return;
+    setAgainBusy(true);
+    try {
+      const kind = isBook ? 'read' : 'watch';
+      await sendMessage(MessageType.CREATE_EXPERIENCE, {
+        workId: media.id,
+        kind,
+        status: 'in_progress',
+        editionId: preferredEditionId || undefined,
+      });
+      onUpdateStatus?.('watching');
+      setExperienceRefreshKey((k) => k + 1);
+      playSaveCeremony();
+    } catch {
+      /* non-fatal */
+    } finally {
+      setAgainBusy(false);
+    }
+  };
 
   useEffect(() => {
     return () => {
@@ -396,6 +545,99 @@ export function DetailModal({
           </div>
         )}
 
+        <div className="sanctuary-detail-section" data-testid="related-works-section">
+          <h3 className="sanctuary-detail-section-title">Related works</h3>
+          {relatedLoading && (
+            <p className="sanctuary-detail-related-empty">Loading related works…</p>
+          )}
+          {!relatedLoading && relatedWorks.length === 0 && !linkOpen && (
+            <p className="sanctuary-detail-related-empty">
+              No adaptations linked yet. Relations are only created from metadata or your confirmation.
+            </p>
+          )}
+          {relatedWorks.length > 0 && (
+            <ul className="sanctuary-detail-related-list">
+              {relatedWorks.map((row) => (
+                <li key={row.relation.id} className="sanctuary-detail-related-item">
+                  <span className="sanctuary-detail-related-label">{row.label}</span>
+                  <span className="sanctuary-detail-related-title">
+                    {row.linkedWork?.canonicalTitle || row.linkedWorkId}
+                    {row.linkedWork?.year ? (
+                      <span className="sanctuary-detail-related-year"> ({row.linkedWork.year})</span>
+                    ) : null}
+                    {row.linkedWork?.type ? (
+                      <span className="sanctuary-detail-related-medium"> · {row.linkedWork.type}</span>
+                    ) : null}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {!linkOpen ? (
+            <button
+              type="button"
+              className="sanctuary-detail-related-link-btn"
+              onClick={openLinkAdaptation}
+              data-testid="link-adaptation-btn"
+            >
+              Link adaptation…
+            </button>
+          ) : (
+            <div className="sanctuary-detail-related-search" data-testid="adaptation-candidates">
+              <div className="sanctuary-detail-related-search-header">
+                <span className="sanctuary-detail-control-label">
+                  {isBook ? 'Film / series adaptations' : 'Source books'}
+                </span>
+                <button
+                  type="button"
+                  className="sanctuary-detail-related-cancel"
+                  onClick={() => {
+                    setLinkOpen(false);
+                    setCandidates([]);
+                    setLinkError(null);
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+              {candidatesLoading && (
+                <p className="sanctuary-detail-related-empty">Searching…</p>
+              )}
+              {linkError && (
+                <p className="sanctuary-detail-related-error" role="alert">{linkError}</p>
+              )}
+              {!candidatesLoading && candidates.length === 0 && !linkError && (
+                <p className="sanctuary-detail-related-empty">No candidates found for this title.</p>
+              )}
+              <ul className="sanctuary-detail-related-candidates">
+                {candidates.map((c) => (
+                  <li key={c.id}>
+                    <button
+                      type="button"
+                      className="sanctuary-detail-related-candidate"
+                      disabled={linkingId === c.id}
+                      onClick={() => assertAdaptation(c)}
+                    >
+                      <span className="sanctuary-detail-related-candidate-title">
+                        {c.canonicalTitle}
+                        {c.year ? ` (${c.year})` : ''}
+                      </span>
+                      <span className="sanctuary-detail-related-candidate-meta">
+                        {c.type}
+                        {c.authors?.length ? ` · ${c.authors.slice(0, 2).join(', ')}` : ''}
+                        {linkingId === c.id ? ' · linking…' : ' · Link'}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <p className="sanctuary-detail-related-note">
+                Linking is display-only — ratings and notes stay on each work.
+              </p>
+            </div>
+          )}
+        </div>
+
         <div className="sanctuary-detail-library-wrap">
           {libraryItem ? (
             <div className="sanctuary-detail-library-stack">
@@ -466,6 +708,43 @@ export function DetailModal({
                     </div>
                   )}
 
+                  {isBook && editions.length > 0 && (
+                    <div
+                      className="sanctuary-detail-control-row"
+                      data-testid="edition-picker"
+                    >
+                      <span className="sanctuary-detail-control-label">Edition:</span>
+                      <select
+                        value={preferredEditionId}
+                        onChange={(e) =>
+                          void handlePreferredEditionChange(
+                            (e.target as HTMLSelectElement).value,
+                          )
+                        }
+                        className="sanctuary-detail-input sanctuary-detail-select"
+                        aria-label="Preferred edition"
+                        disabled={editionSaving}
+                      >
+                        <option value="">Select edition…</option>
+                        {editions.map((ed) => {
+                          const isbn =
+                            ed.isbn13?.[0] || ed.isbn10?.[0] || '';
+                          const format = ed.format ? ed.format : '';
+                          const parts = [
+                            ed.title,
+                            format,
+                            isbn ? `ISBN ${isbn}` : '',
+                          ].filter(Boolean);
+                          return (
+                            <option value={ed.id} key={ed.id}>
+                              {parts.join(' · ')}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
+                  )}
+
                   {libraryItem.status === 'watched' && (
                     <div className="sanctuary-detail-control-row">
                       <span className="sanctuary-detail-control-label">Your verdict:</span>
@@ -483,6 +762,25 @@ export function DetailModal({
                       </span>
                     </div>
                   )}
+
+                  {libraryItem.status === 'watched' && (
+                    <div className="sanctuary-detail-control-row" data-testid="again-action">
+                      <button
+                        type="button"
+                        className="sanctuary-btn-restraint"
+                        disabled={againBusy}
+                        onClick={() => void handleReadOrWatchAgain()}
+                      >
+                        {againBusy ? 'Starting…' : againLabel}
+                      </button>
+                    </div>
+                  )}
+
+                  <ExperienceHistory
+                    workId={media.id}
+                    medium={isBook ? 'book' : media.type === 'tv' ? 'tv' : 'movie'}
+                    refreshKey={experienceRefreshKey}
+                  />
 
                   <div className="sanctuary-detail-tags-section">
                     <span className="sanctuary-detail-control-label">Tags:</span>

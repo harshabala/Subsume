@@ -173,8 +173,10 @@ export function Search() {
               addedLabel="In your library"
               meta={
                 <div className="sanctuary-card-meta">
+                  <span className="sanctuary-card-badge medium-badge" data-medium={item.type}>
+                    {item.type === 'book' ? 'Book' : item.type === 'tv' ? 'Series' : 'Film'}
+                  </span>
                   <span>{item.year || 'ARCHIVAL'}</span>
-                  <span className="sanctuary-card-badge">{item.type === 'tv' ? 'Series' : 'Film'}</span>
                   {item.ratings[0] && (
                     <span style={{ color: 'var(--text-artwork)' }}>
                       SCORE {item.ratings[0].score.toFixed(1)}

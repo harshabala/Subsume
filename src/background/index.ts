@@ -15,6 +15,7 @@ import { settingHandlers } from './handlers/settings';
 import { syncHandlers } from './handlers/sync';
 import { bookHandlers } from './handlers/books';
 import { reflectionHandlers } from './handlers/reflections';
+import { relationHandlers } from './handlers/relations';
 
 const handlers: MessageHandlerMap = {
   ...libraryHandlers,
@@ -26,6 +27,7 @@ const handlers: MessageHandlerMap = {
   ...syncHandlers,
   ...bookHandlers,
   ...reflectionHandlers,
+  ...relationHandlers,
 };
 
 export { handlers };

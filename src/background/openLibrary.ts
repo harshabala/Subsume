@@ -718,6 +718,48 @@ export async function getOpenLibraryEdition(
   return edition;
 }
 
+interface OlEditionsListResponse {
+  size?: number;
+  entries?: OlEditionResponse[];
+  links?: { next?: string };
+}
+
+/**
+ * Fetch editions for an Open Library work.
+ * Uses /works/{OLID}/editions.json (capped for UI pickers).
+ */
+export async function getOpenLibraryEditionsForWork(
+  workId: string,
+  limit = 25
+): Promise<BookEdition[]> {
+  const olId = extractOlId(workId);
+  if (!olId || !olId.endsWith('W')) return [];
+
+  const capped = Math.min(Math.max(limit, 1), 50);
+  const cacheKey = `ol_work_editions_${olId}_${capped}`;
+  const cached = cacheGet<BookEdition[]>(cacheKey);
+  if (cached) return cached;
+
+  const data = await fetchJson<OlEditionsListResponse>(
+    `${OL_BASE}/works/${olId}/editions.json?limit=${capped}`
+  );
+  if (!data?.entries?.length) {
+    cacheSet(cacheKey, []);
+    return [];
+  }
+
+  const fetchedAt = Date.now();
+  const linkedWorkId = `openlibrary_work_${olId}`;
+  const editions: BookEdition[] = [];
+  for (const entry of data.entries) {
+    const edition = mapEditionResponse(entry, linkedWorkId, fetchedAt);
+    if (edition) editions.push(edition);
+  }
+
+  cacheSet(cacheKey, editions);
+  return editions;
+}
+
 // ─── Authors / creators ─────────────────────────────────────────────────────
 
 function mapAuthorSearchDoc(doc: OlAuthorSearchDoc, fetchedAt: number): Creator | null {
