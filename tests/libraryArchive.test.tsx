@@ -185,4 +185,108 @@ describe('Act III Hardcover Library Archive', () => {
     errSpy.mockRestore();
     document.body.removeChild(container);
   });
+
+  it('shows medium-aware status chips for books vs screen', async () => {
+    const bookItems = [
+      {
+        library: {
+          mediaId: 'b1',
+          status: 'watched' as const,
+          addedAt: 1000,
+          updatedAt: 1000,
+        },
+        media: {
+          id: 'b1',
+          canonicalTitle: 'The Left Hand of Darkness',
+          type: 'book' as const,
+          year: 1969,
+          genres: ['SF'],
+          ratings: [],
+          providers: [],
+        },
+      },
+      {
+        library: {
+          mediaId: 'm1',
+          status: 'watched' as const,
+          addedAt: 900,
+          updatedAt: 900,
+        },
+        media: {
+          id: 'm1',
+          canonicalTitle: 'Arrival',
+          type: 'movie' as const,
+          year: 2016,
+          genres: ['SF'],
+          ratings: [],
+          providers: [],
+        },
+      },
+    ];
+    vi.mocked(chrome.runtime.sendMessage).mockImplementation((message: any, callback: any) => {
+      if (message.type === MessageType.GET_LIBRARY_PAGE) {
+        callback({ success: true, data: bookItems });
+      } else {
+        callback({ success: true, data: null });
+      }
+    });
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    render(<Library />, container);
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 40));
+    });
+
+    const chips = Array.from(container.querySelectorAll('.status-chip')).map((el) => ({
+      text: el.textContent?.trim(),
+      medium: el.getAttribute('data-medium'),
+    }));
+    expect(chips).toEqual(
+      expect.arrayContaining([
+        { text: 'Read', medium: 'book' },
+        { text: 'Screened', medium: 'movie' },
+      ]),
+    );
+
+    // No nested interactive: open control is a button, dossier is sibling
+    expect(container.querySelectorAll('button.hardcover-spine-open').length).toBe(2);
+    expect(container.querySelector('.hardcover-spine-open .hardcover-details-toggle')).toBeNull();
+
+    document.body.removeChild(container);
+  });
+
+  it('shows filtered empty state with clear filters when nothing matches', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    render(<Library />, container);
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 40));
+    });
+
+    const keepTab = container.querySelector('[data-intent="keep_memory"]') as HTMLElement;
+    await act(async () => {
+      keepTab.click();
+    });
+
+    // Apply an impossible search on top of intent filter
+    const search = container.querySelector('#archive-search') as HTMLInputElement;
+    await act(async () => {
+      search.value = 'zzzz-no-match';
+      search.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain('No inscriptions match');
+    const clearBtn = Array.from(container.querySelectorAll('button')).find((b) =>
+      b.textContent?.includes('Clear filters'),
+    );
+    expect(clearBtn).toBeTruthy();
+    await act(async () => {
+      clearBtn!.click();
+    });
+    expect(container.textContent).toContain('In the Mood for Love');
+    expect(container.textContent).not.toContain('No inscriptions match');
+
+    document.body.removeChild(container);
+  });
 });

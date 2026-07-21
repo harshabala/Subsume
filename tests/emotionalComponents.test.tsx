@@ -59,10 +59,29 @@ describe('EmotionalWeatherChart', () => {
 });
 
 describe('EmptyStateProjection', () => {
-  it('renders the spec empty-state copy', () => {
+  it('renders the archive inscription empty-state copy', () => {
     const container = document.createElement('div');
     render(<EmptyStateProjection />, container);
-    expect(container.textContent).toContain('No film logged in this atmosphere yet');
-    expect(container.textContent).toContain('log your first projection');
+    expect(container.textContent).toContain('Nothing inscribed yet');
+    expect(container.textContent).toContain('first inscription');
+  });
+
+  it('renders a clear-filters action when provided', () => {
+    const container = document.createElement('div');
+    let clicked = false;
+    render(
+      <EmptyStateProjection
+        title="No inscriptions match"
+        actionLabel="Clear filters"
+        onAction={() => {
+          clicked = true;
+        }}
+      />,
+      container,
+    );
+    const btn = container.querySelector('button');
+    expect(btn?.textContent).toContain('Clear filters');
+    btn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(clicked).toBe(true);
   });
 });

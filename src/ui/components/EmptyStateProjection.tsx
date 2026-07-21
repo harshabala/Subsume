@@ -5,13 +5,18 @@ export interface EmptyStateProjectionProps {
   message?: string;
   hint?: string;
   className?: string;
+  /** Optional primary action (e.g. clear filters) */
+  actionLabel?: string;
+  onAction?: () => void;
 }
 
 export function EmptyStateProjection({
-  title = 'No film logged in this atmosphere yet',
-  message = 'Open any title page and log your first projection.',
+  title = 'Nothing inscribed yet',
+  message = 'When a title stays with you, open its page and leave the first inscription.',
   hint,
   className = '',
+  actionLabel,
+  onAction,
 }: EmptyStateProjectionProps) {
   return (
     <div className={`empty-state-projection ${className}`.trim()} data-testid="empty-state-projection">
@@ -53,6 +58,11 @@ export function EmptyStateProjection({
       <h3 className="empty-state-projection-title">{title}</h3>
       <p className="empty-state-projection-message">{message}</p>
       {hint && <p className="empty-state-projection-hint">{hint}</p>}
+      {actionLabel && onAction && (
+        <button type="button" className="optical-button library-retry-btn" onClick={onAction}>
+          {actionLabel}
+        </button>
+      )}
     </div>
   );
 }

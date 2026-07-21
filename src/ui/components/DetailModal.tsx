@@ -10,7 +10,7 @@ import { AuraVisualizer } from './AuraVisualizer';
 import { ExpandableReflection } from './ExpandableReflection';
 import { ReflectionTimeline } from './ReflectionTimeline';
 import { ExperienceHistory } from './ExperienceHistory';
-import { STATUS_OPTIONS, statusOptionsForMedium, getReflectionExcerpt } from './archive/constants';
+import { statusOptionsForMedium, getReflectionExcerpt } from './archive/constants';
 
 type RelatedWorkRow = {
   relation: { id: string; relation: WorkRelationType; fromWorkId: string; toWorkId: string };
@@ -91,7 +91,7 @@ export function DetailModal({
   const closedRef = useRef(false);
   const titleId = `detail-title-${media.id}`;
   const isBook = media.type === 'book';
-  const statusOptions = isBook ? statusOptionsForMedium('book') : STATUS_OPTIONS;
+  const statusOptions = statusOptionsForMedium(media.type);
   const againLabel = isBook ? 'Read again' : 'Watch again';
 
   const reflectionExcerpt = libraryItem ? getReflectionExcerpt(libraryItem) : undefined;

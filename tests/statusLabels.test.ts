@@ -7,6 +7,7 @@ import {
   legacyIntentToV2,
 } from '@/shared/statusLabels';
 import { mediaItemToCatalogWork, libraryItemToRelationship, libraryItemToReflections } from '@/shared/compatibility';
+import { statusChipLabel, statusOptionsForMedium } from '@/ui/components/archive/constants';
 import type { MediaItem, LibraryItem } from '@/shared/types';
 
 describe('status mapping', () => {
@@ -28,6 +29,15 @@ describe('status mapping', () => {
     expect(statusLabel('completed', 'book')).toBe('Read');
     expect(statusLabel('abandoned', 'book')).toBe('Did not finish');
     expect(statusLabel('planned', 'tv')).toBe('Want to watch');
+  });
+
+  it('archive chips use book-aware labels and literary screen labels', () => {
+    expect(statusChipLabel('watched', 'book')).toBe('Read');
+    expect(statusChipLabel('to-watch', 'book')).toBe('Want to read');
+    expect(statusChipLabel('watched', 'movie')).toBe('Screened');
+    expect(statusChipLabel('to-watch', 'tv')).toBe('Anticipated');
+    expect(statusOptionsForMedium('book').find((o) => o.value === 'watched')?.label).toBe('Read');
+    expect(statusOptionsForMedium('movie').find((o) => o.value === 'watched')?.label).toBe('Screened');
   });
 
   it('defaults abandoned to keep_memory intent', () => {

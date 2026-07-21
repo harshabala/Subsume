@@ -1,6 +1,7 @@
 import { LibraryStatus, SanctuaryIntent, LibraryItem, MediaType } from '@/shared/types';
 import { legacyStatusLabel } from '@/shared/statusLabels';
 
+/** Literary screen status options (Archive collection voice for film/TV) */
 export const STATUS_OPTIONS: { value: LibraryStatus; label: string }[] = [
   { value: 'to-watch', label: 'Anticipated' },
   { value: 'watching', label: 'Now showing' },
@@ -8,16 +9,27 @@ export const STATUS_OPTIONS: { value: LibraryStatus; label: string }[] = [
   { value: 'abandoned', label: 'Shelved' },
 ];
 
-/** Medium-aware operational status options for detail/capture UI */
+/** Medium-aware status options for chips, dossier, and detail UI */
 export function statusOptionsForMedium(medium: MediaType | 'movie' | 'tv' | 'book'): {
   value: LibraryStatus;
   label: string;
 }[] {
-  const m = medium === 'book' ? 'book' : medium;
-  return (['to-watch', 'watching', 'watched', 'abandoned'] as LibraryStatus[]).map((value) => ({
-    value,
-    label: legacyStatusLabel(value, m),
-  }));
+  if (medium === 'book') {
+    return (['to-watch', 'watching', 'watched', 'abandoned'] as LibraryStatus[]).map((value) => ({
+      value,
+      label: legacyStatusLabel(value, 'book'),
+    }));
+  }
+  return STATUS_OPTIONS;
+}
+
+/** Chip label for a library status given the work's medium */
+export function statusChipLabel(
+  status: LibraryStatus,
+  medium: MediaType | 'movie' | 'tv' | 'book' | undefined,
+): string {
+  if (medium === 'book') return legacyStatusLabel(status, 'book');
+  return STATUS_CHIP_LABELS[status];
 }
 
 export const INTENT_CHIP_LABELS: Record<SanctuaryIntent, string> = {
@@ -43,6 +55,7 @@ export function getReflectionExcerpt(library: LibraryItem): string | undefined {
   return combined.length > 0 ? combined : undefined;
 }
 
+/** Default literary chip labels for screen works */
 export const STATUS_CHIP_LABELS: Record<LibraryStatus, string> = {
   'to-watch': 'Anticipated',
   watching: 'Now showing',

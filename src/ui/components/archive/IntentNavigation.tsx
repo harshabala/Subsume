@@ -1,4 +1,5 @@
 import { h, Fragment } from 'preact';
+import { useState } from 'preact/hooks';
 import { LibraryStatus } from '@/shared/types';
 import { IntentFilterOption } from './types';
 
@@ -55,6 +56,7 @@ export function IntentNavigation({
   collectionFilter,
   setCollectionFilter,
 }: IntentNavigationProps) {
+  const [intentOpen, setIntentOpen] = useState(intentFilter !== 'all');
   const collectionTabs =
     activeTab === 'books'
       ? COLLECTION_TABS_BOOKS
@@ -62,11 +64,16 @@ export function IntentNavigation({
         ? COLLECTION_TABS_ALL
         : COLLECTION_TABS_SCREEN;
 
+  const isScreen =
+    activeTab === 'screen' || activeTab === 'movies' || activeTab === 'tv';
+
   return (
     <Fragment>
       <div className="tab-bar" role="tablist" aria-label="Medium">
         <button
           type="button"
+          role="tab"
+          aria-selected={activeTab === 'all'}
           className={`tab-item ${activeTab === 'all' ? 'active' : ''}`}
           onClick={() => setActiveTab('all')}
         >
@@ -74,13 +81,17 @@ export function IntentNavigation({
         </button>
         <button
           type="button"
-          className={`tab-item ${activeTab === 'screen' || activeTab === 'movies' || activeTab === 'tv' ? 'active' : ''}`}
+          role="tab"
+          aria-selected={isScreen}
+          className={`tab-item ${isScreen ? 'active' : ''}`}
           onClick={() => setActiveTab('screen')}
         >
           Screen
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected={activeTab === 'books'}
           className={`tab-item ${activeTab === 'books' ? 'active' : ''}`}
           onClick={() => setActiveTab('books')}
         >
@@ -88,10 +99,12 @@ export function IntentNavigation({
         </button>
       </div>
 
-      {(activeTab === 'screen' || activeTab === 'movies' || activeTab === 'tv') && (
+      {isScreen && (
         <div className="tab-bar tab-bar-secondary" role="tablist" aria-label="Screen type">
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'screen' || activeTab === 'movies'}
             className={`tab-item ${activeTab === 'screen' || activeTab === 'movies' ? 'active' : ''}`}
             onClick={() => setActiveTab('movies')}
           >
@@ -99,6 +112,8 @@ export function IntentNavigation({
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'tv'}
             className={`tab-item ${activeTab === 'tv' ? 'active' : ''}`}
             onClick={() => setActiveTab('tv')}
           >
@@ -112,6 +127,8 @@ export function IntentNavigation({
           <button
             key={tab.id}
             type="button"
+            role="tab"
+            aria-selected={collectionFilter === tab.id}
             data-collection={tab.id}
             onClick={() => setCollectionFilter(tab.id)}
             className={`collection-tab-btn ${collectionFilter === tab.id ? 'active' : ''}`}
@@ -121,23 +138,48 @@ export function IntentNavigation({
         ))}
       </div>
 
-      <p className="intent-filter-hint">
-        {activeTab === 'books'
-          ? 'Optional: refine by how you want to remember each book.'
-          : 'Optional: refine by how you want to remember each work.'}
-      </p>
-      <div className="intent-filter-bar">
-        {INTENT_TABS.map((tab) => (
-          <button
-            key={tab.id}
-            data-intent={tab.id}
-            onClick={() => setIntentFilter(tab.id)}
-            className={`intent-tab-btn ${intentFilter === tab.id ? 'active' : ''}`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <details
+        className="intent-filter-details"
+        open={intentOpen}
+        onToggle={(e) => {
+          const open = (e.target as HTMLDetailsElement).open;
+          setIntentOpen(open);
+          if (!open && intentFilter !== 'all') {
+            setIntentFilter('all');
+          }
+        }}
+      >
+        <summary className="intent-filter-summary">
+          Refine by memory
+          {intentFilter !== 'all' && (
+            <span className="intent-filter-active-badge">
+              {INTENT_TABS.find((t) => t.id === intentFilter)?.label ?? 'Active'}
+            </span>
+          )}
+        </summary>
+        <p className="intent-filter-hint">
+          Optional: how you want each inscription to live in the archive.
+        </p>
+        <div
+          className="intent-filter-bar"
+          role="tablist"
+          aria-label="Sanctuary intent"
+        >
+          {INTENT_TABS.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={intentFilter === tab.id}
+              data-intent={tab.id}
+              onClick={() => setIntentFilter(tab.id)}
+              className={`intent-tab-btn ${intentFilter === tab.id ? 'active' : ''}`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </details>
     </Fragment>
   );
 }

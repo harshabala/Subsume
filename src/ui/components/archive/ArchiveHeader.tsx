@@ -5,7 +5,7 @@ export function ArchiveHeader() {
     <header className="page-header">
       <h2 className="page-title archive-header-title">Archive</h2>
       <p className="page-subtitle">
-        Your private sanctuary for films, shows, and books that stay with you.
+        A private vault of films, shows, and books — each title held as an inscription.
       </p>
     </header>
   );

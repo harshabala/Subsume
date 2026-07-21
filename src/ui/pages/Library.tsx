@@ -241,6 +241,19 @@ export function Library() {
     new Set(items.flatMap((item) => item.library.userTags || []))
   );
 
+  const filtersActive =
+    collectionFilter !== 'all' ||
+    intentFilter !== 'all' ||
+    !!activeTagFilter ||
+    searchQuery.trim().length > 0;
+
+  const clearAllFilters = () => {
+    setCollectionFilter('all');
+    setIntentFilter('all');
+    setActiveTagFilter('');
+    setSearchQuery('');
+  };
+
   const filteredAndSortedItems = useMemo(() => {
     return items
       .filter(({ library, media }) => {
@@ -268,6 +281,30 @@ export function Library() {
         }
       });
   }, [items, collectionFilter, activeTagFilter, searchQuery, sortBy, intentFilter]);
+
+  const emptyCopy = (() => {
+    if (activeTab === 'books') {
+      return {
+        title: 'No books inscribed yet',
+        message: 'When a title stays with you, open its page and leave the first inscription.',
+        hint: 'Browse any page for a book that holds you, or search the catalogue.',
+      };
+    }
+    if (activeTab === 'screen' || activeTab === 'movies' || activeTab === 'tv') {
+      const screenNoun =
+        activeTab === 'tv' ? 'series' : activeTab === 'movies' ? 'films' : 'titles';
+      return {
+        title: `No ${screenNoun} inscribed yet`,
+        message: 'Open any title page and leave the first inscription before the moment passes.',
+        hint: 'Browse on the web or capture a moment to enrol your first frame.',
+      };
+    }
+    return {
+      title: 'Nothing inscribed yet',
+      message: 'Films, shows, and books you keep live here as inscriptions in a private vault.',
+      hint: 'Browse titles on the web or capture a moment to leave your first mark.',
+    };
+  })();
 
   return (
     <div className="page-container">
@@ -316,6 +353,7 @@ export function Library() {
               The vault could not be reached. Check your connection and try again.
             </p>
             <button
+              type="button"
               onClick={() => fetchLibrary(0, false)}
               className="optical-button library-retry-btn"
             >
@@ -325,24 +363,49 @@ export function Library() {
         ) : items.length === 0 ? (
           <EmptyStateProjection
             className="library-empty-state"
-            title={
-              activeTab === 'books'
-                ? 'No books here yet'
-                : undefined
-            }
-            message={
-              activeTab === 'books'
-                ? 'When a title catches you, save it before the moment passes.'
-                : undefined
-            }
+            title={emptyCopy.title}
+            message={emptyCopy.message}
+            hint={emptyCopy.hint}
+          />
+        ) : filteredAndSortedItems.length === 0 ? (
+          <EmptyStateProjection
+            className="library-empty-state library-filtered-empty"
+            title="No inscriptions match"
+            message="These filters leave the shelf empty. Broaden the view, or clear them to see what you have already kept."
             hint={
-              activeTab === 'books'
-                ? 'Browse any page for a title that holds you, or search the catalogue.'
-                : 'Browse titles on the web or capture a moment to enrol your first frame.'
+              hasMore
+                ? 'Filters apply to titles already loaded. Load more of the vault if you expect a match further down.'
+                : undefined
             }
+            actionLabel="Clear filters"
+            onAction={clearAllFilters}
           />
         ) : (
           <Fragment>
+            <div className="archive-results-meta" aria-live="polite">
+              <span className="archive-results-count">
+                {filteredAndSortedItems.length === items.length
+                  ? `${filteredAndSortedItems.length} inscription${filteredAndSortedItems.length === 1 ? '' : 's'}`
+                  : `${filteredAndSortedItems.length} of ${items.length} inscriptions`}
+                {hasMore ? ' loaded' : ''}
+              </span>
+              {filtersActive && (
+                <button
+                  type="button"
+                  className="archive-clear-filters-btn"
+                  onClick={clearAllFilters}
+                >
+                  Clear filters
+                </button>
+              )}
+            </div>
+
+            {filtersActive && hasMore && (
+              <p className="archive-pagination-note">
+                Filters apply to titles already opened from the vault. Load more to search deeper.
+              </p>
+            )}
+
             <div className="card-grid">
               {filteredAndSortedItems.map(({ library, media }, index) => (
                 <HardcoverSpineCard
@@ -361,13 +424,13 @@ export function Library() {
             </div>
 
             {hasMore && (
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '32px', marginBottom: '16px' }}>
-                <button 
-                  className="btn btn-secondary" 
+              <div className="archive-load-more-wrap">
+                <button
+                  type="button"
+                  className="optical-button archive-load-more-btn"
                   onClick={loadNextPage}
-                  style={{ padding: '10px 24px', fontSize: '14px', minWidth: '150px' }}
                 >
-                  Load more titles
+                  Open more of the vault
                 </button>
               </div>
             )}
