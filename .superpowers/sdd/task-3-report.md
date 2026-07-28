@@ -50,3 +50,20 @@
 
 ## Commit
 - `feat(dispatch): honest web-grounded path behind capability gate`
+
+---
+
+## Follow-up fix — OL resolve title gate (review Important #1)
+
+**Date:** 2026-07-28  
+**Finding:** `searchOpenLibrary` `matchScore` is rank-only (`1 - i * 0.05`). With `limit: 2`, top hits are always ≥ 0.95, so `if (!best || best.matchScore < 0.5)` never rejected a non-empty OL response. Web hits could attach `web_grounded` + citations to wrong catalog works.
+
+**Fix:** In `buildWebGroundedCandidates`, pick first OL hit where `titleMatchScore(hit.title, work.canonicalTitle) ≥ 0.5` (reuse `titleMatchScore` from `crossMediumRecommendations`, same bar as Task 2 Pass 2). Empty OL / no title-close hit → skip (no invented works, no wrong citation pairing).
+
+**Test:** `rejects high-rank OL hits whose titles do not match the web hit (title gate)` — rank-1 wrong title rejected; matching title accepted with citations.
+
+### Verification
+- `npx vitest run tests/webGroundedDispatch.test.ts tests/dispatch.test.ts` → **22/22 passed** (7 web + 15 dispatch)
+
+### Commit
+- `fix(dispatch): gate OL web resolve on titleMatchScore not rank`

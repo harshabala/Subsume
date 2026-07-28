@@ -30,6 +30,7 @@ import {
 import { generateWeeklyDigest } from './digest';
 import { getDiscoveryFeed, discoveryFeedToWeeklyDigest } from './discoveryFeed';
 import { searchOpenLibrary } from './openLibrary';
+import { titleMatchScore } from './crossMediumRecommendations';
 
 export const DISPATCH_PERIOD_STORAGE_KEY = 'subsume_dispatch_last_period';
 export const DISPATCH_ALARM_NAME = 'subsumeDispatch';
@@ -435,8 +436,13 @@ export async function buildWebGroundedCandidates(
           query: resolveTitle,
           limit: 2,
         });
-        const best = olHits[0];
-        if (!best || best.matchScore < 0.5) continue;
+        // OL matchScore is rank-only (1 - i*0.05), not title similarity — always ≥ 0.95
+        // for the top two hits. Gate on real title closeness so web citations cannot attach
+        // to loosely related / wrong catalog works.
+        const best = olHits.find(
+          (hit) => titleMatchScore(resolveTitle, hit.work.canonicalTitle) >= 0.5
+        );
+        if (!best) continue;
 
         const media = catalogWorkToMediaItem(best.work);
         if (best.work.medium === 'book' || best.work.bookDetails) {

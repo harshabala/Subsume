@@ -288,6 +288,86 @@ describe('web-grounded dispatch path', () => {
     expect(items).toHaveLength(0);
   });
 
+  it('rejects high-rank OL hits whose titles do not match the web hit (title gate)', async () => {
+    // OL always returns rank-only scores (1.0 first) — without title closeness this would
+    // attach a real citation URL to the wrong catalog work.
+    vi.mocked(searchOpenLibrary).mockResolvedValue([
+      {
+        matchScore: 1.0,
+        work: {
+          id: 'openlibrary_work_OL_WRONG',
+          medium: 'book' as const,
+          canonicalTitle: 'Completely Unrelated Novel About Spices',
+          firstReleaseYear: 1999,
+          genres: [],
+          images: {},
+          externalIds: [{ provider: 'openlibrary' as const, externalId: 'OL_WRONG' }],
+          creatorCredits: [],
+          bookDetails: { authors: ['Someone Else'] },
+          sourceProvenance: [],
+          sourceConfidence: 'high' as const,
+          createdAt: 1,
+          updatedAt: 1,
+        },
+      },
+    ]);
+
+    setActiveWebSearchAdapter(
+      createMockWebAdapter([
+        {
+          url: 'https://example.com/reviews/tender-is-the-night',
+          title: 'Tender Is the Night',
+        },
+      ])
+    );
+
+    const rejected = await buildWebGroundedCandidates({
+      ...basePrefs,
+      webGroundedDispatchEnabled: true,
+    });
+    expect(rejected).toHaveLength(0);
+    expect(putMediaItem).not.toHaveBeenCalled();
+
+    // Matching title still accepted (same rank-only score shape)
+    vi.mocked(searchOpenLibrary).mockResolvedValue([
+      {
+        matchScore: 1.0,
+        work: {
+          id: 'openlibrary_work_OL999W',
+          medium: 'book' as const,
+          canonicalTitle: 'Tender Is the Night',
+          firstReleaseYear: 1934,
+          genres: [],
+          images: {},
+          externalIds: [{ provider: 'openlibrary' as const, externalId: 'OL999W' }],
+          creatorCredits: [],
+          bookDetails: { authors: ['F. Scott Fitzgerald'] },
+          sourceProvenance: [],
+          sourceConfidence: 'high' as const,
+          createdAt: 1,
+          updatedAt: 1,
+        },
+      },
+    ]);
+    vi.mocked(putMediaItem).mockClear();
+
+    const accepted = await buildWebGroundedCandidates({
+      ...basePrefs,
+      webGroundedDispatchEnabled: true,
+    });
+    expect(accepted).toHaveLength(1);
+    expect(accepted[0].discoveryMode).toBe('web_grounded');
+    expect(accepted[0].title).toBe('Tender Is the Night');
+    expect(accepted[0].mediaId).toContain('OL999W');
+    expect(accepted[0].citations).toEqual([
+      {
+        url: 'https://example.com/reviews/tender-is-the-night',
+        title: 'Tender Is the Night',
+      },
+    ]);
+    expect(putMediaItem).toHaveBeenCalled();
+  });
+
   it('persists digest with mixed catalog and web_grounded items', async () => {
     setActiveWebSearchAdapter(
       createMockWebAdapter([
