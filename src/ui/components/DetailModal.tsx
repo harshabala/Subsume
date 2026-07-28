@@ -78,6 +78,11 @@ export function DetailModal({
   );
   const [editionSaving, setEditionSaving] = useState(false);
   const [againBusy, setAgainBusy] = useState(false);
+  /** Draft while dragging the verdict range; commit only on pointer-up / blur / key change-end. */
+  const [draftRating, setDraftRating] = useState(libraryItem?.userRating || 5);
+  const draftRatingRef = useRef(draftRating);
+  draftRatingRef.current = draftRating;
+  const lastCommittedRatingRef = useRef<number | undefined>(libraryItem?.userRating);
   const [experienceRefreshKey, setExperienceRefreshKey] = useState(0);
   const [relatedWorks, setRelatedWorks] = useState<RelatedWorkRow[]>([]);
   const [relatedLoading, setRelatedLoading] = useState(false);
@@ -187,6 +192,19 @@ export function DetailModal({
     libraryItem?.tension,
     libraryItem?.warmth,
   ]);
+
+  useEffect(() => {
+    setDraftRating(libraryItem?.userRating || 5);
+    lastCommittedRatingRef.current = libraryItem?.userRating;
+  }, [libraryItem?.userRating, libraryItem?.mediaId]);
+
+  const commitDraftRating = useCallback(() => {
+    const next = draftRatingRef.current;
+    // Guard double-fire (pointerup + blur) and no-op when unchanged vs last commit.
+    if (lastCommittedRatingRef.current === next) return;
+    lastCommittedRatingRef.current = next;
+    onUpdateRating?.(next);
+  }, [onUpdateRating]);
 
   // Load reading progress for books
   useEffect(() => {
@@ -813,13 +831,21 @@ export function DetailModal({
                         min={1}
                         max={10}
                         step={1}
-                        value={libraryItem.userRating || 5}
-                        onChange={(e) => onUpdateRating?.(parseInt((e.target as HTMLInputElement).value, 10))}
+                        value={draftRating}
+                        onInput={(e) =>
+                          setDraftRating(parseInt((e.currentTarget as HTMLInputElement).value, 10))
+                        }
+                        onPointerUp={commitDraftRating}
+                        onMouseUp={commitDraftRating}
+                        onTouchEnd={commitDraftRating}
+                        onKeyUp={commitDraftRating}
+                        onBlur={commitDraftRating}
                         className="sanctuary-detail-range"
-                        aria-valuetext={`${libraryItem.userRating || 5} out of 10`}
+                        data-testid="detail-rating-slider"
+                        aria-valuetext={`${draftRating} out of 10`}
                       />
                       <span className="sanctuary-detail-rating-display" aria-hidden="true">
-                        {libraryItem.userRating || 5} <span className="sanctuary-detail-rating-max">/ 10</span>
+                        {draftRating} <span className="sanctuary-detail-rating-max">/ 10</span>
                       </span>
                     </div>
                   )}

@@ -1,5 +1,5 @@
 import { h } from 'preact';
-import { useState } from 'preact/hooks';
+import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import { LibraryItem, MediaItem, LibraryStatus } from '@/shared/types';
 import {
   statusOptionsForMedium,
@@ -46,10 +46,28 @@ export function HardcoverSpineCard({
   const statusLabel = statusChipLabel(library.status, medium);
   const staggerIndex = Math.min(index, 5);
   const hasRating = typeof library.userRating === 'number' && library.userRating >= 1;
-  const ratingValue = hasRating ? library.userRating! : 5;
+  const committedRating = hasRating ? library.userRating! : undefined;
+  /** Draft while dragging; commit only on pointer-up / blur / key change-end (not every step). */
+  const [draftRating, setDraftRating] = useState(committedRating ?? 5);
+  const draftRatingRef = useRef(draftRating);
+  draftRatingRef.current = draftRating;
+  const lastCommittedRatingRef = useRef<number | undefined>(committedRating);
   const isCompleted = library.status === 'watched';
   // Static excerpt on the open control — avoid nested buttons (expand lives in detail modal)
   const cardInscription = reflectionExcerpt ? truncateForExcerpt(reflectionExcerpt) : null;
+
+  useEffect(() => {
+    setDraftRating(committedRating ?? 5);
+    lastCommittedRatingRef.current = committedRating;
+  }, [committedRating, library.mediaId]);
+
+  const commitDraftRating = useCallback(() => {
+    const next = draftRatingRef.current;
+    // Guard double-fire (pointerup + blur) and no-op when unchanged vs last commit.
+    if (lastCommittedRatingRef.current === next) return;
+    lastCommittedRatingRef.current = next;
+    onUpdateRating(library.mediaId, next);
+  }, [library.mediaId, onUpdateRating]);
 
   return (
     <article
@@ -193,15 +211,29 @@ export function HardcoverSpineCard({
                   min={1}
                   max={10}
                   step={1}
-                  value={ratingValue}
-                  onChange={(e) =>
-                    onUpdateRating(library.mediaId, parseInt((e.target as HTMLInputElement).value, 10))
+                  value={draftRating}
+                  onInput={(e) =>
+                    setDraftRating(parseInt((e.currentTarget as HTMLInputElement).value, 10))
                   }
+                  onPointerUp={commitDraftRating}
+                  onMouseUp={commitDraftRating}
+                  onTouchEnd={commitDraftRating}
+                  onKeyUp={commitDraftRating}
+                  onBlur={commitDraftRating}
                   className="hardcover-range"
-                  aria-valuetext={hasRating ? `${library.userRating} of 10` : 'Not set'}
+                  data-testid="spine-rating-slider"
+                  aria-valuetext={
+                    committedRating !== undefined ? `${draftRating} of 10` : 'Not set'
+                  }
                 />
-                <span className="hardcover-rating-val" data-unset={!hasRating || undefined}>
-                  {hasRating ? `${library.userRating} / 10` : '—'}
+                <span
+                  className="hardcover-rating-val"
+                  data-unset={committedRating === undefined || undefined}
+                >
+                  {/* Show draft while scrubbing; em dash only before any committed verdict */}
+                  {committedRating !== undefined || draftRating !== 5
+                    ? `${draftRating} / 10`
+                    : '—'}
                 </span>
               </div>
             )}
