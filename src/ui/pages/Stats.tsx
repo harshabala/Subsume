@@ -1,7 +1,20 @@
 import { h } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useMemo } from 'preact/hooks';
 import { sendMessage } from '@/shared/messages';
 import { MessageType, LibraryItem, MediaItem } from '@/shared/types';
+import {
+  computeBookReadingStats,
+  hasBookReadingActivity,
+  type BookStatsItem,
+} from '@/shared/bookStats';
+import {
+  STATS_BOOK_SECTION_TITLE,
+  STATS_BOOK_FINISHED_LABEL,
+  STATS_BOOK_READING_LABEL,
+  STATS_BOOK_ABANDONED_LABEL,
+  STATS_BOOK_PAGES_LABEL,
+  STATS_BOOK_PAGES_PARTIAL_NOTE,
+} from '@/shared/productCopy';
 import { EmotionalWeatherChart } from '../components/EmotionalWeatherChart';
 
 interface JoinedItem {
@@ -11,6 +24,14 @@ interface JoinedItem {
 
 interface StatsProps {
   onNavigate?: (page: 'search' | 'library' | 'home') => void;
+}
+
+function toBookStatsItems(items: JoinedItem[]): BookStatsItem[] {
+  return items.map((i) => ({
+    type: i.media?.type,
+    status: i.library.status,
+    pageCount: i.media?.pageCount,
+  }));
 }
 
 export function Stats({ onNavigate }: StatsProps = {}) {
@@ -68,6 +89,13 @@ export function Stats({ onNavigate }: StatsProps = {}) {
     ? Math.max(0, 100 - moviePercent - tvPercent)
     : 0;
 
+  const bookStats = useMemo(
+    () => computeBookReadingStats(toBookStatsItems(items)),
+    [items],
+  );
+  const showBookReading = hasBookReadingActivity(bookStats);
+  const hasProgramme = totalWatched > 0 || showBookReading;
+
   return (
     <div className="page-container sanctuary-page-shell">
       <header className="sanctuary-header">
@@ -85,7 +113,7 @@ export function Stats({ onNavigate }: StatsProps = {}) {
            <div className="subsume-spinner sanctuary-spinner-centered" />
            <p className="sanctuary-plaque-text sanctuary-plaque-text-spaced">Loading stats…</p>
         </div>
-      ) : totalWatched === 0 ? (
+      ) : !hasProgramme ? (
         <div className="sanctuary-empty-plaque">
           <span className="sanctuary-plaque-index">Index 00</span>
           <h3 className="sanctuary-plaque-title">No works logged yet</h3>
@@ -104,11 +132,14 @@ export function Stats({ onNavigate }: StatsProps = {}) {
         </div>
       ) : (
         <div className="stats-stack">
-          <EmotionalWeatherChart
-            items={items.map((item) => item.library)}
-            className="stats-weather-chart"
-          />
+          {totalWatched > 0 && (
+            <EmotionalWeatherChart
+              items={items.map((item) => item.library)}
+              className="stats-weather-chart"
+            />
+          )}
 
+          {totalWatched > 0 && (
           <div className="stats-meta-row" role="list" aria-label="Programme summary">
             <div className="stats-meta-item" role="listitem">
               <span className="stats-meta-value">{totalWatched}</span>
@@ -134,7 +165,40 @@ export function Stats({ onNavigate }: StatsProps = {}) {
               <span className="stats-meta-label">avg rating</span>
             </div>
           </div>
+          )}
 
+          {showBookReading && (
+            <section className="stats-chart-panel stats-book-panel" aria-labelledby="stats-book-heading">
+              <h3 className="stats-chart-title" id="stats-book-heading">
+                {STATS_BOOK_SECTION_TITLE}
+              </h3>
+              <div className="stats-book-grid" role="list" aria-label="Reading statistics">
+                <div className="stats-book-stat" role="listitem">
+                  <span className="stats-book-value">{bookStats.finished}</span>
+                  <span className="stats-book-label">{STATS_BOOK_FINISHED_LABEL}</span>
+                </div>
+                <div className="stats-book-stat" role="listitem">
+                  <span className="stats-book-value">{bookStats.currentlyReading}</span>
+                  <span className="stats-book-label">{STATS_BOOK_READING_LABEL}</span>
+                </div>
+                <div className="stats-book-stat" role="listitem">
+                  <span className="stats-book-value">{bookStats.abandoned}</span>
+                  <span className="stats-book-label">{STATS_BOOK_ABANDONED_LABEL}</span>
+                </div>
+                {bookStats.totalPages != null && bookStats.totalPages > 0 && (
+                  <div className="stats-book-stat" role="listitem">
+                    <span className="stats-book-value accent">{bookStats.totalPages.toLocaleString()}</span>
+                    <span className="stats-book-label">{STATS_BOOK_PAGES_LABEL}</span>
+                  </div>
+                )}
+              </div>
+              {bookStats.totalPages != null && bookStats.pagesKnownFor > 0 && (
+                <p className="stats-book-footnote">{STATS_BOOK_PAGES_PARTIAL_NOTE}</p>
+              )}
+            </section>
+          )}
+
+          {totalWatched > 0 && (
           <div className="stats-charts-grid">
             <div className="stats-chart-panel">
               <h3 className="stats-chart-title">
@@ -202,6 +266,7 @@ export function Stats({ onNavigate }: StatsProps = {}) {
               </div>
             </div>
           </div>
+          )}
         </div>
       )}
     </div>

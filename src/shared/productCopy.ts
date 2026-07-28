@@ -57,6 +57,19 @@ export const PREFERRED_EDITION_BADGE = 'Preferred';
 export const EDITIONS_SHARE_ARCHIVE_NOTE =
   'Editions of this work share one archive relationship (status, notes, and verdict). “Use as preferred” marks the printing you mean — it does not merge separate catalog works.';
 
+/** Stats page — book reading section title (literary tone). */
+export const STATS_BOOK_SECTION_TITLE = 'On the page';
+
+/** Stats labels for book reading buckets */
+export const STATS_BOOK_FINISHED_LABEL = 'finished';
+export const STATS_BOOK_READING_LABEL = 'currently reading';
+export const STATS_BOOK_ABANDONED_LABEL = 'did not finish';
+export const STATS_BOOK_PAGES_LABEL = 'pages among them';
+
+/** Stats footnote when page totals are partial */
+export const STATS_BOOK_PAGES_PARTIAL_NOTE =
+  'Page totals appear when an edition or progress records them — not every volume carries a count.';
+
 export function mediumLabel(type: WorkMedium | MediaType | 'movie' | 'tv' | 'book' | string): string {
   if (type === 'book') return MEDIUM_LABEL.book;
   if (type === 'tv') return MEDIUM_LABEL.tv;

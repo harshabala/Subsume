@@ -17,6 +17,12 @@ import {
   USE_AS_PREFERRED_EDITION_LABEL,
   PREFERRED_EDITION_BADGE,
   EDITIONS_SHARE_ARCHIVE_NOTE,
+  STATS_BOOK_SECTION_TITLE,
+  STATS_BOOK_FINISHED_LABEL,
+  STATS_BOOK_READING_LABEL,
+  STATS_BOOK_ABANDONED_LABEL,
+  STATS_BOOK_PAGES_LABEL,
+  STATS_BOOK_PAGES_PARTIAL_NOTE,
   failedToAddToArchiveMessage,
   failedToRemoveFromArchiveMessage,
 } from '@/shared/productCopy';
@@ -59,6 +65,16 @@ describe('productCopy lexicon', () => {
     expect(PREFERRED_EDITION_BADGE).toBe('Preferred');
     expect(EDITIONS_SHARE_ARCHIVE_NOTE).toMatch(/archive relationship/i);
     expect(EDITIONS_SHARE_ARCHIVE_NOTE).toMatch(/does not merge/i);
+  });
+
+  it('stats book reading copy stays literary (not To Watch / DNF jargon)', () => {
+    expect(STATS_BOOK_SECTION_TITLE).toBe('On the page');
+    expect(STATS_BOOK_FINISHED_LABEL).toBe('finished');
+    expect(STATS_BOOK_READING_LABEL).toBe('currently reading');
+    expect(STATS_BOOK_ABANDONED_LABEL).toBe('did not finish');
+    expect(STATS_BOOK_PAGES_LABEL).toMatch(/pages/i);
+    expect(STATS_BOOK_PAGES_PARTIAL_NOTE).toMatch(/page totals/i);
+    expect(STATS_BOOK_ABANDONED_LABEL).not.toMatch(/stopped|to watch/i);
   });
 
   it('error helpers say archive not library', () => {

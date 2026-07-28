@@ -3497,6 +3497,61 @@ select.sanctuary-input option {
   max-width: 28em;
 }
 
+/* Book reading statistics — literary plaque */
+.stats-book-panel {
+  padding-bottom: 24px;
+}
+
+.stats-book-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 20px 16px;
+}
+
+.stats-book-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+}
+
+.stats-book-value {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--text-reflection);
+  line-height: 1.1;
+}
+
+.stats-book-value.accent {
+  color: var(--border-hero);
+}
+
+.stats-book-label {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text-meta);
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  max-width: 12em;
+  line-height: 1.35;
+}
+
+.stats-book-footnote {
+  margin: 20px 0 0;
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-size: 12px;
+  color: var(--text-meta);
+  text-align: center;
+  max-width: 36em;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.45;
+}
+
 /* ── Logs Page ── */
 .logs-table-wrap {
   overflow-x: auto;
