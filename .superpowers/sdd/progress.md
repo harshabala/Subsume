@@ -15,8 +15,12 @@ Task 3: complete (commits f963dc2..55a7e4a, review clean after OL title gate)
 Task 4: complete (6f937d7 + 0c1fe21 slider release fix, review clean)
 - [x] Task 5: Translation / new-edition alert types
 Task 5: complete (afc1db3, review clean)
-- [ ] Task 6: Edition reconciliation UX
-- [ ] Task 7: Richer book statistics
-- [ ] Task 8: Optional Goodreads CSV import
-- [ ] Task 9: Docs + release notes
+- [x] Task 6: Edition reconciliation UX
+Task 6: complete (13a84f4, edition reconciliation + preferred edition UX)
+- [x] Task 7: Richer book statistics
+Task 7: complete (bd03870, pure bookStats + On the page Stats section)
+- [x] Task 8: Optional Goodreads CSV import
+Task 8: complete (07d1683)
+- [x] Task 9: Docs + release notes
+Task 9: complete (docs: Phase 0–3 books expansion completion notes)
 - [ ] Task 10: Final verification

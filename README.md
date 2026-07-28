@@ -77,10 +77,14 @@ The **Hardcover Library Archive** organizes everything you've captured — each 
 | **Poetic Capture Canvas** | Emotion-first capture with progressive disclosure | Preact, URL param routing (`?act=capture`), focus-pull blur keyframes |
 | **Hardcover Library Archive** | Editorial archive grouped by `sanctuaryIntent` with `emotionalRecall` excerpts; All / Screen / Books filters | Preact, `useMemo` intent filtering, medium filter, `isMountedRef` async safety |
 | **Book detection & catalogue** | Notice books on any page; resolve works via Open Library (no key) with optional Google Books enrichment | Content-script stages (JSON-LD, ISBN, domain adapters), Open Library + Google Books background clients |
+| **Screen + book page detection** | Structured title-page detection for films, series, documentaries, and books | JSON-LD + domain adapters; offline harness **27/30** correct medium (see `docs/detection-accuracy-report.md`) |
+| **Cross-medium recommendations** | Film/TV ↔ book bridges from catalogue relations and taste (opt-in) | Pref-gated generator; every candidate resolves to a real catalogue work |
+| **Subsume Dispatch** | Opt-in weekly multi-medium picks (screen + books) | Catalog-only by default; web-grounded path only when a real search adapter is capable |
+| **Book alerts & import** | Author/keyword alerts; optional translation/edition kinds; Goodreads CSV seed | Best-effort OL matching; CSV is one-shot import, not continuous sync |
 | **Auteur Screenplay Dock** | Floating reflection notepad on any page | Shadow DOM, toggle collapse/expand, `destroy()` lifecycle |
 | **Chronological Filmography Tracking** | Follow directors, DPs, actors, writers across their full body of work | TMDb Person API, IndexedDB people store |
 | **Cross-Site Hover Cards** | Instant synopsis and status on film, show, or book titles | Isolated DOM injection, debounced pointer controllers, O(1) cache |
-| **Contextual LLM Recommendations** | AI discovery from your actual taste profile and notes | Two-stage prompting pipeline, OpenAI / Anthropic / Gemini adapters |
+| **Contextual LLM Recommendations** | AI discovery from your actual taste profile and notes | Two-stage prompting pipeline, OpenAI / Anthropic / Gemini adapters; catalog validation |
 | **Weekly Automated Digests** | Curated new release picks across streaming subscriptions | Chrome background alarms, dynamic rule/AI hybrid curation |
 | **Google Drive Sync** | Full library backup and restore via Google Drive | OAuth 2.0, multipart Drive API upload/download |
 
@@ -117,7 +121,7 @@ The **Hardcover Library Archive** organizes everything you've captured — each 
 - **Strict TypeScript:** No `any` types in production code. All `unknown` inputs are narrowed at boundaries.
 - **Memory Safety:** Every Shadow DOM manager (`MuseumPlaqueManager`, `AuteurScreenplayDock`) implements an explicit `destroy()` lifecycle. Every async hook uses an `isMountedRef` cancellation flag.
 - **Structured Telemetry:** All diagnostic messaging routes through a typed `logger` utility.
-- **Test Coverage:** ~222+ unit tests (Vitest). Run `npm test` for the live count.
+- **Test Coverage:** Large Vitest suite (books expansion + screen detection harness + existing flows). Run `npm test` for the live count.
 
 ---
 
@@ -132,7 +136,7 @@ Subsume is a client-side Chrome extension. There is no backend proxy — API key
 | **Where keys live** | TMDb, OMDb, optional Google Books, and LLM API keys are stored in **IndexedDB** (`subsume-db`) as part of `UserPreferences`. They are **not encrypted at rest**. |
 | **Who is responsible** | You. Keys never leave your browser except when the extension calls the providers you configure. Treat your machine and Chrome profile as trusted. |
 | **Content-script exposure** | API keys are **never** sent to content scripts. `GET_CONTENT_PREFS` returns feature toggles only (see `buildContentPrefs()`). |
-| **Export/backup** | Library export excludes API keys. Only media and library records are included. |
+| **Export/backup** | Library export (v2 multi-medium) excludes API keys and preference secrets. Media, library, works, editions, and relationships only. |
 
 ### LLM Integration
 
@@ -247,7 +251,22 @@ Subsume stands on the shoulders of incredible open-source tools and open data pr
 - **[idb](https://github.com/jakearchibald/idb):** For robust Promise-based IndexedDB transaction wrapping.
 - **[Lucide Icons](https://lucide.dev/):** For crisp, modern UI iconography.
 - **[Newsreader](https://fonts.google.com/specimen/Newsreader) & [Outfit](https://fonts.google.com/specimen/Outfit) (Google Fonts):** For the editorial typographic identity of the sanctuary.
-- **[Vitest](https://vitest.dev/):** For the unit test suite (~222+ tests; run `npm test` for the current count).
+- **[Vitest](https://vitest.dev/):** For the unit test suite (run `npm test` for the current count).
+
+---
+
+## v0.3.0 — Multi-medium books expansion (Phase 0–3)
+
+Subsume treats **books as first-class** alongside film and TV: Open Library catalogue, ISBN/page detection, archive filters, author follow, catalog recommendations, multi-medium dispatch, adaptation relations, editions, reading stats, and optional Goodreads CSV import.
+
+**Honest limits (production):**
+
+- Web-grounded “research” claims stay **off** until a real web-search adapter is registered (`supportsWebSearch` is false by default).
+- Translation / new-edition alerts are **best-effort**, not complete coverage.
+- Goodreads is a **one-shot CSV import**, not continuous sync.
+- Detection harness: **27/30** fixtures correct medium with **0** wrong-medium hits (precision over recall on weak prose).
+
+Full changelog: [`RELEASE_NOTES_v0.3.0.md`](./RELEASE_NOTES_v0.3.0.md). Privacy: exports still exclude API keys ([`docs/PRIVACY.md`](./docs/PRIVACY.md)).
 
 ---
 

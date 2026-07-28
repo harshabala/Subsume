@@ -462,7 +462,8 @@
 
       <h2 id="controls">Your controls</h2>
       <ol>
-        <li><strong>Export</strong> your library from the extension (exports are designed to exclude API keys; media and library records are included).</li>
+        <li><strong>Export</strong> your library from the extension. Export payloads are multi-medium (media, library, works, editions, relationships) and are <strong>designed to exclude API keys and preference secrets</strong> — never include TMDb, OMDb, Google Books, or LLM keys.</li>
+        <li><strong>Import Goodreads CSV</strong> (optional): if you use Settings → Import Goodreads CSV, the file is parsed <strong>on your device</strong> to seed archive rows. The CSV is <strong>not</strong> sent to an LLM or to a Subsume server. This is a one-shot import, not continuous Goodreads sync.</li>
         <li><strong>Disable domains</strong> so content scripts do not run their discovery UI on sites you blacklist.</li>
         <li><strong>Disconnect Google Drive</strong> to stop optional backup via the extension’s Settings.</li>
         <li><strong>Clear or change API keys</strong> in Settings; stop using optional LLM, OMDb, or Google Books features at any time. Turn off book detection or Open Library under <strong>Books &amp; detection</strong>.</li>

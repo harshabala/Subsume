@@ -114,12 +114,13 @@ Diagnostic logging, if enabled or used for troubleshooting, stays in local exten
 
 You can:
 
-1. **Export** your library from the extension (exports are designed to exclude API keys; media and library records are included).
-2. **Disable domains** so content scripts do not run their discovery UI on sites you blacklist.
-3. **Disconnect Google Drive** to stop optional backup via the extension’s Settings.
-4. **Clear or change API keys** in Settings; stop using optional LLM, OMDb, or Google Books features at any time. Turn off book detection or Open Library under **Books & detection**.
-5. **Uninstall** the extension to remove it and its local Chrome extension data from the browser.
-6. **Contact** the developer at the email above with privacy questions.
+1. **Export** your library from the extension. Export payloads are multi-medium (media, library, works, editions, relationships) and are **designed to exclude API keys and preference secrets** — never include TMDb, OMDb, Google Books, or LLM keys.
+2. **Import Goodreads CSV** (optional): if you use Settings → Import Goodreads CSV, the file is parsed **on your device** to seed archive rows. The CSV is **not** sent to an LLM or to a Subsume server. This is a one-shot import, not continuous Goodreads sync.
+3. **Disable domains** so content scripts do not run their discovery UI on sites you blacklist.
+4. **Disconnect Google Drive** to stop optional backup via the extension’s Settings.
+5. **Clear or change API keys** in Settings; stop using optional LLM, OMDb, or Google Books features at any time. Turn off book detection or Open Library under **Books & detection**.
+6. **Uninstall** the extension to remove it and its local Chrome extension data from the browser.
+7. **Contact** the developer at the email above with privacy questions.
 
 ---
 
