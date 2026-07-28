@@ -1,62 +1,47 @@
-# Task 2 Report: ExpandableReflection + transition cleanup + nav/errors enter
+# Task 2 Report — Cross-medium recommendations
 
-## Status
-**DONE**
+**Status:** DONE  
+**Branch:** `feat/books-expansion`  
+**Date:** 2026-07-28
 
-## Commit
-- **Hash:** `82b94510673f708db855183950e3562b2744f892` (short: `82b9451`)
-- **Message:** `feat(ui): reflection expand and chrome motion polish`
-- **Files committed only:**
-  - `src/ui/components/ExpandableReflection.tsx`
-  - `src/styles/sanctuary.css`
-  - `src/ui/App.tsx`
-  - `src/ui/styles/sidebar.css`
-  - `src/ui/styles/sanctuary-shared.css`
-  - `.superpowers/sdd/task-2-report.md`
-- Seed-data and unrelated working tree changes were **not** staged.
+## Delivered
 
-## What changed
+### Generator (`src/background/crossMediumRecommendations.ts`)
+- Catalog-safe cross-medium recs (film/TV ↔ book).
+- Pref gate via `enabled` option (false → empty, no I/O).
+- **Pass 1:** Highly rated / watched library seeds → `adaptation_of` / `adapted_as` / `based_on` work relations → resolve linked `MediaItem` from media/works storage only (skip if missing).
+- **Pass 2 (optional):** If no relation hit for a seed, catalog search:
+  - book seed → discovery (screen)
+  - screen seed → Open Library (books)
+  - Only provider-returned works; `putMediaItem` before recommend.
+- Human-readable bridge `explanation` on every item; `discoveryMode: 'cross_medium'`.
 
-### ExpandableReflection (`src/ui/components/ExpandableReflection.tsx`)
-- Always renders full reflection text (no hard swap between truncated/full strings).
-- Expandable blocks use classes `reflection-excerpt-expandable` + `reflection-excerpt-expanded`.
-- CSS-driven expand/collapse on `.reflection-excerpt-panel-inner`: `max-height` (~3 lines ↔ 12rem) + `opacity`, with a soft mask fade when collapsed.
-- Toggle still reports `aria-expanded` and optional `onToggleExpand`.
-- PRM: `transition: none` on the panel inner (instant expand/collapse).
+### Handler wiring
+- `GET_RECOMMENDATIONS` appends cross-medium items when `prefs.crossMediumRecommendationsEnabled === true`.
+- Dismissed works filtered; deduped against existing primary recs.
+- Book catalog recs also tagged `discoveryMode: 'catalog'`.
 
-### sanctuary.css transition cleanup
-- Replaced all `transition: all` on interactive chrome with explicit properties (`background`, `border-color`, `color`, `opacity`, etc.) matched to hover/active rules.
-- Reflection excerpt styles updated for smooth expand; removed line-clamp hard snap path.
+### Types
+- `Recommendation.discoveryMode?: 'catalog' | 'web_grounded' | 'cross_medium'`
+- `Recommendation.seedTitle?: string`
 
-### Nav menu (`src/ui/App.tsx` + `sidebar.css`)
-- Open/close lifecycle: `navMenuClosing` keeps backdrop mounted through exit; drawer loses `open` and gains `closing` until `transitionend` (or 400ms fallback).
-- Drawer enter/exit: `opacity` + `translateX` (with `pointer-events` gated when closed).
-- PRM: close immediately; CSS disables drawer transitions and backdrop animations.
-- Backdrop already had enter/exit keyframes; exit now actually runs via closing class.
+### UI
+- Recommendations page chips: **All | Screen | Books | Cross-medium** (Cross-medium chip only when pref is on).
+- Client-side filter by medium / discoveryMode.
+- Settings → Books & detection: **Cross-medium recommendations** toggle (default off).
 
-### Inline action errors (`sanctuary-shared.css`)
-- `.sanctuary-notice-plaque` fades in over **180ms** (`sanctuary-notice-enter`).
-- PRM: animation disabled.
-- Covers Library, Recommendations, Alerts, NewReleases, Search (shared class).
+### Tests
+- `tests/crossMediumRecommendations.test.ts` (9 cases): pref off, relation hits both directions, missing catalog target, library exclude, candidate search catalog-only, no seeds, explanation helpers.
+
+## Not in scope
+- Web-grounded dispatch (Task 3).
+- Detection threshold changes.
+- Silent permanent relation creation from candidate search.
 
 ## Verification
-```
-npx vitest run
-# Test Files  41 passed (41)
-# Tests       219 passed (219)
-```
+- Focused: `crossMediumRecommendations`, `bookRecommendations`, `workRelations`, `recommendations-trakt` — green.
+- Full suite: **71 files, 456 tests passed**.
+- `tsc --noEmit` clean.
 
-## Self-review checklist
-| Requirement | Met |
-|-------------|-----|
-| Reflection expand/collapse smooth (opacity + max-height) | Yes |
-| PRM: instant expand | Yes |
-| Nav menu enter animation | Yes (opacity + slide) |
-| Nav menu exit | Yes (closing lifecycle) |
-| Inline action errors fade-in ~180ms | Yes |
-| `transition: all` cleaned in sanctuary.css | Yes (0 remaining) |
-| Seed-data not committed | Yes |
-
-## Concerns
-- Collapsed reflection uses a fixed `max-height: 4.5em` (~3 lines) rather than measuring content; very large fonts/zoom may clip slightly differently than the old 120-char truncate + line-clamp combo.
-- Nav drawer exit relies on `transitionend` for `transform`/`opacity`; if both fire, a ref guard prevents double-finish. Fallback timeout covers browsers that skip events under PRM edge cases.
+## Commit
+- `feat(recs): cross-medium recommendations behind pref`
