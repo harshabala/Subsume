@@ -125,6 +125,87 @@ describe('IMPORT_GOODREADS_CSV', () => {
     expect(result.results[0].status).toBe('to-watch');
   });
 
+  it('rejects title fallback when OL hit title similarity is below 0.5', async () => {
+    vi.mocked(openLibrary.resolveOpenLibraryIsbn).mockResolvedValue(null);
+    // Rank-only matchScore is high; canonical titles do not match CSV title
+    vi.mocked(openLibrary.searchOpenLibrary).mockResolvedValue([
+      {
+        matchScore: 1.0,
+        work: {
+          ...gatsbyWork,
+          id: 'openlibrary_work_unrelated',
+          canonicalTitle: 'Completely Different Novel',
+        },
+      },
+    ]);
+
+    const result = (await handler(
+      {
+        rows: [
+          {
+            rowIndex: 1,
+            title: 'Obscure Personal Memoir XYZ',
+            author: 'Unknown Author',
+            exclusiveShelf: 'to-read',
+            myRating: 0,
+          },
+        ],
+      },
+      sender,
+    )) as {
+      imported: number;
+      failed: number;
+      results: Array<{ ok: boolean; error?: string; mediaId?: string }>;
+    };
+
+    expect(result.imported).toBe(0);
+    expect(result.failed).toBe(1);
+    expect(result.results[0].ok).toBe(false);
+    expect(result.results[0].error).toMatch(/Open Library/i);
+    expect(result.results[0].mediaId).toBeUndefined();
+    expect(openLibrary.searchOpenLibrary).toHaveBeenCalled();
+  });
+
+  it('picks first OL hit with titleMatchScore ≥ 0.5, not rank-only hits[0]', async () => {
+    vi.mocked(openLibrary.resolveOpenLibraryIsbn).mockResolvedValue(null);
+    vi.mocked(openLibrary.searchOpenLibrary).mockResolvedValue([
+      {
+        matchScore: 1.0,
+        work: {
+          ...gatsbyWork,
+          id: 'openlibrary_work_wrong',
+          canonicalTitle: 'Something Else Entirely',
+        },
+      },
+      {
+        matchScore: 0.95,
+        work: gatsbyWork,
+      },
+    ]);
+
+    const result = (await handler(
+      {
+        rows: [
+          {
+            rowIndex: 1,
+            title: 'The Great Gatsby',
+            author: 'F. Scott Fitzgerald',
+            exclusiveShelf: 'to-read',
+            myRating: 0,
+          },
+        ],
+      },
+      sender,
+    )) as {
+      imported: number;
+      results: Array<{ ok: boolean; mediaId?: string }>;
+    };
+
+    expect(result.imported).toBe(1);
+    expect(result.results[0].ok).toBe(true);
+    expect(result.results[0].mediaId).toBe(gatsbyWork.id);
+  });
+
   it('records failure when catalog cannot resolve', async () => {
     vi.mocked(openLibrary.resolveOpenLibraryIsbn).mockResolvedValue(null);
     vi.mocked(openLibrary.searchOpenLibrary).mockResolvedValue([]);

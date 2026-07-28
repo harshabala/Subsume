@@ -51,7 +51,11 @@ export type GenerateCrossMediumOptions = {
   allowCandidateSearch?: boolean;
 };
 
-/** Minimum title similarity for Pass 2 catalog candidates (aligned with OL matchScore ≥ 0.5). */
+/**
+ * Minimum title similarity for Pass 2 catalog candidates.
+ * Uses titleMatchScore (not OL rank-only matchScore) — same ≥ 0.5 bar as
+ * book→screen candidates and web-grounded OL resolve.
+ */
 const MIN_CANDIDATE_TITLE_SCORE = 0.5;
 
 /**
@@ -274,11 +278,18 @@ export async function generateCrossMediumRecommendations(
             break; // one candidate per seed
           }
         } else {
+          // Screen → book: OL matchScore is rank-only (1 - i*0.05), not title
+          // closeness. Gate on titleMatchScore like book→screen / web-grounded.
           const { searchOpenLibrary } = await import('./openLibrary');
           const hits = await searchOpenLibrary({ query: title, limit: 5 });
           for (const hit of hits) {
             if (results.length >= cap) break;
-            if (hit.matchScore < MIN_CANDIDATE_TITLE_SCORE) continue;
+            if (
+              titleMatchScore(title, hit.work.canonicalTitle) <
+              MIN_CANDIDATE_TITLE_SCORE
+            ) {
+              continue;
+            }
 
             const item = catalogWorkToMediaItem(hit.work);
             item.type = 'book';

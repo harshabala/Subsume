@@ -49,7 +49,11 @@ import {
   parseGoodreadsDate,
   type GoodreadsImportRow,
 } from '@/shared/goodreadsImport';
+import { titleMatchScore } from '../crossMediumRecommendations';
 import { invalidateProfileCache } from '../context';
+
+/** Same title-closeness bar as web-grounded / cross-medium OL resolve. */
+const MIN_GOODREADS_TITLE_SCORE = 0.5;
 
 const ARCHIVE_STATUSES = new Set<LibraryStatus>([
   'to-watch',
@@ -499,10 +503,18 @@ export const bookHandlers: MessageHandlerMap = {
         }
 
         if (!media) {
+          // OL matchScore is rank-only — do not take hits[0] blindly.
+          // Require real title closeness (same ≥ 0.5 bar as web-grounded dispatch).
           const q = goodreadsRowSearchQuery(row);
           const hits = await ol.searchOpenLibrary({ query: q, limit: 3 });
-          if (hits.length > 0 && hits[0].work) {
-            media = catalogWorkToMediaItem(hits[0].work);
+          const best = hits.find(
+            (hit) =>
+              hit.work &&
+              titleMatchScore(title, hit.work.canonicalTitle) >=
+                MIN_GOODREADS_TITLE_SCORE,
+          );
+          if (best?.work) {
+            media = catalogWorkToMediaItem(best.work);
             media.type = 'book';
           }
         }

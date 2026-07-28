@@ -240,11 +240,9 @@ describe('generateCrossMediumRecommendations', () => {
   });
 
   it('optional candidate search only uses provider-returned catalog works', async () => {
-    const film = movieMedia('tmdb_movie_arrival', 'Arrival');
-    const olBook = bookMedia(
-      'openlibrary_work_story',
-      'Story of Your Life',
-    );
+    // Titles must be similar enough for titleMatchScore ≥ 0.5 (not OL rank score)
+    const film = movieMedia('tmdb_movie_dune', 'Dune');
+    const olBook = bookMedia('openlibrary_work_dune', 'Dune');
 
     vi.mocked(getAllLibraryItems).mockResolvedValue([libItem(film.id, 10)]);
     vi.mocked(getAllMediaMap).mockResolvedValue({ [film.id]: film });
@@ -260,7 +258,7 @@ describe('generateCrossMediumRecommendations', () => {
           images: {},
           externalIds: [],
           creatorCredits: [],
-          bookDetails: { authors: ['Ted Chiang'] },
+          bookDetails: { authors: ['Frank Herbert'] },
           sourceProvenance: [],
           sourceConfidence: 'high',
           createdAt: 0,
@@ -276,7 +274,7 @@ describe('generateCrossMediumRecommendations', () => {
 
     expect(recs).toHaveLength(1);
     expect(recs[0].mediaId).toBe(olBook.id);
-    expect(recs[0].media.canonicalTitle).toBe('Story of Your Life');
+    expect(recs[0].media.canonicalTitle).toBe('Dune');
     expect(recs[0].discoveryMode).toBe('cross_medium');
     expect(recs[0].explanation).toMatch(/catalog/i);
     // Title came from OL work, not LLM
@@ -319,6 +317,92 @@ describe('generateCrossMediumRecommendations', () => {
     });
 
     expect(recs).toEqual([]);
+  });
+
+  it('screen→book candidate search requires titleMatchScore ≥ 0.5 (not OL rank score)', async () => {
+    const film = movieMedia('tmdb_movie_it', 'It');
+    const wrongWork = {
+      id: 'openlibrary_work_unrelated',
+      medium: 'book' as const,
+      canonicalTitle: 'Completely Different Novel',
+      genres: [] as string[],
+      images: {},
+      externalIds: [],
+      creatorCredits: [],
+      bookDetails: { authors: ['Someone'] },
+      sourceProvenance: [],
+      sourceConfidence: 'high' as const,
+      createdAt: 0,
+      updatedAt: 0,
+    };
+    const matchingWork = {
+      id: 'openlibrary_work_it',
+      medium: 'book' as const,
+      canonicalTitle: 'It',
+      genres: [] as string[],
+      images: {},
+      externalIds: [],
+      creatorCredits: [],
+      bookDetails: { authors: ['Stephen King'] },
+      sourceProvenance: [],
+      sourceConfidence: 'high' as const,
+      createdAt: 0,
+      updatedAt: 0,
+    };
+
+    vi.mocked(getAllLibraryItems).mockResolvedValue([libItem(film.id, 10)]);
+    vi.mocked(getAllMediaMap).mockResolvedValue({ [film.id]: film });
+    vi.mocked(getWorkRelationsForWork).mockResolvedValue([]);
+    // Rank-only matchScore is high for both; only title closeness should select
+    vi.mocked(searchOpenLibrary).mockResolvedValue([
+      { matchScore: 1.0, work: wrongWork },
+      { matchScore: 0.95, work: matchingWork },
+    ]);
+
+    const recs = await generateCrossMediumRecommendations({
+      enabled: true,
+      allowCandidateSearch: true,
+    });
+
+    expect(recs).toHaveLength(1);
+    expect(recs[0].mediaId).toBe(matchingWork.id);
+    expect(recs[0].media.canonicalTitle).toBe('It');
+  });
+
+  it('screen→book skips OL hits with low title similarity despite high matchScore', async () => {
+    const film = movieMedia('tmdb_movie_arrival', 'Arrival');
+    const wrongWork = {
+      id: 'openlibrary_work_story',
+      medium: 'book' as const,
+      canonicalTitle: 'Story of Your Life',
+      genres: [] as string[],
+      images: {},
+      externalIds: [],
+      creatorCredits: [],
+      bookDetails: { authors: ['Ted Chiang'] },
+      sourceProvenance: [],
+      sourceConfidence: 'high' as const,
+      createdAt: 0,
+      updatedAt: 0,
+    };
+
+    vi.mocked(getAllLibraryItems).mockResolvedValue([libItem(film.id, 10)]);
+    vi.mocked(getAllMediaMap).mockResolvedValue({ [film.id]: film });
+    vi.mocked(getWorkRelationsForWork).mockResolvedValue([]);
+    // Would previously accept via rank-only matchScore ≥ 0.5
+    vi.mocked(searchOpenLibrary).mockResolvedValue([
+      { matchScore: 0.92, work: wrongWork },
+    ]);
+
+    const recs = await generateCrossMediumRecommendations({
+      enabled: true,
+      allowCandidateSearch: true,
+    });
+
+    expect(recs).toEqual([]);
+    expect(putMediaItem).not.toHaveBeenCalledWith(
+      expect.objectContaining({ id: wrongWork.id }),
+    );
   });
 
   it('returns empty when library has no highly rated seeds', async () => {
