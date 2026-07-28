@@ -151,6 +151,90 @@ describe('SET_USER_RATING validation', () => {
       expect.objectContaining({ userRating: 8 })
     );
   });
+
+  it('appends ratingHistory when rating changes', async () => {
+    const item = {
+      mediaId: 'tmdb_movie_1',
+      status: 'watched' as const,
+      addedAt: 1,
+      updatedAt: 1,
+      userRating: 6,
+      ratingHistory: [{ rating: 6, at: 1000 }],
+    };
+    vi.mocked(getLibraryItem).mockResolvedValue(item);
+
+    const handler = handlers[MessageType.SET_USER_RATING]!;
+    const result = await handler({ mediaId: 'tmdb_movie_1', rating: 9 }, sender);
+
+    expect(result).toEqual({ updated: true });
+    expect(putLibraryItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userRating: 9,
+        ratingHistory: expect.arrayContaining([
+          { rating: 6, at: 1000 },
+          expect.objectContaining({ rating: 9, at: expect.any(Number) }),
+        ]),
+      }),
+    );
+    const saved = vi.mocked(putLibraryItem).mock.calls[0][0];
+    expect(saved.ratingHistory).toHaveLength(2);
+  });
+
+  it('does not append ratingHistory when rating is unchanged', async () => {
+    const item = {
+      mediaId: 'tmdb_movie_1',
+      status: 'watched' as const,
+      addedAt: 1,
+      updatedAt: 1,
+      userRating: 8,
+      ratingHistory: [{ rating: 8, at: 1000 }],
+    };
+    vi.mocked(getLibraryItem).mockResolvedValue({ ...item, ratingHistory: [...item.ratingHistory] });
+
+    const handler = handlers[MessageType.SET_USER_RATING]!;
+    await handler({ mediaId: 'tmdb_movie_1', rating: 8 }, sender);
+
+    expect(putLibraryItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userRating: 8,
+        ratingHistory: [{ rating: 8, at: 1000 }],
+      }),
+    );
+  });
+
+  it('records first rating into empty ratingHistory', async () => {
+    const item = {
+      mediaId: 'tmdb_movie_1',
+      status: 'watched' as const,
+      addedAt: 1,
+      updatedAt: 1,
+    };
+    vi.mocked(getLibraryItem).mockResolvedValue(item);
+
+    const handler = handlers[MessageType.SET_USER_RATING]!;
+    await handler({ mediaId: 'tmdb_movie_1', rating: 7 }, sender);
+
+    const saved = vi.mocked(putLibraryItem).mock.calls[0][0];
+    expect(saved.ratingHistory).toHaveLength(1);
+    expect(saved.ratingHistory![0]).toEqual(
+      expect.objectContaining({ rating: 7, at: expect.any(Number) }),
+    );
+  });
+});
+
+describe('appendRatingHistory', () => {
+  it('caps history at 50 entries', async () => {
+    const { appendRatingHistory, RATING_HISTORY_CAP } = await import(
+      '@/background/handlers/library'
+    );
+    let history: Array<{ rating: number; at: number }> | undefined;
+    for (let i = 1; i <= RATING_HISTORY_CAP + 5; i++) {
+      history = appendRatingHistory(history, (i % 10) + 1, i * 1000);
+    }
+    expect(history).toHaveLength(RATING_HISTORY_CAP);
+    expect(history![0].at).toBe(6 * 1000);
+    expect(history![history!.length - 1].at).toBe((RATING_HISTORY_CAP + 5) * 1000);
+  });
 });
 
 describe('UPDATE_STATUS validation', () => {

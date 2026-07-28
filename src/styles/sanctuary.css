@@ -1020,6 +1020,27 @@
   color: var(--text-meta);
 }
 
+.sanctuary-detail-rating-history {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sanctuary-detail-rating-history-list {
+  margin: 0;
+  padding-left: 1.1em;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-meta);
+  list-style: decimal;
+}
+
+.sanctuary-detail-rating-history-at {
+  color: var(--text-meta);
+  opacity: 0.85;
+}
+
 .sanctuary-detail-tags-section {
   display: flex;
   flex-direction: column;

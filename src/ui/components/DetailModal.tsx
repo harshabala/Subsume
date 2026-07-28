@@ -824,6 +824,30 @@ export function DetailModal({
                     </div>
                   )}
 
+                  {(libraryItem.ratingHistory?.length ?? 0) > 1 && (
+                    <div
+                      className="sanctuary-detail-rating-history"
+                      data-testid="rating-history"
+                    >
+                      <span className="sanctuary-detail-control-label">Rating history</span>
+                      <ol className="sanctuary-detail-rating-history-list">
+                        {libraryItem.ratingHistory!.map((entry, i) => (
+                          <li key={`${entry.at}-${entry.rating}-${i}`}>
+                            {entry.rating}/10
+                            <span className="sanctuary-detail-rating-history-at" aria-hidden="true">
+                              {' · '}
+                              {new Date(entry.at).toLocaleDateString(undefined, {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                              })}
+                            </span>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+
                   {libraryItem.status === 'watched' && (
                     <div className="sanctuary-detail-control-row" data-testid="again-action">
                       <button

@@ -65,12 +65,20 @@ export type LibraryStatus = 'to-watch' | 'watching' | 'watched' | 'abandoned';
 
 export type SanctuaryIntent = 'keep_memory' | 'revisit_this_month' | 'wishlist';
 
+/** Single user-rating change recorded on a library relationship. */
+export interface RatingHistoryEntry {
+  rating: number; // 1–10
+  at: number; // timestamp ms
+}
+
 export interface LibraryItem {
   mediaId: string;
   status: LibraryStatus;
   addedAt: number;  // timestamp
   updatedAt: number;
   userRating?: number;  // 1–10
+  /** Chronological rating changes (newest last); capped at 50 by SET_USER_RATING. */
+  ratingHistory?: RatingHistoryEntry[];
   userTags?: string[];
   notes?: string;
 

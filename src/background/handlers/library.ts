@@ -36,6 +36,26 @@ import { isSafeNavMediaId } from '@/shared/mediaIds';
 import { invalidateProfileCache } from '../context';
 import { mergeMediaItems } from '../mediaMerge';
 import { broadcastMessage, parseSetUserNotesRequest, parseUpdateStatusRequest } from './utils';
+import type { RatingHistoryEntry } from '@/shared/types';
+
+/** Max entries kept on `LibraryItem.ratingHistory`. */
+export const RATING_HISTORY_CAP = 50;
+
+/**
+ * Append a rating change to history (newest last), capped at {@link RATING_HISTORY_CAP}.
+ * Pure helper for SET_USER_RATING and unit tests.
+ */
+export function appendRatingHistory(
+  history: RatingHistoryEntry[] | undefined,
+  rating: number,
+  at: number = Date.now(),
+): RatingHistoryEntry[] {
+  const next = [...(history ?? []), { rating, at }];
+  if (next.length > RATING_HISTORY_CAP) {
+    return next.slice(next.length - RATING_HISTORY_CAP);
+  }
+  return next;
+}
 
 /** Append a reflection from notes/emotionalRecall when body is new vs latest. */
 async function appendReflectionFromNotes(
@@ -147,6 +167,9 @@ export const libraryHandlers: MessageHandlerMap = {
     const existing = await getLibraryItem(req.mediaId);
     if (!existing) {
       return { updated: false };
+    }
+    if (existing.userRating !== req.rating) {
+      existing.ratingHistory = appendRatingHistory(existing.ratingHistory, req.rating);
     }
     existing.userRating = req.rating;
     existing.updatedAt = Date.now();

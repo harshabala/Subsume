@@ -552,6 +552,7 @@ async function dualWriteLibrary(db: IDBPDatabase<SubsumeDB>, item: LibraryItem):
     ...mapped,
     preferredEditionId: item.preferredEditionId ?? existingRel?.preferredEditionId,
     currentExperienceId: existingRel?.currentExperienceId,
+    ratingHistory: item.ratingHistory ?? existingRel?.ratingHistory,
     latestReflectionExcerpt:
       existingRel?.latestReflectionExcerpt ?? mapped.latestReflectionExcerpt,
   });

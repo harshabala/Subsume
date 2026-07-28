@@ -161,6 +161,8 @@ export interface LibraryRelationship {
   updatedAt: number;
   statusChangedAt?: number;
   currentRating?: number;
+  /** Chronological rating changes (newest last); dual-written from LibraryItem. */
+  ratingHistory?: Array<{ rating: number; at: number }>;
   userTags?: string[];
   sanctuaryIntent?: SanctuaryIntentV2;
   preferredEditionId?: string;
