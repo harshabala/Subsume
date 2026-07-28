@@ -30,6 +30,7 @@ import { getDiscoveryFeed, discoveryFeedToWeeklyDigest } from '../discoveryFeed'
 import { getTraktTrending } from '../trakt';
 import { GetDiscoveryFeedRequest, UserPreferences, WeeklyDigest } from '@/shared/types';
 import { generateCatalogBookRecommendations } from '../bookRecommendations';
+import { generateCrossMediumRecommendations } from '../crossMediumRecommendations';
 import { resolveRecommendationCandidates } from '../catalogValidate';
 import { getLlmProviderCapabilities } from '@/shared/llmCapabilities';
 
@@ -178,10 +179,44 @@ export const recommendationHandlers: MessageHandlerMap = {
         const bookAsRecs: Recommendation[] = filteredBooks.map((m) => ({
           mediaId: m.id,
           explanation: 'Related to books in your archive',
+          discoveryMode: 'catalog' as const,
         }));
         primary = [...primary, ...bookAsRecs].slice(0, 20);
       } catch (err) {
         logger.warn('[Subsume] Catalog book recommendations failed:', err);
+      }
+    }
+
+    // Cross-medium bridges (film/TV ↔ book) — gated on pref, catalog-only
+    if (prefs.crossMediumRecommendationsEnabled === true) {
+      try {
+        const cross = await generateCrossMediumRecommendations({
+          limit: 6,
+          enabled: true,
+        });
+        const crossMedia = filterDismissedMedia(
+          cross.map((c) => c.media),
+          dismissed,
+        );
+        const crossIds = new Set(crossMedia.map((m) => m.id));
+        const crossAsRecs: Recommendation[] = cross
+          .filter((c) => crossIds.has(c.mediaId))
+          .map((c) => ({
+            mediaId: c.mediaId,
+            explanation: c.explanation,
+            discoveryMode: 'cross_medium' as const,
+            seedTitle: c.seedTitle,
+          }));
+        // Prefer not duplicating mediaIds already in primary
+        const existingIds = new Set(
+          primary.map((p) =>
+            'mediaId' in p ? (p as Recommendation).mediaId : (p as MediaItem).id,
+          ),
+        );
+        const novelCross = crossAsRecs.filter((r) => !existingIds.has(r.mediaId));
+        primary = [...primary, ...novelCross].slice(0, 24);
+      } catch (err) {
+        logger.warn('[Subsume] Cross-medium recommendations failed:', err);
       }
     }
 

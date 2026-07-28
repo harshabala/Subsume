@@ -440,6 +440,10 @@ export type SubsumeExportV2 = ImportLibraryData & {
 export interface Recommendation {
   mediaId: string;
   explanation: string;
+  /** How this recommendation was discovered (catalog rule, web-grounded, cross-medium bridge). */
+  discoveryMode?: 'catalog' | 'web_grounded' | 'cross_medium';
+  /** Title of the library seed that bridges to this recommendation. */
+  seedTitle?: string;
 }
 
 export interface GroupedRecommendation {

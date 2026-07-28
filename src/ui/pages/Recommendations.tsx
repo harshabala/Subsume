@@ -1,5 +1,5 @@
 import { h } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useMemo } from 'preact/hooks';
 import { sendMessage } from '@/shared/messages';
 import {
   MessageType,
@@ -9,11 +9,30 @@ import {
   PersonalizedRecommendation,
   RecommendationGroup,
   WatchProfile,
+  UserPreferences,
 } from '@/shared/types';
 import { DetailModal } from '../components/DetailModal';
 import { RecommendationMediaCard } from '../components/RecommendationMediaCard';
 import { RecommendationAiCard } from '../components/RecommendationAiCard';
 import '../styles/recommendations.css';
+
+type MediumChip = 'all' | 'screen' | 'books' | 'cross_medium';
+
+function matchesMediumChip(
+  rec: Recommendation & { media: MediaItem },
+  chip: MediumChip,
+): boolean {
+  if (chip === 'all') return true;
+  if (chip === 'cross_medium') return rec.discoveryMode === 'cross_medium';
+  if (chip === 'books') {
+    return rec.media.type === 'book' && rec.discoveryMode !== 'cross_medium';
+  }
+  // screen
+  return (
+    (rec.media.type === 'movie' || rec.media.type === 'tv') &&
+    rec.discoveryMode !== 'cross_medium'
+  );
+}
 
 interface RecommendationsProps {
   onOpenCuratorSettings?: () => void;
@@ -30,6 +49,8 @@ export function Recommendations({ onOpenCuratorSettings, onNavigate }: Recommend
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  const [mediumChip, setMediumChip] = useState<MediumChip>('all');
+  const [crossMediumEnabled, setCrossMediumEnabled] = useState(false);
 
   // ── Phase 4: Personalized AI state ────────────────────────────────────
   const [personalizedRecs, setPersonalizedRecs] = useState<PersonalizedRecommendation[]>([]);
@@ -170,6 +191,17 @@ export function Recommendations({ onOpenCuratorSettings, onNavigate }: Recommend
     fetchLedgerRecs();
   }, []);
 
+  // Pref for cross-medium chip visibility (default off)
+  useEffect(() => {
+    sendMessage<Record<string, never>, UserPreferences>(MessageType.GET_PREFERENCES, {})
+      .then((res) => {
+        if (res.success && res.data) {
+          setCrossMediumEnabled(res.data.crossMediumRecommendationsEnabled === true);
+        }
+      })
+      .catch(() => {/* silent */});
+  }, []);
+
   // ── Phase 4: Silently load watch profile on mount ──────────────────
   useEffect(() => {
     sendMessage<any, { profile: WatchProfile }>(
@@ -288,7 +320,25 @@ export function Recommendations({ onOpenCuratorSettings, onNavigate }: Recommend
     }
   }
 
+  const filteredRecs = useMemo(
+    () => recs.filter((r) => matchesMediumChip(r, mediumChip)),
+    [recs, mediumChip],
+  );
+  const filteredGroupedRecs = useMemo(
+    () =>
+      groupedRecs
+        .map((g) => ({
+          ...g,
+          recommendations: g.recommendations.filter((r) => matchesMediumChip(r, mediumChip)),
+        }))
+        .filter((g) => g.recommendations.length > 0),
+    [groupedRecs, mediumChip],
+  );
+
   const hasNoRecs = isGrouped ? groupedRecs.length === 0 : recs.length === 0;
+  const hasNoFilteredRecs = isGrouped
+    ? filteredGroupedRecs.length === 0
+    : filteredRecs.length === 0;
   const hasEnoughHistory = watchProfile !== null && watchProfile.totalWatched >= 3;
   const topGenres = (watchProfile?.favoriteGenres || []).slice(0, 3);
 
@@ -296,6 +346,13 @@ export function Recommendations({ onOpenCuratorSettings, onNavigate }: Recommend
     (recGroups || []).flatMap(g => g.recommendations.map(r => r.tmdbId))
   );
   const ungroupedRecs = personalizedRecs.filter(r => !groupedTmdbIds.has(r.tmdbId));
+
+  const mediumChips: { id: MediumChip; label: string }[] = [
+    { id: 'all', label: 'All' },
+    { id: 'screen', label: 'Screen' },
+    { id: 'books', label: 'Books' },
+    ...(crossMediumEnabled ? [{ id: 'cross_medium' as const, label: 'Cross-medium' }] : []),
+  ];
 
   return (
     <div className="page-container">
@@ -314,6 +371,28 @@ export function Recommendations({ onOpenCuratorSettings, onNavigate }: Recommend
           Primary selections from your viewing ledger and resonance notes. Below, an optional house curator can deepen the programme when you ask.
         </p>
       </header>
+
+      <div
+        className="sanctuary-view-toggle recommendations-view-mode-toggle"
+        role="group"
+        aria-label="Recommendation medium"
+      >
+        {mediumChips.map((chip) => (
+          <button
+            key={chip.id}
+            type="button"
+            className={`sanctuary-view-toggle-btn recommendations-view-mode-btn ${
+              mediumChip === chip.id
+                ? 'recommendations-view-mode-btn-active'
+                : 'recommendations-view-mode-btn-inactive'
+            }`}
+            onClick={() => setMediumChip(chip.id)}
+            aria-pressed={mediumChip === chip.id}
+          >
+            {chip.label}
+          </button>
+        ))}
+      </div>
 
       {/* ── Primary: rule-based / ledger recommendations (full width) ── */}
       <section className="recommendations-ledger-section" aria-label="Ledger recommendations">
@@ -358,9 +437,26 @@ export function Recommendations({ onOpenCuratorSettings, onNavigate }: Recommend
                 </button>
               )}
             </div>
+          ) : hasNoFilteredRecs ? (
+            <div className="sanctuary-empty-plaque">
+              <span className="sanctuary-plaque-index">No matches</span>
+              <h3 className="sanctuary-plaque-title">Nothing in this medium yet</h3>
+              <p className="sanctuary-plaque-text">
+                {mediumChip === 'cross_medium'
+                  ? 'Cross-medium bridges appear when adaptation relations or catalog matches link film/TV and books in your archive.'
+                  : 'Try another medium filter, or add more works to your archive.'}
+              </p>
+              <button
+                type="button"
+                className="optical-button recommendations-retry-btn"
+                onClick={() => setMediumChip('all')}
+              >
+                Show all
+              </button>
+            </div>
           ) : isGrouped ? (
             <div className="recommendations-grouped-container">
-              {groupedRecs.map(({ seedTitle, recommendations }) => {
+              {filteredGroupedRecs.map(({ seedTitle, recommendations }) => {
                 const isCollapsed = collapsedGroups[seedTitle] || false;
                 const panelId = `rec-group-${seedTitle.replace(/\s+/g, '-').toLowerCase()}`;
                 return (
@@ -399,7 +495,7 @@ export function Recommendations({ onOpenCuratorSettings, onNavigate }: Recommend
             </div>
           ) : (
             <div className="card-grid recommendations-rule-grid">
-              {recs.map(r => (
+              {filteredRecs.map(r => (
                 <RecommendationMediaCard
                   key={r.media.id}
                   media={r.media}

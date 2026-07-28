@@ -958,6 +958,22 @@ export function Settings() {
             <p className="settings-toggle-help">
               Default catalogue for search and resolution. No API key required. Turn off only if you prefer another source.
             </p>
+
+            <label className="settings-toggle-label">
+              <input
+                type="checkbox"
+                checked={prefs.crossMediumRecommendationsEnabled ?? false}
+                onChange={(e) =>
+                  handleChange('crossMediumRecommendationsEnabled', e.currentTarget.checked)
+                }
+                className="settings-toggle-checkbox"
+              />
+              <span className="settings-toggle-text-sm">Cross-medium recommendations</span>
+            </label>
+            <p className="settings-toggle-help">
+              Suggest adaptations and source novels between film/TV and books using catalog relations.
+              Off by default — liking a story does not imply liking its adaptation.
+            </p>
           </div>
         </div>
         </>
