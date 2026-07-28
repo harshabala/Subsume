@@ -247,6 +247,8 @@ export enum MessageType {
   CHECK_LIBRARY_STATUS = 'CHECK_LIBRARY_STATUS',
   EXPORT_LIBRARY = 'EXPORT_LIBRARY',
   IMPORT_LIBRARY = 'IMPORT_LIBRARY',
+  /** One-shot Goodreads CSV archive seed (local parse; not continuous sync). */
+  IMPORT_GOODREADS_CSV = 'IMPORT_GOODREADS_CSV',
   CONNECT_GOOGLE_DRIVE = 'CONNECT_GOOGLE_DRIVE',
   BACKUP_TO_DRIVE = 'BACKUP_TO_DRIVE',
   RESTORE_FROM_DRIVE = 'RESTORE_FROM_DRIVE',
@@ -449,6 +451,40 @@ export interface ImportLibraryData {
   experiences?: import('./catalogTypes').Experience[];
   reflections?: import('./catalogTypes').Reflection[];
   creators?: import('./catalogTypes').Creator[];
+}
+
+/**
+ * One-shot Goodreads CSV import request.
+ * Prefer `csvText` from a local file read; parsing is pure (no LLM).
+ * Optional pre-parsed `rows` for tests / chunked UI.
+ */
+export interface ImportGoodreadsCsvRequest {
+  /** Full CSV file contents (local parse only). */
+  csvText?: string;
+  /** Pre-parsed rows (skips CSV parse when provided). */
+  rows?: import('./goodreadsImport').GoodreadsImportRow[];
+  /** Override default batch cap (tests only; production UI uses default). */
+  cap?: number;
+}
+
+export interface ImportGoodreadsCsvRowResult {
+  rowIndex: number;
+  title: string;
+  ok: boolean;
+  mediaId?: string;
+  status?: LibraryStatus;
+  error?: string;
+}
+
+export interface ImportGoodreadsCsvResponse {
+  imported: number;
+  skipped: number;
+  failed: number;
+  truncated: boolean;
+  totalDataRows: number;
+  processed: number;
+  results: ImportGoodreadsCsvRowResult[];
+  warnings: string[];
 }
 
 /** Explicit v2 export shape (schemaVersion always 2). */

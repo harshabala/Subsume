@@ -5,11 +5,13 @@ import {
   MessageType,
   UserPreferences,
   ImportLibraryData,
+  ImportGoodreadsCsvResponse,
   ThemePreference,
   CinemaAtmosphere,
   FreeDataSourceStatus,
   FreeDataSourceId,
 } from '@/shared/types';
+import { GOODREADS_IMPORT_BATCH_CAP } from '@/shared/goodreadsImport';
 import { applyThemePreference, applyCinemaAtmosphere, watchSystemTheme } from '@/shared/theme';
 import { THEME_LABELS } from '@/shared/themeLabels';
 import { AVAILABLE_PLATFORMS } from '@/shared/platforms';
@@ -40,6 +42,8 @@ export function Settings() {
   const [activeSection, setActiveSection] = useState<SettingsSectionId>('appearance');
   const [driveStatus, setDriveStatus] = useState<string | null>(null);
   const [driveConnecting, setDriveConnecting] = useState(false);
+  const [goodreadsImporting, setGoodreadsImporting] = useState(false);
+  const [goodreadsSummary, setGoodreadsSummary] = useState<string | null>(null);
   const oauthRedirectUri =
     typeof chrome !== 'undefined' && chrome.identity?.getRedirectURL
       ? chrome.identity.getRedirectURL()
@@ -296,6 +300,84 @@ export function Settings() {
       } catch (err: unknown) {
         showNotice(`Failed to import library: ${formatUserError(err)}`, 'error');
       }
+    };
+    reader.readAsText(file);
+  };
+
+  /** Local-only Goodreads CSV → archive seed via Open Library (not continuous sync). */
+  const handleGoodreadsImport = (e: Event) => {
+    const target = e.target as HTMLInputElement;
+    const file = target.files?.[0];
+    // Reset so the same file can be re-selected after an error
+    target.value = '';
+    if (!file) return;
+    if (goodreadsImporting) return;
+
+    setGoodreadsImporting(true);
+    setGoodreadsSummary(null);
+
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      try {
+        const csvText = String(ev.target?.result ?? '');
+        // Parse stays on-device in the shared pure module; never sent to LLM.
+        // Background re-parses the same text for resolve + archive write.
+        const res = await sendMessage<
+          { csvText: string },
+          ImportGoodreadsCsvResponse
+        >(
+          MessageType.IMPORT_GOODREADS_CSV,
+          { csvText },
+          180_000,
+        );
+        const data = res.data;
+        if (!data) {
+          showNotice('Goodreads import returned no result.', 'error');
+          setGoodreadsSummary('Import failed — no response.');
+          return;
+        }
+        const parts = [
+          `Imported ${data.imported}`,
+          data.failed ? `${data.failed} failed` : null,
+          data.skipped ? `${data.skipped} skipped` : null,
+          data.truncated
+            ? `capped at ${data.processed} of ${data.totalDataRows}`
+            : `of ${data.totalDataRows} rows`,
+        ].filter(Boolean);
+        const summary = parts.join(' · ');
+        setGoodreadsSummary(summary);
+
+        const failSample = data.results
+          .filter((r) => !r.ok)
+          .slice(0, 5)
+          .map((r) => `Row ${r.rowIndex}: ${r.title} — ${r.error ?? 'failed'}`)
+          .join('\n');
+
+        if (data.imported > 0 && data.failed === 0) {
+          showNotice(`Goodreads import complete: ${summary}`, 'success');
+        } else if (data.imported > 0) {
+          showNotice(
+            `Goodreads import partial: ${summary}${failSample ? `. ${failSample}` : ''}`,
+            'error',
+          );
+        } else {
+          showNotice(
+            `Goodreads import failed: ${summary}${failSample ? `. ${failSample}` : ''}`,
+            'error',
+          );
+        }
+      } catch (err: unknown) {
+        const msg = formatUserError(err);
+        setGoodreadsSummary(`Failed: ${msg}`);
+        showNotice(`Failed to import Goodreads CSV: ${msg}`, 'error');
+      } finally {
+        setGoodreadsImporting(false);
+      }
+    };
+    reader.onerror = () => {
+      setGoodreadsImporting(false);
+      setGoodreadsSummary('Could not read file.');
+      showNotice('Could not read Goodreads CSV file.', 'error');
     };
     reader.readAsText(file);
   };
@@ -1072,6 +1154,41 @@ export function Settings() {
                   />
                 </label>
               </div>
+            </div>
+
+            <div className="settings-section-divider">
+              <span className="settings-field-label">Import Goodreads CSV</span>
+              <p className="settings-panel-hint">
+                One-shot seed from a Goodreads library export (Title, Author, ISBN13, My
+                Rating, Exclusive Shelf, Date Read). Rows resolve via Open Library and land
+                in your archive. Parsed entirely on this device — the CSV is never sent to
+                an LLM. Cap: {GOODREADS_IMPORT_BATCH_CAP} rows per import.
+              </p>
+              <p className="settings-panel-hint">
+                Not a full Goodreads sync: no ongoing two-way updates, no reviews/shelves
+                beyond status mapping, and no guarantee every title resolves.
+              </p>
+              <div className="settings-btn-row">
+                <label
+                  className={`btn-sanctuary-restraint${goodreadsImporting ? ' is-disabled' : ''}`}
+                  style={{ margin: 0, opacity: goodreadsImporting ? 0.6 : 1 }}
+                  aria-busy={goodreadsImporting}
+                >
+                  {goodreadsImporting ? 'Importing…' : 'Choose Goodreads CSV'}
+                  <input
+                    type="file"
+                    accept=".csv,text/csv"
+                    style={{ display: 'none' }}
+                    disabled={goodreadsImporting}
+                    onChange={handleGoodreadsImport}
+                  />
+                </label>
+              </div>
+              {goodreadsSummary && (
+                <p className="settings-drive-status ok" role="status">
+                  {goodreadsSummary}
+                </p>
+              )}
             </div>
           </div>
         </div>

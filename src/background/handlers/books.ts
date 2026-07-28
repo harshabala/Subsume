@@ -27,13 +27,29 @@ import {
 } from '../storage';
 import { isValidMediaId } from '@/shared/mediaIds';
 import { mergeMediaItems } from '../mediaMerge';
-import type { LibraryStatus, MediaItem } from '@/shared/types';
+import type {
+  ImportGoodreadsCsvRequest,
+  ImportGoodreadsCsvResponse,
+  ImportGoodreadsCsvRowResult,
+  LibraryStatus,
+  MediaItem,
+} from '@/shared/types';
 import { logger } from '@/shared/logger';
 import {
   originHostFromSender,
   tryConsumeOriginRateLimit,
   ORIGIN_RATE_LIMIT_REASON,
 } from '../originRateLimit';
+import {
+  GOODREADS_IMPORT_BATCH_CAP,
+  goodreadsRowSearchQuery,
+  mapGoodreadsRatingToSubsume,
+  mapGoodreadsShelfToStatus,
+  parseGoodreadsCsv,
+  parseGoodreadsDate,
+  type GoodreadsImportRow,
+} from '@/shared/goodreadsImport';
+import { invalidateProfileCache } from '../context';
 
 const ARCHIVE_STATUSES = new Set<LibraryStatus>([
   'to-watch',
@@ -408,5 +424,166 @@ export const bookHandlers: MessageHandlerMap = {
 
     logger.log('[Subsume] SET_PREFERRED_EDITION:', workId, editionId);
     return { updated: true as const, workId, preferredEditionId: editionId };
+  },
+
+  /**
+   * One-shot Goodreads CSV → archive seed.
+   * Parses locally (or accepts pre-parsed rows); resolves via Open Library only.
+   * Never sends CSV to LLM. Not a continuous Goodreads sync.
+   */
+  [MessageType.IMPORT_GOODREADS_CSV]: async (payload) => {
+    const req = (payload || {}) as ImportGoodreadsCsvRequest;
+    const cap =
+      typeof req.cap === 'number' && req.cap > 0
+        ? Math.min(Math.floor(req.cap), GOODREADS_IMPORT_BATCH_CAP)
+        : GOODREADS_IMPORT_BATCH_CAP;
+
+    let rows: GoodreadsImportRow[] = [];
+    let totalDataRows = 0;
+    let truncated = false;
+    const warnings: string[] = [];
+
+    if (Array.isArray(req.rows) && req.rows.length > 0) {
+      totalDataRows = req.rows.length;
+      truncated = totalDataRows > cap;
+      rows = req.rows.slice(0, cap);
+      if (truncated) {
+        warnings.push(
+          `Import capped at ${cap} of ${totalDataRows} rows (not a full Goodreads sync).`,
+        );
+      }
+    } else if (typeof req.csvText === 'string') {
+      const parsed = parseGoodreadsCsv(req.csvText, { cap });
+      rows = parsed.rows;
+      totalDataRows = parsed.totalDataRows;
+      truncated = parsed.truncated;
+      warnings.push(...parsed.warnings);
+    } else {
+      throw new Error('IMPORT_GOODREADS_CSV requires csvText or rows');
+    }
+
+    const results: ImportGoodreadsCsvRowResult[] = [];
+    let imported = 0;
+    let skipped = 0;
+    let failed = 0;
+
+    const ol = await loadOpenLibrary();
+
+    for (const row of rows) {
+      const title = row.title?.trim() || '';
+      if (!title) {
+        skipped += 1;
+        results.push({
+          rowIndex: row.rowIndex,
+          title: '(empty)',
+          ok: false,
+          error: 'Empty title',
+        });
+        continue;
+      }
+
+      try {
+        let media: MediaItem | null = null;
+
+        const isbn = row.isbn13?.trim();
+        if (isbn && isValidIsbn(isbn)) {
+          try {
+            const resolved = await ol.resolveOpenLibraryIsbn(isbn);
+            if (resolved?.work) {
+              media = catalogWorkToMediaItem(resolved.work);
+              media.type = 'book';
+            }
+          } catch (err) {
+            logger.warn('[Subsume] Goodreads import ISBN resolve failed:', title, err);
+          }
+        }
+
+        if (!media) {
+          const q = goodreadsRowSearchQuery(row);
+          const hits = await ol.searchOpenLibrary({ query: q, limit: 3 });
+          if (hits.length > 0 && hits[0].work) {
+            media = catalogWorkToMediaItem(hits[0].work);
+            media.type = 'book';
+          }
+        }
+
+        if (!media) {
+          failed += 1;
+          results.push({
+            rowIndex: row.rowIndex,
+            title,
+            ok: false,
+            error: 'Could not resolve via Open Library (ISBN/title)',
+          });
+          continue;
+        }
+
+        const status = mapGoodreadsShelfToStatus(row.exclusiveShelf);
+        const rating = mapGoodreadsRatingToSubsume(row.myRating);
+        const dateReadMs = parseGoodreadsDate(row.dateRead);
+        const now = Date.now();
+
+        const existingMedia = await getMediaItem(media.id);
+        const mediaToStore = existingMedia
+          ? mergeMediaItems(media, existingMedia)
+          : media;
+        await putMediaItem(mediaToStore);
+
+        const existing = await getLibraryItem(media.id);
+        const libraryItem = {
+          mediaId: media.id,
+          status,
+          addedAt: existing?.addedAt ?? now,
+          updatedAt: now,
+          sanctuaryIntent: intentForStatus(status),
+          notes: existing?.notes,
+          emotionalRecall: existing?.emotionalRecall,
+          userRating: rating ?? existing?.userRating,
+          ratingHistory: existing?.ratingHistory,
+          userTags: existing?.userTags,
+          contemplatedAt: dateReadMs ?? existing?.contemplatedAt,
+          preferredEditionId: existing?.preferredEditionId,
+        };
+        await putLibraryItem(libraryItem);
+
+        imported += 1;
+        results.push({
+          rowIndex: row.rowIndex,
+          title,
+          ok: true,
+          mediaId: media.id,
+          status,
+        });
+      } catch (err) {
+        failed += 1;
+        const msg = err instanceof Error ? err.message : 'Import failed';
+        results.push({
+          rowIndex: row.rowIndex,
+          title,
+          ok: false,
+          error: msg,
+        });
+      }
+    }
+
+    if (imported > 0) {
+      invalidateProfileCache();
+    }
+
+    const response: ImportGoodreadsCsvResponse = {
+      imported,
+      skipped,
+      failed,
+      truncated,
+      totalDataRows,
+      processed: rows.length,
+      results,
+      warnings,
+    };
+    logger.log(
+      '[Subsume] IMPORT_GOODREADS_CSV:',
+      `imported=${imported} failed=${failed} skipped=${skipped} truncated=${truncated}`,
+    );
+    return response;
   },
 };
