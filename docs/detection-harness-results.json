@@ -1,0 +1,1108 @@
+{
+  "generatedAt": "2026-07-25T13:23:54.435Z",
+  "baseline": {
+    "total": 30,
+    "detected": 8,
+    "correctMedium": 7,
+    "falseNegatives": 22,
+    "wrongMedium": 1,
+    "byExpectedMedium": {
+      "book": {
+        "total": 8,
+        "detected": 7,
+        "correct": 7,
+        "wrongMedium": 0
+      },
+      "movie": {
+        "total": 8,
+        "detected": 1,
+        "correct": 0,
+        "wrongMedium": 1
+      },
+      "tv": {
+        "total": 8,
+        "detected": 0,
+        "correct": 0,
+        "wrongMedium": 0
+      },
+      "documentary": {
+        "total": 6,
+        "detected": 0,
+        "correct": 0,
+        "wrongMedium": 0
+      }
+    },
+    "byPrimarySignal": {
+      "json_ld": {
+        "hits": 3,
+        "correct": 3
+      },
+      "domain_adapter": {
+        "hits": 3,
+        "correct": 3
+      },
+      "isbn": {
+        "hits": 1,
+        "correct": 1
+      },
+      "heuristic": {
+        "hits": 1,
+        "correct": 0
+      }
+    },
+    "falseNegativeIds": [
+      "book-blog-review",
+      "movie-imdb-inception",
+      "movie-letterboxd-parasite",
+      "movie-rt-dune",
+      "movie-netflix-title",
+      "movie-imdb-no-jsonld",
+      "movie-blog-mention",
+      "movie-streaming-prime",
+      "series-imdb-succession",
+      "series-rt-bear",
+      "series-wikipedia-leftovers",
+      "series-imdb-mandalorian",
+      "series-netflix",
+      "series-letterboxd-list",
+      "series-imdb-episode",
+      "series-tvmaze-style",
+      "doc-imdb-free-solo",
+      "doc-letterboxd-free-solo",
+      "doc-wikipedia-13th",
+      "doc-imdb-neighbor",
+      "doc-rt-octopus",
+      "doc-netflix"
+    ],
+    "wrongMediumIds": [
+      "movie-wikipedia-blade-runner"
+    ],
+    "zeroSignalDomains": [
+      "blog.example.com",
+      "imdb.com",
+      "letterboxd.com",
+      "netflix.com",
+      "rottentomatoes.com",
+      "tvmaze.com"
+    ]
+  },
+  "full": {
+    "total": 30,
+    "detected": 27,
+    "correctMedium": 27,
+    "falseNegatives": 3,
+    "wrongMedium": 0,
+    "byExpectedMedium": {
+      "book": {
+        "total": 8,
+        "detected": 7,
+        "correct": 7,
+        "wrongMedium": 0
+      },
+      "movie": {
+        "total": 8,
+        "detected": 7,
+        "correct": 7,
+        "wrongMedium": 0
+      },
+      "tv": {
+        "total": 8,
+        "detected": 7,
+        "correct": 7,
+        "wrongMedium": 0
+      },
+      "documentary": {
+        "total": 6,
+        "detected": 6,
+        "correct": 6,
+        "wrongMedium": 0
+      }
+    },
+    "byPrimarySignal": {
+      "json_ld": {
+        "hits": 15,
+        "correct": 15
+      },
+      "domain_adapter": {
+        "hits": 11,
+        "correct": 11
+      },
+      "isbn": {
+        "hits": 1,
+        "correct": 1
+      }
+    },
+    "falseNegativeIds": [
+      "book-blog-review",
+      "movie-blog-mention",
+      "series-letterboxd-list"
+    ],
+    "wrongMediumIds": [],
+    "zeroSignalDomains": [
+      "blog.example.com"
+    ]
+  },
+  "resultsFull": [
+    {
+      "id": "book-amazon-gatsby",
+      "expectedMedium": "book",
+      "mediumCorrect": true,
+      "url": "https://www.amazon.com/dp/0743273567",
+      "detected": true,
+      "classifiedAs": "book",
+      "confidence": 0.98,
+      "title": "The Great Gatsby",
+      "signalsFired": [
+        "json_ld",
+        "isbn",
+        "domain_adapter",
+        "url_pattern"
+      ],
+      "primarySignal": "json_ld",
+      "bookCandidateCount": 1,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "book-goodreads-1984",
+      "expectedMedium": "book",
+      "mediumCorrect": true,
+      "url": "https://www.goodreads.com/book/show/5470.1984",
+      "detected": true,
+      "classifiedAs": "book",
+      "confidence": 0.92,
+      "title": "1984",
+      "signalsFired": [
+        "domain_adapter",
+        "url_pattern",
+        "isbn"
+      ],
+      "primarySignal": "domain_adapter",
+      "bookCandidateCount": 1,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "book-openlibrary-dune",
+      "expectedMedium": "book",
+      "mediumCorrect": true,
+      "url": "https://openlibrary.org/works/OL893415W",
+      "detected": true,
+      "classifiedAs": "book",
+      "confidence": 0.98,
+      "title": "Dune",
+      "signalsFired": [
+        "json_ld",
+        "isbn",
+        "domain_adapter",
+        "url_pattern"
+      ],
+      "primarySignal": "json_ld",
+      "bookCandidateCount": 1,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "book-publisher-knopf",
+      "expectedMedium": "book",
+      "mediumCorrect": true,
+      "url": "https://www.knopfdoubleday.com/book/123/the-overstory/",
+      "detected": true,
+      "classifiedAs": "book",
+      "confidence": 0.8500000000000001,
+      "title": "The Overstory",
+      "signalsFired": [
+        "isbn"
+      ],
+      "primarySignal": "isbn",
+      "bookCandidateCount": 1,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "book-blog-review",
+      "expectedMedium": "book",
+      "mediumCorrect": false,
+      "notes": "Weak blog mention — expect FN under precision gates",
+      "url": "https://blog.example.com/beloved-notes",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "book-google-pride",
+      "expectedMedium": "book",
+      "mediumCorrect": true,
+      "url": "https://books.google.com/books?id=abc",
+      "detected": true,
+      "classifiedAs": "book",
+      "confidence": 0.92,
+      "title": "Pride and Prejudice",
+      "signalsFired": [
+        "domain_adapter",
+        "url_pattern",
+        "isbn",
+        "open_graph"
+      ],
+      "primarySignal": "domain_adapter",
+      "bookCandidateCount": 1,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "book-wikipedia-gatsby",
+      "expectedMedium": "book",
+      "mediumCorrect": true,
+      "url": "https://en.wikipedia.org/wiki/The_Great_Gatsby",
+      "detected": true,
+      "classifiedAs": "book",
+      "confidence": 0.86,
+      "title": "The Great Gatsby",
+      "signalsFired": [
+        "domain_adapter",
+        "url_pattern",
+        "heuristic"
+      ],
+      "primarySignal": "domain_adapter",
+      "bookCandidateCount": 2,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "book-barnes-circe",
+      "expectedMedium": "book",
+      "mediumCorrect": true,
+      "url": "https://www.barnesandnoble.com/w/circe-madeline-miller/112701234",
+      "detected": true,
+      "classifiedAs": "book",
+      "confidence": 0.95,
+      "title": "Circe",
+      "signalsFired": [
+        "json_ld",
+        "isbn"
+      ],
+      "primarySignal": "json_ld",
+      "bookCandidateCount": 1,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "movie-imdb-inception",
+      "expectedMedium": "movie",
+      "mediumCorrect": true,
+      "url": "https://www.imdb.com/title/tt1375666/",
+      "detected": true,
+      "classifiedAs": "movie",
+      "confidence": 0.9500000000000001,
+      "title": "Inception",
+      "signalsFired": [
+        "json_ld",
+        "domain_adapter",
+        "url_pattern"
+      ],
+      "primarySignal": "json_ld",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 1
+    },
+    {
+      "id": "movie-letterboxd-parasite",
+      "expectedMedium": "movie",
+      "mediumCorrect": true,
+      "url": "https://letterboxd.com/film/parasite-2019/",
+      "detected": true,
+      "classifiedAs": "movie",
+      "confidence": 0.92,
+      "title": "Parasite",
+      "signalsFired": [
+        "json_ld",
+        "domain_adapter",
+        "url_pattern"
+      ],
+      "primarySignal": "json_ld",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 1
+    },
+    {
+      "id": "movie-rt-dune",
+      "expectedMedium": "movie",
+      "mediumCorrect": true,
+      "url": "https://www.rottentomatoes.com/m/dune_2021",
+      "detected": true,
+      "classifiedAs": "movie",
+      "confidence": 0.92,
+      "title": "Dune",
+      "signalsFired": [
+        "json_ld",
+        "domain_adapter",
+        "url_pattern"
+      ],
+      "primarySignal": "json_ld",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 1
+    },
+    {
+      "id": "movie-netflix-title",
+      "expectedMedium": "movie",
+      "mediumCorrect": true,
+      "url": "https://www.netflix.com/title/81231974",
+      "detected": true,
+      "classifiedAs": "movie",
+      "confidence": 0.9,
+      "title": "The Power of the Dog",
+      "signalsFired": [
+        "domain_adapter",
+        "url_pattern",
+        "open_graph"
+      ],
+      "primarySignal": "domain_adapter",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 1
+    },
+    {
+      "id": "movie-wikipedia-blade-runner",
+      "expectedMedium": "movie",
+      "mediumCorrect": true,
+      "url": "https://en.wikipedia.org/wiki/Blade_Runner",
+      "detected": true,
+      "classifiedAs": "movie",
+      "confidence": 0.87,
+      "title": "Blade Runner",
+      "signalsFired": [
+        "domain_adapter",
+        "url_pattern",
+        "page_title"
+      ],
+      "primarySignal": "domain_adapter",
+      "bookCandidateCount": 1,
+      "screenCandidateCount": 1
+    },
+    {
+      "id": "movie-imdb-no-jsonld",
+      "expectedMedium": "movie",
+      "mediumCorrect": true,
+      "url": "https://www.imdb.com/title/tt13238346/",
+      "detected": true,
+      "classifiedAs": "movie",
+      "confidence": 0.9,
+      "title": "Past Lives",
+      "signalsFired": [
+        "domain_adapter",
+        "url_pattern",
+        "open_graph"
+      ],
+      "primarySignal": "domain_adapter",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 1
+    },
+    {
+      "id": "movie-blog-mention",
+      "expectedMedium": "movie",
+      "mediumCorrect": false,
+      "notes": "True negative for high-precision page detection",
+      "url": "https://blog.example.com/weekend",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "movie-streaming-prime",
+      "expectedMedium": "movie",
+      "mediumCorrect": true,
+      "url": "https://www.amazon.com/gp/video/detail/B098XYZ",
+      "detected": true,
+      "classifiedAs": "movie",
+      "confidence": 0.9,
+      "title": "The Green Knight",
+      "signalsFired": [
+        "domain_adapter",
+        "url_pattern",
+        "open_graph"
+      ],
+      "primarySignal": "domain_adapter",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 1
+    },
+    {
+      "id": "series-imdb-succession",
+      "expectedMedium": "tv",
+      "mediumCorrect": true,
+      "url": "https://www.imdb.com/title/tt7660850/",
+      "detected": true,
+      "classifiedAs": "tv",
+      "confidence": 0.92,
+      "title": "Succession",
+      "signalsFired": [
+        "json_ld",
+        "domain_adapter",
+        "url_pattern"
+      ],
+      "primarySignal": "json_ld",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 1
+    },
+    {
+      "id": "series-rt-bear",
+      "expectedMedium": "tv",
+      "mediumCorrect": true,
+      "url": "https://www.rottentomatoes.com/tv/the_bear",
+      "detected": true,
+      "classifiedAs": "tv",
+      "confidence": 0.92,
+      "title": "The Bear",
+      "signalsFired": [
+        "json_ld",
+        "domain_adapter",
+        "url_pattern"
+      ],
+      "primarySignal": "json_ld",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 1
+    },
+    {
+      "id": "series-wikipedia-leftovers",
+      "expectedMedium": "tv",
+      "mediumCorrect": true,
+      "url": "https://en.wikipedia.org/wiki/The_Leftovers_(TV_series)",
+      "detected": true,
+      "classifiedAs": "tv",
+      "confidence": 0.87,
+      "title": "The Leftovers",
+      "signalsFired": [
+        "domain_adapter",
+        "url_pattern",
+        "page_title"
+      ],
+      "primarySignal": "domain_adapter",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 1
+    },
+    {
+      "id": "series-imdb-mandalorian",
+      "expectedMedium": "tv",
+      "mediumCorrect": true,
+      "url": "https://www.imdb.com/title/tt8111088/",
+      "detected": true,
+      "classifiedAs": "tv",
+      "confidence": 0.92,
+      "title": "The Mandalorian",
+      "signalsFired": [
+        "json_ld",
+        "domain_adapter",
+        "url_pattern"
+      ],
+      "primarySignal": "json_ld",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 1
+    },
+    {
+      "id": "series-netflix",
+      "expectedMedium": "tv",
+      "mediumCorrect": true,
+      "url": "https://www.netflix.com/title/80057281",
+      "detected": true,
+      "classifiedAs": "tv",
+      "confidence": 0.9,
+      "title": "Stranger Things",
+      "signalsFired": [
+        "domain_adapter",
+        "url_pattern",
+        "open_graph"
+      ],
+      "primarySignal": "domain_adapter",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 1
+    },
+    {
+      "id": "series-letterboxd-list",
+      "expectedMedium": "tv",
+      "mediumCorrect": false,
+      "notes": "Non-title page — expect FN",
+      "url": "https://letterboxd.com/lists/",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "series-imdb-episode",
+      "expectedMedium": "tv",
+      "mediumCorrect": true,
+      "url": "https://www.imdb.com/title/tt0636289/",
+      "detected": true,
+      "classifiedAs": "tv",
+      "confidence": 0.92,
+      "title": "Pilot",
+      "signalsFired": [
+        "json_ld",
+        "domain_adapter",
+        "url_pattern"
+      ],
+      "primarySignal": "json_ld",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 1
+    },
+    {
+      "id": "series-tvmaze-style",
+      "expectedMedium": "tv",
+      "mediumCorrect": true,
+      "url": "https://www.tvmaze.com/shows/169/breaking-bad",
+      "detected": true,
+      "classifiedAs": "tv",
+      "confidence": 0.9,
+      "title": "Breaking Bad",
+      "signalsFired": [
+        "json_ld"
+      ],
+      "primarySignal": "json_ld",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 1
+    },
+    {
+      "id": "doc-imdb-free-solo",
+      "expectedMedium": "documentary",
+      "mediumCorrect": true,
+      "url": "https://www.imdb.com/title/tt7775622/",
+      "detected": true,
+      "classifiedAs": "documentary",
+      "confidence": 0.93,
+      "title": "Free Solo",
+      "signalsFired": [
+        "json_ld",
+        "domain_adapter",
+        "url_pattern"
+      ],
+      "primarySignal": "json_ld",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 1
+    },
+    {
+      "id": "doc-letterboxd-free-solo",
+      "expectedMedium": "documentary",
+      "mediumCorrect": true,
+      "url": "https://letterboxd.com/film/free-solo/",
+      "detected": true,
+      "classifiedAs": "documentary",
+      "confidence": 0.93,
+      "title": "Free Solo",
+      "signalsFired": [
+        "json_ld",
+        "domain_adapter",
+        "url_pattern"
+      ],
+      "primarySignal": "json_ld",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 1
+    },
+    {
+      "id": "doc-wikipedia-13th",
+      "expectedMedium": "documentary",
+      "mediumCorrect": true,
+      "url": "https://en.wikipedia.org/wiki/13th_(film)",
+      "detected": true,
+      "classifiedAs": "documentary",
+      "confidence": 0.87,
+      "title": "13th",
+      "signalsFired": [
+        "domain_adapter",
+        "url_pattern",
+        "page_title"
+      ],
+      "primarySignal": "domain_adapter",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 1
+    },
+    {
+      "id": "doc-imdb-neighbor",
+      "expectedMedium": "documentary",
+      "mediumCorrect": true,
+      "notes": "Documentary via subnav text; JSON-LD genres omit Documentary",
+      "url": "https://www.imdb.com/title/tt7681902/",
+      "detected": true,
+      "classifiedAs": "documentary",
+      "confidence": 0.9400000000000001,
+      "title": "Won't You Be My Neighbor?",
+      "signalsFired": [
+        "json_ld",
+        "domain_adapter",
+        "url_pattern"
+      ],
+      "primarySignal": "json_ld",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 1
+    },
+    {
+      "id": "doc-rt-octopus",
+      "expectedMedium": "documentary",
+      "mediumCorrect": true,
+      "url": "https://www.rottentomatoes.com/m/my_octopus_teacher",
+      "detected": true,
+      "classifiedAs": "documentary",
+      "confidence": 0.93,
+      "title": "My Octopus Teacher",
+      "signalsFired": [
+        "json_ld",
+        "domain_adapter",
+        "url_pattern"
+      ],
+      "primarySignal": "json_ld",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 1
+    },
+    {
+      "id": "doc-netflix",
+      "expectedMedium": "documentary",
+      "mediumCorrect": true,
+      "url": "https://www.netflix.com/title/81254224",
+      "detected": true,
+      "classifiedAs": "documentary",
+      "confidence": 0.9,
+      "title": "The Social Dilemma",
+      "signalsFired": [
+        "domain_adapter",
+        "url_pattern",
+        "open_graph"
+      ],
+      "primarySignal": "domain_adapter",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 1
+    }
+  ],
+  "resultsBaseline": [
+    {
+      "id": "book-amazon-gatsby",
+      "expectedMedium": "book",
+      "mediumCorrect": true,
+      "url": "https://www.amazon.com/dp/0743273567",
+      "detected": true,
+      "classifiedAs": "book",
+      "confidence": 0.98,
+      "title": "The Great Gatsby",
+      "signalsFired": [
+        "json_ld",
+        "isbn",
+        "domain_adapter",
+        "url_pattern"
+      ],
+      "primarySignal": "json_ld",
+      "bookCandidateCount": 1,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "book-goodreads-1984",
+      "expectedMedium": "book",
+      "mediumCorrect": true,
+      "url": "https://www.goodreads.com/book/show/5470.1984",
+      "detected": true,
+      "classifiedAs": "book",
+      "confidence": 0.92,
+      "title": "1984",
+      "signalsFired": [
+        "domain_adapter",
+        "url_pattern",
+        "isbn"
+      ],
+      "primarySignal": "domain_adapter",
+      "bookCandidateCount": 1,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "book-openlibrary-dune",
+      "expectedMedium": "book",
+      "mediumCorrect": true,
+      "url": "https://openlibrary.org/works/OL893415W",
+      "detected": true,
+      "classifiedAs": "book",
+      "confidence": 0.98,
+      "title": "Dune",
+      "signalsFired": [
+        "json_ld",
+        "isbn",
+        "domain_adapter",
+        "url_pattern"
+      ],
+      "primarySignal": "json_ld",
+      "bookCandidateCount": 1,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "book-publisher-knopf",
+      "expectedMedium": "book",
+      "mediumCorrect": true,
+      "url": "https://www.knopfdoubleday.com/book/123/the-overstory/",
+      "detected": true,
+      "classifiedAs": "book",
+      "confidence": 0.8500000000000001,
+      "title": "The Overstory",
+      "signalsFired": [
+        "isbn"
+      ],
+      "primarySignal": "isbn",
+      "bookCandidateCount": 1,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "book-blog-review",
+      "expectedMedium": "book",
+      "mediumCorrect": false,
+      "notes": "Weak blog mention — expect FN under precision gates",
+      "url": "https://blog.example.com/beloved-notes",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "book-google-pride",
+      "expectedMedium": "book",
+      "mediumCorrect": true,
+      "url": "https://books.google.com/books?id=abc",
+      "detected": true,
+      "classifiedAs": "book",
+      "confidence": 0.92,
+      "title": "Pride and Prejudice",
+      "signalsFired": [
+        "domain_adapter",
+        "url_pattern",
+        "isbn",
+        "open_graph"
+      ],
+      "primarySignal": "domain_adapter",
+      "bookCandidateCount": 1,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "book-wikipedia-gatsby",
+      "expectedMedium": "book",
+      "mediumCorrect": true,
+      "url": "https://en.wikipedia.org/wiki/The_Great_Gatsby",
+      "detected": true,
+      "classifiedAs": "book",
+      "confidence": 0.86,
+      "title": "The Great Gatsby",
+      "signalsFired": [
+        "domain_adapter",
+        "url_pattern",
+        "heuristic"
+      ],
+      "primarySignal": "domain_adapter",
+      "bookCandidateCount": 2,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "book-barnes-circe",
+      "expectedMedium": "book",
+      "mediumCorrect": true,
+      "url": "https://www.barnesandnoble.com/w/circe-madeline-miller/112701234",
+      "detected": true,
+      "classifiedAs": "book",
+      "confidence": 0.95,
+      "title": "Circe",
+      "signalsFired": [
+        "json_ld",
+        "isbn"
+      ],
+      "primarySignal": "json_ld",
+      "bookCandidateCount": 1,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "movie-imdb-inception",
+      "expectedMedium": "movie",
+      "mediumCorrect": false,
+      "url": "https://www.imdb.com/title/tt1375666/",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "movie-letterboxd-parasite",
+      "expectedMedium": "movie",
+      "mediumCorrect": false,
+      "url": "https://letterboxd.com/film/parasite-2019/",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "movie-rt-dune",
+      "expectedMedium": "movie",
+      "mediumCorrect": false,
+      "url": "https://www.rottentomatoes.com/m/dune_2021",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "movie-netflix-title",
+      "expectedMedium": "movie",
+      "mediumCorrect": false,
+      "url": "https://www.netflix.com/title/81231974",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "movie-wikipedia-blade-runner",
+      "expectedMedium": "movie",
+      "mediumCorrect": false,
+      "url": "https://en.wikipedia.org/wiki/Blade_Runner",
+      "detected": true,
+      "classifiedAs": "book",
+      "confidence": 0.7,
+      "title": "Blade Runner is a 1982 science fiction film directed",
+      "signalsFired": [
+        "heuristic"
+      ],
+      "primarySignal": "heuristic",
+      "bookCandidateCount": 1,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "movie-imdb-no-jsonld",
+      "expectedMedium": "movie",
+      "mediumCorrect": false,
+      "url": "https://www.imdb.com/title/tt13238346/",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "movie-blog-mention",
+      "expectedMedium": "movie",
+      "mediumCorrect": false,
+      "notes": "True negative for high-precision page detection",
+      "url": "https://blog.example.com/weekend",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "movie-streaming-prime",
+      "expectedMedium": "movie",
+      "mediumCorrect": false,
+      "url": "https://www.amazon.com/gp/video/detail/B098XYZ",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "series-imdb-succession",
+      "expectedMedium": "tv",
+      "mediumCorrect": false,
+      "url": "https://www.imdb.com/title/tt7660850/",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "series-rt-bear",
+      "expectedMedium": "tv",
+      "mediumCorrect": false,
+      "url": "https://www.rottentomatoes.com/tv/the_bear",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "series-wikipedia-leftovers",
+      "expectedMedium": "tv",
+      "mediumCorrect": false,
+      "url": "https://en.wikipedia.org/wiki/The_Leftovers_(TV_series)",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "series-imdb-mandalorian",
+      "expectedMedium": "tv",
+      "mediumCorrect": false,
+      "url": "https://www.imdb.com/title/tt8111088/",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "series-netflix",
+      "expectedMedium": "tv",
+      "mediumCorrect": false,
+      "url": "https://www.netflix.com/title/80057281",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "series-letterboxd-list",
+      "expectedMedium": "tv",
+      "mediumCorrect": false,
+      "notes": "Non-title page — expect FN",
+      "url": "https://letterboxd.com/lists/",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "series-imdb-episode",
+      "expectedMedium": "tv",
+      "mediumCorrect": false,
+      "url": "https://www.imdb.com/title/tt0636289/",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "series-tvmaze-style",
+      "expectedMedium": "tv",
+      "mediumCorrect": false,
+      "url": "https://www.tvmaze.com/shows/169/breaking-bad",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "doc-imdb-free-solo",
+      "expectedMedium": "documentary",
+      "mediumCorrect": false,
+      "url": "https://www.imdb.com/title/tt7775622/",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "doc-letterboxd-free-solo",
+      "expectedMedium": "documentary",
+      "mediumCorrect": false,
+      "url": "https://letterboxd.com/film/free-solo/",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "doc-wikipedia-13th",
+      "expectedMedium": "documentary",
+      "mediumCorrect": false,
+      "url": "https://en.wikipedia.org/wiki/13th_(film)",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "doc-imdb-neighbor",
+      "expectedMedium": "documentary",
+      "mediumCorrect": false,
+      "notes": "Documentary via subnav text; JSON-LD genres omit Documentary",
+      "url": "https://www.imdb.com/title/tt7681902/",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "doc-rt-octopus",
+      "expectedMedium": "documentary",
+      "mediumCorrect": false,
+      "url": "https://www.rottentomatoes.com/m/my_octopus_teacher",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    },
+    {
+      "id": "doc-netflix",
+      "expectedMedium": "documentary",
+      "mediumCorrect": false,
+      "url": "https://www.netflix.com/title/81254224",
+      "detected": false,
+      "classifiedAs": "none",
+      "confidence": 0,
+      "signalsFired": [],
+      "primarySignal": "unknown",
+      "bookCandidateCount": 0,
+      "screenCandidateCount": 0
+    }
+  ]
+}

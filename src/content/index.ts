@@ -8,6 +8,7 @@
 import { scanPage, startObserving, stopObserving, scanImages, setImageScanConfig, DetectedTitle } from './scanner';
 import { detectCatalogRegions } from './catalogDetector';
 import { detectBookCandidates, HIGH_CONFIDENCE } from './bookDetection';
+import { detectScreenPageCandidates } from './screenDetection';
 import { HoverCardManager } from './hoverCard';
 import { MuseumPlaqueManager as PosterBadgeManager } from './overlay';
 import { BookPlaqueManager, findBookPlaqueAnchor } from './bookOverlay';
@@ -115,13 +116,15 @@ async function init(): Promise<void> {
     return;
   }
 
+  const pageUrl = new URL(window.location.href);
+
   // Book detection on arbitrary pages (JSON-LD, ISBN, adapters, heuristics).
   // High confidence (≥0.85) only: resolve + plaque when cover overlays on.
   // Mid-band (0.65–0.84) is detected but not auto-plaqued (precision first).
   const detectBooksEnabled = prefs?.detectBooks !== false;
   if (detectBooksEnabled) {
     try {
-      const bookCandidates = detectBookCandidates(document, new URL(window.location.href));
+      const bookCandidates = detectBookCandidates(document, pageUrl);
       logger.log(`[Subsume] Book detection found ${bookCandidates.length} candidate(s).`);
       if (coverOverlaysEnabled) {
         bookPlaqueManagerRef = new BookPlaqueManager();
@@ -129,6 +132,24 @@ async function init(): Promise<void> {
       }
     } catch (err) {
       logger.error('[Subsume] Book detection failed:', err);
+    }
+  }
+
+  // Screen title-page detection (JSON-LD Movie/TVSeries + domain adapters).
+  // Used for diagnostics and future plaques; does not lower book confidence gates.
+  // Documentaries classify as screenKind=documentary (storage medium remains movie).
+  const detectScreenEnabled = prefs?.detectScreenWorks !== false;
+  if (detectScreenEnabled) {
+    try {
+      const screenCandidates = detectScreenPageCandidates(document, pageUrl);
+      if (screenCandidates.length > 0) {
+        const top = screenCandidates[0];
+        logger.log(
+          `[Subsume] Screen page detection: "${top.title}" (${top.screenKind}, conf=${top.confidence.toFixed(2)}, n=${screenCandidates.length})`
+        );
+      }
+    } catch (err) {
+      logger.error('[Subsume] Screen page detection failed:', err);
     }
   }
 

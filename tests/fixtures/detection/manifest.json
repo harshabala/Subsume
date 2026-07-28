@@ -1,0 +1,217 @@
+{
+  "version": 1,
+  "fixtures": [
+    {
+      "id": "book-amazon-gatsby",
+      "url": "https://www.amazon.com/dp/0743273567",
+      "expectedMedium": "book",
+      "expectedTitleIncludes": "Gatsby",
+      "htmlFile": "book-amazon-gatsby.html"
+    },
+    {
+      "id": "book-goodreads-1984",
+      "url": "https://www.goodreads.com/book/show/5470.1984",
+      "expectedMedium": "book",
+      "expectedTitleIncludes": "1984",
+      "htmlFile": "book-goodreads-1984.html"
+    },
+    {
+      "id": "book-openlibrary-dune",
+      "url": "https://openlibrary.org/works/OL893415W",
+      "expectedMedium": "book",
+      "expectedTitleIncludes": "Dune",
+      "htmlFile": "book-openlibrary-dune.html"
+    },
+    {
+      "id": "book-publisher-knopf",
+      "url": "https://www.knopfdoubleday.com/book/123/the-overstory/",
+      "expectedMedium": "book",
+      "expectedTitleIncludes": "Overstory",
+      "htmlFile": "book-publisher-knopf.html"
+    },
+    {
+      "id": "book-blog-review",
+      "url": "https://blog.example.com/beloved-notes",
+      "expectedMedium": "book",
+      "expectedTitleIncludes": "Beloved",
+      "htmlFile": "book-blog-review.html",
+      "notes": "Weak blog mention — expect FN under precision gates"
+    },
+    {
+      "id": "book-google-pride",
+      "url": "https://books.google.com/books?id=abc",
+      "expectedMedium": "book",
+      "expectedTitleIncludes": "Pride",
+      "htmlFile": "book-google-pride.html"
+    },
+    {
+      "id": "book-wikipedia-gatsby",
+      "url": "https://en.wikipedia.org/wiki/The_Great_Gatsby",
+      "expectedMedium": "book",
+      "expectedTitleIncludes": "Gatsby",
+      "htmlFile": "book-wikipedia-gatsby.html"
+    },
+    {
+      "id": "book-barnes-circe",
+      "url": "https://www.barnesandnoble.com/w/circe-madeline-miller/112701234",
+      "expectedMedium": "book",
+      "expectedTitleIncludes": "Circe",
+      "htmlFile": "book-barnes-circe.html"
+    },
+    {
+      "id": "movie-imdb-inception",
+      "url": "https://www.imdb.com/title/tt1375666/",
+      "expectedMedium": "movie",
+      "expectedTitleIncludes": "Inception",
+      "htmlFile": "movie-imdb-inception.html"
+    },
+    {
+      "id": "movie-letterboxd-parasite",
+      "url": "https://letterboxd.com/film/parasite-2019/",
+      "expectedMedium": "movie",
+      "expectedTitleIncludes": "Parasite",
+      "htmlFile": "movie-letterboxd-parasite.html"
+    },
+    {
+      "id": "movie-rt-dune",
+      "url": "https://www.rottentomatoes.com/m/dune_2021",
+      "expectedMedium": "movie",
+      "expectedTitleIncludes": "Dune",
+      "htmlFile": "movie-rt-dune.html"
+    },
+    {
+      "id": "movie-netflix-title",
+      "url": "https://www.netflix.com/title/81231974",
+      "expectedMedium": "movie",
+      "expectedTitleIncludes": "Power of the Dog",
+      "htmlFile": "movie-netflix-title.html"
+    },
+    {
+      "id": "movie-wikipedia-blade-runner",
+      "url": "https://en.wikipedia.org/wiki/Blade_Runner",
+      "expectedMedium": "movie",
+      "expectedTitleIncludes": "Blade Runner",
+      "htmlFile": "movie-wikipedia-blade-runner.html"
+    },
+    {
+      "id": "movie-imdb-no-jsonld",
+      "url": "https://www.imdb.com/title/tt13238346/",
+      "expectedMedium": "movie",
+      "expectedTitleIncludes": "Past Lives",
+      "htmlFile": "movie-imdb-no-jsonld.html"
+    },
+    {
+      "id": "movie-blog-mention",
+      "url": "https://blog.example.com/weekend",
+      "expectedMedium": "movie",
+      "htmlFile": "movie-blog-mention.html",
+      "notes": "True negative for high-precision page detection"
+    },
+    {
+      "id": "movie-streaming-prime",
+      "url": "https://www.amazon.com/gp/video/detail/B098XYZ",
+      "expectedMedium": "movie",
+      "expectedTitleIncludes": "Green Knight",
+      "htmlFile": "movie-streaming-prime.html"
+    },
+    {
+      "id": "series-imdb-succession",
+      "url": "https://www.imdb.com/title/tt7660850/",
+      "expectedMedium": "tv",
+      "expectedTitleIncludes": "Succession",
+      "htmlFile": "series-imdb-succession.html"
+    },
+    {
+      "id": "series-rt-bear",
+      "url": "https://www.rottentomatoes.com/tv/the_bear",
+      "expectedMedium": "tv",
+      "expectedTitleIncludes": "Bear",
+      "htmlFile": "series-rt-bear.html"
+    },
+    {
+      "id": "series-wikipedia-leftovers",
+      "url": "https://en.wikipedia.org/wiki/The_Leftovers_(TV_series)",
+      "expectedMedium": "tv",
+      "expectedTitleIncludes": "Leftovers",
+      "htmlFile": "series-wikipedia-leftovers.html"
+    },
+    {
+      "id": "series-imdb-mandalorian",
+      "url": "https://www.imdb.com/title/tt8111088/",
+      "expectedMedium": "tv",
+      "expectedTitleIncludes": "Mandalorian",
+      "htmlFile": "series-imdb-mandalorian.html"
+    },
+    {
+      "id": "series-netflix",
+      "url": "https://www.netflix.com/title/80057281",
+      "expectedMedium": "tv",
+      "expectedTitleIncludes": "Stranger Things",
+      "htmlFile": "series-netflix.html"
+    },
+    {
+      "id": "series-letterboxd-list",
+      "url": "https://letterboxd.com/lists/",
+      "expectedMedium": "tv",
+      "htmlFile": "series-letterboxd-not-film.html",
+      "notes": "Non-title page — expect FN"
+    },
+    {
+      "id": "series-imdb-episode",
+      "url": "https://www.imdb.com/title/tt0636289/",
+      "expectedMedium": "tv",
+      "expectedTitleIncludes": "Pilot",
+      "htmlFile": "series-imdb-episode.html"
+    },
+    {
+      "id": "series-tvmaze-style",
+      "url": "https://www.tvmaze.com/shows/169/breaking-bad",
+      "expectedMedium": "tv",
+      "expectedTitleIncludes": "Breaking Bad",
+      "htmlFile": "series-tvmaze-style.html"
+    },
+    {
+      "id": "doc-imdb-free-solo",
+      "url": "https://www.imdb.com/title/tt7775622/",
+      "expectedMedium": "documentary",
+      "expectedTitleIncludes": "Free Solo",
+      "htmlFile": "doc-imdb-free-solo.html"
+    },
+    {
+      "id": "doc-letterboxd-free-solo",
+      "url": "https://letterboxd.com/film/free-solo/",
+      "expectedMedium": "documentary",
+      "expectedTitleIncludes": "Free Solo",
+      "htmlFile": "doc-letterboxd-free-solo.html"
+    },
+    {
+      "id": "doc-wikipedia-13th",
+      "url": "https://en.wikipedia.org/wiki/13th_(film)",
+      "expectedMedium": "documentary",
+      "expectedTitleIncludes": "13th",
+      "htmlFile": "doc-wikipedia-13th.html"
+    },
+    {
+      "id": "doc-imdb-neighbor",
+      "url": "https://www.imdb.com/title/tt7681902/",
+      "expectedMedium": "documentary",
+      "expectedTitleIncludes": "Neighbor",
+      "htmlFile": "doc-imdb-no-genre-field.html",
+      "notes": "Documentary via subnav text; JSON-LD genres omit Documentary"
+    },
+    {
+      "id": "doc-rt-octopus",
+      "url": "https://www.rottentomatoes.com/m/my_octopus_teacher",
+      "expectedMedium": "documentary",
+      "expectedTitleIncludes": "Octopus",
+      "htmlFile": "doc-rt-my-octopus.html"
+    },
+    {
+      "id": "doc-netflix",
+      "url": "https://www.netflix.com/title/81254224",
+      "expectedMedium": "documentary",
+      "expectedTitleIncludes": "Social Dilemma",
+      "htmlFile": "doc-netflix.html"
+    }
+  ]
+}
