@@ -42,11 +42,41 @@ export type CrossMediumRecommendation = {
 
 export type GenerateCrossMediumOptions = {
   limit?: number;
-  /** When false, always return []. Caller should pass prefs.crossMediumRecommendationsEnabled. */
+  /**
+   * Pref gate. Fail closed: defaults to false so callers must opt in explicitly
+   * (handler passes prefs.crossMediumRecommendationsEnabled === true).
+   */
   enabled?: boolean;
   /** Attempt catalog search for adaptations when no stored relation exists (default true). */
   allowCandidateSearch?: boolean;
 };
+
+/** Minimum title similarity for Pass 2 catalog candidates (aligned with OL matchScore ≥ 0.5). */
+const MIN_CANDIDATE_TITLE_SCORE = 0.5;
+
+/**
+ * Simple title closeness score in [0, 1] for gating discovery/OL candidates.
+ * Exact match → 1; word-boundary / multi-word containment → 0.7; otherwise 0.
+ * Uses word boundaries so short titles like "It" do not match inside "different".
+ */
+export function titleMatchScore(a: string, b: string): number {
+  const na = a.toLowerCase().trim();
+  const nb = b.toLowerCase().trim();
+  if (!na || !nb) return 0;
+  if (na === nb) return 1;
+
+  const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Allow punctuation (colon, dash) as soft boundaries after the phrase
+  const asPhrase = (s: string) =>
+    new RegExp(`(?:^|[\\s"'])${escape(s)}(?:$|[\\s:–—\\-'"!,.?])`, 'i');
+  if (asPhrase(na).test(nb) || asPhrase(nb).test(na)) return 0.7;
+
+  // Longer multi-word containment (e.g. "The Great Gatsby" vs "Great Gatsby")
+  if (na.length >= 6 && nb.length >= 6 && (na.includes(nb) || nb.includes(na))) {
+    return 0.7;
+  }
+  return 0;
+}
 
 function isScreen(type: MediaItem['type']): boolean {
   return type === 'movie' || type === 'tv';
@@ -142,7 +172,7 @@ export async function generateCrossMediumRecommendations(
 ): Promise<CrossMediumRecommendation[]> {
   const {
     limit = DEFAULT_LIMIT,
-    enabled = true,
+    enabled = false,
     allowCandidateSearch = true,
   } = options;
 
@@ -226,6 +256,10 @@ export async function generateCrossMediumRecommendations(
             if (!isScreen(hit.type)) continue;
             if (libraryIds.has(hit.id) || seenIds.has(hit.id)) continue;
             if (hit.id === seed.id) continue;
+            // Match quality gate (same bar as OL path ≥ 0.5)
+            if (titleMatchScore(title, hit.canonicalTitle) < MIN_CANDIDATE_TITLE_SCORE) {
+              continue;
+            }
 
             await putMediaItem(hit);
             seenIds.add(hit.id);
@@ -244,7 +278,7 @@ export async function generateCrossMediumRecommendations(
           const hits = await searchOpenLibrary({ query: title, limit: 5 });
           for (const hit of hits) {
             if (results.length >= cap) break;
-            if (hit.matchScore < 0.5) continue;
+            if (hit.matchScore < MIN_CANDIDATE_TITLE_SCORE) continue;
 
             const item = catalogWorkToMediaItem(hit.work);
             item.type = 'book';

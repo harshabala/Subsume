@@ -11,6 +11,7 @@ import {
   WeeklyDigestItem,
   DiscoveryFeed,
   DiscoveryFeedItem,
+  isGroupedRecommendationList,
 } from '@/shared/types';
 import { DetailModal } from '../components/DetailModal';
 import { SanctuaryMediaCard } from '../components/SanctuaryMediaCard';
@@ -218,8 +219,12 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
         }
 
         const recData = recsRes?.data || [];
-        if (recData.length > 0 && !('seedTitle' in recData[0])) {
-          const mediaIds = (recData as Recommendation[]).map((r) => r.mediaId).slice(0, 6);
+        // Skip GroupedRecommendation[] only (nested recommendations[]); flat items may have seedTitle
+        if (recData.length > 0 && !isGroupedRecommendationList(recData)) {
+          const mediaIds = (recData as Recommendation[])
+            .filter((r) => r && typeof r === 'object' && 'mediaId' in r)
+            .map((r) => r.mediaId)
+            .slice(0, 6);
           const mediaRes = await sendMessage<any, MediaItem[]>(MessageType.GET_MEDIA_ITEMS, { mediaIds });
           if (mediaRes.data) {
             const mediaMap = new Map(mediaRes.data.map((m) => [m.id, m]));

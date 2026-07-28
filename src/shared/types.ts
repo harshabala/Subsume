@@ -451,6 +451,23 @@ export interface GroupedRecommendation {
   recommendations: Recommendation[];
 }
 
+/**
+ * True when the payload is GroupedRecommendation[] (has nested recommendations[]).
+ * Do not use `'seedTitle' in item` — flat Recommendation items may also carry seedTitle
+ * (e.g. cross-medium bridges).
+ */
+export function isGroupedRecommendationList(
+  data: unknown,
+): data is GroupedRecommendation[] {
+  if (!Array.isArray(data) || data.length === 0) return false;
+  const first = data[0];
+  if (typeof first !== 'object' || first === null) return false;
+  return (
+    'recommendations' in first &&
+    Array.isArray((first as GroupedRecommendation).recommendations)
+  );
+}
+
 export interface CreateWatchAlertRequest {
   name: string;
   type?: 'movie' | 'tv' | 'both' | 'book';

@@ -23,6 +23,7 @@ import {
   generateCrossMediumRecommendations,
   buildRelationBridgeExplanation,
   buildCandidateBridgeExplanation,
+  titleMatchScore,
 } from '@/background/crossMediumRecommendations';
 import {
   getAllLibraryItems,
@@ -91,6 +92,18 @@ describe('generateCrossMediumRecommendations', () => {
     expect(recs).toEqual([]);
     expect(getAllLibraryItems).not.toHaveBeenCalled();
     expect(getWorkRelationsForWork).not.toHaveBeenCalled();
+    expect(discoverySearch).not.toHaveBeenCalled();
+    expect(searchOpenLibrary).not.toHaveBeenCalled();
+  });
+
+  it('defaults enabled to false (fail closed — no I/O without explicit opt-in)', async () => {
+    const seed = bookMedia('openlibrary_work_gatsby', 'The Great Gatsby');
+    vi.mocked(getAllLibraryItems).mockResolvedValue([libItem(seed.id, 10)]);
+    vi.mocked(getAllMediaMap).mockResolvedValue({ [seed.id]: seed });
+
+    const recs = await generateCrossMediumRecommendations();
+    expect(recs).toEqual([]);
+    expect(getAllLibraryItems).not.toHaveBeenCalled();
     expect(discoverySearch).not.toHaveBeenCalled();
     expect(searchOpenLibrary).not.toHaveBeenCalled();
   });
@@ -270,6 +283,44 @@ describe('generateCrossMediumRecommendations', () => {
     expect(searchOpenLibrary).toHaveBeenCalled();
   });
 
+  it('book→screen candidate search requires title match ≥ 0.5', async () => {
+    const book = bookMedia('openlibrary_work_it', 'It');
+    const unrelated = movieMedia('tmdb_movie_other', 'Completely Different Film');
+    const matching = movieMedia('tmdb_movie_it', 'It');
+
+    vi.mocked(getAllLibraryItems).mockResolvedValue([libItem(book.id, 10)]);
+    vi.mocked(getAllMediaMap).mockResolvedValue({ [book.id]: book });
+    vi.mocked(getWorkRelationsForWork).mockResolvedValue([]);
+    vi.mocked(discoverySearch).mockResolvedValue([unrelated, matching]);
+
+    const recs = await generateCrossMediumRecommendations({
+      enabled: true,
+      allowCandidateSearch: true,
+    });
+
+    expect(recs).toHaveLength(1);
+    expect(recs[0].mediaId).toBe(matching.id);
+    expect(recs[0].media.canonicalTitle).toBe('It');
+    expect(discoverySearch).toHaveBeenCalled();
+  });
+
+  it('book→screen skips discovery hits with low title similarity', async () => {
+    const book = bookMedia('openlibrary_work_dune', 'Dune');
+    const unrelated = movieMedia('tmdb_movie_other', 'Spice World');
+
+    vi.mocked(getAllLibraryItems).mockResolvedValue([libItem(book.id, 10)]);
+    vi.mocked(getAllMediaMap).mockResolvedValue({ [book.id]: book });
+    vi.mocked(getWorkRelationsForWork).mockResolvedValue([]);
+    vi.mocked(discoverySearch).mockResolvedValue([unrelated]);
+
+    const recs = await generateCrossMediumRecommendations({
+      enabled: true,
+      allowCandidateSearch: true,
+    });
+
+    expect(recs).toEqual([]);
+  });
+
   it('returns empty when library has no highly rated seeds', async () => {
     const film = movieMedia('tmdb_1', 'Meh Film');
     vi.mocked(getAllLibraryItems).mockResolvedValue([
@@ -312,5 +363,42 @@ describe('bridge explanation helpers', () => {
     const text = buildCandidateBridgeExplanation(film, book);
     expect(text.toLowerCase()).toMatch(/candidate|catalog/);
     expect(text).toContain('Arrival');
+  });
+});
+
+describe('titleMatchScore', () => {
+  it('scores exact and containment matches above the 0.5 gate', () => {
+    expect(titleMatchScore('The Great Gatsby', 'The Great Gatsby')).toBe(1);
+    expect(titleMatchScore('Dune', 'Dune: Part One')).toBe(0.7);
+    expect(titleMatchScore('It', 'It Chapter Two')).toBe(0.7);
+    expect(titleMatchScore('Dune', 'Spice World')).toBe(0);
+    expect(titleMatchScore('It', 'Completely Different Film')).toBe(0);
+    expect(titleMatchScore('', 'Anything')).toBe(0);
+  });
+});
+
+describe('isGroupedRecommendationList type guard', () => {
+  it('distinguishes GroupedRecommendation[] from flat recs with seedTitle', async () => {
+    const { isGroupedRecommendationList } = await import('@/shared/types');
+
+    expect(
+      isGroupedRecommendationList([
+        { seedTitle: 'Dune', recommendations: [{ mediaId: 'm1', explanation: 'x' }] },
+      ]),
+    ).toBe(true);
+
+    expect(
+      isGroupedRecommendationList([
+        {
+          mediaId: 'm1',
+          explanation: 'Catalog adaptation candidate',
+          discoveryMode: 'cross_medium',
+          seedTitle: 'Dune',
+        },
+      ]),
+    ).toBe(false);
+
+    expect(isGroupedRecommendationList([])).toBe(false);
+    expect(isGroupedRecommendationList(null)).toBe(false);
   });
 });

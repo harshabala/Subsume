@@ -5,10 +5,12 @@ import {
   GetRecommendationsRequest,
   MediaItem,
   Recommendation,
+  GroupedRecommendation,
   PersonalizedRecommendation,
   RecommendationGroup,
   SubmitRecommendationFeedbackRequest,
   RecommendationFeedbackEntry,
+  isGroupedRecommendationList,
 } from '@/shared/types';
 import {
   getPreferences,
@@ -145,24 +147,38 @@ export const recommendationHandlers: MessageHandlerMap = {
     const dismissed = await getDismissedRecWorkIds();
 
     let primary: Array<Recommendation | MediaItem> = [];
+    /** When LLM returns seed-grouped shape, keep groups and still append catalog/cross. */
+    let llmGroups: GroupedRecommendation[] | null = null;
 
     if (prefs.llmEnabled && prefs.llmApiKey) {
       try {
         logger.log('[Subsume] Using LLM for recommendations...');
         const llmRecs = await generateLLMRecommendations();
         if (Array.isArray(llmRecs) && llmRecs.length > 0) {
-          // Grouped shape: leave as-is (handler historically returned groups)
-          if ('seedTitle' in (llmRecs[0] as object)) {
-            return llmRecs;
+          // Robust group detection (not seedTitle — flat recs may carry seedTitle)
+          if (isGroupedRecommendationList(llmRecs)) {
+            const filtered = llmRecs
+              .map((g) => ({
+                seedTitle: g.seedTitle,
+                recommendations: filterDismissedRecs(g.recommendations, dismissed),
+              }))
+              .filter((g) => g.recommendations.length > 0);
+            // Empty after dismiss → fall through to rule-based / catalog paths
+            if (filtered.length > 0) {
+              llmGroups = filtered;
+              // Flatten for dedupe against book/cross appends
+              primary = llmGroups.flatMap((g) => g.recommendations);
+            }
+          } else {
+            primary = filterDismissedRecs(llmRecs as Recommendation[], dismissed);
           }
-          primary = filterDismissedRecs(llmRecs as Recommendation[], dismissed);
         }
       } catch (err) {
         logger.error('[Subsume] LLM recommendations failed, falling back to rule-based', err);
       }
     }
 
-    if (primary.length === 0) {
+    if (primary.length === 0 && !llmGroups) {
       logger.log('[Subsume] Using rule-based recommendations fallback');
       const ruleRecs: Recommendation[] = await generateRuleBasedRecommendations(
         req?.basedOnMediaId
@@ -171,23 +187,27 @@ export const recommendationHandlers: MessageHandlerMap = {
     }
 
     // Catalog book recommendations (never LLM-invented titles)
+    let bookAsRecs: Recommendation[] = [];
     const booksEnabled = prefs.enabledMedia?.book !== false;
     if (booksEnabled && (await libraryHasBooks())) {
       try {
         const bookRecs = await generateCatalogBookRecommendations(8);
         const filteredBooks = filterDismissedMedia(bookRecs, dismissed);
-        const bookAsRecs: Recommendation[] = filteredBooks.map((m) => ({
+        bookAsRecs = filteredBooks.map((m) => ({
           mediaId: m.id,
           explanation: 'Related to books in your archive',
           discoveryMode: 'catalog' as const,
         }));
-        primary = [...primary, ...bookAsRecs].slice(0, 20);
+        if (!llmGroups) {
+          primary = [...primary, ...bookAsRecs].slice(0, 20);
+        }
       } catch (err) {
         logger.warn('[Subsume] Catalog book recommendations failed:', err);
       }
     }
 
     // Cross-medium bridges (film/TV ↔ book) — gated on pref, catalog-only
+    let novelCross: Recommendation[] = [];
     if (prefs.crossMediumRecommendationsEnabled === true) {
       try {
         const cross = await generateCrossMediumRecommendations({
@@ -207,17 +227,59 @@ export const recommendationHandlers: MessageHandlerMap = {
             discoveryMode: 'cross_medium' as const,
             seedTitle: c.seedTitle,
           }));
-        // Prefer not duplicating mediaIds already in primary
+        // Prefer not duplicating mediaIds already in primary / groups
         const existingIds = new Set(
           primary.map((p) =>
             'mediaId' in p ? (p as Recommendation).mediaId : (p as MediaItem).id,
           ),
         );
-        const novelCross = crossAsRecs.filter((r) => !existingIds.has(r.mediaId));
-        primary = [...primary, ...novelCross].slice(0, 24);
+        novelCross = crossAsRecs.filter((r) => !existingIds.has(r.mediaId));
+        if (!llmGroups) {
+          primary = [...primary, ...novelCross].slice(0, 24);
+        }
       } catch (err) {
         logger.warn('[Subsume] Cross-medium recommendations failed:', err);
       }
+    }
+
+    // LLM grouped mode: return groups + catalog/cross as additional groups (never drop them)
+    if (llmGroups) {
+      const groups: GroupedRecommendation[] = [...llmGroups];
+      if (bookAsRecs.length > 0) {
+        const existingIds = new Set(
+          groups.flatMap((g) => g.recommendations.map((r) => r.mediaId)),
+        );
+        const novelBooks = bookAsRecs.filter((r) => !existingIds.has(r.mediaId));
+        if (novelBooks.length > 0) {
+          groups.push({
+            seedTitle: 'Related books',
+            recommendations: novelBooks,
+          });
+        }
+      }
+      if (novelCross.length > 0) {
+        // Group cross-medium by seed title so chip filter + bridge copy stay intact
+        const bySeed = new Map<string, Recommendation[]>();
+        for (const r of novelCross) {
+          const key = r.seedTitle?.trim() || 'Cross-medium bridges';
+          const list = bySeed.get(key) ?? [];
+          list.push(r);
+          bySeed.set(key, list);
+        }
+        for (const [seedTitle, recommendations] of bySeed) {
+          // Prefer merging into an existing LLM group with the same seed
+          const existing = groups.find((g) => g.seedTitle === seedTitle);
+          if (existing) {
+            const existingIds = new Set(existing.recommendations.map((r) => r.mediaId));
+            for (const r of recommendations) {
+              if (!existingIds.has(r.mediaId)) existing.recommendations.push(r);
+            }
+          } else {
+            groups.push({ seedTitle, recommendations });
+          }
+        }
+      }
+      return groups;
     }
 
     // If we have fewer than 5 recommendations, supplement with Trakt trending

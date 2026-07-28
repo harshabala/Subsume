@@ -10,6 +10,7 @@ import {
   RecommendationGroup,
   WatchProfile,
   UserPreferences,
+  isGroupedRecommendationList,
 } from '@/shared/types';
 import { DetailModal } from '../components/DetailModal';
 import { RecommendationMediaCard } from '../components/RecommendationMediaCard';
@@ -80,7 +81,8 @@ export function Recommendations({ onOpenCuratorSettings, onNavigate }: Recommend
       }
 
       const groupedData = recResponse.data;
-      const hasGroups = Array.isArray(groupedData) && groupedData.length > 0 && 'seedTitle' in groupedData[0];
+      // Use nested recommendations[], not seedTitle — flat cross-medium recs also set seedTitle
+      const hasGroups = isGroupedRecommendationList(groupedData);
 
       if (hasGroups) {
         // Grouped path: unchanged, only Recommendation objects here
