@@ -1,11 +1,21 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import {
   getLlmProviderCapabilities,
   canClaimWebResearch,
+  isWebGroundedDispatchOptIn,
 } from '@/shared/llmCapabilities';
+import {
+  resetActiveWebSearchAdapter,
+  setActiveWebSearchAdapter,
+  type WebSearchAdapter,
+} from '@/shared/webSearchAdapter';
+
+afterEach(() => {
+  resetActiveWebSearchAdapter();
+});
 
 describe('getLlmProviderCapabilities', () => {
-  it('returns chat-only for openai with web search disabled', () => {
+  it('returns chat-only for openai with web search disabled (default Noop adapter)', () => {
     const caps = getLlmProviderCapabilities('openai');
     expect(caps.provider).toBe('openai');
     expect(caps.capabilities).toEqual(['chat']);
@@ -31,6 +41,18 @@ describe('getLlmProviderCapabilities', () => {
     expect(getLlmProviderCapabilities('OpenAI').provider).toBe('openai');
     expect(getLlmProviderCapabilities('ANTHROPIC').provider).toBe('anthropic');
   });
+
+  it('reports supportsWebSearch when a capable adapter is registered', () => {
+    const mock: WebSearchAdapter = {
+      id: 'mock',
+      supportsWebSearch: true,
+      search: async () => [],
+    };
+    setActiveWebSearchAdapter(mock);
+    const caps = getLlmProviderCapabilities('openai');
+    expect(caps.supportsWebSearch).toBe(true);
+    expect(caps.capabilities).toEqual(['chat', 'web_search']);
+  });
 });
 
 describe('canClaimWebResearch', () => {
@@ -38,9 +60,34 @@ describe('canClaimWebResearch', () => {
     expect(canClaimWebResearch('openai', false)).toBe(false);
   });
 
-  it('is false when provider lacks web search even if user opts in', () => {
+  it('is false when adapter lacks web search even if user opts in', () => {
     expect(canClaimWebResearch('openai', true)).toBe(false);
     expect(canClaimWebResearch('gemini', true)).toBe(false);
     expect(canClaimWebResearch('local', true)).toBe(false);
+  });
+
+  it('is true only when adapter supports web search and user opts in', () => {
+    setActiveWebSearchAdapter({
+      id: 'mock',
+      supportsWebSearch: true,
+      search: async () => [],
+    });
+    expect(canClaimWebResearch('openai', true)).toBe(true);
+    expect(canClaimWebResearch('openai', false)).toBe(false);
+  });
+});
+
+describe('isWebGroundedDispatchOptIn', () => {
+  it('reads webGroundedDispatchEnabled primary flag', () => {
+    expect(isWebGroundedDispatchOptIn({ webGroundedDispatchEnabled: true })).toBe(true);
+    expect(isWebGroundedDispatchOptIn({ webGroundedDispatchEnabled: false })).toBe(false);
+  });
+
+  it('accepts legacy dispatchWebSearchEnabled alias', () => {
+    expect(isWebGroundedDispatchOptIn({ dispatchWebSearchEnabled: true })).toBe(true);
+  });
+
+  it('is false when neither flag is set', () => {
+    expect(isWebGroundedDispatchOptIn({})).toBe(false);
   });
 });

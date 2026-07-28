@@ -179,6 +179,12 @@ export interface UserPreferences {
   dispatchWeekday?: number;
   dispatchLocalTime?: string;
   dispatchTimezone?: string;
+  /**
+   * Opt-in to web-grounded Subsume Dispatch when the active provider/adapter
+   * supports web search. Default false. Cost and privacy implications — see Settings.
+   */
+  webGroundedDispatchEnabled?: boolean;
+  /** @deprecated Prefer webGroundedDispatchEnabled; still read as opt-in alias. */
   dispatchWebSearchEnabled?: boolean;
   dispatchMaxSearches?: number;
 }
@@ -544,6 +550,12 @@ export interface RecommendationGroup {
 
 // ─── Weekly Digest Types ─────────────────────────────────────────────
 
+/** Citation attached when a dispatch item used web search. */
+export interface DigestCitation {
+  url: string;
+  title?: string;
+}
+
 export interface WeeklyDigestItem {
   mediaId: string;
   title: string;
@@ -551,6 +563,10 @@ export interface WeeklyDigestItem {
   type: MediaType;
   reason: string;
   platforms: string[];
+  /** How this pick was discovered. Catalog-only unless web path ran with capability. */
+  discoveryMode?: 'catalog' | 'web_grounded';
+  /** Present only when discoveryMode is web_grounded and search returned sources. */
+  citations?: DigestCitation[];
 }
 
 export interface WeeklyDigest {

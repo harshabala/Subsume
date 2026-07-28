@@ -1,6 +1,10 @@
 /**
  * Phase 2 weekly Subsume Dispatch — multi-medium catalog-based selection.
  * Spec: docs/SUBSUME_BOOKS_EXPANSION_INSTRUCTIONS.md §10
+ *
+ * Catalog-only by default. Web-grounded path runs only when
+ * canClaimWebResearch(provider, webGroundedDispatchEnabled) is true
+ * (active WebSearchAdapter.supportsWebSearch + user opt-in).
  */
 
 import type {
@@ -10,6 +14,11 @@ import type {
   WeeklyDigestItem,
 } from '@/shared/types';
 import { catalogWorkToMediaItem } from '@/shared/compatibility';
+import {
+  canClaimWebResearch,
+  isWebGroundedDispatchOptIn,
+} from '@/shared/llmCapabilities';
+import { getActiveWebSearchAdapter } from '@/shared/webSearchAdapter';
 import { logger } from '@/shared/logger';
 import {
   getAllLibraryItems,
@@ -71,7 +80,7 @@ export function shouldRunDispatch(
 
 /**
  * Build multi-medium weekly digest (screen + books).
- * Catalog-only unless a future web-search path is enabled with provider capability.
+ * Catalog-only unless canClaimWebResearch is true (adapter + opt-in).
  * Idempotent: one digest per weekly period unless `force`.
  */
 export async function generateSubsumeDispatch(
@@ -100,11 +109,37 @@ export async function generateSubsumeDispatch(
   for (const item of [...screen.items, ...books]) {
     if (seen.has(item.mediaId)) continue;
     seen.add(item.mediaId);
-    items.push(item);
+    // Catalog path: never claim web research
+    items.push({
+      ...item,
+      discoveryMode: item.discoveryMode ?? 'catalog',
+    });
   }
 
-  // Catalog-based: llmGenerated true only when the screen path used LLM curation.
-  // Never claims web research (web-grounded dispatch is not implemented in this path).
+  const provider = prefs.llmProvider || 'openai';
+  const webOptIn = isWebGroundedDispatchOptIn(prefs);
+  const useWebGrounded = canClaimWebResearch(provider, webOptIn);
+
+  if (useWebGrounded) {
+    try {
+      const webItems = await buildWebGroundedCandidates(prefs, seen);
+      for (const item of webItems) {
+        if (seen.has(item.mediaId)) continue;
+        seen.add(item.mediaId);
+        items.push(item);
+      }
+    } catch (err) {
+      logger.warn('[Subsume] Web-grounded dispatch path failed; catalog items kept:', err);
+    }
+  } else if (webOptIn) {
+    // User opted in but adapter/provider cannot claim web research — stay catalog-only.
+    logger.info(
+      '[Subsume] Web-grounded dispatch opted in but canClaimWebResearch is false — catalog-only'
+    );
+  }
+
+  // llmGenerated true only when the screen path used LLM curation.
+  // Never set flags or copy that imply web research without useWebGrounded.
   const digest: WeeklyDigest = {
     generatedAt: Date.now(),
     items,
@@ -116,7 +151,7 @@ export async function generateSubsumeDispatch(
   logger.info(
     '[Subsume] Subsume Dispatch saved for',
     periodKey,
-    `(${digest.items.length} items, llm=${digest.llmGenerated})`
+    `(${digest.items.length} items, llm=${digest.llmGenerated}, web=${useWebGrounded})`
   );
   return digest;
 }
@@ -334,6 +369,7 @@ async function buildBookCandidates(prefs: UserPreferences): Promise<WeeklyDigest
           type: 'book',
           reason: q.reason,
           platforms: [],
+          discoveryMode: 'catalog',
         });
       }
     } catch (err) {
@@ -342,6 +378,165 @@ async function buildBookCandidates(prefs: UserPreferences): Promise<WeeklyDigest
   }
 
   return items;
+}
+
+// ─── Web-grounded candidates (capability-gated) ─────────────────────────────
+
+/**
+ * Bounded web-search path: search → resolve every hit into the catalog → store citations.
+ * Never invents works: OL (or fail) only. Caller must already gate with canClaimWebResearch.
+ */
+export async function buildWebGroundedCandidates(
+  prefs: UserPreferences,
+  alreadySeen: Set<string> = new Set()
+): Promise<WeeklyDigestItem[]> {
+  const adapter = getActiveWebSearchAdapter();
+  if (!adapter.supportsWebSearch) return [];
+
+  const library = await getAllLibraryItems();
+  if (library.length === 0) return [];
+
+  const mediaMap = await getAllMediaMap(library.map((l) => l.mediaId));
+  const libraryIds = new Set(library.map((l) => l.mediaId));
+  const completedIds = new Set(
+    library.filter((l) => l.status === 'watched').map((l) => l.mediaId)
+  );
+
+  const maxSearches = Math.min(
+    prefs.dispatchMaxSearches ?? MAX_BOOK_SEARCHES,
+    MAX_BOOK_SEARCHES
+  );
+
+  const intents = buildWebSearchIntents(library, mediaMap, maxSearches);
+  if (intents.length === 0) return [];
+
+  const items: WeeklyDigestItem[] = [];
+  const seen = new Set(alreadySeen);
+
+  for (const intent of intents) {
+    if (items.length >= BOOK_ITEM_CAP) break;
+
+    let hits;
+    try {
+      hits = await adapter.search(intent.query, { maxResults: MAX_RESULTS_PER_SEARCH });
+    } catch (err) {
+      logger.warn('[Subsume] Web search adapter failed for', intent.query, err);
+      continue;
+    }
+
+    for (const hit of hits) {
+      if (items.length >= BOOK_ITEM_CAP) break;
+      const resolveTitle = (hit.title ?? '').trim();
+      if (!resolveTitle) continue;
+      if (!hit.url || typeof hit.url !== 'string') continue;
+
+      try {
+        const olHits = await searchOpenLibrary({
+          query: resolveTitle,
+          limit: 2,
+        });
+        const best = olHits[0];
+        if (!best || best.matchScore < 0.5) continue;
+
+        const media = catalogWorkToMediaItem(best.work);
+        if (best.work.medium === 'book' || best.work.bookDetails) {
+          media.type = 'book';
+          if (best.work.bookDetails?.authors) {
+            media.authors = best.work.bookDetails.authors;
+          }
+        }
+        if (libraryIds.has(media.id) || completedIds.has(media.id) || seen.has(media.id)) {
+          continue;
+        }
+
+        seen.add(media.id);
+        await putMediaItem(media);
+        items.push({
+          mediaId: media.id,
+          title: media.canonicalTitle,
+          year: media.year || 0,
+          type: media.type,
+          reason: intent.reason,
+          platforms: [],
+          discoveryMode: 'web_grounded',
+          citations: [{ url: hit.url, title: hit.title }],
+        });
+      } catch (err) {
+        logger.warn('[Subsume] Failed to resolve web hit to catalog:', resolveTitle, err);
+      }
+    }
+  }
+
+  return items;
+}
+
+function buildWebSearchIntents(
+  library: { mediaId: string; status: string }[],
+  mediaMap: Record<string, MediaItem>,
+  maxSearches: number
+): Array<{ query: string; reason: string }> {
+  const authorCounts = new Map<string, { count: number; seedTitle: string }>();
+  const subjectCounts = new Map<string, { count: number; seedTitle: string }>();
+
+  for (const item of library) {
+    const media = mediaMap[item.mediaId];
+    if (!media) continue;
+    const seedTitle = media.canonicalTitle;
+    if (media.type === 'book') {
+      for (const author of media.authors ?? []) {
+        const key = author.trim();
+        if (!key) continue;
+        const prev = authorCounts.get(key) ?? { count: 0, seedTitle };
+        authorCounts.set(key, {
+          count: prev.count + (item.status === 'watched' ? 2 : 1),
+          seedTitle: item.status === 'watched' ? seedTitle : prev.seedTitle,
+        });
+      }
+    }
+    for (const genre of media.genres ?? []) {
+      const key = genre.trim();
+      if (!key) continue;
+      const prev = subjectCounts.get(key) ?? { count: 0, seedTitle };
+      subjectCounts.set(key, {
+        count: prev.count + 1,
+        seedTitle: prev.seedTitle,
+      });
+    }
+  }
+
+  const authorIntents = [...authorCounts.entries()]
+    .sort((a, b) => b[1].count - a[1].count)
+    .slice(0, maxSearches)
+    .map(([author, meta]) => ({
+      query: `recent books by ${author}`,
+      reason: `Web research related to ${meta.seedTitle}`,
+    }));
+
+  const remaining = maxSearches - authorIntents.length;
+  const subjectIntents =
+    remaining > 0
+      ? [...subjectCounts.entries()]
+          .sort((a, b) => b[1].count - a[1].count)
+          .slice(0, remaining)
+          .map(([subject, meta]) => ({
+            query: `notable ${subject} books and film adaptations 2024 2025 2026`,
+            reason: `Web research related to ${meta.seedTitle}`,
+          }))
+      : [];
+
+  if (authorIntents.length + subjectIntents.length > 0) {
+    return [...authorIntents, ...subjectIntents];
+  }
+
+  // Fallback: seed titles from library (still catalog-resolved after search)
+  return library
+    .map((l) => mediaMap[l.mediaId])
+    .filter((m): m is MediaItem => !!m)
+    .slice(0, maxSearches)
+    .map((m) => ({
+      query: `works similar to ${m.canonicalTitle}`,
+      reason: `Web research related to ${m.canonicalTitle}`,
+    }));
 }
 
 // ─── Schedule helpers ────────────────────────────────────────────────────────

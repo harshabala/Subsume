@@ -785,6 +785,7 @@ const DEFAULT_PREFS: UserPreferences = {
   dispatchWeekday: 4, // Thursday (0 = Sunday)
   dispatchLocalTime: '19:00',
   dispatchMaxSearches: 5,
+  webGroundedDispatchEnabled: false,
   dispatchWebSearchEnabled: false,
 };
 

@@ -56,6 +56,7 @@ const basePrefs: UserPreferences = {
   dispatchWeekday: 4,
   dispatchLocalTime: '19:00',
   dispatchMaxSearches: 5,
+  webGroundedDispatchEnabled: false,
   dispatchWebSearchEnabled: false,
   openLibraryEnabled: true,
   enabledMedia: { movie: true, tv: true, book: true },
@@ -255,12 +256,28 @@ describe('generateSubsumeDispatch', () => {
 
     const book = digest.items.find((i) => i.type === 'book');
     expect(book?.reason).toMatch(/Because you completed/i);
+    expect(book?.discoveryMode).toBe('catalog');
+    expect(book?.citations).toBeUndefined();
+    for (const item of digest.items) {
+      expect(item.discoveryMode).toBe('catalog');
+      expect(item.citations).toBeUndefined();
+    }
     expect(saveWeeklyDigest).toHaveBeenCalled();
     expect(chrome.storage.local.set).toHaveBeenCalledWith(
       expect.objectContaining({
         [DISPATCH_PERIOD_STORAGE_KEY]: expect.stringMatching(/^\d{4}-W\d{2}$/),
       })
     );
+  });
+
+  it('stays catalog-only when web opt-in is on but adapter lacks web search', async () => {
+    const digest = await generateSubsumeDispatch({
+      ...basePrefs,
+      webGroundedDispatchEnabled: true,
+    });
+
+    expect(digest.items.every((i) => i.discoveryMode === 'catalog')).toBe(true);
+    expect(digest.items.every((i) => !i.citations?.length)).toBe(true);
   });
 
   it('second call same period returns cached digest without regenerating', async () => {

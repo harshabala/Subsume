@@ -526,7 +526,8 @@ export function Settings() {
           <h3 className="settings-panel-heading">Weekly selection</h3>
           <p className="settings-panel-description">
             Catalog-based picks for films and books from your archive and connected catalogs.
-            No web search unless you enable it later. Notifications never include private notes.
+            Web search only runs when you opt in below and a capable web-search adapter is active.
+            Notifications never include private notes.
           </p>
 
           <div className="settings-field-group">
@@ -541,6 +542,29 @@ export function Settings() {
             </label>
             <p className="settings-toggle-help">
               Default schedule: Thursday at 7:00 PM local time. Opt-in only — off until you enable it.
+            </p>
+          </div>
+
+          <div className="settings-field-group">
+            <label className="settings-toggle-label">
+              <input
+                type="checkbox"
+                checked={!!prefs.webGroundedDispatchEnabled}
+                onChange={(e) =>
+                  handleChange('webGroundedDispatchEnabled', e.currentTarget.checked)
+                }
+                className="settings-toggle-checkbox"
+              />
+              <span className="settings-toggle-text-lg">Web-grounded dispatch</span>
+            </label>
+            <p className="settings-toggle-help">
+              When your LLM provider has a working web-search adapter, dispatch may run bounded
+              web searches and attach source citations. Default is off.
+            </p>
+            <p className="settings-help-text-italic" role="note">
+              Cost &amp; privacy: web search can bill your provider account and sends short
+              search intents derived from your archive (not full notes). Without a capable
+              adapter, Subsume stays catalog-only and will not claim it researched the web.
             </p>
           </div>
 

@@ -1,8 +1,10 @@
 /**
  * LLM provider capability registry.
  * Catalog-only recommendation dispatch: providers report chat only unless
- * tool/web-search call paths are explicitly implemented.
+ * a functional WebSearchAdapter is registered (supportsWebSearch true).
  */
+
+import { activeAdapterSupportsWebSearch } from './webSearchAdapter';
 
 export type LlmCapability = 'chat' | 'web_search';
 
@@ -16,8 +18,9 @@ const KNOWN_PROVIDERS = new Set(['openai', 'anthropic', 'gemini', 'local']);
 
 /**
  * Capability map for configured LLM providers.
- * supportsWebSearch defaults to false for all — honest catalog-only dispatch
- * unless tool-call web research is implemented end-to-end.
+ * supportsWebSearch is true only when an active WebSearchAdapter reports
+ * supportsWebSearch — production default is Noop (false). Honest catalog-only
+ * until a real tool path is registered and functional.
  */
 export function getLlmProviderCapabilities(provider: string): LlmProviderCapabilities {
   const normalized = (provider || 'openai').toLowerCase().trim();
@@ -25,19 +28,31 @@ export function getLlmProviderCapabilities(provider: string): LlmProviderCapabil
     KNOWN_PROVIDERS.has(normalized) ? normalized : 'openai'
   ) as LlmProviderCapabilities['provider'];
 
-  // Optional tools (web_search) exist on some APIs but Subsume does not wire them yet.
+  const supportsWebSearch = activeAdapterSupportsWebSearch();
+
   return {
     provider: known,
-    capabilities: ['chat'],
-    supportsWebSearch: false,
+    capabilities: supportsWebSearch ? ['chat', 'web_search'] : ['chat'],
+    supportsWebSearch,
   };
 }
 
 /**
  * Whether the app may claim web research for this provider + user opt-in.
- * Requires both provider capability and explicit user preference.
+ * Requires both active adapter capability and explicit user preference.
  */
 export function canClaimWebResearch(provider: string, userOptIn: boolean): boolean {
   if (!userOptIn) return false;
   return getLlmProviderCapabilities(provider).supportsWebSearch;
+}
+
+/**
+ * Resolve dispatch web-search opt-in from prefs.
+ * Primary: webGroundedDispatchEnabled; legacy alias: dispatchWebSearchEnabled.
+ */
+export function isWebGroundedDispatchOptIn(prefs: {
+  webGroundedDispatchEnabled?: boolean;
+  dispatchWebSearchEnabled?: boolean;
+}): boolean {
+  return prefs.webGroundedDispatchEnabled === true || prefs.dispatchWebSearchEnabled === true;
 }
