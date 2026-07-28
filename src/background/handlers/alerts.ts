@@ -17,6 +17,10 @@ export const alertHandlers: MessageHandlerMap = {
   [MessageType.CREATE_WATCH_ALERT]: async (payload) => {
     const req = payload as CreateWatchAlertRequest;
     const isBook = req.type === 'book';
+    const alertTypes =
+      req.alertTypes && req.alertTypes.length > 0
+        ? Array.from(new Set(req.alertTypes))
+        : undefined;
     const alert: WatchAlert = {
       id: `alert_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
       name: req.name.trim(),
@@ -28,6 +32,7 @@ export const alertHandlers: MessageHandlerMap = {
       authorKeyword: isBook
         ? req.authorKeyword?.trim() || undefined
         : undefined,
+      alertTypes,
       createdAt: Date.now(),
       enabled: req.enabled ?? true,
       lastNotifiedMediaIds: [],

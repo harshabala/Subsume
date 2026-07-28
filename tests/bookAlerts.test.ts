@@ -20,6 +20,9 @@ import {
   findNewAlertMatches,
   checkBookAlerts,
   checkWatchAlerts,
+  bookSignalsMatchAlertKind,
+  matchesAlertTypes,
+  bookAlertSignalsFromMedia,
 } from '@/background/alerts';
 import { searchOpenLibrary } from '@/background/openLibrary';
 import { getLatestReleases } from '@/background/tmdb';
@@ -33,7 +36,8 @@ function makeBookMedia(
   id: string,
   title: string,
   authors: string[] = [],
-  year = 2024
+  year = 2024,
+  extras: Partial<MediaItem> = {}
 ): MediaItem {
   return {
     id,
@@ -45,6 +49,7 @@ function makeBookMedia(
     providers: [{ provider: 'openlibrary', externalId: id.replace(/^openlibrary_work_/, '') }],
     posterUrl: '',
     authors,
+    ...extras,
   };
 }
 
@@ -159,6 +164,240 @@ describe('mediaMatchesWatchAlert — book type', () => {
   });
 });
 
+describe('bookSignalsMatchAlertKind', () => {
+  it('new_release always matches when keyword/author already passed', () => {
+    expect(
+      bookSignalsMatchAlertKind('new_release', { title: 'Any Book' })
+    ).toBe(true);
+  });
+
+  it('translation matches multi-language or non-English codes', () => {
+    expect(
+      bookSignalsMatchAlertKind('translation', {
+        title: 'Kafka on the Shore',
+        languages: ['eng', 'jpn'],
+      })
+    ).toBe(true);
+    expect(
+      bookSignalsMatchAlertKind('translation', {
+        title: 'Kafka on the Shore',
+        languages: ['jpn'],
+      })
+    ).toBe(true);
+    expect(
+      bookSignalsMatchAlertKind('translation', {
+        title: 'Kafka on the Shore',
+        languages: ['eng'],
+      })
+    ).toBe(false);
+  });
+
+  it('translation matches title/subtitle translation cues', () => {
+    expect(
+      bookSignalsMatchAlertKind('translation', {
+        title: 'Kafka on the Shore',
+        subtitle: 'English translation by Philip Gabriel',
+      })
+    ).toBe(true);
+    expect(
+      bookSignalsMatchAlertKind('translation', {
+        title: 'Plain Title',
+        languages: [],
+      })
+    ).toBe(false);
+  });
+
+  it('new_edition matches editionCount > 1 or edition title cues', () => {
+    expect(
+      bookSignalsMatchAlertKind('new_edition', {
+        title: 'Dune',
+        editionCount: 42,
+      })
+    ).toBe(true);
+    expect(
+      bookSignalsMatchAlertKind('new_edition', {
+        title: 'Dune',
+        subtitle: '50th Anniversary Edition',
+      })
+    ).toBe(true);
+    expect(
+      bookSignalsMatchAlertKind('new_edition', {
+        title: 'Dune',
+        editionCount: 1,
+      })
+    ).toBe(false);
+  });
+
+  it('adaptation matches title cues only', () => {
+    expect(
+      bookSignalsMatchAlertKind('adaptation', {
+        title: 'Dune',
+        subtitle: 'Movie tie-in edition',
+      })
+    ).toBe(true);
+    expect(
+      bookSignalsMatchAlertKind('adaptation', { title: 'Dune' })
+    ).toBe(false);
+  });
+
+  it('news never matches via catalog signals', () => {
+    expect(
+      bookSignalsMatchAlertKind('news', {
+        title: 'Breaking Book News',
+        languages: ['eng', 'fra'],
+        editionCount: 99,
+      })
+    ).toBe(false);
+  });
+});
+
+describe('matchesAlertTypes + mediaMatchesWatchAlert with alertTypes', () => {
+  it('empty/omitted alertTypes does not filter (legacy behavior)', () => {
+    const alert = makeBookAlert({
+      authorKeyword: 'Murakami',
+      alertTypes: undefined,
+    });
+    const media = makeBookMedia(
+      'openlibrary_work_OL1W',
+      'Kafka on the Shore',
+      ['Haruki Murakami'],
+      2002,
+      { languages: ['eng'] }
+    );
+    expect(matchesAlertTypes(alert, media)).toBe(true);
+    expect(mediaMatchesWatchAlert(alert, media)).toBe(true);
+  });
+
+  it('filters by translation when only translation is selected', () => {
+    const alert = makeBookAlert({
+      authorKeyword: 'Murakami',
+      alertTypes: ['translation'],
+    });
+    const translated = makeBookMedia(
+      'openlibrary_work_OL1W',
+      'Kafka on the Shore',
+      ['Haruki Murakami'],
+      2002,
+      { languages: ['jpn', 'eng'] }
+    );
+    const englishOnly = makeBookMedia(
+      'openlibrary_work_OL2W',
+      'Kafka on the Shore',
+      ['Haruki Murakami'],
+      2002,
+      { languages: ['eng'] }
+    );
+
+    expect(mediaMatchesWatchAlert(alert, translated)).toBe(true);
+    expect(mediaMatchesWatchAlert(alert, englishOnly)).toBe(false);
+  });
+
+  it('filters by new_edition when selected', () => {
+    const alert = makeBookAlert({
+      keyword: 'Dune',
+      authorKeyword: undefined,
+      alertTypes: ['new_edition'],
+    });
+    const multiEdition = makeBookMedia(
+      'openlibrary_work_OL3W',
+      'Dune',
+      ['Frank Herbert'],
+      1965,
+      { editionCount: 12 }
+    );
+    const single = makeBookMedia(
+      'openlibrary_work_OL4W',
+      'Dune Messiah',
+      ['Frank Herbert'],
+      1969,
+      { editionCount: 1 }
+    );
+
+    expect(mediaMatchesWatchAlert(alert, multiEdition)).toBe(true);
+    expect(mediaMatchesWatchAlert(alert, single)).toBe(false);
+  });
+
+  it('OR across multiple alertTypes', () => {
+    const alert = makeBookAlert({
+      authorKeyword: 'Murakami',
+      alertTypes: ['translation', 'new_edition'],
+    });
+    const byLang = makeBookMedia(
+      'openlibrary_work_OL5W',
+      '1Q84',
+      ['Haruki Murakami'],
+      2009,
+      { languages: ['jpn'] }
+    );
+    const byEdition = makeBookMedia(
+      'openlibrary_work_OL6W',
+      '1Q84',
+      ['Haruki Murakami'],
+      2009,
+      { languages: ['eng'], editionCount: 5 }
+    );
+    const neither = makeBookMedia(
+      'openlibrary_work_OL7W',
+      '1Q84',
+      ['Haruki Murakami'],
+      2009,
+      { languages: ['eng'], editionCount: 1 }
+    );
+
+    expect(mediaMatchesWatchAlert(alert, byLang)).toBe(true);
+    expect(mediaMatchesWatchAlert(alert, byEdition)).toBe(true);
+    expect(mediaMatchesWatchAlert(alert, neither)).toBe(false);
+  });
+
+  it('still requires keyword + author when alertTypes match', () => {
+    const alert = makeBookAlert({
+      keyword: 'Kafka',
+      authorKeyword: 'Murakami',
+      alertTypes: ['translation'],
+    });
+    const wrongAuthor = makeBookMedia(
+      'openlibrary_work_OL8W',
+      'Kafka on the Shore',
+      ['Someone Else'],
+      2002,
+      { languages: ['jpn', 'eng'] }
+    );
+    expect(mediaMatchesWatchAlert(alert, wrongAuthor)).toBe(false);
+  });
+
+  it('new_release kind matches any keyword/author book hit', () => {
+    const alert = makeBookAlert({
+      authorKeyword: 'Murakami',
+      alertTypes: ['new_release'],
+    });
+    const media = makeBookMedia(
+      'openlibrary_work_OL9W',
+      'Norwegian Wood',
+      ['Haruki Murakami'],
+      1987,
+      { languages: ['eng'] }
+    );
+    expect(mediaMatchesWatchAlert(alert, media)).toBe(true);
+  });
+
+  it('bookAlertSignalsFromMedia maps languages and editionCount', () => {
+    const media = makeBookMedia(
+      'openlibrary_work_OL10W',
+      'Title',
+      ['Author'],
+      2000,
+      { languages: ['fra'], editionCount: 3, subtitle: 'Revised edition' }
+    );
+    expect(bookAlertSignalsFromMedia(media)).toEqual({
+      title: 'Title',
+      subtitle: 'Revised edition',
+      authors: ['Author'],
+      languages: ['fra'],
+      editionCount: 3,
+    });
+  });
+});
+
 describe('findNewAlertMatches with book media', () => {
   it('returns only unnotified book matches', () => {
     const alert = makeBookAlert({
@@ -220,6 +459,7 @@ describe('checkBookAlerts', () => {
           canonicalTitle: 'Kafka on the Shore',
           firstReleaseYear: 2002,
           genres: [],
+          languages: ['jpn', 'eng'],
           images: {},
           externalIds: [
             {
@@ -229,7 +469,7 @@ describe('checkBookAlerts', () => {
             },
           ],
           creatorCredits: [{ name: 'Haruki Murakami', role: 'author' }],
-          bookDetails: { authors: ['Haruki Murakami'] },
+          bookDetails: { authors: ['Haruki Murakami'], editionCount: 8 },
           sourceProvenance: [],
           sourceConfidence: 'high',
           createdAt: 1,
@@ -251,6 +491,60 @@ describe('checkBookAlerts', () => {
     expect(matches).toHaveLength(1);
     expect(matches[0].media.type).toBe('book');
     expect(matches[0].media.canonicalTitle).toBe('Kafka on the Shore');
+    expect(matches[0].media.languages).toEqual(['jpn', 'eng']);
+    expect(matches[0].media.editionCount).toBe(8);
+  });
+
+  it('applies translation alertTypes filter on Open Library results', async () => {
+    vi.mocked(searchOpenLibrary).mockResolvedValue([
+      {
+        matchScore: 0.9,
+        work: {
+          id: 'openlibrary_work_OL101W',
+          medium: 'book',
+          canonicalTitle: 'Kafka on the Shore',
+          firstReleaseYear: 2002,
+          genres: [],
+          languages: ['eng'],
+          images: {},
+          externalIds: [{ provider: 'openlibrary', externalId: 'OL101W' }],
+          creatorCredits: [{ name: 'Haruki Murakami', role: 'author' }],
+          bookDetails: { authors: ['Haruki Murakami'], editionCount: 1 },
+          sourceProvenance: [],
+          sourceConfidence: 'high',
+          createdAt: 1,
+          updatedAt: 1,
+        },
+      },
+      {
+        matchScore: 0.85,
+        work: {
+          id: 'openlibrary_work_OL102W',
+          medium: 'book',
+          canonicalTitle: 'Norwegian Wood',
+          firstReleaseYear: 1987,
+          genres: [],
+          languages: ['jpn', 'eng'],
+          images: {},
+          externalIds: [{ provider: 'openlibrary', externalId: 'OL102W' }],
+          creatorCredits: [{ name: 'Haruki Murakami', role: 'author' }],
+          bookDetails: { authors: ['Haruki Murakami'], editionCount: 3 },
+          sourceProvenance: [],
+          sourceConfidence: 'high',
+          createdAt: 1,
+          updatedAt: 1,
+        },
+      },
+    ]);
+
+    const alert = makeBookAlert({
+      authorKeyword: 'Murakami',
+      alertTypes: ['translation'],
+    });
+    const matches = await checkBookAlerts([alert]);
+
+    expect(matches).toHaveLength(1);
+    expect(matches[0].media.id).toBe('openlibrary_work_OL102W');
   });
 
   it('skips already-notified media ids', async () => {

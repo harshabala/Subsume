@@ -4,6 +4,7 @@ import { sendMessage } from '@/shared/messages';
 import {
   MessageType,
   WatchAlert,
+  WatchAlertKind,
   CreateWatchAlertRequest,
 } from '@/shared/types';
 import { AVAILABLE_GENRES } from '@/shared/genres';
@@ -18,6 +19,26 @@ import '../styles/settings.css';
 
 type AlertFormType = NonNullable<CreateWatchAlertRequest['type']>;
 
+const BOOK_ALERT_KIND_OPTIONS: Array<{
+  id: WatchAlertKind;
+  label: string;
+  hint?: string;
+}> = [
+  { id: 'new_release', label: 'New releases' },
+  { id: 'translation', label: 'Translations', hint: 'best-effort' },
+  { id: 'new_edition', label: 'New editions', hint: 'best-effort' },
+  { id: 'adaptation', label: 'Adaptations', hint: 'title cues only' },
+  { id: 'news', label: 'News', hint: 'not via catalog yet' },
+];
+
+const ALERT_KIND_LABELS: Record<WatchAlertKind, string> = {
+  new_release: 'new release',
+  translation: 'translation',
+  new_edition: 'new edition',
+  adaptation: 'adaptation',
+  news: 'news',
+};
+
 const EMPTY_FORM: CreateWatchAlertRequest = {
   name: '',
   type: 'both',
@@ -25,6 +46,7 @@ const EMPTY_FORM: CreateWatchAlertRequest = {
   platforms: [],
   keyword: '',
   authorKeyword: '',
+  alertTypes: [],
   enabled: true,
 };
 
@@ -63,6 +85,14 @@ function formatAlertCriteria(alert: WatchAlert): string {
 
   if (alert.authorKeyword?.trim()) {
     parts.push(`author: "${alert.authorKeyword.trim()}"`);
+  }
+
+  if (alert.alertTypes && alert.alertTypes.length > 0) {
+    parts.push(
+      alert.alertTypes
+        .map((k) => ALERT_KIND_LABELS[k] ?? k)
+        .join(', ')
+    );
   }
 
   return parts.length > 0 ? parts.join(' · ') : 'All new releases';
@@ -126,8 +156,17 @@ export function Alerts() {
         ...form,
         type,
         authorKeyword: '',
+        alertTypes: [],
       });
     }
+  };
+
+  const toggleAlertKind = (kind: WatchAlertKind) => {
+    const current = form.alertTypes || [];
+    const updated = current.includes(kind)
+      ? current.filter((k) => k !== kind)
+      : [...current, kind];
+    setForm({ ...form, alertTypes: updated });
   };
 
   const handleCreate = async () => {
@@ -156,6 +195,10 @@ export function Alerts() {
               : undefined,
           genres: form.type === 'book' ? [] : form.genres,
           platforms: form.type === 'book' ? [] : form.platforms,
+          alertTypes:
+            form.type === 'book' && form.alertTypes && form.alertTypes.length > 0
+              ? form.alertTypes
+              : undefined,
         }
       );
       if (res.success && res.data) {
@@ -368,6 +411,50 @@ export function Alerts() {
                     }
                     className="settings-input"
                   />
+                </div>
+              )}
+
+              {isBookForm && (
+                <div>
+                  <span className="alerts-field-label" id="alert-kinds-label">
+                    Alert kinds (optional)
+                  </span>
+                  <p className="alerts-card-meta" style={{ marginTop: '0.35rem' }}>
+                    Translation and new-edition matches use Open Library language and
+                    edition signals when available. Coverage is incomplete — we never
+                    invent releases.
+                  </p>
+                  <div
+                    className="alerts-chip-grid"
+                    role="group"
+                    aria-labelledby="alert-kinds-label"
+                  >
+                    {BOOK_ALERT_KIND_OPTIONS.map((option) => {
+                      const active = (form.alertTypes || []).includes(option.id);
+                      return (
+                        <label
+                          key={option.id}
+                          className={`alerts-chip ${active ? 'active' : 'inactive'}`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={active}
+                            onChange={() => toggleAlertKind(option.id)}
+                            className="alerts-chip-hidden-input"
+                          />
+                          <span
+                            className={`alerts-chip-dot ${active ? 'active' : 'inactive'}`}
+                          />
+                          {option.label}
+                          {option.hint ? (
+                            <span className="alerts-card-meta" style={{ marginLeft: '0.25rem' }}>
+                              ({option.hint})
+                            </span>
+                          ) : null}
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 

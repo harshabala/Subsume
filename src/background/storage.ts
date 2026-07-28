@@ -936,6 +936,14 @@ export function isValidMediaItem(m: unknown): m is MediaItem {
 
 const VALID_ALERT_TYPES = new Set(['movie', 'tv', 'both', 'book']);
 
+const VALID_WATCH_ALERT_KINDS = new Set([
+  'new_release',
+  'adaptation',
+  'translation',
+  'new_edition',
+  'news',
+]);
+
 export function isValidWatchAlert(a: unknown): a is WatchAlert {
   if (!a || typeof a !== 'object') return false;
   const item = a as Record<string, unknown>;
@@ -948,6 +956,16 @@ export function isValidWatchAlert(a: unknown): a is WatchAlert {
   if (item.platforms !== undefined && !Array.isArray(item.platforms)) return false;
   if (item.keyword !== undefined && typeof item.keyword !== 'string') return false;
   if (item.authorKeyword !== undefined && typeof item.authorKeyword !== 'string') return false;
+  if (item.alertTypes !== undefined) {
+    if (!Array.isArray(item.alertTypes)) return false;
+    if (
+      !item.alertTypes.every(
+        (k) => typeof k === 'string' && VALID_WATCH_ALERT_KINDS.has(k)
+      )
+    ) {
+      return false;
+    }
+  }
   if (item.lastCheckedAt !== undefined && !Number.isFinite(item.lastCheckedAt)) return false;
   if (item.lastMatchAt !== undefined && !Number.isFinite(item.lastMatchAt)) return false;
   if (item.lastNotifiedMediaIds !== undefined && !Array.isArray(item.lastNotifiedMediaIds)) {

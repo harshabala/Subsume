@@ -1,5 +1,6 @@
 import {
   WatchAlert,
+  WatchAlertKind,
   WatchAlertMatch,
   MediaItem,
   UserPreferences,
@@ -17,6 +18,16 @@ import {
 const GENRE_ID_TO_NAME: Record<string, string> = Object.fromEntries(
   AVAILABLE_GENRES.map((genre) => [genre.id, genre.name])
 );
+
+/** Best-effort title/subtitle cues for book alert kinds (not completeness guarantees). */
+const TRANSLATION_TITLE_RE =
+  /\b(translation|translated|traduction|traducido|übersetzung|перевод|traduzione)\b/i;
+const EDITION_TITLE_RE =
+  /\b(edition|ed\.|revised|anniversary|reprint|hardcover|paperback|omnibus|collector(?:'s)?|special ed)\b/i;
+const ADAPTATION_TITLE_RE =
+  /\b(adaptation|adapted|movie tie[- ]?in|film tie[- ]?in|novelization|novelisation|screen adaptation)\b/i;
+
+const ENGLISH_LANG_CODES = new Set(['eng', 'en', 'english', 'en-us', 'en-gb']);
 
 function platformNamesForAlert(alert: WatchAlert): string[] {
   return (alert.platforms || [])
@@ -81,6 +92,96 @@ function matchesType(alert: WatchAlert, media: MediaItem): boolean {
   return media.type === alertType;
 }
 
+/** Normalized book-alert signals for pure matching helpers / tests. */
+export interface BookAlertMatchSignals {
+  title: string;
+  subtitle?: string;
+  authors?: string[];
+  languages?: string[];
+  editionCount?: number;
+}
+
+export function bookAlertSignalsFromMedia(media: MediaItem): BookAlertMatchSignals {
+  return {
+    title: media.canonicalTitle,
+    subtitle: media.subtitle,
+    authors: media.authors,
+    languages: media.languages,
+    editionCount: media.editionCount,
+  };
+}
+
+function titleBlob(signals: BookAlertMatchSignals): string {
+  return `${signals.title} ${signals.subtitle ?? ''}`;
+}
+
+function hasNonEnglishLanguage(languages: string[] | undefined): boolean {
+  if (!languages?.length) return false;
+  return languages.some((lang) => {
+    const n = lang.trim().toLowerCase();
+    return n.length > 0 && !ENGLISH_LANG_CODES.has(n);
+  });
+}
+
+/**
+ * Best-effort: whether provider signals support a single alert kind.
+ * - new_release: always true once keyword/author already matched
+ * - translation: multi-language, non-English language codes, or title cues
+ * - new_edition: editionCount > 1 or edition-ish title/subtitle cues
+ * - adaptation: title/subtitle cues only (no invented adaptations)
+ * - news: not available from Open Library poll — never true via catalog match
+ */
+export function bookSignalsMatchAlertKind(
+  kind: WatchAlertKind,
+  signals: BookAlertMatchSignals
+): boolean {
+  const blob = titleBlob(signals);
+  switch (kind) {
+    case 'new_release':
+      return true;
+    case 'translation': {
+      const langs = signals.languages ?? [];
+      if (langs.length > 1) return true;
+      if (hasNonEnglishLanguage(langs)) return true;
+      return TRANSLATION_TITLE_RE.test(blob);
+    }
+    case 'new_edition': {
+      if ((signals.editionCount ?? 0) > 1) return true;
+      return EDITION_TITLE_RE.test(blob);
+    }
+    case 'adaptation':
+      return ADAPTATION_TITLE_RE.test(blob);
+    case 'news':
+      return false;
+    default:
+      return false;
+  }
+}
+
+/**
+ * Optional alertTypes filter.
+ * - Missing/empty alertTypes → no kind filter (legacy behavior).
+ * - Book: OR across selected kinds using best-effort provider signals.
+ * - Screen: book-only kinds (translation/new_edition) never match; others pass.
+ */
+export function matchesAlertTypes(alert: WatchAlert, media: MediaItem): boolean {
+  const types = alert.alertTypes;
+  if (!types || types.length === 0) return true;
+
+  if (alert.type === 'book' || media.type === 'book') {
+    const signals = bookAlertSignalsFromMedia(media);
+    return types.some((kind) => bookSignalsMatchAlertKind(kind, signals));
+  }
+
+  // Screen path: ignore book-only kinds; any remaining kind (or only book kinds → fail)
+  const screenKinds = types.filter(
+    (k) => k !== 'translation' && k !== 'new_edition'
+  );
+  if (screenKinds.length === 0) return false;
+  // new_release / adaptation / news all apply to premiere-style screen alerts
+  return screenKinds.some((k) => k === 'new_release' || k === 'adaptation' || k === 'news');
+}
+
 export function mediaMatchesWatchAlert(alert: WatchAlert, media: MediaItem): boolean {
   if (!alert.enabled) return false;
   if (!matchesType(alert, media)) return false;
@@ -89,12 +190,14 @@ export function mediaMatchesWatchAlert(alert: WatchAlert, media: MediaItem): boo
   if (alert.type === 'book' || media.type === 'book') {
     if (!matchesKeyword(alert, media)) return false;
     if (!matchesAuthor(alert, media)) return false;
+    if (!matchesAlertTypes(alert, media)) return false;
     return true;
   }
 
   if (!hasGenreOverlap(genreNamesForAlert(alert), media)) return false;
   if (!hasPlatformMatch(platformNamesForAlert(alert), media)) return false;
   if (!matchesKeyword(alert, media)) return false;
+  if (!matchesAlertTypes(alert, media)) return false;
   return true;
 }
 
@@ -158,6 +261,13 @@ export async function checkBookAlerts(
             .map((c) => c.name);
         }
         media.subtitle = hit.work.subtitle;
+        // Best-effort translation / edition signals from Open Library search
+        if (hit.work.languages?.length) {
+          media.languages = hit.work.languages;
+        }
+        if (typeof hit.work.bookDetails?.editionCount === 'number') {
+          media.editionCount = hit.work.bookDetails.editionCount;
+        }
         if (seen.has(media.id)) continue;
         seen.add(media.id);
         allMedia.push(media);

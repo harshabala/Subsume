@@ -117,6 +117,11 @@ export function catalogWorkToMediaItem(work: CatalogWork): MediaItem {
     streamingAvailability: work.screenDetails?.streamingAvailability,
     wikidataSummary: undefined,
     wikidataDirectorBio: undefined,
+    subtitle: work.subtitle,
+    authors: work.bookDetails?.authors,
+    pageCount: undefined,
+    languages: work.languages,
+    editionCount: work.bookDetails?.editionCount,
   };
 }
 

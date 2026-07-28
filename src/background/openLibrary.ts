@@ -385,6 +385,7 @@ function mapSearchDocToWork(doc: OlSearchDoc, fetchedAt: number): CatalogWork | 
   if (languages?.length) fields.push('languages');
   if (cover) fields.push('images.primary');
   if (doc.subtitle) fields.push('subtitle');
+  if (typeof doc.edition_count === 'number') fields.push('bookDetails.editionCount');
 
   return {
     id: workId,
@@ -409,6 +410,8 @@ function mapSearchDocToWork(doc: OlSearchDoc, fetchedAt: number): CatalogWork | 
       firstPublishedYear: year,
       primarySubjects: subjects?.slice(0, 10),
       defaultEditionId: safeEditionId(doc.cover_edition_key),
+      editionCount:
+        typeof doc.edition_count === 'number' ? doc.edition_count : undefined,
     },
     sourceProvenance: [provenance(olId, workSourceUrl(olId), fields, fetchedAt)],
     sourceConfidence: 'high',

@@ -59,6 +59,12 @@ export interface MediaItem {
   subtitle?: string;
   pageCount?: number;
   preferredEditionId?: string;
+  /**
+   * Optional book-alert signals from catalog providers (Open Library search).
+   * Used best-effort for translation / new-edition matching; not complete.
+   */
+  languages?: string[];
+  editionCount?: number;
 }
 
 export type LibraryStatus = 'to-watch' | 'watching' | 'watched' | 'abandoned';
@@ -490,6 +496,11 @@ export interface CreateWatchAlertRequest {
   keyword?: string;
   /** Book alerts: match author name substring */
   authorKeyword?: string;
+  /**
+   * Optional alert kinds (ReleaseAlert conceptually).
+   * Empty/omitted = no kind filter (any match that passes keyword/author/genre).
+   */
+  alertTypes?: WatchAlertKind[];
   enabled?: boolean;
 }
 
@@ -612,6 +623,17 @@ export interface GetDiscoveryFeedRequest {
 
 // ─── Watch Alert Types ─────────────────────────────────────────────────
 
+/**
+ * Alert kind filter (ReleaseAlert conceptually; WatchAlert name kept for compatibility).
+ * Book translation/new_edition matching is best-effort from provider signals only.
+ */
+export type WatchAlertKind =
+  | 'new_release'
+  | 'adaptation'
+  | 'translation'
+  | 'new_edition'
+  | 'news';
+
 export interface WatchAlert {
   id: string;
   name: string;
@@ -622,6 +644,11 @@ export interface WatchAlert {
   keyword?: string;  // title must contain
   /** Book alerts: match author name substring */
   authorKeyword?: string;
+  /**
+   * Optional kinds to match. Omitted/empty = no kind filter.
+   * For books, translation/new_edition use language/edition signals when available.
+   */
+  alertTypes?: WatchAlertKind[];
   createdAt: number;
   lastCheckedAt?: number;
   lastMatchAt?: number;

@@ -58,6 +58,8 @@ export interface BookWorkDetails {
   primarySubjects?: string[];
   adaptationWorkIds?: string[];
   defaultEditionId?: string;
+  /** Open Library search edition_count when available (alert signal). */
+  editionCount?: number;
 }
 
 export interface CatalogWork {
