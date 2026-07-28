@@ -11,7 +11,18 @@ import { ExpandableReflection } from './ExpandableReflection';
 import { ReflectionTimeline } from './ReflectionTimeline';
 import { ExperienceHistory } from './ExperienceHistory';
 import { statusOptionsForMedium, getReflectionExcerpt } from './archive/constants';
-import { mediumLabel } from '@/shared/productCopy';
+import {
+  mediumLabel,
+  EDITIONS_SECTION_TITLE,
+  USE_AS_PREFERRED_EDITION_LABEL,
+  PREFERRED_EDITION_BADGE,
+  EDITIONS_SHARE_ARCHIVE_NOTE,
+} from '@/shared/productCopy';
+import {
+  editionMetaParts,
+  formatEditionListLabel,
+  sortEditionsPreferredFirst,
+} from '@/shared/bookEditions';
 
 type RelatedWorkRow = {
   relation: { id: string; relation: WorkRelationType; fromWorkId: string; toWorkId: string };
@@ -785,38 +796,86 @@ export function DetailModal({
 
                   {isBook && editions.length > 0 && (
                     <div
-                      className="sanctuary-detail-control-row"
+                      className="sanctuary-detail-editions"
                       data-testid="edition-picker"
                     >
-                      <span className="sanctuary-detail-control-label">Edition:</span>
-                      <select
-                        value={preferredEditionId}
-                        onChange={(e) =>
-                          void handlePreferredEditionChange(
-                            (e.target as HTMLSelectElement).value,
-                          )
-                        }
-                        className="sanctuary-detail-input sanctuary-detail-select"
-                        aria-label="Preferred edition"
-                        disabled={editionSaving}
-                      >
-                        <option value="">Select edition…</option>
-                        {editions.map((ed) => {
-                          const isbn =
-                            ed.isbn13?.[0] || ed.isbn10?.[0] || '';
-                          const format = ed.format ? ed.format : '';
-                          const parts = [
-                            ed.title,
-                            format,
-                            isbn ? `ISBN ${isbn}` : '',
-                          ].filter(Boolean);
+                      <span className="sanctuary-detail-control-label">
+                        {EDITIONS_SECTION_TITLE}
+                      </span>
+                      <p className="sanctuary-detail-editions-note">
+                        {EDITIONS_SHARE_ARCHIVE_NOTE}
+                      </p>
+                      <ul className="sanctuary-detail-editions-list" role="list">
+                        {sortEditionsPreferredFirst(editions, preferredEditionId).map((ed) => {
+                          const isPreferred = ed.id === preferredEditionId;
+                          const meta = editionMetaParts(ed);
+                          const titleLine = ed.subtitle?.trim()
+                            ? `${ed.title} — ${ed.subtitle}`
+                            : ed.title;
                           return (
-                            <option value={ed.id} key={ed.id}>
-                              {parts.join(' · ')}
-                            </option>
+                            <li
+                              key={ed.id}
+                              className={`sanctuary-detail-edition-row${isPreferred ? ' is-preferred' : ''}`}
+                              data-testid="edition-row"
+                              data-edition-id={ed.id}
+                              data-preferred={isPreferred ? 'true' : 'false'}
+                            >
+                              <div className="sanctuary-detail-edition-body">
+                                <span className="sanctuary-detail-edition-title">
+                                  {titleLine || 'Edition'}
+                                </span>
+                                {meta.length > 0 && (
+                                  <span className="sanctuary-detail-edition-meta">
+                                    {meta.join(' · ')}
+                                  </span>
+                                )}
+                              </div>
+                              {isPreferred ? (
+                                <span
+                                  className="sanctuary-detail-edition-preferred-badge"
+                                  data-testid="preferred-edition-badge"
+                                >
+                                  {PREFERRED_EDITION_BADGE}
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="sanctuary-btn-restraint sanctuary-detail-edition-prefer-btn"
+                                  data-testid="use-as-preferred-edition"
+                                  disabled={editionSaving}
+                                  aria-label={`${USE_AS_PREFERRED_EDITION_LABEL}: ${formatEditionListLabel(ed)}`}
+                                  onClick={() => void handlePreferredEditionChange(ed.id)}
+                                >
+                                  {editionSaving ? 'Saving…' : USE_AS_PREFERRED_EDITION_LABEL}
+                                </button>
+                              )}
+                            </li>
                           );
                         })}
-                      </select>
+                      </ul>
+                      {/* Compact select for keyboard / AT users who prefer a single control */}
+                      <label className="sanctuary-detail-editions-select-label">
+                        <span className="sr-only">Preferred edition</span>
+                        <select
+                          value={preferredEditionId}
+                          onChange={(e) =>
+                            void handlePreferredEditionChange(
+                              (e.target as HTMLSelectElement).value,
+                            )
+                          }
+                          className="sanctuary-detail-input sanctuary-detail-select sanctuary-detail-editions-select"
+                          aria-label="Preferred edition"
+                          data-testid="preferred-edition-select"
+                          disabled={editionSaving}
+                        >
+                          <option value="">Select preferred edition…</option>
+                          {editions.map((ed) => (
+                            <option value={ed.id} key={ed.id}>
+                              {formatEditionListLabel(ed)}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
                     </div>
                   )}
 

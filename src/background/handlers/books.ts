@@ -11,6 +11,7 @@ import type {
 } from '@/shared/catalogTypes';
 import { catalogWorkToMediaItem } from '@/shared/compatibility';
 import { isValidIsbn, toIsbn13 } from '@/shared/isbn';
+import { sortEditionsPreferredFirst } from '@/shared/bookEditions';
 import {
   putMediaItem,
   getMediaItem,
@@ -351,12 +352,7 @@ export const bookHandlers: MessageHandlerMap = {
     const rel = await getRelationship(workId);
     const preferred =
       rel?.preferredEditionId ?? media?.preferredEditionId ?? undefined;
-    if (preferred && editions.length > 1) {
-      editions = [
-        ...editions.filter((e) => e.id === preferred),
-        ...editions.filter((e) => e.id !== preferred),
-      ];
-    }
+    editions = sortEditionsPreferredFirst(editions, preferred);
 
     return {
       editions,

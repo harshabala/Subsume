@@ -1020,6 +1020,99 @@
   color: var(--text-meta);
 }
 
+.sanctuary-detail-editions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sanctuary-detail-editions-note {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-meta);
+  opacity: 0.9;
+}
+
+.sanctuary-detail-editions-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sanctuary-detail-edition-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--text-meta) 22%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--bg-sanctuary) 40%, transparent);
+}
+
+.sanctuary-detail-edition-row.is-preferred {
+  border-color: color-mix(in srgb, var(--accent, var(--text-meta)) 45%, transparent);
+}
+
+.sanctuary-detail-edition-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 12rem;
+}
+
+.sanctuary-detail-edition-title {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--text-sanctuary);
+}
+
+.sanctuary-detail-edition-meta {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-meta);
+  letter-spacing: 0.02em;
+}
+
+.sanctuary-detail-edition-preferred-badge {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-meta);
+  padding: 4px 8px;
+  border: 1px solid color-mix(in srgb, var(--text-meta) 35%, transparent);
+  border-radius: 2px;
+  white-space: nowrap;
+  align-self: center;
+}
+
+.sanctuary-detail-edition-prefer-btn {
+  font-size: 11px !important;
+  padding: 4px 10px !important;
+  letter-spacing: 0.06em;
+  align-self: center;
+  white-space: nowrap;
+}
+
+.sanctuary-detail-editions-select-label {
+  display: block;
+  margin-top: 2px;
+}
+
+.sanctuary-detail-editions-select {
+  width: 100%;
+}
+
 .sanctuary-detail-rating-history {
   display: flex;
   flex-direction: column;

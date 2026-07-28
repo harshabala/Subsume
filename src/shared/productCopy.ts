@@ -41,6 +41,22 @@ export const TRY_AGAIN_LABEL = 'Try again';
 /** Creators registry (people) operational label */
 export const CREATORS_LABEL = 'Creators';
 
+/** Book dossier: preferred-edition section heading */
+export const EDITIONS_SECTION_TITLE = 'Editions';
+
+/** CTA on a non-preferred edition row */
+export const USE_AS_PREFERRED_EDITION_LABEL = 'Use as preferred';
+
+/** Badge when this edition is the preferred printing */
+export const PREFERRED_EDITION_BADGE = 'Preferred';
+
+/**
+ * Honesty copy: editions under one work share archive state;
+ * preferred edition is not a multi-work merge.
+ */
+export const EDITIONS_SHARE_ARCHIVE_NOTE =
+  'Editions of this work share one archive relationship (status, notes, and verdict). “Use as preferred” marks the printing you mean — it does not merge separate catalog works.';
+
 export function mediumLabel(type: WorkMedium | MediaType | 'movie' | 'tv' | 'book' | string): string {
   if (type === 'book') return MEDIUM_LABEL.book;
   if (type === 'tv') return MEDIUM_LABEL.tv;

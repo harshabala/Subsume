@@ -13,6 +13,10 @@ import {
   LIVE_FEED_LABEL,
   TRY_AGAIN_LABEL,
   CREATORS_LABEL,
+  EDITIONS_SECTION_TITLE,
+  USE_AS_PREFERRED_EDITION_LABEL,
+  PREFERRED_EDITION_BADGE,
+  EDITIONS_SHARE_ARCHIVE_NOTE,
   failedToAddToArchiveMessage,
   failedToRemoveFromArchiveMessage,
 } from '@/shared/productCopy';
@@ -47,6 +51,14 @@ describe('productCopy lexicon', () => {
     expect(LIVE_FEED_LABEL).toBe('Live feed');
     expect(TRY_AGAIN_LABEL).toBe('Try again');
     expect(CREATORS_LABEL).toBe('Creators');
+  });
+
+  it('edition reconciliation copy marks preferred without multi-work merge', () => {
+    expect(EDITIONS_SECTION_TITLE).toBe('Editions');
+    expect(USE_AS_PREFERRED_EDITION_LABEL).toBe('Use as preferred');
+    expect(PREFERRED_EDITION_BADGE).toBe('Preferred');
+    expect(EDITIONS_SHARE_ARCHIVE_NOTE).toMatch(/archive relationship/i);
+    expect(EDITIONS_SHARE_ARCHIVE_NOTE).toMatch(/does not merge/i);
   });
 
   it('error helpers say archive not library', () => {
