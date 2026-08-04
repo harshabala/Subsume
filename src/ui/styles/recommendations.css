@@ -49,7 +49,7 @@
 }
 
 .recommendation-media-card-btn:focus-visible {
-  outline: 2px solid var(--accent-gold, #c9a84c);
+  outline: 2px solid var(--accent-gold, #da291c);
   outline-offset: 2px;
 }
 
@@ -194,7 +194,7 @@
 }
 
 .recommendation-ai-card--openable .recommendation-ai-card-open:focus-visible {
-  outline: 2px solid var(--accent-gold, #c9a84c);
+  outline: 2px solid var(--accent-gold, #da291c);
   outline-offset: 2px;
 }
 

@@ -1501,7 +1501,7 @@
 }
 
 .reflection-timeline-chip:hover {
-  border-color: var(--border-hero, #c9a84c);
+  border-color: var(--border-hero, #da291c);
   background: var(--surface-subtle, rgba(255, 255, 255, 0.04));
 }
 

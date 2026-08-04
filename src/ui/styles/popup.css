@@ -73,7 +73,7 @@
   display: inline-block;
   width: 14px;
   height: 14px;
-  background: var(--primary, #c9a84c);
+  background: var(--primary, #da291c);
   border-radius: 4px;
 }
 
@@ -339,8 +339,8 @@
 }
 
 .search-input:focus {
-  border-color: var(--primary, #c9a84c);
-  box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.15);
+  border-color: var(--primary, #da291c);
+  box-shadow: 0 0 0 2px rgba(218, 41, 28, 0.15);
 }
 
 .search-input:focus-visible,
@@ -352,7 +352,7 @@
 .slider-input:focus-visible,
 .selected-movie-deselect-btn:focus-visible,
 .popup-icon-btn:focus-visible {
-  outline: 2px solid color-mix(in oklch, var(--primary, #c9a84c) 70%, white);
+  outline: 2px solid color-mix(in oklch, var(--primary, #da291c) 70%, white);
   outline-offset: 2px;
 }
 
@@ -435,7 +435,7 @@
 }
 
 .suggestion-year {
-  color: var(--primary, #c9a84c);
+  color: var(--primary, #da291c);
   font-family: var(--font-mono);
   font-size: 11px;
   margin-left: 10px;
@@ -594,7 +594,7 @@
   border-radius: 50%;
   cursor: pointer;
   border: none;
-  background-color: var(--primary, #c9a84c);
+  background-color: var(--primary, #da291c);
 }
 
 #slider-awe::-moz-range-thumb { background-color: var(--color-awe); }
@@ -674,7 +674,7 @@
 }
 
 .ext-notes-textarea:focus {
-  border-color: var(--primary, #c9a84c);
+  border-color: var(--primary, #da291c);
 }
 
 .intent-selector-group {
@@ -719,9 +719,9 @@
 }
 
 .intent-pill.active {
-  background: var(--primary-soft, rgba(201, 168, 76, 0.12));
-  border-color: var(--primary, #c9a84c);
-  color: var(--primary, #c9a84c);
+  background: var(--primary-soft, rgba(218, 41, 28, 0.12));
+  border-color: var(--primary, #da291c);
+  color: var(--primary, #da291c);
 }
 
 /* ─── Actions & Buttons ─────────────────────────────────────────── */
