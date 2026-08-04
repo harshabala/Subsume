@@ -1,5 +1,5 @@
 /* ──────────────────────────────────────────────────────────────────
-   Subsume Chrome Extension Popup — Gilded Night / Sanctuary Theme
+   Subsume Chrome Extension Popup — Ferrari / Cinema Black Sanctuary Theme
    ────────────────────────────────────────────────────────────────── */
 
 :root {
@@ -902,7 +902,7 @@
   font-style: italic;
 }
 
-/* ─── Light theme parity (Parchment) ───────────────────────────── */
+/* ─── Light theme parity (White Canvas) ───────────────────────────── */
 [data-theme='light'] {
   --grain-opacity-popup: 0.03;
 }
