@@ -24,3 +24,5 @@ skills-lock.json
 .impeccable.md
 vite.config.ts.timestamp-*.mjs
 package-lock\ 2.json
+# Git worktrees
+.worktrees/
