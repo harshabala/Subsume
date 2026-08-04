@@ -61,16 +61,23 @@ export const SHADOW_TOKEN_CSS = `
   --spacing-5xl: 96px;
   --spacing-super: 128px;
 
-  /* Radius & motion */
+  /* Radius & motion (parity with tokens.css) */
   --radius-none: 0px;
   --radius-sm: 2px;
   --radius-md: 4px;
   --radius-lg: 8px;
+  --duration-instant: 100ms;
   --duration-fast: 130ms;
   --duration-normal: 220ms;
   --duration-slow: 260ms;
-  --transition-fast: var(--duration-fast) ease;
+  --duration-curtain: 280ms;
+  --duration-curtain-close: 220ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-focus-pull: cubic-bezier(0.25, 1, 0.5, 1);
+  --transition-fast: var(--duration-fast) var(--ease-out);
   --transition-base: var(--duration-normal) ease;
+  --transition-normal: var(--transition-base);
+  --blur-hero: blur(16px);
 
   /* Shadows */
   --shadow-sm: 0 1px 3px hsla(240, 18%, 4%, 0.5);

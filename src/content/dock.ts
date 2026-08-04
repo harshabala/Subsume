@@ -58,9 +58,9 @@ const DOCK_STYLES = `
     font-weight: 500;
     cursor: pointer;
     box-shadow: var(--shadow-md);
-    transition: border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-      box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-      transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: border-color var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out),
+      transform var(--duration-normal) var(--ease-out);
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);

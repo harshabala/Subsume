@@ -126,11 +126,11 @@ const PLAQUE_STYLES = `
     cursor: pointer;
     pointer-events: auto;
     box-sizing: border-box;
-    transition: background 280ms cubic-bezier(0.16, 1, 0.3, 1),
-      border-color 280ms cubic-bezier(0.16, 1, 0.3, 1),
-      box-shadow 280ms cubic-bezier(0.16, 1, 0.3, 1),
-      color 280ms cubic-bezier(0.16, 1, 0.3, 1),
-      transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition: background var(--duration-curtain) var(--ease-out),
+      border-color var(--duration-curtain) var(--ease-out),
+      box-shadow var(--duration-curtain) var(--ease-out),
+      color var(--duration-curtain) var(--ease-out),
+      transform var(--duration-curtain) var(--ease-out);
     overflow: hidden;
     white-space: nowrap;
   }
@@ -160,7 +160,7 @@ const PLAQUE_STYLES = `
     gap: var(--spacing-sm);
     max-width: 0;
     opacity: 0;
-    transition: max-width 220ms cubic-bezier(0.16, 1, 0.3, 1), opacity 220ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition: max-width var(--duration-curtain-close) var(--ease-out), opacity var(--duration-curtain-close) var(--ease-out);
     overflow: hidden;
   }
 
