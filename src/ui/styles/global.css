@@ -507,8 +507,8 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .type-filters button.active {
-  background: var(--primary);
-  color: var(--btn-primary-fg);
+  background: var(--chip-active-bg, var(--primary-soft));
+  color: var(--primary);
   border-color: var(--primary);
 }
 

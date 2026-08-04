@@ -2754,9 +2754,9 @@ select.sanctuary-input option {
 }
 
 .tag-filter-chip.active {
-  background: var(--primary);
-  border-color: var(--border-hero);
-  color: var(--on-primary-fg);
+  background: var(--chip-active-bg);
+  border-color: var(--primary);
+  color: var(--primary);
   font-weight: 600;
 }
 

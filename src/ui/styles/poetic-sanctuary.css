@@ -246,9 +246,9 @@
 }
 
 .intent-selectors button.active {
-  background: var(--primary);
-  color: var(--on-accent-fg);
-  border-color: var(--border-hero);
+  background: var(--chip-active-bg, var(--primary-soft));
+  color: var(--primary);
+  border-color: var(--primary);
   font-weight: 600;
 }
 
@@ -277,9 +277,9 @@
 }
 
 .rating-control button.active {
-  background: var(--primary);
-  color: var(--on-accent-fg);
-  border-color: var(--border-hero);
+  background: var(--chip-active-bg, var(--primary-soft));
+  color: var(--primary);
+  border-color: var(--primary);
   font-weight: 600;
 }
 
