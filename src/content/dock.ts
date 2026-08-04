@@ -176,15 +176,20 @@ const DOCK_STYLES = `
     border-color: var(--primary);
   }
 
+  .dock-textarea:focus-visible {
+    outline: 2px solid var(--ring, var(--primary));
+    outline-offset: 2px;
+  }
+
   .dock-footer {
     display: flex;
     justify-content: flex-end;
   }
 
   .dock-save-btn {
-    background: var(--primary-soft);
-    color: var(--text-reflection);
-    border: 1px solid var(--border-hero);
+    background: var(--primary);
+    color: var(--on-primary-fg, #ffffff);
+    border: 1px solid var(--primary);
     min-height: 44px;
     padding: var(--spacing-sm) var(--spacing-md);
     border-radius: var(--radius-sm);
