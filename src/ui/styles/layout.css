@@ -43,7 +43,7 @@
 }
 
 .page-title {
-  font-family: 'Newsreader', Georgia, serif;
+  font-family: var(--font-editorial);
   font-size: 28px;
   font-weight: 400;
   font-style: italic;
@@ -56,7 +56,7 @@
 
 .page-subtitle {
   margin: 8px 0 0;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-ui);
   font-size: 13px;
   color: var(--page-subtitle-fg);
   letter-spacing: 0.03em;
@@ -249,7 +249,7 @@
 }
 
 .plaque-title {
-  font-family: 'Newsreader', Georgia, serif;
+  font-family: var(--font-editorial);
   font-size: 1.35rem;
   font-style: italic;
   font-weight: 500;
@@ -258,14 +258,14 @@
 }
 
 .plaque-director {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-ui);
   font-size: 11px;
   color: var(--muted-fg);
   margin-bottom: 0.75rem;
 }
 
 .plaque-quote {
-  font-family: 'Newsreader', Georgia, serif;
+  font-family: var(--font-editorial);
   font-size: 0.95rem;
   font-style: italic;
   line-height: 1.4;
@@ -284,7 +284,7 @@
   flex: 1;
   padding: 0.6rem 1rem;
   border-radius: 2px;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-ui);
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -331,7 +331,7 @@
 }
 
 .lobby-heading {
-  font-family: 'Newsreader', Georgia, serif;
+  font-family: var(--font-editorial);
   font-size: 2.75rem;
   font-style: italic;
   font-weight: 400;
@@ -340,7 +340,7 @@
 }
 
 .lobby-desc {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-ui);
   font-size: 1rem;
   line-height: 1.6;
   color: var(--muted-fg);
@@ -386,14 +386,14 @@
 }
 
 .simulated-blog-title {
-  font-family: 'Newsreader', Georgia, serif;
+  font-family: var(--font-editorial);
   font-size: 2rem;
   font-style: italic;
   margin-bottom: 1rem;
 }
 
 .simulated-blog-excerpt {
-  font-family: 'Newsreader', Georgia, serif;
+  font-family: var(--font-editorial);
   font-size: 1.1rem;
   line-height: 1.6;
 }

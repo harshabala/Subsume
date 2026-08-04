@@ -164,7 +164,7 @@
 }
 
 .library-empty-state-title {
-  font-family: 'Newsreader', Georgia, serif;
+  font-family: var(--font-editorial);
   font-style: italic;
   font-weight: 400;
   font-size: 1.75rem;
@@ -172,7 +172,7 @@
 }
 
 .library-empty-state-description {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-ui);
   color: var(--muted-fg);
   font-size: 0.95rem;
   margin-top: 0.5rem;
@@ -180,7 +180,7 @@
 }
 
 .library-empty-state-hint {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-ui);
   margin-top: 1rem;
   font-size: 0.85rem;
   color: var(--fg-subtle);

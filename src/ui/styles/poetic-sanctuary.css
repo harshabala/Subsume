@@ -85,7 +85,7 @@
 }
 
 .poetic-film-title {
-  font-family: 'Outfit', -apple-system, sans-serif;
+  font-family: var(--font-ui);
   font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.18em;
@@ -95,7 +95,7 @@
 }
 
 .poetic-film-director {
-  font-family: 'Newsreader', Georgia, serif;
+  font-family: var(--font-editorial);
   font-size: 1rem;
   font-style: italic;
   color: var(--poetic-film-director-fg);
@@ -144,7 +144,7 @@
 
 .poetic-loading-text,
 .poetic-error-text {
-  font-family: 'Newsreader', Georgia, serif;
+  font-family: var(--font-editorial);
   font-style: italic;
   font-size: 1.1rem;
   color: var(--poetic-film-director-fg);
@@ -157,7 +157,7 @@
   color: var(--text-sanctuary);
   padding: 0.75rem 1.5rem;
   border-radius: 2px;
-  font-family: 'Outfit', -apple-system, sans-serif;
+  font-family: var(--font-ui);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.15em;
@@ -172,7 +172,7 @@
 .poetic-save-error {
   color: var(--text-sanctuary);
   margin: 0 0 12px;
-  font-family: 'Outfit', -apple-system, sans-serif;
+  font-family: var(--font-ui);
   font-size: 0.85rem;
   text-align: center;
 }

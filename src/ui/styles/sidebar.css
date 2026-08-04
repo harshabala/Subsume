@@ -35,7 +35,7 @@
 }
 
 .nav-logo {
-  font-family: 'Newsreader', Georgia, serif;
+  font-family: var(--font-editorial);
   font-size: 1.5rem;
   font-weight: 500;
   font-style: italic;
@@ -52,7 +52,7 @@
 .nav-tab-btn {
   background: transparent;
   border: none;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-ui);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.15em;
@@ -186,7 +186,7 @@
 }
 
 .side-menu-title {
-  font-family: 'Newsreader', Georgia, serif;
+  font-family: var(--font-editorial);
   font-size: 1.25rem;
   font-style: italic;
   color: var(--nav-logo-fg);
@@ -229,7 +229,7 @@
 }
 
 .side-menu-section-label {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-ui);
   font-size: 9px;
   font-weight: 600;
   text-transform: uppercase;
@@ -246,7 +246,7 @@
   min-height: 44px;
   padding: 0.75rem 1rem;
   border-radius: 4px;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-ui);
   font-size: 13px;
   color: var(--nav-item-fg);
   background: transparent;
@@ -294,7 +294,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-ui);
   font-size: 10px;
   color: var(--nav-section-fg);
   letter-spacing: 0.05em;

@@ -43,7 +43,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   margin-left: 0;
-  /* Optical: italic Newsreader capital slightly overhangs — nudge to shell gutter */
+  /* Optical: italic editorial capital slightly overhangs — nudge to shell gutter */
   padding-left: 1px;
 }
 
