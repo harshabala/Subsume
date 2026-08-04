@@ -117,6 +117,8 @@ export function DetailModal({
   const notesFieldId = `detail-notes-${media.id}`;
   const atmosphereFieldId = `detail-atmosphere-${media.id}`;
   const lingeringFieldId = `detail-lingering-${media.id}`;
+  const detailsPanelId = `detail-dossier-${media.id}`;
+  const linkPanelId = `detail-link-panel-${media.id}`;
   const isBook = media.type === 'book';
   const statusOptions = statusOptionsForMedium(media.type);
   const againLabel = isBook ? 'Read again' : 'Watch again';
@@ -473,7 +475,12 @@ export function DetailModal({
 
       const focusable = Array.from(
         modalRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
-      );
+      ).filter((el) => {
+        if (el.getAttribute('tabindex') === '-1') return false;
+        if (el.closest('[aria-hidden="true"], [inert]')) return false;
+        // Skip zero-size / visibility-hidden accordion contents
+        return el.offsetWidth > 0 || el.offsetHeight > 0 || el.getClientRects().length > 0;
+      });
       if (focusable.length === 0) return;
 
       const first = focusable[0];
@@ -656,69 +663,81 @@ export function DetailModal({
               ))}
             </ul>
           )}
-          {!linkOpen ? (
+          {!linkOpen && (
             <button
               type="button"
               className="sanctuary-detail-related-link-btn"
               onClick={openLinkAdaptation}
               data-testid="link-adaptation-btn"
+              aria-expanded={false}
+              aria-controls={linkPanelId}
             >
               Link adaptation…
             </button>
-          ) : (
-            <div className="sanctuary-detail-related-search" data-testid="adaptation-candidates">
-              <div className="sanctuary-detail-related-search-header">
-                <span className="sanctuary-detail-control-label">
-                  {isBook ? 'Film / series adaptations' : 'Source books'}
-                </span>
-                <button
-                  type="button"
-                  className="sanctuary-detail-related-cancel"
-                  onClick={() => {
-                    setLinkOpen(false);
-                    setCandidates([]);
-                    setLinkError(null);
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-              {candidatesLoading && (
-                <p className="sanctuary-detail-related-empty">Searching…</p>
-              )}
-              {linkError && (
-                <p className="sanctuary-detail-related-error" role="alert">{linkError}</p>
-              )}
-              {!candidatesLoading && candidates.length === 0 && !linkError && (
-                <p className="sanctuary-detail-related-empty">No candidates found for this title.</p>
-              )}
-              <ul className="sanctuary-detail-related-candidates">
-                {candidates.map((c) => (
-                  <li key={c.id}>
-                    <button
-                      type="button"
-                      className="sanctuary-detail-related-candidate"
-                      disabled={linkingId === c.id}
-                      onClick={() => assertAdaptation(c)}
-                    >
-                      <span className="sanctuary-detail-related-candidate-title">
-                        {c.canonicalTitle}
-                        {c.year ? ` (${c.year})` : ''}
-                      </span>
-                      <span className="sanctuary-detail-related-candidate-meta">
-                        {c.type}
-                        {c.authors?.length ? ` · ${c.authors.slice(0, 2).join(', ')}` : ''}
-                        {linkingId === c.id ? ' · linking…' : ' · Link'}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-              <p className="sanctuary-detail-related-note">
-                Linking is display-only — ratings and notes stay on each work.
-              </p>
-            </div>
           )}
+          <div
+            id={linkPanelId}
+            className={`sanctuary-detail-accordion${linkOpen ? ' is-expanded' : ''}`}
+            aria-hidden={!linkOpen}
+            inert={linkOpen ? undefined : true}
+          >
+            <div className="sanctuary-detail-accordion-inner">
+              <div className="sanctuary-detail-related-search" data-testid="adaptation-candidates">
+                <div className="sanctuary-detail-related-search-header">
+                  <span className="sanctuary-detail-control-label">
+                    {isBook ? 'Film / series adaptations' : 'Source books'}
+                  </span>
+                  <button
+                    type="button"
+                    className="sanctuary-detail-related-cancel"
+                    tabIndex={linkOpen ? 0 : -1}
+                    onClick={() => {
+                      setLinkOpen(false);
+                      setCandidates([]);
+                      setLinkError(null);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+                {candidatesLoading && (
+                  <p className="sanctuary-detail-related-empty">Searching…</p>
+                )}
+                {linkError && (
+                  <p className="sanctuary-detail-related-error" role="alert">{linkError}</p>
+                )}
+                {!candidatesLoading && candidates.length === 0 && !linkError && linkOpen && (
+                  <p className="sanctuary-detail-related-empty">No candidates found for this title.</p>
+                )}
+                <ul className="sanctuary-detail-related-candidates">
+                  {candidates.map((c) => (
+                    <li key={c.id}>
+                      <button
+                        type="button"
+                        className="sanctuary-detail-related-candidate"
+                        disabled={linkingId === c.id}
+                        tabIndex={linkOpen ? 0 : -1}
+                        onClick={() => assertAdaptation(c)}
+                      >
+                        <span className="sanctuary-detail-related-candidate-title">
+                          {c.canonicalTitle}
+                          {c.year ? ` (${c.year})` : ''}
+                        </span>
+                        <span className="sanctuary-detail-related-candidate-meta">
+                          {c.type}
+                          {c.authors?.length ? ` · ${c.authors.slice(0, 2).join(', ')}` : ''}
+                          {linkingId === c.id ? ' · linking…' : ' · Link'}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                <p className="sanctuary-detail-related-note">
+                  Linking is display-only — ratings and notes stay on each work.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="sanctuary-detail-library-wrap">
@@ -728,14 +747,23 @@ export function DetailModal({
                 type="button"
                 className="sanctuary-detail-details-toggle"
                 aria-expanded={detailsExpanded}
+                aria-controls={detailsPanelId}
                 onClick={() => setDetailsExpanded((prev) => !prev)}
               >
                 Dossier
-                <span className="sanctuary-detail-details-chevron">{detailsExpanded ? '▴' : '▾'}</span>
+                <span className="sanctuary-detail-details-chevron" aria-hidden="true">
+                  {detailsExpanded ? '▴' : '▾'}
+                </span>
               </button>
 
-              {detailsExpanded && (
-                <div className="sanctuary-detail-details-panel">
+              <div
+                id={detailsPanelId}
+                className={`sanctuary-detail-accordion${detailsExpanded ? ' is-expanded' : ''}`}
+                aria-hidden={!detailsExpanded}
+                inert={detailsExpanded ? undefined : true}
+              >
+                <div className="sanctuary-detail-accordion-inner">
+                  <div className="sanctuary-detail-details-panel">
                   <div className="sanctuary-detail-control-row">
                     <label className="sanctuary-detail-control-label" htmlFor={statusFieldId}>
                       Status:
@@ -1091,7 +1119,8 @@ export function DetailModal({
                     showAbandonPrompts={libraryItem.status === 'abandoned'}
                   />
                 </div>
-              )}
+                </div>
+              </div>
             </div>
           ) : (
             <button className="sanctuary-detail-btn-inscribe" onClick={onAddToLibrary}>
