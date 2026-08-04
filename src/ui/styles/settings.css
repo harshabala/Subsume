@@ -523,6 +523,44 @@
   backdrop-filter: var(--blur-hero);
 }
 
+.alerts-form-panel--enter {
+  animation: alerts-form-enter 180ms var(--ease-out, ease-out);
+}
+
+.alerts-form-panel--exiting {
+  animation: alerts-form-exit 180ms ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes alerts-form-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes alerts-form-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alerts-form-panel--enter,
+  .alerts-form-panel--exiting {
+    animation: none;
+  }
+}
+
 .alerts-form-heading {
   font-family: var(--font-editorial);
   font-style: italic;

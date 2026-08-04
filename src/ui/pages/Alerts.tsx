@@ -1,5 +1,5 @@
 import { h } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { sendMessage } from '@/shared/messages';
 import {
   MessageType,
@@ -16,6 +16,16 @@ import {
   mediumLabel,
 } from '@/shared/productCopy';
 import '../styles/settings.css';
+
+/** Matches alerts-form-panel enter/exit (≤200ms). */
+const FORM_MOTION_MS = 180;
+
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return false;
+  }
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
 
 type AlertFormType = NonNullable<CreateWatchAlertRequest['type']>;
 
@@ -108,11 +118,62 @@ export function Alerts() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [formMounted, setFormMounted] = useState(false);
+  const [formExiting, setFormExiting] = useState(false);
   const [form, setForm] = useState<CreateWatchAlertRequest>(EMPTY_FORM);
   const [actionError, setActionError] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const formExitTimerRef = useRef<number | undefined>(undefined);
 
   const isBookForm = form.type === 'book';
+
+  const openForm = useCallback(() => {
+    if (formExitTimerRef.current !== undefined) {
+      window.clearTimeout(formExitTimerRef.current);
+      formExitTimerRef.current = undefined;
+    }
+    setFormExiting(false);
+    setFormMounted(true);
+    setShowForm(true);
+  }, []);
+
+  const closeForm = useCallback(() => {
+    if (!formMounted || formExiting) {
+      setShowForm(false);
+      return;
+    }
+    if (prefersReducedMotion()) {
+      setShowForm(false);
+      setFormMounted(false);
+      setFormExiting(false);
+      return;
+    }
+    setShowForm(false);
+    setFormExiting(true);
+    formExitTimerRef.current = window.setTimeout(() => {
+      setFormMounted(false);
+      setFormExiting(false);
+      formExitTimerRef.current = undefined;
+    }, FORM_MOTION_MS);
+  }, [formMounted, formExiting]);
+
+  const toggleForm = useCallback(() => {
+    if (showForm) {
+      closeForm();
+    } else {
+      // Also re-opens if mid-exit (openForm cancels exit timer)
+      openForm();
+    }
+  }, [showForm, closeForm, openForm]);
+
+  useEffect(
+    () => () => {
+      if (formExitTimerRef.current !== undefined) {
+        window.clearTimeout(formExitTimerRef.current);
+      }
+    },
+    [],
+  );
 
   const loadAlerts = async () => {
     setLoading(true);
@@ -204,7 +265,7 @@ export function Alerts() {
       if (res.success && res.data) {
         setAlerts((prev) => [res.data!, ...prev]);
         setForm(EMPTY_FORM);
-        setShowForm(false);
+        closeForm();
       }
     } catch (err) {
       console.error('Failed to create alert', err);
@@ -262,15 +323,18 @@ export function Alerts() {
             type="button"
             aria-expanded={showForm}
             aria-controls="alerts-create-form"
-            onClick={() => setShowForm((value) => !value)}
+            onClick={toggleForm}
             className={showForm ? 'btn-sanctuary-restraint sm' : 'btn-sanctuary-gold sm'}
           >
             {showForm ? 'Cancel' : 'Create alert'}
           </button>
         </div>
 
-        {showForm && (
-          <div className="alerts-form-panel" id="alerts-create-form">
+        {formMounted && (
+          <div
+            className={`alerts-form-panel${formExiting ? ' alerts-form-panel--exiting' : ' alerts-form-panel--enter'}`}
+            id="alerts-create-form"
+          >
             <h3 className="alerts-form-heading">
               New release alert
             </h3>
