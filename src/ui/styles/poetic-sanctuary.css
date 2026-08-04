@@ -198,6 +198,11 @@
   border-color: var(--border-hero);
 }
 
+.poetic-textarea:focus-visible {
+  outline: 2px solid var(--ring, var(--primary));
+  outline-offset: 2px;
+}
+
 .progressive-controls {
   display: flex;
   flex-direction: column;
@@ -350,6 +355,11 @@
 
 .poetic-input:focus {
   border-color: var(--border-hero);
+}
+
+.poetic-input:focus-visible {
+  outline: 2px solid var(--ring, var(--primary));
+  outline-offset: 2px;
 }
 
 /* ─── Enter / Exit keyframes (Slow Dolly + Curtain Close) ─────────── */

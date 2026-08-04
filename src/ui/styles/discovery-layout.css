@@ -60,7 +60,11 @@
 .discovery-lobby-text-link:focus-visible {
   color: var(--text-reflection, var(--app-fg));
   border-bottom-color: var(--border-hero, var(--accent-gold, currentColor));
-  outline: none;
+}
+
+.discovery-lobby-text-link:focus-visible {
+  outline: 2px solid var(--ring, var(--primary));
+  outline-offset: 2px;
 }
 
 .discovery-lobby-text-link:disabled {

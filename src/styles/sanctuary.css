@@ -185,6 +185,11 @@
   background: var(--input-bg-focus);
 }
 
+.optical-input:focus-visible {
+  outline: 2px solid var(--ring, var(--primary));
+  outline-offset: 2px;
+}
+
 .optical-button {
   font-family: var(--font-ui);
   font-size: 12px;
@@ -990,6 +995,11 @@
   border-color: var(--border-hero);
 }
 
+.sanctuary-detail-input:focus-visible {
+  outline: 2px solid var(--ring, var(--primary));
+  outline-offset: 2px;
+}
+
 .sanctuary-detail-select {
   width: auto;
   min-width: 180px;
@@ -1656,6 +1666,10 @@
 .sanctuary-input:focus {
   border-color: var(--border-hero);
 }
+.sanctuary-input:focus-visible {
+  outline: 2px solid var(--ring, var(--primary));
+  outline-offset: 2px;
+}
 select.sanctuary-input option {
   background: var(--surface-select);
 }
@@ -1887,6 +1901,10 @@ select.sanctuary-input option {
   font-size: 11px;
   outline: none;
   cursor: pointer;
+}
+.filmography-sort-select:focus-visible {
+  outline: 2px solid var(--ring, var(--primary));
+  outline-offset: 2px;
 }
 .filmography-sort-select option {
   background: var(--surface-select);
@@ -3267,6 +3285,7 @@ select.sanctuary-input option {
   font-style: italic;
   font-size: 18px;
   font-weight: 400;
+  font-variant-numeric: tabular-nums;
   color: var(--text-reflection);
   line-height: 1.2;
 }
@@ -3386,6 +3405,7 @@ select.sanctuary-input option {
   color: var(--text-meta);
   font-style: italic;
   font-family: var(--font-editorial);
+  font-variant-numeric: tabular-nums;
 }
 
 .stats-progress-track {
@@ -3521,6 +3541,7 @@ select.sanctuary-input option {
   font-style: italic;
   font-size: 32px;
   font-weight: 400;
+  font-variant-numeric: tabular-nums;
   color: var(--text-reflection);
   line-height: 1.1;
 }

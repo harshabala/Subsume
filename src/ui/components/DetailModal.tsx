@@ -518,7 +518,7 @@ export function DetailModal({
         tabIndex={-1}
       >
         <button type="button" onClick={requestClose} className="sanctuary-modal-close" aria-label="Close details">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
@@ -537,7 +537,7 @@ export function DetailModal({
               <img src={media.posterUrl} alt={media.canonicalTitle} className="sanctuary-detail-poster-img" loading="lazy" decoding="async" />
             ) : (
               <div className="sanctuary-detail-poster-placeholder">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true">
                   <rect x="2" y="3" width="20" height="18" rx="2" />
                   <path d="M7 3v18M17 3v18M2 9h5M17 9h5M2 15h5M17 15h5" />
                 </svg>
