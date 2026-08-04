@@ -656,6 +656,7 @@ const HOVER_CARD_STYLES = `
     opacity: 0;
     transform: translateY(8px) scale(0.96);
     pointer-events: none;
+    transition-duration: 0.18s; /* exit ≤ enter (0.25s) */
   }
 
   /* Skeleton loading */
