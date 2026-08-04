@@ -4,8 +4,8 @@
 
 **Who:** People curating a private relationship with works that take hold of them — on the screen and on the page.
 
-**Register:** Product UI (settings, tables, extension shell). Visual system: Gilded Night / Cinematic Sanctuary (`src/shared/tokens.css`).
+**Register:** Product UI (settings, tables, extension shell). Visual system: **Cinema Black + Rosso Corsa** (Ferrari-adapted tokens in `src/shared/tokens.css`; brand register in `brand.md`).
 
 **Primary tasks:** Browse archive (All / Screen / Books), capture what stayed with you, detect works while browsing, configure API keys, Open Library book search, optional Drive backup.
 
-**Tone:** Calm, literary dark UI; gold accent for selection and primary actions only. Shared sanctuary voice with medium-specific labels.
+**Tone:** Calm cinematic dark UI; **scarce** Rosso Corsa (`#da291c`) for primary actions and selection only. Shared sanctuary voice with medium-specific labels. Themes: Cinema Black / White Canvas.

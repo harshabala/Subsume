@@ -160,13 +160,15 @@ const PLAQUE_STYLES = `
     gap: var(--spacing-sm);
     max-width: 0;
     opacity: 0;
-    transition: all 280ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition: max-width 220ms cubic-bezier(0.16, 1, 0.3, 1), opacity 220ms cubic-bezier(0.16, 1, 0.3, 1);
     overflow: hidden;
   }
 
-  .museum-plaque:hover .plaque-reveal {
-    max-width: 120px;
-    opacity: 1;
+  @media (hover: hover) and (pointer: fine) {
+    .museum-plaque:hover .plaque-reveal {
+      max-width: 120px;
+      opacity: 1;
+    }
   }
 
   .plaque-separator {

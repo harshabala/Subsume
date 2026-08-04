@@ -60,7 +60,7 @@
   cursor: pointer;
   min-height: 44px;
   padding: 10px 12px;
-  transition: all 0.2s ease;
+  transition: color 0.2s var(--ease-out, ease), background-color 0.2s var(--ease-out, ease);
   position: relative;
 }
 
@@ -69,8 +69,10 @@
   outline-offset: 2px;
 }
 
-.nav-tab-btn:hover {
-  color: var(--nav-tab-fg-hover);
+@media (hover: hover) and (pointer: fine) {
+  .nav-tab-btn:hover {
+    color: var(--nav-tab-fg-hover);
+  }
 }
 
 .nav-tab-btn.active {

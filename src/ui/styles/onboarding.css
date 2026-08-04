@@ -150,7 +150,7 @@
   text-transform: uppercase;
   border-radius: 2px;
   cursor: pointer;
-  transition: all 220ms ease;
+  transition: background-color 220ms var(--ease-out, ease), border-color 220ms var(--ease-out, ease), color 220ms var(--ease-out, ease), opacity 220ms var(--ease-out, ease);
 }
 
 .onboarding-cta:hover {

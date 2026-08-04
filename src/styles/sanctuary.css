@@ -298,7 +298,7 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: var(--border-hero);
+  background: var(--primary);
 }
 
 .programme-tab:hover:not(.active) {
@@ -576,7 +576,7 @@
 }
 
 .sanctuary-modal-backdrop.closing {
-  animation: sanctuary-backdrop-exit var(--duration-curtain-close, 300ms) ease-in forwards;
+  animation: sanctuary-backdrop-exit var(--duration-curtain-close, 220ms) var(--ease-focus-pull, ease-out) forwards;
 }
 
 .sanctuary-modal-content {
@@ -597,8 +597,8 @@
 }
 
 .sanctuary-modal-content.closing {
-  /* Curtain Close: shorter, smaller motion, ease-in */
-  animation: sanctuary-modal-exit var(--duration-curtain-close, 300ms) ease-in forwards;
+  /* Curtain Close: shorter exit, reverse of enter path, ease-out */
+  animation: sanctuary-modal-exit var(--duration-curtain-close, 220ms) var(--ease-focus-pull, ease-out) forwards;
 }
 
 @keyframes sanctuary-backdrop-enter {
@@ -629,8 +629,8 @@
   }
   to {
     opacity: 0;
-    /* Subtler than enter: smaller translate, nearer scale */
-    transform: scale(0.98) translateY(4px);
+    /* Spatial reverse of enter for consistency */
+    transform: scale(0.96) translateY(8px);
   }
 }
 
@@ -1554,7 +1554,7 @@
 }
 
 .sanctuary-detail-btn-inscribe {
-  background: var(--border-hero);
+  background: var(--primary);
   border: none;
   color: var(--on-primary-fg);
   min-height: 44px;
@@ -1613,7 +1613,7 @@
 }
 
 .sanctuary-btn-gold {
-  background: var(--border-hero);
+  background: var(--primary);
   border: none;
   color: var(--on-primary-fg);
   min-height: 44px;
@@ -1796,7 +1796,7 @@ select.sanctuary-input option {
   padding-top: 16px;
 }
 .filmography-add-all-btn {
-  background: var(--border-hero);
+  background: var(--primary);
   border: none;
   color: var(--on-primary-fg);
   min-height: 44px;
@@ -1963,7 +1963,7 @@ select.sanctuary-input option {
 .filmography-sprocket-hole {
   width: 6px;
   height: 2px;
-  background: var(--border-hero);
+  background: var(--primary);
 }
 .filmography-poster-wrap {
   position: relative;
@@ -2030,7 +2030,7 @@ select.sanctuary-input option {
   box-shadow: 0 0 6px var(--border-hero);
 }
 .filmography-status-dot.watched {
-  background: var(--border-hero);
+  background: var(--primary);
 }
 .filmography-status-dot.watching {
   background: var(--status-dot-watching);
@@ -2291,7 +2291,7 @@ select.sanctuary-input option {
   background: var(--chip-dot-inactive);
 }
 .settings-chip.active .settings-chip-dot {
-  background: var(--border-hero);
+  background: var(--primary);
 }
 .settings-field-note {
   font-family: var(--font-editorial);
@@ -2543,7 +2543,7 @@ select.sanctuary-input option {
   width: 100%;
 }
 .sidebar-nav-people-badge {
-  background: var(--border-hero);
+  background: var(--primary);
   color: var(--on-primary-fg);
   border-radius: 10px;
   padding: 1px var(--spacing-sm);
@@ -2736,7 +2736,7 @@ select.sanctuary-input option {
 }
 
 .tag-filter-chip.active {
-  background: var(--border-hero);
+  background: var(--primary);
   border-color: var(--border-hero);
   color: var(--on-primary-fg);
   font-weight: 600;
@@ -3398,7 +3398,7 @@ select.sanctuary-input option {
 
 .stats-progress-fill {
   height: 100%;
-  background: var(--border-hero);
+  background: var(--primary);
   border-radius: 2px;
 }
 
@@ -3433,7 +3433,7 @@ select.sanctuary-input option {
 }
 
 .stats-mix-segment.cinema {
-  background: var(--border-hero);
+  background: var(--primary);
   color: var(--on-primary-fg);
 }
 
@@ -3469,7 +3469,7 @@ select.sanctuary-input option {
 }
 
 .stats-legend-swatch.cinema {
-  background: var(--border-hero);
+  background: var(--primary);
 }
 
 .stats-legend-swatch.series {

@@ -161,9 +161,9 @@
   background: linear-gradient(
     to right,
     transparent 0%,
-    var(--primary, hsl(45, 80%, 62%)) 20%,
-    var(--primary-hover, hsl(45, 85%, 68%)) 50%,
-    var(--primary, hsl(45, 80%, 62%)) 80%,
+    var(--primary, #da291c) 20%,
+    var(--primary-hover, #9d2211) 50%,
+    var(--primary, #da291c) 80%,
     transparent 100%
   );
   transform: scaleX(0);
@@ -359,9 +359,9 @@
   background: conic-gradient(
     from 200deg at 50% 50%,
     transparent 0deg,
-    hsla(45, 80%, 62%, 0.28) 70deg,
+    rgba(218, 41, 28, 0.28) 70deg,
     transparent 150deg,
-    hsla(45, 70%, 58%, 0.16) 240deg,
+    rgba(218, 41, 28, 0.16) 240deg,
     transparent 320deg
   );
   filter: blur(14px);

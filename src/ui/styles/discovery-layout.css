@@ -11,7 +11,7 @@
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(ellipse 80% 50% at 20% 0%, var(--gold-soft-bg, hsla(45, 60%, 50%, 0.06)), transparent 55%),
+    radial-gradient(ellipse 80% 50% at 20% 0%, var(--gold-soft-bg, rgba(218, 41, 28, 0.06)), transparent 55%),
     radial-gradient(ellipse 60% 40% at 90% 30%, hsla(240, 30%, 40%, 0.04), transparent 50%);
   opacity: 0.9;
 }

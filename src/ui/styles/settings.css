@@ -166,7 +166,7 @@
 }
 
 .settings-chip-dot.active {
-  background: var(--border-hero);
+  background: var(--primary);
 }
 
 /* Hidden checkbox inside label chips */
@@ -224,7 +224,7 @@
 
 /* Gold CTA */
 .btn-sanctuary-gold {
-  background: var(--border-hero);
+  background: var(--primary);
   border: none;
   color: var(--on-primary-fg);
   min-height: 44px;
@@ -593,7 +593,7 @@
 }
 
 .alerts-chip-dot.active {
-  background: var(--border-hero);
+  background: var(--primary);
 }
 
 .alerts-chip-hidden-input {
