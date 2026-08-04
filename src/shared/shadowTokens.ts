@@ -4,47 +4,48 @@
  */
 
 export const SHADOW_FONT_STYLESHEET =
-  'https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400;1,6..72,500&family=Outfit:wght@300;400;500;600&display=swap';
+  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap';
 
 /** Key CSS variables from src/shared/tokens.css (dark / default). */
 export const SHADOW_TOKEN_CSS = `
 :host {
-  /* Gilded Night */
-  --bg-base: hsl(240, 18%, 5%);
-  --bg-elevated: hsl(240, 16%, 8%);
-  --bg-overlay: hsl(240, 14%, 11%);
-  --bg-hover: hsl(240, 12%, 14%);
-  --bg-sunken: hsl(240, 20%, 3%);
-  --fg-base: hsl(0, 0%, 92%);
-  --fg-muted: hsl(240, 8%, 52%);
-  --fg-subtle: hsl(240, 8%, 36%);
-  --primary: hsl(45, 80%, 62%);
-  --primary-soft: hsla(45, 80%, 62%, 0.10);
-  --primary-hover: hsl(45, 85%, 68%);
-  --primary-pressed: hsl(45, 75%, 54%);
-  --border: hsla(0, 0%, 100%, 0.07);
-  --border-subtle: hsla(0, 0%, 100%, 0.04);
+  /* Ferrari / Cinema Black */
+  --bg-base: #181818;
+  --bg-elevated: #242424;
+  --bg-overlay: #303030;
+  --bg-hover: #3a3a3a;
+  --bg-sunken: #121212;
+  --fg-base: #ffffff;
+  --fg-muted: #969696;
+  --fg-subtle: #666666;
+  --primary: #da291c;
+  --primary-soft: rgba(218, 41, 28, 0.10);
+  --primary-hover: #9d2211;
+  --primary-pressed: #b01e0a;
+  --border: hsla(0, 0%, 100%, 0.08);
+  --border-subtle: hsla(0, 0%, 100%, 0.05);
   --gold: var(--primary);
+  --accent-gold: var(--primary);
 
   /* Sanctuary */
-  --bg-sanctuary: hsl(240, 18%, 5%);
-  --bg-plaque: hsla(240, 15%, 11%, 0.85);
-  --bg-plaque-hover: hsla(240, 15%, 16%, 0.95);
+  --bg-sanctuary: #181818;
+  --bg-plaque: hsla(0, 0%, 12%, 0.92);
+  --bg-plaque-hover: hsla(0, 0%, 16%, 0.96);
   --border-restraint: hsla(0, 0%, 100%, 0.08);
-  --border-hero: hsla(45, 90%, 65%, 0.4);
+  --border-hero: rgba(218, 41, 28, 0.45);
   --accent-sanctuary: var(--border-hero);
 
   /* Text hierarchy */
-  --text-reflection: hsl(0, 0%, 96%);
-  --text-artwork: hsl(0, 0%, 82%);
-  --text-title: hsl(240, 10%, 70%);
-  --text-meta: hsl(240, 10%, 50%);
-  --text-control: hsl(240, 10%, 32%);
+  --text-reflection: #ffffff;
+  --text-artwork: #d2d2d2;
+  --text-title: #969696;
+  --text-meta: #8f8f8f;
+  --text-control: #666666;
   --text-sanctuary: var(--text-reflection);
 
   /* Typography */
-  --font-editorial: 'Newsreader', 'Cormorant Garamond', Georgia, serif;
-  --font-ui: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-editorial: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --font-sans: var(--font-ui);
   --font-mono: 'JetBrains Mono', ui-monospace, 'Courier New', monospace;
 
@@ -57,9 +58,9 @@ export const SHADOW_TOKEN_CSS = `
   --spacing-2xl: 32px;
 
   /* Radius & motion */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
   --duration-fast: 130ms;
   --duration-normal: 220ms;
   --duration-slow: 260ms;
@@ -79,22 +80,22 @@ export const SHADOW_TOKEN_CSS = `
   --color-text-secondary: var(--fg-muted);
   --color-text-muted: var(--fg-subtle);
   --color-accent-light: var(--primary);
-  --color-accent-border: rgba(201, 168, 76, 0.25);
+  --color-accent-border: rgba(218, 41, 28, 0.25);
 
   /* Shadcn-compatible (content overlays) */
-  --background: #0a0a0b;
-  --foreground: #e8e6e1;
-  --card: #141416;
-  --card-foreground: #e8e6e1;
-  --muted-foreground: #9e9a90;
+  --background: #181818;
+  --foreground: #ffffff;
+  --card: #303030;
+  --card-foreground: #ffffff;
+  --muted-foreground: #969696;
   --destructive: #ef4444;
-  --ring: #c9a84c;
+  --ring: #da291c;
 }
 `;
 
 let fontsInjected = false;
 
-/** Inject Outfit + Newsreader once per document (shared across shadow roots). */
+/** Inject Inter once per document (shared across shadow roots). */
 export function injectShadowFonts(doc: Document = document): void {
   if (fontsInjected || doc.getElementById('subsume-shadow-fonts')) return;
 
