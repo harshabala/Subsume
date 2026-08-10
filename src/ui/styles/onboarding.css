@@ -150,7 +150,7 @@
   text-transform: uppercase;
   border-radius: 2px;
   cursor: pointer;
-  transition: all 220ms ease;
+  transition: background-color 220ms var(--ease-out, ease), border-color 220ms var(--ease-out, ease), color 220ms var(--ease-out, ease), opacity 220ms var(--ease-out, ease);
 }
 
 .onboarding-cta:hover {
@@ -209,6 +209,29 @@
   width: 100%;
 }
 
+/* Step content enter only — shell chrome (monogram, dots, glows) stays put */
+.onboarding-step-pane {
+  width: 100%;
+  animation: onboarding-step-enter 200ms var(--ease-out, ease-out);
+}
+
+@keyframes onboarding-step-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-step-pane {
+    animation: none;
+  }
+}
+
 .onboarding-headline--step {
   font-size: 32px;
 }
@@ -257,6 +280,11 @@
 
 .onboarding-input:focus {
   border-color: var(--onboarding-cta-border);
+}
+
+.onboarding-input:focus-visible {
+  outline: 2px solid var(--ring, var(--primary));
+  outline-offset: 2px;
 }
 
 .onboarding-input::placeholder {

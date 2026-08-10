@@ -51,10 +51,12 @@
   cursor: pointer;
 }
 
-.media-card:hover {
-  border-color: var(--color-accent-border);
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-card-hover);
+@media (hover: hover) and (pointer: fine) {
+  .media-card:hover {
+    border-color: var(--color-accent-border);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-card-hover);
+  }
 }
 
 .media-card:active {

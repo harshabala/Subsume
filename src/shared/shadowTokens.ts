@@ -56,22 +56,34 @@ export const SHADOW_TOKEN_CSS = `
   --spacing-lg: 20px;
   --spacing-xl: 24px;
   --spacing-2xl: 32px;
+  --spacing-3xl: 48px;
+  --spacing-4xl: 64px;
+  --spacing-5xl: 96px;
+  --spacing-super: 128px;
 
-  /* Radius & motion */
+  /* Radius & motion (parity with tokens.css) */
+  --radius-none: 0px;
   --radius-sm: 2px;
   --radius-md: 4px;
   --radius-lg: 8px;
+  --duration-instant: 100ms;
   --duration-fast: 130ms;
   --duration-normal: 220ms;
   --duration-slow: 260ms;
-  --transition-fast: var(--duration-fast) ease;
+  --duration-curtain: 280ms;
+  --duration-curtain-close: 220ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-focus-pull: cubic-bezier(0.25, 1, 0.5, 1);
+  --transition-fast: var(--duration-fast) var(--ease-out);
   --transition-base: var(--duration-normal) ease;
+  --transition-normal: var(--transition-base);
+  --blur-hero: blur(16px);
 
   /* Shadows */
-  --shadow-sm: 0 1px 3px hsla(240, 18%, 4%, 0.6);
-  --shadow-md: 0 4px 16px hsla(240, 18%, 4%, 0.55);
-  --shadow-lg: 0 12px 40px hsla(240, 18%, 4%, 0.6);
-  --shadow-hero: 0 20px 60px hsla(240, 18%, 4%, 0.8);
+  --shadow-sm: 0 1px 3px hsla(240, 18%, 4%, 0.5);
+  --shadow-md: 0 4px 16px hsla(240, 18%, 4%, 0.45);
+  --shadow-lg: 0 12px 40px hsla(240, 18%, 4%, 0.5);
+  --shadow-hero: 0 20px 60px hsla(240, 18%, 4%, 0.7);
 
   /* Aliases */
   --color-surface: var(--bg-elevated);

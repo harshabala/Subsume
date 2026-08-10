@@ -11,7 +11,7 @@
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(ellipse 80% 50% at 20% 0%, var(--gold-soft-bg, hsla(45, 60%, 50%, 0.06)), transparent 55%),
+    radial-gradient(ellipse 80% 50% at 20% 0%, var(--gold-soft-bg, rgba(218, 41, 28, 0.06)), transparent 55%),
     radial-gradient(ellipse 60% 40% at 90% 30%, hsla(240, 30%, 40%, 0.04), transparent 50%);
   opacity: 0.9;
 }
@@ -60,7 +60,11 @@
 .discovery-lobby-text-link:focus-visible {
   color: var(--text-reflection, var(--app-fg));
   border-bottom-color: var(--border-hero, var(--accent-gold, currentColor));
-  outline: none;
+}
+
+.discovery-lobby-text-link:focus-visible {
+  outline: 2px solid var(--ring, var(--primary));
+  outline-offset: 2px;
 }
 
 .discovery-lobby-text-link:disabled {

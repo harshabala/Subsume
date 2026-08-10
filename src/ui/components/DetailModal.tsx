@@ -106,6 +106,18 @@ export function DetailModal({
   const notesDebounceRef = useRef<ReturnType<typeof setTimeout>>();
   const ceremonyTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const progressDebounceRef = useRef<ReturnType<typeof setTimeout>>();
+  /** Latest scheduled notes payload — used to flush on unmount without stale closures. */
+  const pendingNotesRef = useRef<{
+    notes: string;
+    atmosphere: string;
+    lingeringThought: string;
+    emotions: EmotionalSpectrum;
+  } | null>(null);
+  /** Latest scheduled reading progress — flushed on unmount if timer still pending. */
+  const pendingProgressRef = useRef<{
+    page: number | '';
+    total: number | '';
+  } | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const closedRef = useRef(false);
@@ -117,6 +129,8 @@ export function DetailModal({
   const notesFieldId = `detail-notes-${media.id}`;
   const atmosphereFieldId = `detail-atmosphere-${media.id}`;
   const lingeringFieldId = `detail-lingering-${media.id}`;
+  const detailsPanelId = `detail-dossier-${media.id}`;
+  const linkPanelId = `detail-link-panel-${media.id}`;
   const isBook = media.type === 'book';
   const statusOptions = statusOptionsForMedium(media.type);
   const againLabel = isBook ? 'Read again' : 'Watch again';
@@ -296,25 +310,9 @@ export function DetailModal({
     }
   };
 
-  useEffect(() => {
-    return () => {
-      if (notesDebounceRef.current) {
-        clearTimeout(notesDebounceRef.current);
-      }
-      if (ceremonyTimerRef.current) {
-        clearTimeout(ceremonyTimerRef.current);
-      }
-      if (progressDebounceRef.current) {
-        clearTimeout(progressDebounceRef.current);
-      }
-    };
-  }, []);
-
-  const persistReadingProgress = (page: number | '', total: number | '') => {
-    if (!isBook || !libraryItem) return;
-    if (progressDebounceRef.current) clearTimeout(progressDebounceRef.current);
-    progressDebounceRef.current = setTimeout(() => {
-      progressDebounceRef.current = undefined;
+  const commitReadingProgress = useCallback(
+    (page: number | '', total: number | '') => {
+      if (!isBook || !libraryItem) return;
       const value = typeof page === 'number' ? page : parseInt(String(page), 10);
       if (!Number.isFinite(value) || value < 0) return;
       const totalVal =
@@ -333,17 +331,73 @@ export function DetailModal({
             : {}),
         },
       }).catch(() => {});
+    },
+    [isBook, libraryItem, media.id],
+  );
+
+  const persistReadingProgress = (page: number | '', total: number | '') => {
+    if (!isBook || !libraryItem) return;
+    pendingProgressRef.current = { page, total };
+    if (progressDebounceRef.current) clearTimeout(progressDebounceRef.current);
+    progressDebounceRef.current = setTimeout(() => {
+      progressDebounceRef.current = undefined;
+      const pending = pendingProgressRef.current;
+      pendingProgressRef.current = null;
+      if (!pending) return;
+      commitReadingProgress(pending.page, pending.total);
     }, 400);
   };
+
+  /** Flush pending debounced notes + progress so unmount/close cannot drop user input. */
+  const flushPendingSaves = useCallback(() => {
+    if (notesDebounceRef.current) {
+      clearTimeout(notesDebounceRef.current);
+      notesDebounceRef.current = undefined;
+    }
+    if (pendingNotesRef.current) {
+      const pending = pendingNotesRef.current;
+      pendingNotesRef.current = null;
+      onUpdateNotes?.(
+        pending.notes,
+        pending.atmosphere,
+        pending.lingeringThought,
+        pending.emotions,
+      );
+    }
+    if (progressDebounceRef.current) {
+      clearTimeout(progressDebounceRef.current);
+      progressDebounceRef.current = undefined;
+    }
+    if (pendingProgressRef.current) {
+      const pending = pendingProgressRef.current;
+      pendingProgressRef.current = null;
+      commitReadingProgress(pending.page, pending.total);
+    }
+  }, [commitReadingProgress, onUpdateNotes]);
+
+  const flushPendingSavesRef = useRef(flushPendingSaves);
+  flushPendingSavesRef.current = flushPendingSaves;
+
+  useEffect(() => {
+    return () => {
+      flushPendingSavesRef.current();
+      if (ceremonyTimerRef.current) {
+        clearTimeout(ceremonyTimerRef.current);
+      }
+    };
+  }, []);
 
   const finishClose = useCallback(() => {
     if (closedRef.current) return;
     closedRef.current = true;
+    flushPendingSaves();
     onClose();
-  }, [onClose]);
+  }, [onClose, flushPendingSaves]);
 
   const requestClose = useCallback(() => {
     if (closedRef.current) return;
+    // Persist drafts as soon as close begins (exit animation may delay unmount)
+    flushPendingSaves();
     // Second Esc (or close) during exit: finish immediately — do not hard-block
     if (closingRef.current) {
       finishClose();
@@ -355,7 +409,7 @@ export function DetailModal({
     }
     closingRef.current = true;
     setClosing(true);
-  }, [finishClose]);
+  }, [finishClose, flushPendingSaves]);
 
   // Wait for curtain-close animationend, with timeout fallback if it never fires
   useEffect(() => {
@@ -412,12 +466,26 @@ export function DetailModal({
     nextLingering: string,
     nextEmotions: EmotionalSpectrum,
   ) => {
+    pendingNotesRef.current = {
+      notes: nextNotes,
+      atmosphere: nextAtmosphere,
+      lingeringThought: nextLingering,
+      emotions: nextEmotions,
+    };
     if (notesDebounceRef.current) {
       clearTimeout(notesDebounceRef.current);
     }
     notesDebounceRef.current = setTimeout(() => {
       notesDebounceRef.current = undefined;
-      commitNotesSave(nextNotes, nextAtmosphere, nextLingering, nextEmotions);
+      const pending = pendingNotesRef.current;
+      pendingNotesRef.current = null;
+      if (!pending) return;
+      commitNotesSave(
+        pending.notes,
+        pending.atmosphere,
+        pending.lingeringThought,
+        pending.emotions,
+      );
     }, 500);
   };
 
@@ -442,11 +510,22 @@ export function DetailModal({
     scheduleNotesSave(notes, atmosphere, lingeringThought, nextEmotions);
   };
 
+  /** Blur flush — commits notes with save ceremony when a debounce is still pending. */
   const flushNotes = () => {
+    if (!notesDebounceRef.current && !pendingNotesRef.current) return;
     if (notesDebounceRef.current) {
       clearTimeout(notesDebounceRef.current);
       notesDebounceRef.current = undefined;
-      commitNotesSave(notes, atmosphere, lingeringThought, emotions);
+    }
+    const pending = pendingNotesRef.current;
+    pendingNotesRef.current = null;
+    if (pending) {
+      commitNotesSave(
+        pending.notes,
+        pending.atmosphere,
+        pending.lingeringThought,
+        pending.emotions,
+      );
     }
   };
 
@@ -473,7 +552,12 @@ export function DetailModal({
 
       const focusable = Array.from(
         modalRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
-      );
+      ).filter((el) => {
+        if (el.getAttribute('tabindex') === '-1') return false;
+        if (el.closest('[aria-hidden="true"], [inert]')) return false;
+        // Skip zero-size / visibility-hidden accordion contents
+        return el.offsetWidth > 0 || el.offsetHeight > 0 || el.getClientRects().length > 0;
+      });
       if (focusable.length === 0) return;
 
       const first = focusable[0];
@@ -518,7 +602,7 @@ export function DetailModal({
         tabIndex={-1}
       >
         <button type="button" onClick={requestClose} className="sanctuary-modal-close" aria-label="Close details">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
@@ -537,7 +621,7 @@ export function DetailModal({
               <img src={media.posterUrl} alt={media.canonicalTitle} className="sanctuary-detail-poster-img" loading="lazy" decoding="async" />
             ) : (
               <div className="sanctuary-detail-poster-placeholder">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true">
                   <rect x="2" y="3" width="20" height="18" rx="2" />
                   <path d="M7 3v18M17 3v18M2 9h5M17 9h5M2 15h5M17 15h5" />
                 </svg>
@@ -656,69 +740,81 @@ export function DetailModal({
               ))}
             </ul>
           )}
-          {!linkOpen ? (
+          {!linkOpen && (
             <button
               type="button"
               className="sanctuary-detail-related-link-btn"
               onClick={openLinkAdaptation}
               data-testid="link-adaptation-btn"
+              aria-expanded={false}
+              aria-controls={linkPanelId}
             >
               Link adaptation…
             </button>
-          ) : (
-            <div className="sanctuary-detail-related-search" data-testid="adaptation-candidates">
-              <div className="sanctuary-detail-related-search-header">
-                <span className="sanctuary-detail-control-label">
-                  {isBook ? 'Film / series adaptations' : 'Source books'}
-                </span>
-                <button
-                  type="button"
-                  className="sanctuary-detail-related-cancel"
-                  onClick={() => {
-                    setLinkOpen(false);
-                    setCandidates([]);
-                    setLinkError(null);
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-              {candidatesLoading && (
-                <p className="sanctuary-detail-related-empty">Searching…</p>
-              )}
-              {linkError && (
-                <p className="sanctuary-detail-related-error" role="alert">{linkError}</p>
-              )}
-              {!candidatesLoading && candidates.length === 0 && !linkError && (
-                <p className="sanctuary-detail-related-empty">No candidates found for this title.</p>
-              )}
-              <ul className="sanctuary-detail-related-candidates">
-                {candidates.map((c) => (
-                  <li key={c.id}>
-                    <button
-                      type="button"
-                      className="sanctuary-detail-related-candidate"
-                      disabled={linkingId === c.id}
-                      onClick={() => assertAdaptation(c)}
-                    >
-                      <span className="sanctuary-detail-related-candidate-title">
-                        {c.canonicalTitle}
-                        {c.year ? ` (${c.year})` : ''}
-                      </span>
-                      <span className="sanctuary-detail-related-candidate-meta">
-                        {c.type}
-                        {c.authors?.length ? ` · ${c.authors.slice(0, 2).join(', ')}` : ''}
-                        {linkingId === c.id ? ' · linking…' : ' · Link'}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-              <p className="sanctuary-detail-related-note">
-                Linking is display-only — ratings and notes stay on each work.
-              </p>
-            </div>
           )}
+          <div
+            id={linkPanelId}
+            className={`sanctuary-detail-accordion${linkOpen ? ' is-expanded' : ''}`}
+            aria-hidden={!linkOpen}
+            inert={linkOpen ? undefined : true}
+          >
+            <div className="sanctuary-detail-accordion-inner">
+              <div className="sanctuary-detail-related-search" data-testid="adaptation-candidates">
+                <div className="sanctuary-detail-related-search-header">
+                  <span className="sanctuary-detail-control-label">
+                    {isBook ? 'Film / series adaptations' : 'Source books'}
+                  </span>
+                  <button
+                    type="button"
+                    className="sanctuary-detail-related-cancel"
+                    tabIndex={linkOpen ? 0 : -1}
+                    onClick={() => {
+                      setLinkOpen(false);
+                      setCandidates([]);
+                      setLinkError(null);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+                {candidatesLoading && (
+                  <p className="sanctuary-detail-related-empty">Searching…</p>
+                )}
+                {linkError && (
+                  <p className="sanctuary-detail-related-error" role="alert">{linkError}</p>
+                )}
+                {!candidatesLoading && candidates.length === 0 && !linkError && linkOpen && (
+                  <p className="sanctuary-detail-related-empty">No candidates found for this title.</p>
+                )}
+                <ul className="sanctuary-detail-related-candidates">
+                  {candidates.map((c) => (
+                    <li key={c.id}>
+                      <button
+                        type="button"
+                        className="sanctuary-detail-related-candidate"
+                        disabled={linkingId === c.id}
+                        tabIndex={linkOpen ? 0 : -1}
+                        onClick={() => assertAdaptation(c)}
+                      >
+                        <span className="sanctuary-detail-related-candidate-title">
+                          {c.canonicalTitle}
+                          {c.year ? ` (${c.year})` : ''}
+                        </span>
+                        <span className="sanctuary-detail-related-candidate-meta">
+                          {c.type}
+                          {c.authors?.length ? ` · ${c.authors.slice(0, 2).join(', ')}` : ''}
+                          {linkingId === c.id ? ' · linking…' : ' · Link'}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                <p className="sanctuary-detail-related-note">
+                  Linking is display-only — ratings and notes stay on each work.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="sanctuary-detail-library-wrap">
@@ -728,14 +824,23 @@ export function DetailModal({
                 type="button"
                 className="sanctuary-detail-details-toggle"
                 aria-expanded={detailsExpanded}
+                aria-controls={detailsPanelId}
                 onClick={() => setDetailsExpanded((prev) => !prev)}
               >
                 Dossier
-                <span className="sanctuary-detail-details-chevron">{detailsExpanded ? '▴' : '▾'}</span>
+                <span className="sanctuary-detail-details-chevron" aria-hidden="true">
+                  {detailsExpanded ? '▴' : '▾'}
+                </span>
               </button>
 
-              {detailsExpanded && (
-                <div className="sanctuary-detail-details-panel">
+              <div
+                id={detailsPanelId}
+                className={`sanctuary-detail-accordion${detailsExpanded ? ' is-expanded' : ''}`}
+                aria-hidden={!detailsExpanded}
+                inert={detailsExpanded ? undefined : true}
+              >
+                <div className="sanctuary-detail-accordion-inner">
+                  <div className="sanctuary-detail-details-panel">
                   <div className="sanctuary-detail-control-row">
                     <label className="sanctuary-detail-control-label" htmlFor={statusFieldId}>
                       Status:
@@ -1030,7 +1135,9 @@ export function DetailModal({
                       id={notesFieldId}
                       value={notes}
                       placeholder="What stayed with you after the credits?"
-                      onChange={(e) => handleNotesChange(e.currentTarget.value)}
+                      onInput={(e) =>
+                        handleNotesChange((e.currentTarget as HTMLTextAreaElement).value)
+                      }
                       onBlur={flushNotes}
                       rows={4}
                       className="sanctuary-detail-input sanctuary-detail-textarea"
@@ -1049,7 +1156,9 @@ export function DetailModal({
                           type="text"
                           value={atmosphere}
                           placeholder="e.g. Melancholic, Warm Amber"
-                          onChange={(e) => handleAtmosphereChange(e.currentTarget.value)}
+                          onInput={(e) =>
+                            handleAtmosphereChange((e.currentTarget as HTMLInputElement).value)
+                          }
                           onBlur={flushNotes}
                           className="sanctuary-detail-input"
                         />
@@ -1066,7 +1175,9 @@ export function DetailModal({
                           type="text"
                           value={lingeringThought}
                           placeholder="e.g. The cost of love..."
-                          onChange={(e) => handleLingeringChange(e.currentTarget.value)}
+                          onInput={(e) =>
+                            handleLingeringChange((e.currentTarget as HTMLInputElement).value)
+                          }
                           onBlur={flushNotes}
                           className="sanctuary-detail-input"
                         />
@@ -1091,7 +1202,8 @@ export function DetailModal({
                     showAbandonPrompts={libraryItem.status === 'abandoned'}
                   />
                 </div>
-              )}
+                </div>
+              </div>
             </div>
           ) : (
             <button className="sanctuary-detail-btn-inscribe" onClick={onAddToLibrary}>

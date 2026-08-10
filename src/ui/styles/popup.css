@@ -234,12 +234,14 @@
   width: 100%;
   color: inherit;
   font: inherit;
-  transition: all 0.2s;
+  transition: background-color 0.2s var(--ease-out, ease), border-color 0.2s var(--ease-out, ease);
 }
 
-.popup-recent-item:hover {
-  background: var(--bg-plaque-hover);
-  border-color: var(--accent-gold-border, var(--border-restraint));
+@media (hover: hover) and (pointer: fine) {
+  .popup-recent-item:hover {
+    background: var(--bg-plaque-hover);
+    border-color: var(--accent-gold-border, var(--border-restraint));
+  }
 }
 
 .popup-recent-poster {
@@ -335,7 +337,7 @@
   font-family: var(--font-ui);
   font-size: 13px;
   outline: none;
-  transition: all 0.2s;
+  transition: border-color 0.2s var(--ease-out, ease), box-shadow 0.2s var(--ease-out, ease);
 }
 
 .search-input:focus {
@@ -670,7 +672,7 @@
   resize: none;
   height: 54px;
   outline: none;
-  transition: all 0.2s;
+  transition: border-color 0.2s var(--ease-out, ease), box-shadow 0.2s var(--ease-out, ease);
 }
 
 .ext-notes-textarea:focus {
@@ -706,16 +708,18 @@
   background: var(--bg-plaque);
   border: 1px solid var(--border-restraint);
   color: var(--fg-muted);
-  transition: all 0.2s;
+  transition: background-color 0.2s var(--ease-out, ease), border-color 0.2s var(--ease-out, ease), color 0.2s var(--ease-out, ease);
   user-select: none;
   font-weight: 500;
   font-family: inherit;
   width: 100%;
 }
 
-.intent-pill:hover {
-  background: var(--bg-hover);
-  color: var(--fg-base);
+@media (hover: hover) and (pointer: fine) {
+  .intent-pill:hover {
+    background: var(--bg-hover);
+    color: var(--fg-base);
+  }
 }
 
 .intent-pill.active {
@@ -774,7 +778,7 @@
 
 .popup-btn-primary {
   background: var(--primary);
-  color: var(--on-primary-fg, #0a0a0a);
+  color: var(--on-primary-fg, #ffffff);
   border-color: var(--primary);
   font-weight: 600;
 }
@@ -782,7 +786,7 @@
 .popup-btn-primary:hover:not(:disabled) {
   background: var(--primary-hover);
   border-color: var(--primary-hover);
-  color: var(--on-primary-fg, #0a0a0a);
+  color: var(--on-primary-fg, #ffffff);
 }
 
 .popup-btn-secondary {
@@ -926,4 +930,32 @@
 
 [data-theme='light'] .popup-stat:hover {
   background: var(--surface-hover-subtle);
+}
+
+/* ─── Reduced Motion (nuclear parity with app shell global.css) ─── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .popup-view,
+  .suggestion-item,
+  .popup-close-btn:active,
+  .selected-movie-deselect-btn:active,
+  .popup-btn:active:not(:disabled),
+  .slider-input::-webkit-slider-thumb:hover,
+  .slider-input::-moz-range-thumb:hover {
+    transform: none;
+  }
+
+  .film-grain-popup {
+    display: none !important;
+    opacity: 0 !important;
+  }
 }

@@ -149,7 +149,7 @@ export function Search() {
                 fontSize: '11px',
                 borderColor: typeFilter === opt.value ? 'var(--border-hero)' : 'var(--border-restraint)',
                 color: typeFilter === opt.value ? 'var(--text-reflection)' : 'var(--text-meta)',
-                background: typeFilter === opt.value ? 'hsla(45, 90%, 65%, 0.08)' : 'var(--bg-plaque)'
+                background: typeFilter === opt.value ? 'rgba(218, 41, 28, 0.08)' : 'var(--bg-plaque)'
               }}
             >
               {opt.label}

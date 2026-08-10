@@ -168,7 +168,7 @@
 .diagnostics-oauth-hint {
   padding: 0;
   border-radius: var(--radius-md, 8px);
-  border: 1px solid var(--accent-gold-border, hsla(45, 80%, 62%, 0.25));
+  border: 1px solid var(--accent-gold-border, rgba(218, 41, 28, 0.25));
   background: var(--gold-soft-bg);
 }
 
@@ -282,7 +282,7 @@
 }
 
 .diagnostics-table-row.is-selected {
-  background: var(--gold-soft-bg, hsla(45, 80%, 62%, 0.14));
+  background: var(--gold-soft-bg, rgba(218, 41, 28, 0.14));
 }
 
 .diagnostics-table-row.is-selected td {
@@ -320,12 +320,12 @@
 
 .diagnostics-severity-pill.level-warn {
   color: var(--warning);
-  background: hsla(45, 90%, 50%, 0.12);
+  background: rgba(218, 41, 28, 0.12);
 }
 
 .diagnostics-severity-pill.level-info {
   color: var(--gold-text-soft, var(--text-reflection));
-  background: var(--gold-soft-bg, hsla(45, 80%, 62%, 0.1));
+  background: var(--gold-soft-bg, rgba(218, 41, 28, 0.1));
 }
 
 .diagnostics-cell-category {

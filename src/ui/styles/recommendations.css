@@ -553,7 +553,7 @@
   display: inline-block;
   width: 1px;
   height: 1.2em;
-  background: var(--border-hero);
+  background: var(--primary);
   flex-shrink: 0;
   align-self: center;
 }

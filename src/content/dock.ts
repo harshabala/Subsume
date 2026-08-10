@@ -4,6 +4,10 @@ import { setupShadowStyles } from '@/shared/shadowTokens';
 const DOCK_ATTR = 'data-subsume-dock';
 export const PAGE_REFLECTIONS_STORAGE_KEY = 'subsume_page_reflections';
 
+/** Expand enter duration (ms). Exit is slightly shorter. Cap ≤220ms. */
+const DOCK_ENTER_MS = 200;
+const DOCK_EXIT_MS = 180;
+
 export interface PageReflection {
   notes: string;
   updatedAt: number;
@@ -58,9 +62,9 @@ const DOCK_STYLES = `
     font-weight: 500;
     cursor: pointer;
     box-shadow: var(--shadow-md);
-    transition: border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-      box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-      transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: border-color var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out),
+      transform var(--duration-normal) var(--ease-out);
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
@@ -88,6 +92,25 @@ const DOCK_STYLES = `
     display: flex;
     flex-direction: column;
     gap: var(--spacing-md);
+  }
+
+  /* Pill ↔ card enter/exit: transform + opacity only, ≤220ms */
+  .dock-enter {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  .dock-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity ${DOCK_ENTER_MS}ms ease-out, transform ${DOCK_ENTER_MS}ms ease-out;
+  }
+
+  .dock-exit {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity ${DOCK_EXIT_MS}ms ease-out, transform ${DOCK_EXIT_MS}ms ease-out;
+    pointer-events: none;
   }
 
   .dock-header {
@@ -153,15 +176,20 @@ const DOCK_STYLES = `
     border-color: var(--primary);
   }
 
+  .dock-textarea:focus-visible {
+    outline: 2px solid var(--ring, var(--primary));
+    outline-offset: 2px;
+  }
+
   .dock-footer {
     display: flex;
     justify-content: flex-end;
   }
 
   .dock-save-btn {
-    background: var(--primary-soft);
-    color: var(--text-reflection);
-    border: 1px solid var(--border-hero);
+    background: var(--primary);
+    color: var(--on-primary-fg, #ffffff);
+    border: 1px solid var(--primary);
     min-height: 44px;
     padding: var(--spacing-sm) var(--spacing-md);
     border-radius: var(--radius-sm);
@@ -184,10 +212,19 @@ const DOCK_STYLES = `
 
   @media (prefers-reduced-motion: reduce) {
     .dock-toggle-btn,
-    .dock-save-btn {
+    .dock-save-btn,
+    .dock-enter,
+    .dock-enter-active,
+    .dock-exit {
       transition: none;
     }
     .dock-toggle-btn:hover {
+      transform: none;
+    }
+    .dock-enter,
+    .dock-enter-active,
+    .dock-exit {
+      opacity: 1;
       transform: none;
     }
   }
@@ -203,6 +240,13 @@ export class AuteurScreenplayDock {
   private boundOnToggle: ((e: MouseEvent) => void) | null;
   private boundOnSave: ((e: MouseEvent) => void) | null;
 
+  /** Pending rAF for enter activation (double-rAF paint). */
+  private enterRaf: number | null = null;
+  /** Pending timeout for exit wait or enter-class cleanup. */
+  private animTimeout: ReturnType<typeof setTimeout> | null = null;
+  /** Generation counter so stale timeouts/rAFs no-op after a new toggle/destroy. */
+  private animGen = 0;
+
   constructor() {
     this.boundOnToggle = (e: MouseEvent) => {
       e.preventDefault();
@@ -214,6 +258,58 @@ export class AuteurScreenplayDock {
       e.stopPropagation();
       this.saveNotes();
     };
+  }
+
+  private prefersReducedMotion(): boolean {
+    try {
+      return (
+        typeof window !== 'undefined' &&
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  private clearAnimTimers(): void {
+    this.animGen += 1;
+    if (this.enterRaf != null) {
+      cancelAnimationFrame(this.enterRaf);
+      this.enterRaf = null;
+    }
+    if (this.animTimeout != null) {
+      clearTimeout(this.animTimeout);
+      this.animTimeout = null;
+    }
+  }
+
+  /**
+   * Enter: start at .dock-enter (opacity 0, translateY 8px), then rAF →
+   * .dock-enter-active and drop .dock-enter (opacity 1, translateY 0, ~200ms).
+   * Reduced motion: skip classes entirely.
+   */
+  private runEnterAnimation(el: HTMLElement): void {
+    if (this.prefersReducedMotion()) return;
+
+    const gen = this.animGen;
+    el.classList.remove('dock-exit', 'dock-enter-active');
+    el.classList.add('dock-enter');
+
+    // Double rAF ensures the browser paints the enter state before transitioning.
+    this.enterRaf = requestAnimationFrame(() => {
+      this.enterRaf = requestAnimationFrame(() => {
+        this.enterRaf = null;
+        if (gen !== this.animGen || !el.isConnected) return;
+        el.classList.add('dock-enter-active');
+        el.classList.remove('dock-enter');
+        this.animTimeout = setTimeout(() => {
+          this.animTimeout = null;
+          if (gen !== this.animGen || !el.isConnected) return;
+          el.classList.remove('dock-enter-active');
+        }, DOCK_ENTER_MS);
+      });
+    });
   }
 
   private buildCard(): HTMLElement {
@@ -263,6 +359,15 @@ export class AuteurScreenplayDock {
     return card;
   }
 
+  private buildPill(): HTMLButtonElement {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'dock-toggle-btn';
+    btn.textContent = '✦ Reflection dock';
+    btn.addEventListener('click', this.boundOnToggle!);
+    return btn;
+  }
+
   public get isExpanded(): boolean {
     return this.isExpandedState;
   }
@@ -292,11 +397,13 @@ export class AuteurScreenplayDock {
     this.mountPoint.className = 'dock-container';
     this.shadowRoot.appendChild(this.mountPoint);
 
-    this.render();
+    // Initial mount: show collapsed pill without enter animation.
+    this.render({ animate: false });
     logger.log('[Subsume] Mounted Auteur Screenplay Dock.');
   }
 
   public destroy(): void {
+    this.clearAnimTimers();
     if (this.mountPoint) {
       this.mountPoint.innerHTML = '';
       this.mountPoint = null;
@@ -314,23 +421,56 @@ export class AuteurScreenplayDock {
 
   public toggle(): void {
     this.isExpandedState = !this.isExpandedState;
-    this.render();
+    this.render({ animate: true });
   }
 
-  private render(): void {
+  /**
+   * @param animate When true (toggle), run enter/exit. When false (mount), instant.
+   */
+  private render(options: { animate: boolean } = { animate: false }): void {
     if (!this.mountPoint) return;
-    this.mountPoint.innerHTML = '';
 
-    if (!this.isExpandedState) {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'dock-toggle-btn';
-      btn.textContent = '✦ Reflection dock';
-      btn.addEventListener('click', this.boundOnToggle!);
-      this.mountPoint.appendChild(btn);
-    } else {
-      this.mountPoint.appendChild(this.buildCard());
+    const reduced = this.prefersReducedMotion();
+    const shouldAnimate = options.animate && !reduced;
+
+    if (this.isExpandedState) {
+      // Expand: replace with card + enter animation (no exit on pill per spec).
+      this.clearAnimTimers();
+      this.mountPoint.innerHTML = '';
+      const card = this.buildCard();
+      this.mountPoint.appendChild(card);
+      if (shouldAnimate) {
+        this.runEnterAnimation(card);
+      }
+      return;
     }
+
+    // Collapse
+    const existing = this.mountPoint.firstElementChild as HTMLElement | null;
+    const hasCard = existing?.classList.contains('dock-card') ?? false;
+
+    if (shouldAnimate && hasCard && existing) {
+      this.clearAnimTimers();
+      const gen = this.animGen;
+      existing.classList.remove('dock-enter', 'dock-enter-active');
+      existing.classList.add('dock-exit');
+      this.animTimeout = setTimeout(() => {
+        this.animTimeout = null;
+        if (gen !== this.animGen || !this.mountPoint) return;
+        // Still collapsed after exit wait
+        if (this.isExpandedState) return;
+        this.mountPoint.innerHTML = '';
+        const pill = this.buildPill();
+        this.mountPoint.appendChild(pill);
+        this.runEnterAnimation(pill);
+      }, DOCK_EXIT_MS);
+      return;
+    }
+
+    // Instant swap (initial mount, reduced motion, or no card to exit)
+    this.clearAnimTimers();
+    this.mountPoint.innerHTML = '';
+    this.mountPoint.appendChild(this.buildPill());
   }
 
   private saveNotes(): void {

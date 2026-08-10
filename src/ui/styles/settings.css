@@ -75,6 +75,11 @@
   outline: none;
 }
 
+.settings-input:focus-visible {
+  outline: 2px solid var(--ring, var(--primary));
+  outline-offset: 2px;
+}
+
 .settings-input.resize-v {
   resize: vertical;
 }
@@ -166,7 +171,7 @@
 }
 
 .settings-chip-dot.active {
-  background: var(--border-hero);
+  background: var(--primary);
 }
 
 /* Hidden checkbox inside label chips */
@@ -224,7 +229,7 @@
 
 /* Gold CTA */
 .btn-sanctuary-gold {
-  background: var(--border-hero);
+  background: var(--primary);
   border: none;
   color: var(--on-primary-fg);
   min-height: 44px;
@@ -518,6 +523,44 @@
   backdrop-filter: var(--blur-hero);
 }
 
+.alerts-form-panel--enter {
+  animation: alerts-form-enter 180ms var(--ease-out, ease-out);
+}
+
+.alerts-form-panel--exiting {
+  animation: alerts-form-exit 180ms ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes alerts-form-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes alerts-form-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alerts-form-panel--enter,
+  .alerts-form-panel--exiting {
+    animation: none;
+  }
+}
+
 .alerts-form-heading {
   font-family: var(--font-editorial);
   font-style: italic;
@@ -593,7 +636,7 @@
 }
 
 .alerts-chip-dot.active {
-  background: var(--border-hero);
+  background: var(--primary);
 }
 
 .alerts-chip-hidden-input {

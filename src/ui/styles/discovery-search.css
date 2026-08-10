@@ -32,7 +32,12 @@
 
 .discovery-search-input:focus {
   border-color: var(--border-hero);
-  box-shadow: 0 0 0 2px hsla(45, 90%, 65%, 0.12);
+  box-shadow: 0 0 0 2px rgba(218, 41, 28, 0.12);
+}
+
+.discovery-search-input:focus-visible {
+  outline: 2px solid var(--ring, var(--primary));
+  outline-offset: 2px;
 }
 
 .discovery-search-filters {
@@ -54,7 +59,7 @@
   background: var(--bg-plaque);
   color: var(--text-meta);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .discovery-search-filter:hover {
@@ -65,7 +70,7 @@
 .discovery-search-filter.active {
   border-color: var(--border-hero);
   color: var(--text-reflection);
-  background: hsla(45, 90%, 65%, 0.08);
+  background: rgba(218, 41, 28, 0.08);
 }
 
 .discovery-search-status {

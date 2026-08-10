@@ -59,7 +59,7 @@ const PLAQUE_STYLES = `
     border-radius: var(--radius-md);
     background: var(--bg-plaque);
     color: var(--text-artwork);
-    border: 1px solid hsla(45, 80%, 55%, 0.28);
+    border: 1px solid rgba(218, 41, 28, 0.28);
     backdrop-filter: blur(8px);
     box-shadow: var(--shadow-md);
     font-family: var(--font-ui);
@@ -69,16 +69,16 @@ const PLAQUE_STYLES = `
     letter-spacing: 0.02em;
     pointer-events: auto;
     cursor: default;
-    transition: background 280ms cubic-bezier(0.16, 1, 0.3, 1),
-      border-color 280ms cubic-bezier(0.16, 1, 0.3, 1),
-      box-shadow 280ms cubic-bezier(0.16, 1, 0.3, 1),
-      transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition: background var(--duration-curtain) var(--ease-out),
+      border-color var(--duration-curtain) var(--ease-out),
+      box-shadow var(--duration-curtain) var(--ease-out),
+      transform var(--duration-curtain) var(--ease-out);
     white-space: nowrap;
   }
 
   .book-plaque:hover {
     background: var(--bg-plaque-hover);
-    border-color: hsla(45, 85%, 60%, 0.45);
+    border-color: rgba(218, 41, 28, 0.45);
     box-shadow: var(--shadow-lg);
     transform: translateY(-1px);
   }
@@ -178,13 +178,13 @@ const PLAQUE_STYLES = `
   }
 
   .plaque-add:hover {
-    border-color: hsla(45, 80%, 55%, 0.5);
+    border-color: rgba(218, 41, 28, 0.5);
     color: var(--text-reflection);
     background: var(--primary-soft);
   }
 
   .plaque-add:focus-visible {
-    border-color: hsla(45, 80%, 55%, 0.5);
+    border-color: rgba(218, 41, 28, 0.5);
     color: var(--text-reflection);
     background: var(--primary-soft);
     outline: 2px solid var(--accent-gold, var(--primary));

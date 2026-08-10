@@ -25,7 +25,12 @@
   cursor: pointer;
   border-bottom: 2px solid transparent;
   outline: none;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s var(--ease-out, ease), border-color 0.2s var(--ease-out, ease), color 0.2s var(--ease-out, ease), opacity 0.2s var(--ease-out, ease);
+}
+
+.people-tab:focus-visible {
+  outline: 2px solid var(--ring, var(--primary));
+  outline-offset: 2px;
 }
 
 .people-tab.active {
@@ -466,7 +471,7 @@
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s var(--ease-out, ease), border-color 0.2s var(--ease-out, ease), color 0.2s var(--ease-out, ease), opacity 0.2s var(--ease-out, ease);
 }
 
 .filmography-filter-chip.active {
@@ -613,7 +618,7 @@
   letter-spacing: 0.15em;
   padding: 12px 4px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s var(--ease-out, ease), border-color 0.2s var(--ease-out, ease), color 0.2s var(--ease-out, ease), opacity 0.2s var(--ease-out, ease);
 }
 
 .people-sanctuary-tab.active {
@@ -857,6 +862,11 @@
   box-sizing: border-box;
 }
 
+.people-sanctuary-search:focus-visible {
+  outline: 2px solid var(--ring, var(--primary));
+  outline-offset: 2px;
+}
+
 .people-search-results {
   display: flex;
   flex-direction: column;
@@ -949,6 +959,11 @@
   outline: none;
 }
 
+.people-role-select:focus-visible {
+  outline: 2px solid var(--ring, var(--primary));
+  outline-offset: 2px;
+}
+
 .people-role-select option {
   background: var(--surface-select);
 }
@@ -964,7 +979,7 @@
 }
 
 .people-enroll-btn.active {
-  background: var(--border-hero);
+  background: var(--primary);
   border: none;
   color: var(--on-primary-fg);
   cursor: pointer;
