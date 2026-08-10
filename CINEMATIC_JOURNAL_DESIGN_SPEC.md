@@ -6,7 +6,7 @@
 > **Repository Finder Path:** `/Users/harshabalakrishnan/Documents/Projects/Subsume/CINEMATIC_JOURNAL_DESIGN_SPEC.md`  
 > **Superseding Clause:** *This specification supersedes all utilitarian or decorative SaaS implementation details wherever there is conflict. Every engineering and UI decision must justify its existence by making contemplation and reflection more meaningful.*
 
-> **Design authority:** For UI implementation, this cinematic spec and `src/shared/tokens.css` are the canonical sources of truth. They supersede `brand.md` wherever there is conflict (typography, palette tokens, spacing, motion). `brand.md` remains a legacy reference for palette mood notes only — do not implement Geist or other deprecated tokens in production UI.
+> **Design authority (updated 2026-08-10):** Live implementation is governed by `src/shared/tokens.css`, `DESIGN.md`, and `brand.md`. This cinematic document remains valuable for **theatre philosophy and interaction acts**, but its palette/type blocks (Gilded Night, Newsreader/Outfit, Parchment) are **historical**. Wave 2 identity: Cinema Black + Rosso Corsa, Courier Prime (display) + IBM Plex Mono (UI). Where this file conflicts with `DESIGN.md` / tokens, **tokens win**.
 
 ---
 

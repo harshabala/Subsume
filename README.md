@@ -250,7 +250,7 @@ Subsume stands on the shoulders of incredible open-source tools and open data pr
 - **[Preact](https://preactjs.com/) & [Vite](https://vitejs.dev/):** For ultra-fast, lightweight UI rendering and bundle optimisation.
 - **[idb](https://github.com/jakearchibald/idb):** For robust Promise-based IndexedDB transaction wrapping.
 - **[Lucide Icons](https://lucide.dev/):** For crisp, modern UI iconography.
-- **[Newsreader](https://fonts.google.com/specimen/Newsreader) & [Outfit](https://fonts.google.com/specimen/Outfit) (Google Fonts):** For the editorial typographic identity of the sanctuary.
+- **[Courier Prime](https://fonts.google.com/specimen/Courier+Prime) & [IBM Plex Mono](https://fonts.google.com/specimen/IBM+Plex+Mono) (Google Fonts):** Display/plaque type + UI mono system (Wave 2 identity — screenplay and manuscript, not dual serif/sans).
 - **[Vitest](https://vitest.dev/):** For the unit test suite (run `npm test` for the current count).
 
 ---

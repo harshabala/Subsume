@@ -1662,6 +1662,8 @@
   border-color: var(--danger-fg);
 }
 
+/* Primary CTA — .sanctuary-btn-gold kept as deprecated alias (Wave 2) */
+.sanctuary-btn-primary,
 .sanctuary-btn-gold {
   background: var(--primary);
   border: none;
@@ -1683,9 +1685,11 @@
   align-items: center;
   justify-content: center;
 }
+.sanctuary-btn-primary:hover,
 .sanctuary-btn-gold:hover {
   background: var(--primary-hover-bg);
 }
+.sanctuary-btn-primary:active:not(:disabled),
 .sanctuary-btn-gold:active:not(:disabled) {
   transform: scale(0.97);
 }
@@ -3695,6 +3699,7 @@ select.sanctuary-input option {
   .sanctuary-action-button:active:not(:disabled),
   .optical-button:active:not(:disabled),
   .optical-filter-tab:active,
+  .sanctuary-btn-primary:active:not(:disabled),
   .sanctuary-btn-gold:active:not(:disabled),
   .sanctuary-btn-restraint:active:not(:disabled),
   .intent-tab-btn:active,

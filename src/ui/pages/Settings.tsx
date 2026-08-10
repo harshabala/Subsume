@@ -1205,7 +1205,7 @@ export function Settings() {
           {updateStatus && <span className="settings-update-status">{updateStatus}</span>}
         </div>
 
-        <button className="btn-sanctuary-gold" onClick={save} disabled={saving}>
+        <button className="btn-sanctuary-primary" onClick={save} disabled={saving}>
           {saving ? 'Saving…' : 'Save settings'}
         </button>
       </div>
