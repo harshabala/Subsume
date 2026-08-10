@@ -929,8 +929,17 @@ export function isValidMediaItem(m: unknown): m is MediaItem {
   if (typeof item.id !== 'string' || !MEDIA_ID_PATTERN.test(item.id)) return false;
   // type must be a valid MediaType
   if (!VALID_MEDIA_TYPES.has(item.type as string)) return false;
-  // year must be a finite number
+  // year must be a finite number in a plausible range
   if (typeof item.year !== 'number' || !Number.isFinite(item.year)) return false;
+  if (item.year < 1800 || item.year > 2100) return false;
+  // Wave 4: require a non-empty title so sparse forgeries cannot land in IDB
+  if (typeof item.canonicalTitle !== 'string' || item.canonicalTitle.trim().length === 0) {
+    return false;
+  }
+  if (item.canonicalTitle.length > 500) return false;
+  // ratings / providers when present must be arrays
+  if (item.ratings !== undefined && !Array.isArray(item.ratings)) return false;
+  if (item.providers !== undefined && !Array.isArray(item.providers)) return false;
   return true;
 }
 

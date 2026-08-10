@@ -1,5 +1,6 @@
 import { logger } from '@/shared/logger';
 import { setupShadowStyles } from '@/shared/shadowTokens';
+import { isTrustedGesture } from '@/content/closedShadow';
 
 const DOCK_ATTR = 'data-subsume-dock';
 export const PAGE_REFLECTIONS_STORAGE_KEY = 'subsume_page_reflections';
@@ -247,16 +248,29 @@ export class AuteurScreenplayDock {
   /** Generation counter so stale timeouts/rAFs no-op after a new toggle/destroy. */
   private animGen = 0;
 
+  private boundOnKeyDown: ((e: KeyboardEvent) => void) | null = null;
+  private lastFocusBeforeExpand: HTMLElement | null = null;
+
   constructor() {
     this.boundOnToggle = (e: MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      // Wave 4: require a trusted user gesture (blocks synthetic page clicks)
+      if (!isTrustedGesture(e)) return;
       this.toggle();
     };
     this.boundOnSave = (e: MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      if (!isTrustedGesture(e)) return;
       this.saveNotes();
+    };
+    this.boundOnKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (!this.isExpandedState) return;
+      e.preventDefault();
+      e.stopPropagation();
+      this.toggle();
     };
   }
 
@@ -337,8 +351,14 @@ export class AuteurScreenplayDock {
     const textarea = document.createElement('textarea');
     textarea.className = 'dock-textarea';
     textarea.placeholder = 'What stayed with you after this page?';
+    textarea.setAttribute('aria-label', 'Reflection notes for this page');
+    textarea.setAttribute('name', 'subsume-page-reflection');
     void loadPageReflection(this.pageKey).then((notes) => {
       textarea.value = notes;
+      // Focus after notes load so keyboard users land in the field
+      requestAnimationFrame(() => {
+        if (textarea.isConnected) textarea.focus();
+      });
     }).catch((err) => {
       logger.warn('[Subsume] Failed to load page reflection notes:', err);
     });
@@ -364,6 +384,8 @@ export class AuteurScreenplayDock {
     btn.type = 'button';
     btn.className = 'dock-toggle-btn';
     btn.textContent = '✦ Reflection dock';
+    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-label', 'Open reflection dock');
     btn.addEventListener('click', this.boundOnToggle!);
     return btn;
   }
@@ -397,6 +419,11 @@ export class AuteurScreenplayDock {
     this.mountPoint.className = 'dock-container';
     this.shadowRoot.appendChild(this.mountPoint);
 
+    // Esc collapses expanded dock (Wave 4 keyboard model)
+    if (this.boundOnKeyDown) {
+      document.addEventListener('keydown', this.boundOnKeyDown, true);
+    }
+
     // Initial mount: show collapsed pill without enter animation.
     this.render({ animate: false });
     logger.log('[Subsume] Mounted Auteur Screenplay Dock.');
@@ -404,6 +431,9 @@ export class AuteurScreenplayDock {
 
   public destroy(): void {
     this.clearAnimTimers();
+    if (this.boundOnKeyDown) {
+      document.removeEventListener('keydown', this.boundOnKeyDown, true);
+    }
     if (this.mountPoint) {
       this.mountPoint.innerHTML = '';
       this.mountPoint = null;
@@ -416,12 +446,23 @@ export class AuteurScreenplayDock {
     this.isExpandedState = false;
     this.boundOnToggle = null;
     this.boundOnSave = null;
+    this.boundOnKeyDown = null;
     logger.log('[Subsume] Destroyed Auteur Screenplay Dock.');
   }
 
   public toggle(): void {
+    if (!this.isExpandedState) {
+      this.lastFocusBeforeExpand = document.activeElement as HTMLElement | null;
+    }
     this.isExpandedState = !this.isExpandedState;
     this.render({ animate: true });
+    if (!this.isExpandedState && this.lastFocusBeforeExpand?.isConnected) {
+      try {
+        this.lastFocusBeforeExpand.focus();
+      } catch {
+        /* ignore */
+      }
+    }
   }
 
   /**
@@ -483,7 +524,10 @@ export class AuteurScreenplayDock {
     savePageReflection(this.pageKey, notes)
       .then(() => {
         logger.log('[Subsume] Successfully saved auteur reflection notes.');
-        this.toggle();
+        // Only collapse if still expanded (user may have collapsed mid-save)
+        if (this.isExpandedState) {
+          this.toggle();
+        }
       })
       .catch((err) => {
         logger.error('[Subsume] Error saving page reflection notes:', err);

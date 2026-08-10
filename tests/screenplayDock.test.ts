@@ -6,6 +6,7 @@ import {
   savePageReflection,
   PAGE_REFLECTIONS_STORAGE_KEY,
 } from '@/content/dock';
+import { dispatchTrustedClick } from '@/content/closedShadow';
 
 describe('AuteurScreenplayDock (dock.ts)', () => {
   beforeEach(() => {
@@ -46,7 +47,7 @@ describe('AuteurScreenplayDock (dock.ts)', () => {
     dock.mount();
 
     const pill = dock.shadow!.querySelector('.dock-toggle-btn') as HTMLElement;
-    pill.click();
+    dispatchTrustedClick(pill);
 
     expect(dock.isExpanded).toBe(true);
     const card = dock.shadow!.querySelector('.dock-card');
@@ -65,7 +66,7 @@ describe('AuteurScreenplayDock (dock.ts)', () => {
     textarea.value = 'Cinematic masterpiece of framing.';
 
     const saveBtn = dock.shadow!.querySelector('.dock-save-btn') as HTMLElement;
-    saveBtn.click();
+    dispatchTrustedClick(saveBtn);
 
     await vi.waitFor(() => {
       expect(chrome.storage.local.set).toHaveBeenCalled();

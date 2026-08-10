@@ -532,9 +532,15 @@ export function DetailModal({
   const requestCloseRef = useRef(requestClose);
   requestCloseRef.current = requestClose;
 
-  // Focus trap + Esc (incl. exit interrupt) + restore focus — matches PoeticCaptureCanvas
+  // Focus trap + Esc + restore focus + inert app shell (Wave 4 a11y)
   useEffect(() => {
     previousFocusRef.current = document.activeElement as HTMLElement | null;
+
+    const shell = document.getElementById('app');
+    if (shell) {
+      shell.setAttribute('inert', '');
+      shell.setAttribute('aria-hidden', 'true');
+    }
 
     const focusDialog = () => {
       modalRef.current?.focus();
@@ -576,6 +582,10 @@ export function DetailModal({
     return () => {
       window.clearTimeout(focusTimer);
       document.removeEventListener('keydown', handleKeyDown);
+      if (shell) {
+        shell.removeAttribute('inert');
+        shell.removeAttribute('aria-hidden');
+      }
       previousFocusRef.current?.focus();
     };
   }, []);

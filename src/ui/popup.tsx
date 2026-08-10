@@ -559,7 +559,7 @@ function Popup() {
                 id="popup-suggestions-list"
                 className="suggestions-list"
                 role="listbox"
-                key={searchLoading ? 'searching' : `suggestions-${searchQuery}`}
+                key={searchLoading ? 'searching' : 'suggestions-list'}
               >
                 {searchLoading ? (
                   <li className="suggestion-item suggestion-item--static" role="option" style={{ fontStyle: 'italic', justifyContent: 'center' }}>Searching the repertoire…</li>
