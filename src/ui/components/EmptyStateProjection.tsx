@@ -1,13 +1,22 @@
 import { h } from 'preact';
 
+export interface EmptyStateAction {
+  label: string;
+  onClick: () => void;
+  /** Primary fills with brand CTA styling; secondary is quieter. */
+  variant?: 'primary' | 'secondary';
+}
+
 export interface EmptyStateProjectionProps {
   title?: string;
   message?: string;
   hint?: string;
   className?: string;
-  /** Optional primary action (e.g. clear filters) */
+  /** Optional primary action (e.g. clear filters) — kept for single-CTA call sites */
   actionLabel?: string;
   onAction?: () => void;
+  /** Multiple CTAs (Wave 1 empty Archive). Overrides single actionLabel when provided. */
+  actions?: EmptyStateAction[];
 }
 
 export function EmptyStateProjection({
@@ -17,7 +26,15 @@ export function EmptyStateProjection({
   className = '',
   actionLabel,
   onAction,
+  actions,
 }: EmptyStateProjectionProps) {
+  const resolvedActions: EmptyStateAction[] =
+    actions && actions.length > 0
+      ? actions
+      : actionLabel && onAction
+        ? [{ label: actionLabel, onClick: onAction, variant: 'primary' }]
+        : [];
+
   return (
     <div className={`empty-state-projection ${className}`.trim()} data-testid="empty-state-projection">
       <div className="empty-state-projection-beam" aria-hidden="true" />
@@ -58,10 +75,23 @@ export function EmptyStateProjection({
       <h3 className="empty-state-projection-title">{title}</h3>
       <p className="empty-state-projection-message">{message}</p>
       {hint && <p className="empty-state-projection-hint">{hint}</p>}
-      {actionLabel && onAction && (
-        <button type="button" className="optical-button library-retry-btn" onClick={onAction}>
-          {actionLabel}
-        </button>
+      {resolvedActions.length > 0 && (
+        <div className="empty-state-projection-actions" role="group" aria-label="Next steps">
+          {resolvedActions.map((action) => (
+            <button
+              key={action.label}
+              type="button"
+              className={
+                action.variant === 'secondary'
+                  ? 'optical-button sm library-retry-btn'
+                  : 'optical-button library-retry-btn'
+              }
+              onClick={action.onClick}
+            >
+              {action.label}
+            </button>
+          ))}
+        </div>
       )}
     </div>
   );

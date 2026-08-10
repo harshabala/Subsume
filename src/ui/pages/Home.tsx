@@ -376,6 +376,36 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
           <p className="lobby-desc">
             The lobby of your picture palace. Search the vault, follow what is moving on the live feed, and return to titles whose afterglow you have already inscribed.
           </p>
+          {!loading && libraryCount === 0 && (
+            <div
+              className="discovery-first-inscription"
+              data-testid="discovery-first-inscription"
+              role="region"
+              aria-label="First inscription"
+            >
+              <p className="discovery-first-inscription-title">Inscribe your first title</p>
+              <p className="discovery-first-inscription-body">
+                Search the catalogue, or browse the web — when a plaque appears, open Reflect and
+                write what stayed with you. That is the whole loop.
+              </p>
+              <div className="discovery-first-inscription-actions">
+                <button
+                  type="button"
+                  className="optical-button"
+                  onClick={() => onNavigate('search')}
+                >
+                  Inscribe your first title
+                </button>
+                <button
+                  type="button"
+                  className="optical-button sm"
+                  onClick={() => onNavigate('library')}
+                >
+                  Open empty Archive
+                </button>
+              </div>
+            </div>
+          )}
           <div className="discovery-lobby-actions">
             <button
               type="button"

@@ -17,6 +17,7 @@ import {
 import type { CollectionFilter, MediumFilter } from '../components/archive/IntentNavigation';
 import { resolveSanctuaryIntent } from '../components/archive/constants';
 import { EmptyStateProjection } from '../components/EmptyStateProjection';
+import { restoreDemoLibrary } from '../lib/ensureDemoLibrary';
 import type { EmotionalSpectrum } from '@/shared/emotions';
 import type { MediaType } from '@/shared/types';
 
@@ -47,6 +48,7 @@ export function Library({ onNavigate }: LibraryProps = {}) {
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [demoLoading, setDemoLoading] = useState(false);
 
   const isMountedRef = useRef(true);
 
@@ -287,11 +289,13 @@ export function Library({ onNavigate }: LibraryProps = {}) {
   }, [items, collectionFilter, activeTagFilter, searchQuery, sortBy, intentFilter]);
 
   const emptyCopy = (() => {
+    const plaqueHowTo =
+      'On any title page, a small plaque may appear — open it and choose Reflect, or use Search here to inscribe by name.';
     if (activeTab === 'books') {
       return {
         title: 'No books inscribed yet',
-        message: 'When a title stays with you, open its page and leave the first inscription.',
-        hint: 'Browse any page for a book that holds you, or search the catalogue.',
+        message: 'When a title stays with you, leave the first inscription here.',
+        hint: plaqueHowTo,
       };
     }
     if (activeTab === 'screen' || activeTab === 'movies' || activeTab === 'tv') {
@@ -299,14 +303,14 @@ export function Library({ onNavigate }: LibraryProps = {}) {
         activeTab === 'tv' ? 'series' : activeTab === 'movies' ? 'films' : 'titles';
       return {
         title: `No ${screenNoun} inscribed yet`,
-        message: 'Open any title page and leave the first inscription before the moment passes.',
-        hint: 'Browse on the web or capture a moment to enrol your first frame.',
+        message: 'Open any title and leave the first inscription before the moment passes.',
+        hint: plaqueHowTo,
       };
     }
     return {
       title: 'Nothing inscribed yet',
       message: 'Films, shows, and books you keep live here as inscriptions in a private vault.',
-      hint: 'Browse titles on the web or capture a moment to leave your first mark.',
+      hint: plaqueHowTo,
     };
   })();
 
@@ -370,8 +374,39 @@ export function Library({ onNavigate }: LibraryProps = {}) {
             title={emptyCopy.title}
             message={emptyCopy.message}
             hint={emptyCopy.hint}
-            actionLabel={onNavigate ? 'Search catalogue' : undefined}
-            onAction={onNavigate ? () => onNavigate('search') : undefined}
+            actions={
+              onNavigate
+                ? [
+                    {
+                      label: 'Search catalogue',
+                      onClick: () => onNavigate('search'),
+                      variant: 'primary',
+                    },
+                    {
+                      label: 'Inscribe on Discovery',
+                      onClick: () => onNavigate('home'),
+                      variant: 'secondary',
+                    },
+                    {
+                      label: demoLoading ? 'Loading reel…' : 'Load highlight reel',
+                      onClick: () => {
+                        if (demoLoading) return;
+                        setDemoLoading(true);
+                        setActionError(null);
+                        void restoreDemoLibrary()
+                          .then(() => fetchLibrary(0, false))
+                          .catch(() => {
+                            setActionError(
+                              'Could not load the highlight reel. Try again, or open Settings → Backup.',
+                            );
+                          })
+                          .finally(() => setDemoLoading(false));
+                      },
+                      variant: 'secondary',
+                    },
+                  ]
+                : undefined
+            }
           />
         ) : filteredAndSortedItems.length === 0 ? (
           <EmptyStateProjection
