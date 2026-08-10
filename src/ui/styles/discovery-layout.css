@@ -21,6 +21,38 @@
   z-index: 2;
 }
 
+/* Wave 1 activation — first inscription prompt when archive is empty */
+.discovery-first-inscription {
+  margin-top: clamp(16px, 2vw, 24px);
+  padding: clamp(16px, 2vw, 20px);
+  border: 1px solid var(--border-hero, rgba(218, 41, 28, 0.35));
+  border-radius: var(--radius-md, 4px);
+  background: var(--primary-soft, rgba(218, 41, 28, 0.08));
+  max-width: 36rem;
+}
+
+.discovery-first-inscription-title {
+  margin: 0 0 8px;
+  font-family: var(--font-ui);
+  font-size: var(--font-size-md, 1rem);
+  font-weight: 600;
+  color: var(--fg-base, #fff);
+  letter-spacing: 0.02em;
+}
+
+.discovery-first-inscription-body {
+  margin: 0 0 14px;
+  font-size: var(--font-size-sm, 0.875rem);
+  line-height: 1.5;
+  color: var(--fg-muted, #969696);
+}
+
+.discovery-first-inscription-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+}
+
 /* Quiet lobby CTAs — one primary, one secondary, text links for the rest */
 .discovery-lobby-actions {
   display: flex;

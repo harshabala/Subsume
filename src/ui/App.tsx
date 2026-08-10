@@ -60,7 +60,7 @@ function getInitialPage(): Page {
   const page = new URLSearchParams(window.location.search).get('page');
   if (page === 'alerts') return 'alerts';
   if (page === 'logs') return 'settings';
-  // Returning users land in Archive unless deep-linked via ?page=
+  // Wave 1 activation: default land is Discovery (first inscription path), not empty Archive
   if (page === 'home' || page === 'discovery') return 'home';
   if (page === 'library' || page === 'archive') return 'library';
   if (page === 'search') return 'search';
@@ -69,7 +69,7 @@ function getInitialPage(): Page {
   if (page === 'people' || page === 'creators') return 'people';
   if (page === 'stats') return 'stats';
   if (page === 'settings') return 'settings';
-  return 'library';
+  return 'home';
 }
 
 function NavIcon({ item }: { item: NavItem }) {
@@ -273,6 +273,15 @@ export function App() {
     try {
       await sendMessage(MessageType.SET_PREFERENCES, newPrefs);
       setPrefs(newPrefs);
+      // Land on Discovery with first-inscription prompt — never empty Archive
+      setCurrentPage('home');
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('page', 'home');
+        window.history.replaceState({}, '', url.toString());
+      } catch {
+        /* non-fatal */
+      }
     } catch (err) {
       console.error('[Subsume] Failed to save onboarding completion:', err);
       showNotice(`Onboarding could not be saved: ${formatUserError(err)}`, 'error');

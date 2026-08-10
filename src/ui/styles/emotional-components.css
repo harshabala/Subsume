@@ -401,6 +401,17 @@
   opacity: 0.8;
 }
 
+.empty-state-projection-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--spacing-sm, 12px);
+  margin-top: var(--spacing-lg, 24px);
+  max-width: 42rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .empty-state-projection,
   .empty-state-projection-beam,

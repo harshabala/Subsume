@@ -1,14 +1,14 @@
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
-import type { LLMProvider } from '@/shared/types';
-import { validateTmdbKey, validateOmdbKey } from '../lib/validateKeys';
+import { validateTmdbKey } from '../lib/validateKeys';
 import '../styles/onboarding.css';
 
+/**
+ * Wave 1 activation: onboarding is 2 steps only.
+ * OMDb + LLM keys are deferred to Settings so first inscription can happen in <90s.
+ */
 export interface OnboardingPatch {
   tmdbApiKey: string;
-  omdbApiKey?: string;
-  llmProvider?: LLMProvider;
-  llmApiKey?: string;
   llmEnabled: boolean;
 }
 
@@ -16,23 +16,12 @@ interface OnboardingProps {
   onComplete: (patch: OnboardingPatch) => void;
 }
 
-const TOTAL_STEPS = 5;
-type Step = 1 | 2 | 3 | 4 | 5;
-
-const LLM_PROVIDERS: { value: LLMProvider; label: string }[] = [
-  { value: 'openai', label: 'OpenAI' },
-  { value: 'anthropic', label: 'Anthropic' },
-  { value: 'gemini', label: 'Google Gemini' },
-];
+const TOTAL_STEPS = 2;
+type Step = 1 | 2;
 
 export function Onboarding({ onComplete }: OnboardingProps) {
   const [step, setStep] = useState<Step>(1);
   const [tmdbApiKey, setTmdbApiKey] = useState('');
-  const [omdbApiKey, setOmdbApiKey] = useState('');
-  const [llmProvider, setLlmProvider] = useState<LLMProvider>('openai');
-  const [llmApiKey, setLlmApiKey] = useState('');
-  const [includeLlm, setIncludeLlm] = useState(false);
-  const [includeOmdb, setIncludeOmdb] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [validating, setValidating] = useState(false);
 
@@ -43,12 +32,18 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     setStep(next);
   };
 
+  const finish = (key: string) => {
+    onComplete({
+      tmdbApiKey: key.trim(),
+      llmEnabled: false,
+    });
+  };
+
   const handleTmdbContinue = async () => {
     clearError();
     const trimmed = tmdbApiKey.trim();
-    // Empty key: not hard-required — continue without validating
     if (!trimmed) {
-      setError("Paste a TMDb token to validate, or choose \"I'll add keys later\".");
+      setError("Paste a TMDb token to validate, or choose \"Enter without keys\".");
       return;
     }
     setValidating(true);
@@ -58,80 +53,15 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         setError(result.error || 'TMDb key could not be validated.');
         return;
       }
-      goTo(3);
+      finish(trimmed);
     } finally {
       setValidating(false);
     }
   };
 
-  const handleTmdbSkip = () => {
-    setTmdbApiKey('');
-    goTo(3);
+  const handleEnterWithoutKeys = () => {
+    finish('');
   };
-
-  const handleOmdbContinue = async () => {
-    clearError();
-    const trimmed = omdbApiKey.trim();
-    if (!trimmed) {
-      setError('Enter an OMDb key, or choose Skip.');
-      return;
-    }
-    setValidating(true);
-    try {
-      const result = await validateOmdbKey(trimmed);
-      if (!result.valid) {
-        setError(result.error || 'OMDb key could not be validated.');
-        return;
-      }
-      setIncludeOmdb(true);
-      goTo(4);
-    } finally {
-      setValidating(false);
-    }
-  };
-
-  const handleOmdbSkip = () => {
-    setIncludeOmdb(false);
-    setOmdbApiKey('');
-    goTo(4);
-  };
-
-  const handleLlmContinue = () => {
-    clearError();
-    const trimmed = llmApiKey.trim();
-    if (!trimmed) {
-      setError('Enter an API key, or choose Skip.');
-      return;
-    }
-    setIncludeLlm(true);
-    goTo(5);
-  };
-
-  const handleLlmSkip = () => {
-    setIncludeLlm(false);
-    setLlmApiKey('');
-    goTo(5);
-  };
-
-  const finish = () => {
-    const patch: OnboardingPatch = {
-      tmdbApiKey: tmdbApiKey.trim(),
-      llmEnabled: includeLlm,
-    };
-    if (includeOmdb && omdbApiKey.trim()) {
-      patch.omdbApiKey = omdbApiKey.trim();
-    }
-    if (includeLlm) {
-      patch.llmProvider = llmProvider;
-      patch.llmApiKey = llmApiKey.trim();
-    }
-    onComplete(patch);
-  };
-
-  const showSkWarning =
-    llmProvider === 'openai' &&
-    llmApiKey.trim().length > 0 &&
-    !llmApiKey.trim().startsWith('sk-');
 
   return (
     <div className="onboarding-screen">
@@ -158,7 +88,6 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           })}
         </nav>
 
-        {/* key={step} restarts enter animation on step change only (shell chrome stays put) */}
         <div key={step} className="onboarding-step-pane">
           {step === 1 && (
             <section className="onboarding-step" aria-labelledby="onboarding-welcome-title">
@@ -195,12 +124,16 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   </div>
                 ))}
               </div>
+              <p className="onboarding-body onboarding-body--compact">
+                You can inscribe a title in under a minute. Optional catalogue keys
+                (TMDb) can wait until you want richer posters and search.
+              </p>
               <button
                 type="button"
                 className="onboarding-cta"
                 onClick={() => goTo(2)}
               >
-                Start setup
+                Begin
               </button>
             </section>
           )}
@@ -208,18 +141,13 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           {step === 2 && (
             <section className="onboarding-step" aria-labelledby="onboarding-tmdb-title">
               <h1 id="onboarding-tmdb-title" className="onboarding-headline onboarding-headline--step">
-                The catalogue key
+                Optional catalogue key
               </h1>
               <div className="onboarding-divider" />
               <p className="onboarding-body onboarding-body--compact">
-                TMDb powers screen discovery — posters, search, and the house
-                programme. Paste your API Read Access Token (Bearer), not the short
-                API Key.
-              </p>
-              <p className="onboarding-body onboarding-body--compact">
-                Optional for now. Screen metadata (posters, search, programme) is
-                richer with TMDb; you can add a token later under Settings. Books
-                use Open Library by default with no key.
+                TMDb improves screen posters and search. Skip for now — free sources
+                still work, and books use Open Library with no key. Add OMDb ratings
+                or an AI curator later under Settings.
               </p>
               <div className="onboarding-form">
                 <label className="onboarding-label" htmlFor="onboarding-tmdb-key">
@@ -247,7 +175,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   >
                     themoviedb.org/settings/api
                   </a>
-                  . Optional Google Books enrichment lives later under Settings.
+                  . Use the API Read Access Token (Bearer), not the short API Key.
                 </p>
                 {error && (
                   <p className="onboarding-error" role="alert">
@@ -258,10 +186,10 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   <button
                     type="button"
                     className="onboarding-cta onboarding-cta--ghost"
-                    onClick={handleTmdbSkip}
+                    onClick={handleEnterWithoutKeys}
                     disabled={validating}
                   >
-                    I&apos;ll add keys later
+                    Enter without keys
                   </button>
                   <button
                     type="button"
@@ -269,167 +197,10 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     onClick={handleTmdbContinue}
                     disabled={validating}
                   >
-                    {validating ? 'Validating…' : 'Validate & continue'}
+                    {validating ? 'Validating…' : 'Validate & enter'}
                   </button>
                 </div>
               </div>
-            </section>
-          )}
-
-          {step === 3 && (
-            <section className="onboarding-step" aria-labelledby="onboarding-omdb-title">
-              <h1 id="onboarding-omdb-title" className="onboarding-headline onboarding-headline--step">
-                Extra ratings
-              </h1>
-              <div className="onboarding-divider" />
-              <p className="onboarding-body onboarding-body--compact">
-                OMDb is optional. It adds IMDb and Rotten Tomatoes scores beside
-                TMDb. Skip if you prefer a quieter marquee.
-              </p>
-              <div className="onboarding-form">
-                <label className="onboarding-label" htmlFor="onboarding-omdb-key">
-                  OMDb API key (optional)
-                </label>
-                <input
-                  id="onboarding-omdb-key"
-                  className="onboarding-input"
-                  type="password"
-                  autoComplete="off"
-                  placeholder="Paste your OMDb key"
-                  value={omdbApiKey}
-                  onInput={(e) => {
-                    clearError();
-                    setOmdbApiKey((e.target as HTMLInputElement).value);
-                  }}
-                />
-                <p className="onboarding-help">
-                  Free at{' '}
-                  <a
-                    href="https://www.omdbapi.com/apikey.aspx"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="onboarding-link"
-                  >
-                    omdbapi.com
-                  </a>
-                  .
-                </p>
-                {error && (
-                  <p className="onboarding-error" role="alert">
-                    {error}
-                  </p>
-                )}
-                <div className="onboarding-actions">
-                  <button
-                    type="button"
-                    className="onboarding-cta onboarding-cta--ghost"
-                    onClick={handleOmdbSkip}
-                    disabled={validating}
-                  >
-                    Skip
-                  </button>
-                  <button
-                    type="button"
-                    className="onboarding-cta"
-                    onClick={handleOmdbContinue}
-                    disabled={validating}
-                  >
-                    {validating ? 'Validating…' : 'Continue'}
-                  </button>
-                </div>
-              </div>
-            </section>
-          )}
-
-          {step === 4 && (
-            <section className="onboarding-step" aria-labelledby="onboarding-llm-title">
-              <h1 id="onboarding-llm-title" className="onboarding-headline onboarding-headline--step">
-                A private curator
-              </h1>
-              <div className="onboarding-divider" />
-              <p className="onboarding-body onboarding-body--compact">
-                Optional. Point Subsume at an LLM you trust for recommendations
-                shaped by your archive, not a public feed.
-              </p>
-              <div className="onboarding-form">
-                <label className="onboarding-label" htmlFor="onboarding-llm-provider">
-                  Provider
-                </label>
-                <select
-                  id="onboarding-llm-provider"
-                  className="onboarding-input onboarding-select"
-                  value={llmProvider}
-                  onChange={(e) => {
-                    clearError();
-                    setLlmProvider((e.target as HTMLSelectElement).value as LLMProvider);
-                  }}
-                >
-                  {LLM_PROVIDERS.map((p) => (
-                    <option key={p.value} value={p.value}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
-
-                <label className="onboarding-label" htmlFor="onboarding-llm-key">
-                  API key
-                </label>
-                <input
-                  id="onboarding-llm-key"
-                  className="onboarding-input"
-                  type="password"
-                  autoComplete="off"
-                  placeholder={llmProvider === 'openai' ? 'sk-…' : 'Paste your API key'}
-                  value={llmApiKey}
-                  onInput={(e) => {
-                    clearError();
-                    setLlmApiKey((e.target as HTMLInputElement).value);
-                  }}
-                />
-                {showSkWarning && (
-                  <p className="onboarding-warn" role="status">
-                    OpenAI keys usually start with sk-. Double-check the format
-                    before you continue.
-                  </p>
-                )}
-                {error && (
-                  <p className="onboarding-error" role="alert">
-                    {error}
-                  </p>
-                )}
-                <div className="onboarding-actions">
-                  <button
-                    type="button"
-                    className="onboarding-cta onboarding-cta--ghost"
-                    onClick={handleLlmSkip}
-                  >
-                    Skip
-                  </button>
-                  <button
-                    type="button"
-                    className="onboarding-cta"
-                    onClick={handleLlmContinue}
-                  >
-                    Continue
-                  </button>
-                </div>
-              </div>
-            </section>
-          )}
-
-          {step === 5 && (
-            <section className="onboarding-step" aria-labelledby="onboarding-done-title">
-              <h1 id="onboarding-done-title" className="onboarding-headline">
-                The house is lit.
-              </h1>
-              <div className="onboarding-divider" />
-              <p className="onboarding-body">
-                Keys stay in your browser. You can revise them anytime under
-                Settings. When you are ready, step into the programme.
-              </p>
-              <button type="button" className="onboarding-cta" onClick={finish}>
-                Enter the house
-              </button>
             </section>
           )}
         </div>
