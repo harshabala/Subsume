@@ -306,3 +306,122 @@ describe('DetailModal rating slider commit-on-release', () => {
     expect(onUpdateRating).not.toHaveBeenCalled();
   });
 });
+
+describe('DetailModal notes debounce flush on unmount/close', () => {
+  function expandDossier(container: HTMLElement) {
+    const toggle = container.querySelector('.sanctuary-detail-details-toggle') as HTMLButtonElement;
+    expect(toggle).toBeTruthy();
+    act(() => {
+      toggle.click();
+    });
+  }
+
+  /** Preact controlled textarea: set value then fire input (onChange maps to input). */
+  function typeNotes(textarea: HTMLTextAreaElement, value: string) {
+    act(() => {
+      textarea.focus();
+      textarea.value = value;
+      textarea.dispatchEvent(new InputEvent('input', { bubbles: true, data: value }));
+    });
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      configurable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        matches: query.includes('prefers-reduced-motion') ? true : false,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    document.body.innerHTML = '';
+  });
+
+  it('flushes pending notes when modal unmounts before debounce fires', () => {
+    const onUpdateNotes = vi.fn();
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    act(() => {
+      render(
+        <DetailModal
+          media={MEDIA}
+          libraryItem={LIBRARY_WATCHED}
+          onClose={vi.fn()}
+          onUpdateNotes={onUpdateNotes}
+        />,
+        container,
+      );
+    });
+
+    expandDossier(container);
+
+    const textarea = container.querySelector(
+      `#detail-notes-${MEDIA.id}`,
+    ) as HTMLTextAreaElement;
+    expect(textarea).toBeTruthy();
+
+    typeNotes(textarea, 'Afterglow that must not be lost');
+
+    expect(onUpdateNotes).not.toHaveBeenCalled();
+
+    // Unmount mid-debounce (simulates parent removing modal before 500ms)
+    act(() => {
+      render(null, container);
+    });
+
+    expect(onUpdateNotes).toHaveBeenCalledTimes(1);
+    expect(onUpdateNotes).toHaveBeenCalledWith(
+      'Afterglow that must not be lost',
+      '',
+      '',
+      expect.any(Object),
+    );
+  });
+
+  it('flushes pending notes on close before reduced-motion immediate onClose', () => {
+    const onUpdateNotes = vi.fn();
+    const onClose = vi.fn();
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    act(() => {
+      render(
+        <DetailModal
+          media={MEDIA}
+          libraryItem={LIBRARY_WATCHED}
+          onClose={onClose}
+          onUpdateNotes={onUpdateNotes}
+        />,
+        container,
+      );
+    });
+
+    expandDossier(container);
+
+    const textarea = container.querySelector(
+      `#detail-notes-${MEDIA.id}`,
+    ) as HTMLTextAreaElement;
+    typeNotes(textarea, 'Closed before save timer');
+
+    const closeBtn = container.querySelector('.sanctuary-modal-close') as HTMLButtonElement;
+    act(() => {
+      closeBtn.click();
+    });
+
+    expect(onUpdateNotes).toHaveBeenCalledTimes(1);
+    expect(onUpdateNotes.mock.calls[0][0]).toBe('Closed before save timer');
+    expect(onClose).toHaveBeenCalled();
+  });
+});

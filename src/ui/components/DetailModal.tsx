@@ -106,6 +106,18 @@ export function DetailModal({
   const notesDebounceRef = useRef<ReturnType<typeof setTimeout>>();
   const ceremonyTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const progressDebounceRef = useRef<ReturnType<typeof setTimeout>>();
+  /** Latest scheduled notes payload — used to flush on unmount without stale closures. */
+  const pendingNotesRef = useRef<{
+    notes: string;
+    atmosphere: string;
+    lingeringThought: string;
+    emotions: EmotionalSpectrum;
+  } | null>(null);
+  /** Latest scheduled reading progress — flushed on unmount if timer still pending. */
+  const pendingProgressRef = useRef<{
+    page: number | '';
+    total: number | '';
+  } | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const closedRef = useRef(false);
@@ -298,25 +310,9 @@ export function DetailModal({
     }
   };
 
-  useEffect(() => {
-    return () => {
-      if (notesDebounceRef.current) {
-        clearTimeout(notesDebounceRef.current);
-      }
-      if (ceremonyTimerRef.current) {
-        clearTimeout(ceremonyTimerRef.current);
-      }
-      if (progressDebounceRef.current) {
-        clearTimeout(progressDebounceRef.current);
-      }
-    };
-  }, []);
-
-  const persistReadingProgress = (page: number | '', total: number | '') => {
-    if (!isBook || !libraryItem) return;
-    if (progressDebounceRef.current) clearTimeout(progressDebounceRef.current);
-    progressDebounceRef.current = setTimeout(() => {
-      progressDebounceRef.current = undefined;
+  const commitReadingProgress = useCallback(
+    (page: number | '', total: number | '') => {
+      if (!isBook || !libraryItem) return;
       const value = typeof page === 'number' ? page : parseInt(String(page), 10);
       if (!Number.isFinite(value) || value < 0) return;
       const totalVal =
@@ -335,17 +331,73 @@ export function DetailModal({
             : {}),
         },
       }).catch(() => {});
+    },
+    [isBook, libraryItem, media.id],
+  );
+
+  const persistReadingProgress = (page: number | '', total: number | '') => {
+    if (!isBook || !libraryItem) return;
+    pendingProgressRef.current = { page, total };
+    if (progressDebounceRef.current) clearTimeout(progressDebounceRef.current);
+    progressDebounceRef.current = setTimeout(() => {
+      progressDebounceRef.current = undefined;
+      const pending = pendingProgressRef.current;
+      pendingProgressRef.current = null;
+      if (!pending) return;
+      commitReadingProgress(pending.page, pending.total);
     }, 400);
   };
+
+  /** Flush pending debounced notes + progress so unmount/close cannot drop user input. */
+  const flushPendingSaves = useCallback(() => {
+    if (notesDebounceRef.current) {
+      clearTimeout(notesDebounceRef.current);
+      notesDebounceRef.current = undefined;
+    }
+    if (pendingNotesRef.current) {
+      const pending = pendingNotesRef.current;
+      pendingNotesRef.current = null;
+      onUpdateNotes?.(
+        pending.notes,
+        pending.atmosphere,
+        pending.lingeringThought,
+        pending.emotions,
+      );
+    }
+    if (progressDebounceRef.current) {
+      clearTimeout(progressDebounceRef.current);
+      progressDebounceRef.current = undefined;
+    }
+    if (pendingProgressRef.current) {
+      const pending = pendingProgressRef.current;
+      pendingProgressRef.current = null;
+      commitReadingProgress(pending.page, pending.total);
+    }
+  }, [commitReadingProgress, onUpdateNotes]);
+
+  const flushPendingSavesRef = useRef(flushPendingSaves);
+  flushPendingSavesRef.current = flushPendingSaves;
+
+  useEffect(() => {
+    return () => {
+      flushPendingSavesRef.current();
+      if (ceremonyTimerRef.current) {
+        clearTimeout(ceremonyTimerRef.current);
+      }
+    };
+  }, []);
 
   const finishClose = useCallback(() => {
     if (closedRef.current) return;
     closedRef.current = true;
+    flushPendingSaves();
     onClose();
-  }, [onClose]);
+  }, [onClose, flushPendingSaves]);
 
   const requestClose = useCallback(() => {
     if (closedRef.current) return;
+    // Persist drafts as soon as close begins (exit animation may delay unmount)
+    flushPendingSaves();
     // Second Esc (or close) during exit: finish immediately — do not hard-block
     if (closingRef.current) {
       finishClose();
@@ -357,7 +409,7 @@ export function DetailModal({
     }
     closingRef.current = true;
     setClosing(true);
-  }, [finishClose]);
+  }, [finishClose, flushPendingSaves]);
 
   // Wait for curtain-close animationend, with timeout fallback if it never fires
   useEffect(() => {
@@ -414,12 +466,26 @@ export function DetailModal({
     nextLingering: string,
     nextEmotions: EmotionalSpectrum,
   ) => {
+    pendingNotesRef.current = {
+      notes: nextNotes,
+      atmosphere: nextAtmosphere,
+      lingeringThought: nextLingering,
+      emotions: nextEmotions,
+    };
     if (notesDebounceRef.current) {
       clearTimeout(notesDebounceRef.current);
     }
     notesDebounceRef.current = setTimeout(() => {
       notesDebounceRef.current = undefined;
-      commitNotesSave(nextNotes, nextAtmosphere, nextLingering, nextEmotions);
+      const pending = pendingNotesRef.current;
+      pendingNotesRef.current = null;
+      if (!pending) return;
+      commitNotesSave(
+        pending.notes,
+        pending.atmosphere,
+        pending.lingeringThought,
+        pending.emotions,
+      );
     }, 500);
   };
 
@@ -444,11 +510,22 @@ export function DetailModal({
     scheduleNotesSave(notes, atmosphere, lingeringThought, nextEmotions);
   };
 
+  /** Blur flush — commits notes with save ceremony when a debounce is still pending. */
   const flushNotes = () => {
+    if (!notesDebounceRef.current && !pendingNotesRef.current) return;
     if (notesDebounceRef.current) {
       clearTimeout(notesDebounceRef.current);
       notesDebounceRef.current = undefined;
-      commitNotesSave(notes, atmosphere, lingeringThought, emotions);
+    }
+    const pending = pendingNotesRef.current;
+    pendingNotesRef.current = null;
+    if (pending) {
+      commitNotesSave(
+        pending.notes,
+        pending.atmosphere,
+        pending.lingeringThought,
+        pending.emotions,
+      );
     }
   };
 
@@ -1058,7 +1135,9 @@ export function DetailModal({
                       id={notesFieldId}
                       value={notes}
                       placeholder="What stayed with you after the credits?"
-                      onChange={(e) => handleNotesChange(e.currentTarget.value)}
+                      onInput={(e) =>
+                        handleNotesChange((e.currentTarget as HTMLTextAreaElement).value)
+                      }
                       onBlur={flushNotes}
                       rows={4}
                       className="sanctuary-detail-input sanctuary-detail-textarea"
@@ -1077,7 +1156,9 @@ export function DetailModal({
                           type="text"
                           value={atmosphere}
                           placeholder="e.g. Melancholic, Warm Amber"
-                          onChange={(e) => handleAtmosphereChange(e.currentTarget.value)}
+                          onInput={(e) =>
+                            handleAtmosphereChange((e.currentTarget as HTMLInputElement).value)
+                          }
                           onBlur={flushNotes}
                           className="sanctuary-detail-input"
                         />
@@ -1094,7 +1175,9 @@ export function DetailModal({
                           type="text"
                           value={lingeringThought}
                           placeholder="e.g. The cost of love..."
-                          onChange={(e) => handleLingeringChange(e.currentTarget.value)}
+                          onInput={(e) =>
+                            handleLingeringChange((e.currentTarget as HTMLInputElement).value)
+                          }
                           onBlur={flushNotes}
                           className="sanctuary-detail-input"
                         />
