@@ -132,18 +132,38 @@ function HoverCard({
             </div>
           </div>
 
-          {/* Ratings */}
+          {/* Ratings — monoline star (no emoji; Wave 3 optical system) */}
           <div className="subsume-ratings">
             {imdbRating && (
               <div className="subsume-rating-chip subsume-imdb">
-                <span className="subsume-rating-icon">⭐</span>
+                <span className="subsume-rating-icon" aria-hidden="true">
+                  <svg width="12" height="12" viewBox="0 0 24 24" focusable="false">
+                    <path
+                      d="M12 3.5l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L4.8 8.8l5-.7L12 3.5z"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
                 <span className="subsume-rating-label">IMDb</span>
                 <span className="subsume-rating-value">{imdbRating.score}/10</span>
               </div>
             )}
             {rtRating && (
               <div className="subsume-rating-chip subsume-rt">
-                <span className="subsume-rating-icon">🍅</span>
+                <span className="subsume-rating-icon" aria-hidden="true">
+                  <svg width="12" height="12" viewBox="0 0 24 24" focusable="false">
+                    <path
+                      d="M12 3.5l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L4.8 8.8l5-.7L12 3.5z"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
                 <span className="subsume-rating-label">RT</span>
                 <span className="subsume-rating-value">{rtRating.score}%</span>
               </div>

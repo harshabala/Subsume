@@ -245,7 +245,7 @@ describe('Act III Hardcover Library Archive', () => {
     expect(chips).toEqual(
       expect.arrayContaining([
         { text: 'Read', medium: 'book' },
-        { text: 'Screened', medium: 'movie' },
+        { text: 'Watched', medium: 'movie' },
       ]),
     );
 

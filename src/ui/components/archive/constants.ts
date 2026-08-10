@@ -1,26 +1,28 @@
 import { LibraryStatus, SanctuaryIntent, LibraryItem, MediaType } from '@/shared/types';
 import { legacyStatusLabel } from '@/shared/statusLabels';
 
-/** Literary screen status options (Archive collection voice for film/TV) */
-export const STATUS_OPTIONS: { value: LibraryStatus; label: string }[] = [
-  { value: 'to-watch', label: 'Anticipated' },
-  { value: 'watching', label: 'Now showing' },
-  { value: 'watched', label: 'Screened' },
-  { value: 'abandoned', label: 'Shelved' },
-];
+/**
+ * Wave 3: one status lexicon everywhere — medium-aware operational labels
+ * from statusLabels.ts (Want to watch / Watched / … · Want to read / Read / …).
+ * Literary-only Anticipated/Screened/Shelved retired from user-facing UI.
+ */
+export const STATUS_OPTIONS: { value: LibraryStatus; label: string }[] = (
+  ['to-watch', 'watching', 'watched', 'abandoned'] as LibraryStatus[]
+).map((value) => ({
+  value,
+  label: legacyStatusLabel(value, 'movie'),
+}));
 
 /** Medium-aware status options for chips, dossier, and detail UI */
 export function statusOptionsForMedium(medium: MediaType | 'movie' | 'tv' | 'book'): {
   value: LibraryStatus;
   label: string;
 }[] {
-  if (medium === 'book') {
-    return (['to-watch', 'watching', 'watched', 'abandoned'] as LibraryStatus[]).map((value) => ({
-      value,
-      label: legacyStatusLabel(value, 'book'),
-    }));
-  }
-  return STATUS_OPTIONS;
+  const m = medium === 'book' ? 'book' : medium === 'tv' ? 'tv' : 'movie';
+  return (['to-watch', 'watching', 'watched', 'abandoned'] as LibraryStatus[]).map((value) => ({
+    value,
+    label: legacyStatusLabel(value, m),
+  }));
 }
 
 /** Chip label for a library status given the work's medium */
@@ -28,13 +30,14 @@ export function statusChipLabel(
   status: LibraryStatus,
   medium: MediaType | 'movie' | 'tv' | 'book' | undefined,
 ): string {
-  if (medium === 'book') return legacyStatusLabel(status, 'book');
-  return STATUS_CHIP_LABELS[status];
+  const m = medium === 'book' ? 'book' : medium === 'tv' ? 'tv' : 'movie';
+  return legacyStatusLabel(status, m);
 }
 
+/** Intent chips — aligned with INTENT_LABELS_V2 (Return Soon, not Revisit This Month) */
 export const INTENT_CHIP_LABELS: Record<SanctuaryIntent, string> = {
   keep_memory: 'Keep This Memory',
-  revisit_this_month: 'Revisit This Month',
+  revisit_this_month: 'Return Soon',
   wishlist: 'Wishlist',
 };
 
@@ -55,10 +58,10 @@ export function getReflectionExcerpt(library: LibraryItem): string | undefined {
   return combined.length > 0 ? combined : undefined;
 }
 
-/** Default literary chip labels for screen works */
+/** Default screen chip labels (same as statusLabels / Want to watch path) */
 export const STATUS_CHIP_LABELS: Record<LibraryStatus, string> = {
-  'to-watch': 'Anticipated',
-  watching: 'Now showing',
-  watched: 'Screened',
-  abandoned: 'Shelved',
+  'to-watch': 'Want to watch',
+  watching: 'Watching',
+  watched: 'Watched',
+  abandoned: 'Stopped',
 };

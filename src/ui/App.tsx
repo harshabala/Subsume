@@ -19,6 +19,7 @@ import { FilmGrain } from './components/FilmGrain';
 import { ensureDemoLibraryIfEmpty } from './lib/ensureDemoLibrary';
 import { useNotice } from './components/NoticeProvider';
 import { formatUserError } from './utils/formatUserError';
+import { Icon, type IconName } from './components/icons';
 import './styles/sidebar.css';
 import './styles/app-nav.css';
 
@@ -33,21 +34,22 @@ interface LibraryStats {
 interface NavItem {
   key: Page;
   label: string;
-  icon: string;
+  /** House monoline icon name, or Roman numeral for primary house nav */
+  icon: IconName | 'I' | 'II' | 'III';
 }
 
 /** Primary explore strip — max 4 destinations in desktop subnav */
 const EXPLORE_NAV: NavItem[] = [
   { key: 'search', label: 'Search', icon: 'search' },
-  { key: 'recommendations', label: 'Recommendations', icon: 'auto_awesome' },
-  { key: 'new-releases', label: 'Now Showing', icon: 'new_releases' },
-  { key: 'people', label: 'Creators', icon: 'movie' },
+  { key: 'recommendations', label: 'Recommendations', icon: 'star' },
+  { key: 'new-releases', label: 'Now Showing', icon: 'screen' },
+  { key: 'people', label: 'Creators', icon: 'capture' },
 ];
 
 /** Secondary destinations — drawer only under House tools */
 const HOUSE_TOOLS_NAV: NavItem[] = [
-  { key: 'stats', label: 'House Stats', icon: 'bar_chart' },
-  { key: 'alerts', label: 'Premiere Alerts', icon: 'notifications' },
+  { key: 'stats', label: 'House Stats', icon: 'stats' },
+  { key: 'alerts', label: 'Premiere Alerts', icon: 'alert' },
 ];
 
 const PRIMARY_NAV: NavItem[] = [
@@ -73,11 +75,17 @@ function getInitialPage(): Page {
 }
 
 function NavIcon({ item }: { item: NavItem }) {
-  return (
-    <span className="sidebar-nav-roman">
-      {item.icon}
-    </span>
-  );
+  if (item.icon === 'I' || item.icon === 'II' || item.icon === 'III') {
+    return <span className="sidebar-nav-roman">{item.icon}</span>;
+  }
+  return <Icon name={item.icon} size={18} className="app-nav-house-icon" />;
+}
+
+function ExploreIcon({ name }: { name: IconName | string }) {
+  if (name === 'I' || name === 'II' || name === 'III') {
+    return <span className="sidebar-nav-roman">{name}</span>;
+  }
+  return <Icon name={name as IconName} size={16} className="app-subnav-icon" />;
 }
 
 export function App() {
@@ -379,7 +387,7 @@ export function App() {
               else if (!navMenuVisible) openNavMenu();
             }}
           >
-            <span className="material-symbols-outlined" aria-hidden="true">menu</span>
+            <Icon name="menu" size={22} />
           </button>
         </nav>
         <nav className="app-subnav" aria-label="Explore">
@@ -392,7 +400,7 @@ export function App() {
               aria-current={currentPage === item.key ? 'page' : undefined}
               {...prefetchProps(item.key)}
             >
-              <span className="material-symbols-outlined app-subnav-icon">{item.icon}</span>
+              <ExploreIcon name={item.icon} />
               <span className="app-subnav-label-full">{item.label}</span>
             </button>
           ))}
@@ -423,7 +431,7 @@ export function App() {
             tabIndex={drawerOpen ? 0 : -1}
             onClick={closeNavMenu}
           >
-            <span className="material-symbols-outlined" aria-hidden="true">close</span>
+            <Icon name="close" size={20} />
           </button>
         </div>
         <div className="side-menu-content">
@@ -454,7 +462,7 @@ export function App() {
                 onClick={() => goToPage(item.key)}
                 {...prefetchProps(item.key)}
               >
-                <span className="material-symbols-outlined side-menu-roman" aria-hidden="true">{item.icon}</span>
+                <ExploreIcon name={item.icon} />
                 <span className="side-menu-label">{item.label}</span>
               </button>
             ))}
@@ -470,7 +478,7 @@ export function App() {
                 onClick={() => goToPage(item.key)}
                 {...prefetchProps(item.key)}
               >
-                <span className="material-symbols-outlined side-menu-roman" aria-hidden="true">{item.icon}</span>
+                <ExploreIcon name={item.icon} />
                 <span className="side-menu-label">{item.label}</span>
               </button>
             ))}

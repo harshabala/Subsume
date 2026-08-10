@@ -113,7 +113,7 @@ describe('PoeticCaptureCanvas', () => {
     expect(intentSelectors).toBeTruthy();
     expect(ratingControl).toBeTruthy();
     expect(container.textContent).toContain('Keep This Memory');
-    expect(container.textContent).toContain('Revisit This Month');
+    expect(container.textContent).toContain('Return Soon');
     expect(container.textContent).toContain('Wishlist');
   });
 
