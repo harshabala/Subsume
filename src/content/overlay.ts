@@ -158,16 +158,21 @@ const PLAQUE_STYLES = `
     display: inline-flex;
     align-items: center;
     gap: var(--spacing-sm);
-    max-width: 0;
+    /* Wave 4: opacity/transform only — avoid max-width thrash */
+    max-width: 120px;
     opacity: 0;
-    transition: max-width var(--duration-curtain-close) var(--ease-out), opacity var(--duration-curtain-close) var(--ease-out);
-    overflow: hidden;
+    transform: translateX(-6px);
+    pointer-events: none;
+    transition:
+      opacity var(--duration-fast, 130ms) var(--ease-out),
+      transform var(--duration-fast, 130ms) var(--ease-out);
   }
 
   @media (hover: hover) and (pointer: fine) {
     .museum-plaque:hover .plaque-reveal {
-      max-width: 120px;
       opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
     }
   }
 

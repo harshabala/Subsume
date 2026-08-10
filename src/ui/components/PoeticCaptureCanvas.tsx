@@ -129,6 +129,12 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
 
     previousFocusRef.current = document.activeElement as HTMLElement;
 
+    const shell = document.getElementById('app');
+    if (shell) {
+      shell.setAttribute('inert', '');
+      shell.setAttribute('aria-hidden', 'true');
+    }
+
     const focusTextarea = () => {
       textareaRef.current?.focus();
     };
@@ -164,6 +170,10 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
     return () => {
       window.clearTimeout(focusTimer);
       document.removeEventListener('keydown', handleKeyDown);
+      if (shell) {
+        shell.removeAttribute('inert');
+        shell.removeAttribute('aria-hidden');
+      }
       previousFocusRef.current?.focus();
     };
   }, [requestClose, loading, loadError]);

@@ -10,11 +10,17 @@ on:
       - main
       - 'chore/**'
 
+# Wave 4: least privilege — no write tokens on CI jobs
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
+        # Pin to release SHA when possible; tag kept for Dependabot readability.
+        # Prefer actions/* with version tags; org should enable hardened SHA pin via Dependabot.
         uses: actions/checkout@v4
 
       - name: Setup Node.js
