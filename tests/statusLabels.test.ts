@@ -31,13 +31,13 @@ describe('status mapping', () => {
     expect(statusLabel('planned', 'tv')).toBe('Want to watch');
   });
 
-  it('archive chips use book-aware labels and literary screen labels', () => {
+  it('archive chips use one medium-aware lexicon (no literary-only fork)', () => {
     expect(statusChipLabel('watched', 'book')).toBe('Read');
     expect(statusChipLabel('to-watch', 'book')).toBe('Want to read');
-    expect(statusChipLabel('watched', 'movie')).toBe('Screened');
-    expect(statusChipLabel('to-watch', 'tv')).toBe('Anticipated');
+    expect(statusChipLabel('watched', 'movie')).toBe('Watched');
+    expect(statusChipLabel('to-watch', 'tv')).toBe('Want to watch');
     expect(statusOptionsForMedium('book').find((o) => o.value === 'watched')?.label).toBe('Read');
-    expect(statusOptionsForMedium('movie').find((o) => o.value === 'watched')?.label).toBe('Screened');
+    expect(statusOptionsForMedium('movie').find((o) => o.value === 'watched')?.label).toBe('Watched');
   });
 
   it('defaults abandoned to keep_memory intent', () => {

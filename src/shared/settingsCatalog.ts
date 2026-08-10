@@ -32,7 +32,7 @@ export const SETTINGS_SECTIONS: SettingsSectionMeta[] = [
     id: 'discovery',
     title: 'Discovery sources',
     description:
-      'Weekly Subsume Dispatch, catalogues for search and new releases. Open Library covers books without a key; free screen sources work out of the box; TMDb, OMDb, and Google Books deepen metadata when you add keys.',
+      'Weekly selection, catalogues for search and new releases. Open Library covers books without a key; free screen sources work out of the box; TMDb, OMDb, and Google Books deepen metadata when you add keys.',
   },
   {
     id: 'credentials',

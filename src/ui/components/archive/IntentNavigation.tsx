@@ -15,11 +15,11 @@ const INTENT_TABS: { id: IntentFilterOption; label: string }[] = [
 export type CollectionFilter = 'all' | LibraryStatus;
 
 const COLLECTION_TABS_SCREEN: { id: CollectionFilter; label: string }[] = [
-  { id: 'all', label: 'Full programme' },
-  { id: 'watched', label: 'Screened' },
-  { id: 'to-watch', label: 'Anticipated' },
-  { id: 'watching', label: 'Now showing' },
-  { id: 'abandoned', label: 'Shelved' },
+  { id: 'all', label: 'All screen' },
+  { id: 'watched', label: 'Watched' },
+  { id: 'to-watch', label: 'Want to watch' },
+  { id: 'watching', label: 'Watching' },
+  { id: 'abandoned', label: 'Stopped' },
 ];
 
 const COLLECTION_TABS_BOOKS: { id: CollectionFilter; label: string }[] = [

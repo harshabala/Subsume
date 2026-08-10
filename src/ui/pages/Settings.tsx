@@ -620,7 +620,7 @@ export function Settings() {
                 onChange={(e) => handleChange('dispatchEnabled', e.currentTarget.checked)}
                 className="settings-toggle-checkbox"
               />
-              <span className="settings-toggle-text-lg">Enable weekly Subsume Dispatch</span>
+              <span className="settings-toggle-text-lg">Enable weekly selection</span>
             </label>
             <p className="settings-toggle-help">
               Default schedule: Thursday at 7:00 PM local time. Opt-in only — off until you enable it.

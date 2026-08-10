@@ -11,6 +11,7 @@ import { InlineNotice } from './components/NoticeProvider';
 import { formatUserError } from './utils/formatUserError';
 import { mediumLabel } from '../shared/productCopy';
 import { legacyStatusLabel } from '../shared/statusLabels';
+import { Icon } from './components/icons';
 import '../shared/tokens.css';
 import './styles/popup.css';
 import './styles/emotional-components.css';
@@ -374,10 +375,10 @@ function Popup() {
               title="Settings"
               aria-label="Open settings"
             >
-              <span className="material-symbols-outlined" aria-hidden="true">settings</span>
+              <Icon name="settings" size={20} />
             </button>
             <button type="button" className="popup-icon-btn" onClick={() => window.close()} title="Close" aria-label="Close popup">
-              <span className="material-symbols-outlined" aria-hidden="true">close</span>
+              <Icon name="close" size={20} />
             </button>
           </div>
         </header>
@@ -393,7 +394,7 @@ function Popup() {
           </div>
           <div className="popup-stat">
             <div className="popup-stat-value">{stats.toWatch}</div>
-            <div className="popup-stat-label">Anticipated</div>
+            <div className="popup-stat-label">Want to watch</div>
           </div>
         </div>
 
@@ -464,11 +465,11 @@ function Popup() {
 
         <div className="popup-actions">
           <button className="popup-btn popup-btn-primary" onClick={() => setActiveView('log')}>
-            <span className="material-symbols-outlined popup-btn-icon" aria-hidden="true">videocam</span>
+            <Icon name="capture" size={18} className="popup-btn-icon" />
             Inscribe a title
           </button>
           <button className="popup-btn popup-btn-secondary" onClick={() => openSanctuary()} type="button">
-            <span className="material-symbols-outlined popup-btn-icon" aria-hidden="true">open_in_new</span>
+            <Icon name="external" size={18} className="popup-btn-icon" />
             Open the house
           </button>
         </div>
@@ -479,7 +480,7 @@ function Popup() {
         <header className="popup-header">
           <div className="popup-brand-area">
             <div className="popup-brand">
-              <span className="material-symbols-outlined popup-brand-capture-icon" aria-hidden="true">videocam</span>
+              <Icon name="capture" size={18} className="popup-brand-capture-icon" />
               Inscribe a title
             </div>
             <div className="popup-tagline">From this page or the catalogue</div>
@@ -492,7 +493,7 @@ function Popup() {
               title="Settings"
               aria-label="Open settings"
             >
-              <span className="material-symbols-outlined" aria-hidden="true">settings</span>
+              <Icon name="settings" size={20} />
             </button>
             <button
               className="popup-close-btn"
