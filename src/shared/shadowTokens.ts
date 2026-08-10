@@ -4,7 +4,7 @@
  */
 
 export const SHADOW_FONT_STYLESHEET =
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap';
+  'https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap';
 
 /** Key CSS variables from src/shared/tokens.css (dark / default). */
 export const SHADOW_TOKEN_CSS = `
@@ -43,11 +43,12 @@ export const SHADOW_TOKEN_CSS = `
   --text-control: #666666;
   --text-sanctuary: var(--text-reflection);
 
-  /* Typography */
-  --font-editorial: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  /* Typography — Courier Prime display + IBM Plex Mono UI */
+  --font-editorial: 'Courier Prime', 'Courier New', ui-monospace, monospace;
+  --font-display: var(--font-editorial);
+  --font-ui: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', 'Courier New', monospace;
   --font-sans: var(--font-ui);
-  --font-mono: 'JetBrains Mono', ui-monospace, 'Courier New', monospace;
+  --font-mono: var(--font-ui);
 
   /* Spacing */
   --spacing-xs: 4px;
@@ -107,7 +108,7 @@ export const SHADOW_TOKEN_CSS = `
 
 let fontsInjected = false;
 
-/** Inject Inter once per document (shared across shadow roots). */
+/** Inject Courier Prime + IBM Plex Mono once per document (shared across shadow roots). */
 export function injectShadowFonts(doc: Document = document): void {
   if (fontsInjected || doc.getElementById('subsume-shadow-fonts')) return;
 

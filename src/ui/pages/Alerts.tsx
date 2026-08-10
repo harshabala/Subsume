@@ -324,7 +324,7 @@ export function Alerts() {
             aria-expanded={showForm}
             aria-controls="alerts-create-form"
             onClick={toggleForm}
-            className={showForm ? 'btn-sanctuary-restraint sm' : 'btn-sanctuary-gold sm'}
+            className={showForm ? 'btn-sanctuary-restraint sm' : 'btn-sanctuary-primary sm'}
           >
             {showForm ? 'Cancel' : 'Create alert'}
           </button>
@@ -527,7 +527,7 @@ export function Alerts() {
                   type="button"
                   onClick={handleCreate}
                   disabled={saving}
-                  className="btn-sanctuary-gold sm"
+                  className="btn-sanctuary-primary sm"
                 >
                   {saving ? 'Saving…' : 'Create alert'}
                 </button>

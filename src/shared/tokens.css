@@ -1,6 +1,7 @@
 /* ──────────────────────────────────────────────────────────────────
-   Subsume Design Tokens — Ferrari cinematic system (Rosso Corsa on near-black)
-   Single source of truth: Cinema Black canvas + Rosso Corsa primary
+   Subsume Design Tokens — Cinema Black sanctuary + scarce Rosso voltage
+   Type: Courier Prime (display/plaque) + IBM Plex Mono (UI/body)
+   Red-channel policy: brand ≠ danger ≠ abandoned (see semantic block)
    ────────────────────────────────────────────────────────────────── */
 
 :root {
@@ -39,11 +40,14 @@
   --text-sanctuary: var(--text-reflection);
   --outline: var(--text-meta);
 
-  /* ─── Typography ───────────────────────────────────────────── */
-  --font-editorial: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  /* ─── Typography (Wave 2 monofont system) ──────────────────── */
+  /* Display / hero / plaque / inscription: Courier Prime (screenplay + manuscript) */
+  --font-editorial: 'Courier Prime', 'Courier New', ui-monospace, monospace;
+  --font-display: var(--font-editorial);
+  /* Body / UI / dense chrome: IBM Plex Mono (legible mono at small sizes) */
+  --font-ui: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', 'Courier New', monospace;
   --font-sans: var(--font-ui);
-  --font-mono: 'JetBrains Mono', ui-monospace, 'Courier New', monospace;
+  --font-mono: var(--font-ui);
 
   /* ─── Spacing Scale ────────────────────────────────────────── */
   --spacing-xs: 4px;
@@ -140,7 +144,8 @@
   --muted-foreground: #969696;
   --accent: #303030;
   --accent-foreground: #ffffff;
-  --destructive: #ef4444;
+  /* Brand Rosso stays on --primary. Danger uses orange-red, not #da291c. */
+  --destructive: #ea580c;
   --destructive-foreground: #ffffff;
   --input: #303030;
   --ring: #da291c;
@@ -187,18 +192,25 @@
   --progress-fill-alt: hsla(0, 0%, 100%, 0.12);
   --chip-active-bg: rgba(218, 41, 28, 0.12);
   --chip-dot-inactive: hsla(0, 0%, 100%, 0.2);
-  --gold-soft-bg: rgba(218, 41, 28, 0.12);
-  --gold-text: var(--primary);
-  --gold-text-soft: #ff6b5c; /* lighter red for soft text accents */
-  --accent-gold-border: rgba(218, 41, 28, 0.28);
-  --accent-gold-border-strong: rgba(218, 41, 28, 0.55);
+  /* Preferred brand soft tokens (Wave 2). --gold* remain aliases one release. */
+  --brand-soft-bg: rgba(218, 41, 28, 0.12);
+  --brand-text: var(--primary);
+  --brand-text-soft: #ff6b5c;
+  --brand-border: rgba(218, 41, 28, 0.28);
+  --brand-border-strong: rgba(218, 41, 28, 0.55);
+  --gold-soft-bg: var(--brand-soft-bg);
+  --gold-text: var(--brand-text);
+  --gold-text-soft: var(--brand-text-soft);
+  --accent-gold-border: var(--brand-border);
+  --accent-gold-border-strong: var(--brand-border-strong);
   --primary-hover-bg: #9d2211;
   --primary-pressed-bg: #b01e0a;
-  --danger-fg: hsl(0, 60%, 65%);
-  --danger-fg-strong: hsl(0, 70%, 65%);
-  --danger-bg: rgba(239, 68, 68, 0.1);
-  --danger-border: rgba(239, 68, 68, 0.25);
-  --danger-bg-solid: hsl(0, 70%, 50%);
+  /* Danger channel — orange-red, never equal to brand Rosso */
+  --danger-fg: #fb923c;
+  --danger-fg-strong: #f97316;
+  --danger-bg: rgba(234, 88, 12, 0.12);
+  --danger-border: rgba(234, 88, 12, 0.35);
+  --danger-bg-solid: #ea580c;
   --danger-on-fg: #ffffff;
   /* Ferrari semantic success / info */
   --success: #03904a;
@@ -224,9 +236,10 @@
   --status-watched-bg: rgba(52, 211, 153, 0.1);
   --status-watched-fg: #34d399;
   --status-watched-border: rgba(52, 211, 153, 0.2);
-  --status-abandoned-bg: rgba(248, 113, 113, 0.1);
-  --status-abandoned-fg: #f87171;
-  --status-abandoned-border: rgba(248, 113, 113, 0.2);
+  /* Abandoned status — muted stone-rose, not CTA and not delete */
+  --status-abandoned-bg: rgba(168, 162, 158, 0.14);
+  --status-abandoned-fg: #a8a29e;
+  --status-abandoned-border: rgba(168, 162, 158, 0.28);
   --status-active: #34d399;
   --status-active-glow: rgba(52, 211, 153, 0.8);
   --status-rating-fg: #fbbf24;

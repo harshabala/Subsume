@@ -227,7 +227,8 @@
 
 /* ── Buttons ────────────────────────────────────────────────────────────── */
 
-/* Gold CTA */
+/* Primary CTA — .btn-sanctuary-gold is deprecated alias (Wave 2) */
+.btn-sanctuary-primary,
 .btn-sanctuary-gold {
   background: var(--primary);
   border: none;
@@ -245,11 +246,13 @@
   box-sizing: border-box;
 }
 
+.btn-sanctuary-primary:focus-visible,
 .btn-sanctuary-gold:focus-visible {
   outline: 2px solid var(--accent-gold, var(--border-hero));
   outline-offset: 2px;
 }
 
+.btn-sanctuary-primary.sm,
 .btn-sanctuary-gold.sm {
   padding: 10px 24px;
 }

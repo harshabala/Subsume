@@ -67,10 +67,10 @@ Subsume is a **Chrome extension for film lovers**. It helps you:
 - `src/background/handlers/library.ts` — persists to IndexedDB
 
 ### Design system (source of truth)
-- `src/shared/tokens.css` — **Gilded Night** (dark) + **Parchment** (light)
-- `brand.md` — palette reference
-- `CINEMATIC_JOURNAL_DESIGN_SPEC.md` — typography, motion, sanctuary patterns
-- Fonts in app: **Newsreader** (editorial) + **Outfit** (UI)
+- `src/shared/tokens.css` — **Cinema Black** (dark) + **White Canvas** (light)
+- `brand.md` + `DESIGN.md` — palette, type, red-channel policy (Wave 2 identity)
+- `CINEMATIC_JOURNAL_DESIGN_SPEC.md` — historical theatre philosophy (typography section superseded by DESIGN.md)
+- Fonts in app: **Courier Prime** (display/plaque) + **IBM Plex Mono** (UI/body)
 
 ### Browsing layer (content scripts — separate from popup)
 - Museum plaque overlays on posters
@@ -92,13 +92,13 @@ Reference file (Open Design): `subsume-cinephile-extension-2.html`
 | **SVG soundwave** chart (average emotions) | ❌ No |
 | **Film grain** shader overlay | ❌ No |
 | **Cinema atmosphere** presets (sunset/emerald/french) | ❌ No |
-| **Gallery Light** theme toggle in mockup UI | ❌ No (Settings has Parchment instead) |
+| **Gallery Light** theme toggle in mockup UI | ❌ No (Settings has White Canvas instead) |
 | Delete card → recalculate chart | ❌ No |
 | Empty state “projection” card | ⚠️ Partial (popup empty only) |
 
-**Fonts in mockup:** Playfair Display + Plus Jakarta Sans  
-**Fonts in extension:** Newsreader + Outfit  
-→ Design agent must decide: keep extension fonts or align mockup fonts.
+**Fonts in mockup:** Playfair Display + Plus Jakarta Sans (historical)  
+**Fonts in extension:** Courier Prime + IBM Plex Mono (Wave 2 identity lock)  
+→ Extension fonts are canonical; do not reintroduce Newsreader/Outfit/Inter.
 
 ---
 
