@@ -572,8 +572,8 @@
 .slider-input::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 28px;
-  height: 28px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   cursor: pointer;
   transition: transform 0.1s;
@@ -591,8 +591,8 @@
 #slider-warmth::-webkit-slider-thumb { background-color: var(--color-warmth, oklch(76% 0.16 55)); }
 
 .slider-input::-moz-range-thumb {
-  width: 28px;
-  height: 28px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   cursor: pointer;
   border: none;
@@ -700,7 +700,8 @@
 }
 
 .intent-pill {
-  padding: 8px 4px;
+  min-height: var(--hit-target-min, 40px);
+  padding: 10px 6px;
   border-radius: 6px;
   font-size: 11px;
   text-align: center;
@@ -713,6 +714,10 @@
   font-weight: 500;
   font-family: inherit;
   width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -723,9 +728,9 @@
 }
 
 .intent-pill.active {
-  background: var(--primary-soft, rgba(218, 41, 28, 0.12));
-  border-color: var(--primary, #da291c);
-  color: var(--primary, #da291c);
+  background: var(--chip-active-bg, rgba(218, 41, 28, 0.28));
+  border-color: var(--chip-active-border, var(--primary, #da291c));
+  color: var(--chip-active-fg, #ffffff);
 }
 
 /* ─── Actions & Buttons ─────────────────────────────────────────── */
@@ -834,8 +839,9 @@
   background: var(--bg-hover);
 }
 
-.popup-icon-btn .material-symbols-outlined {
-  font-size: 20px;
+.popup-icon-btn .house-icon {
+  display: block;
+  flex-shrink: 0;
 }
 
 /* ─── Success overlay ───────────────────────────────────────────── */

@@ -1,8 +1,9 @@
 import { h, type JSX } from 'preact';
 
 /**
- * Wave 3 house monoline icons — Cinema Black / Rosso system.
- * 1.5 stroke, 24 viewBox, currentColor. Prefer these over Material Symbols.
+ * House monoline icons — Cinema Black / Rosso system.
+ * 1.5 stroke, 24 viewBox, currentColor.
+ * Material Symbols font dependency has been removed; this is the only icon path.
  */
 
 export type IconName =

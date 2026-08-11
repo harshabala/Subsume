@@ -1163,11 +1163,12 @@
   font-family: var(--font-ui);
   font-size: 11px;
   letter-spacing: 0.1em;
-  padding: var(--spacing-xs) var(--spacing-md);
+  min-height: var(--hit-target-min, 40px);
+  padding: 8px 12px;
   background: var(--chip-active-bg);
-  border: 1px solid var(--border-hero);
+  border: 1px solid var(--chip-active-border, var(--border-hero));
   border-radius: 2px;
-  color: var(--border-hero);
+  color: var(--chip-active-fg, #ffffff);
 }
 
 .sanctuary-detail-tag-remove {
@@ -1176,8 +1177,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 32px;
-  min-height: 32px;
+  min-width: var(--hit-target-min, 40px);
+  min-height: var(--hit-target-min, 40px);
   margin: -8px -10px -8px -4px;
   background: transparent;
   border: none;
@@ -1894,8 +1895,9 @@ select.sanctuary-input option {
   background: transparent;
   border: 1px solid var(--border-restraint);
   color: var(--text-reflection);
-  min-height: 32px;
-  padding: var(--spacing-sm) var(--spacing-md);
+  min-height: var(--hit-target-min, 40px);
+  min-width: var(--hit-target-min, 40px);
+  padding: 8px 14px;
   border-radius: 2px;
   font-family: var(--font-ui);
   font-size: 11px;
@@ -1922,8 +1924,8 @@ select.sanctuary-input option {
 }
 .filmography-filter-btn.active {
   background: var(--chip-active-bg);
-  border-color: var(--border-hero);
-  color: var(--border-hero);
+  border-color: var(--chip-active-border, var(--border-hero));
+  color: var(--chip-active-fg, #ffffff);
 }
 .filmography-sort-group {
   display: flex;
@@ -2323,8 +2325,9 @@ select.sanctuary-input option {
   border: 1px solid var(--border-restraint);
   background: transparent;
   color: var(--text-artwork);
-  min-height: 32px;
-  padding: var(--spacing-sm) var(--spacing-md);
+  min-height: var(--hit-target-min, 40px);
+  min-width: var(--hit-target-min, 40px);
+  padding: 8px 14px;
   border-radius: 2px;
   font-size: 12px;
   font-family: var(--font-ui);
@@ -2339,9 +2342,9 @@ select.sanctuary-input option {
   border-color: var(--border-hero);
 }
 .settings-chip.active {
-  border-color: var(--border-hero);
+  border-color: var(--chip-active-border, var(--border-hero));
   background: var(--chip-active-bg);
-  color: var(--border-hero);
+  color: var(--chip-active-fg, #ffffff);
 }
 .hidden-input {
   display: none;
@@ -2767,8 +2770,9 @@ select.sanctuary-input option {
   font-family: var(--font-ui);
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  min-height: 32px;
-  padding: 4px 12px;
+  min-height: var(--hit-target-min, 40px);
+  min-width: var(--hit-target-min, 40px);
+  padding: 8px 14px;
   background: var(--input-bg);
   border: 1px solid var(--border-restraint);
   border-radius: 12px;
@@ -2778,6 +2782,7 @@ select.sanctuary-input option {
   user-select: none;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   box-sizing: border-box;
   appearance: none;
   -webkit-appearance: none;
@@ -2799,8 +2804,8 @@ select.sanctuary-input option {
 
 .tag-filter-chip.active {
   background: var(--chip-active-bg);
-  border-color: var(--primary);
-  color: var(--primary);
+  border-color: var(--chip-active-border, var(--primary));
+  color: var(--chip-active-fg, #ffffff);
   font-weight: 600;
 }
 
@@ -2923,8 +2928,8 @@ select.sanctuary-input option {
 }
 
 .collection-tab-btn {
-  min-height: 32px;
-  padding: 6px 14px;
+  min-height: var(--hit-target-min, 40px);
+  padding: 8px 14px;
   border: 1px solid var(--border-restraint, var(--border));
   border-radius: 2px;
   background: transparent;
@@ -2949,9 +2954,9 @@ select.sanctuary-input option {
 }
 
 .collection-tab-btn.active {
-  color: var(--text-reflection);
-  border-color: var(--border-hero, var(--border));
-  background: hsla(0, 0%, 100%, 0.06);
+  color: var(--chip-active-fg, #ffffff);
+  border-color: var(--chip-active-border, var(--border-hero));
+  background: var(--chip-active-bg);
 }
 
 .intent-filter-hint {
@@ -3055,7 +3060,8 @@ select.sanctuary-input option {
 .status-chip {
   display: inline-flex;
   align-items: center;
-  padding: 3px 10px;
+  min-height: 28px;
+  padding: 4px 10px;
   border-radius: 2px;
   font-family: var(--font-ui);
   font-size: 10px;
@@ -3066,13 +3072,17 @@ select.sanctuary-input option {
   border: 1px solid var(--border-restraint, var(--border));
 }
 
+/* Completed / watched: white on soft Rosso (AA), not thin red text on black */
 .status-chip[data-status='watched'] {
-  color: var(--accent-gold, var(--text-artwork));
-  border-color: var(--accent-gold-border, var(--border-restraint));
+  color: var(--chip-active-fg, #ffffff);
+  background: var(--chip-active-bg);
+  border-color: var(--chip-active-border, var(--accent-gold-border));
 }
 
 .status-chip[data-medium='book'][data-status='watched'] {
-  color: var(--accent-gold, var(--text-artwork));
+  color: var(--chip-active-fg, #ffffff);
+  background: var(--chip-active-bg);
+  border-color: var(--chip-active-border, var(--accent-gold-border));
 }
 
 .intent-chip-secondary {

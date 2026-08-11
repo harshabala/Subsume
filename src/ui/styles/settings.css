@@ -154,9 +154,9 @@
 }
 
 .settings-chip.active {
-  border: 1px solid var(--border-hero);
+  border: 1px solid var(--chip-active-border, var(--border-hero));
   background: var(--chip-active-bg);
-  color: var(--border-hero);
+  color: var(--chip-active-fg, #ffffff);
 }
 
 .settings-chip-dot {
@@ -292,7 +292,7 @@
   border: 1px solid var(--border-restraint);
   color: var(--danger-fg);
   border-radius: 2px;
-  min-height: 32px;
+  min-height: var(--hit-target-min, 40px);
   padding: 6px 14px;
   cursor: pointer;
   font-family: var(--font-ui);
@@ -623,8 +623,8 @@
 
 .alerts-chip.active {
   background: var(--chip-active-bg);
-  border: 1px solid var(--border-hero);
-  color: var(--border-hero);
+  border: 1px solid var(--chip-active-border, var(--border-hero));
+  color: var(--chip-active-fg, #ffffff);
 }
 
 .alerts-chip-dot {
