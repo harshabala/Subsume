@@ -190,8 +190,17 @@
   --surface-select: hsl(240, 18%, 8%);
   --progress-track: hsla(0, 0%, 100%, 0.04);
   --progress-fill-alt: hsla(0, 0%, 100%, 0.12);
-  --chip-active-bg: rgba(218, 41, 28, 0.12);
+  /*
+   * Chip / selection Rosso contrast (AA on Cinema Black):
+   * Soft red fill + white label (≥4.5:1). Never pure #da291c text on #181818 alone.
+   */
+  --chip-active-bg: rgba(218, 41, 28, 0.28);
+  --chip-active-fg: #ffffff;
+  --chip-active-border: rgba(218, 41, 28, 0.72);
   --chip-dot-inactive: hsla(0, 0%, 100%, 0.2);
+  /* Interactive control floor (WCAG 2.2 target size guidance) */
+  --hit-target-min: 40px;
+  --hit-target-comfortable: 44px;
   /* Preferred brand soft tokens (Wave 2). --gold* remain aliases one release. */
   --brand-soft-bg: rgba(218, 41, 28, 0.12);
   --brand-text: var(--primary);
@@ -427,7 +436,9 @@
     --surface-select: #ffffff;
     --progress-track: rgba(24, 24, 24, 0.08);
     --progress-fill-alt: rgba(24, 24, 24, 0.15);
-    --chip-active-bg: rgba(218, 41, 28, 0.12);
+    --chip-active-bg: rgba(218, 41, 28, 0.14);
+    --chip-active-fg: #181818;
+    --chip-active-border: rgba(218, 41, 28, 0.55);
     --chip-dot-inactive: rgba(24, 24, 24, 0.2);
     --gold-soft-bg: rgba(218, 41, 28, 0.12);
     --gold-text: #da291c;

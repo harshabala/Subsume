@@ -12,6 +12,14 @@
   padding: 0;
 }
 
+/* House monoline icons (components/icons.tsx) */
+.house-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: middle;
+  color: inherit;
+}
+
 /*
  * Single scrollport for nav + pages so max-width columns share one center line.
  * Nested main scroll + full-bleed sticky nav causes ~scrollbar-width misalignment
@@ -497,19 +505,23 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .type-filters button {
-  padding: 0.4rem 0.75rem;
-  min-height: 32px;
+  padding: 0.5rem 0.85rem;
+  min-height: var(--hit-target-min, 40px);
+  min-width: var(--hit-target-min, 40px);
   font-size: 12px;
   border-radius: var(--radius-sm);
   background: var(--bg-elevated);
   color: var(--fg-muted);
   border: 1px solid var(--border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .type-filters button.active {
   background: var(--chip-active-bg, var(--primary-soft));
-  color: var(--primary);
-  border-color: var(--primary);
+  color: var(--chip-active-fg, #ffffff);
+  border-color: var(--chip-active-border, var(--primary));
 }
 
 /* ─── Nav / Sidebar ────────────────────────────────────── */
