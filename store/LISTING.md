@@ -9,18 +9,18 @@ Paste-ready fields for the Chrome Web Store Developer Dashboard. Keep tone calm 
 
 ## Short description
 
-≤132 characters (count carefully before paste):
+≤132 characters (count carefully before paste). Canonical plain-English pitch (Task 3 / productCopy `PLAIN_ENGLISH_PITCH`):
+
+```
+Private movie & book journal for Chrome. Save what stayed with you while you browse.
+```
+
+Character count: 87.
+
+Alternate (if you prefer feature-forward wording):
 
 ```
 Save films, shows, and books from any page. Capture what stayed with you and discover what fits your taste.
-```
-
-Character count: 108.
-
-Alternate (if you prefer privacy-first wording):
-
-```
-Private film, TV & book sanctuary: capture while browsing, notes & ratings, optional AI—data stays on your device.
 ```
 
 ---
