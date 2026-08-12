@@ -18,7 +18,16 @@ import { AVAILABLE_PLATFORMS } from '@/shared/platforms';
 import { AVAILABLE_GENRES } from '@/shared/genres';
 import { validateImportData } from '@/shared/validation';
 import { CURATOR_JOURNEY_COPY, DEFAULT_PROMPTS } from '@/shared/prompts';
-import { SETTINGS_SECTIONS, type SettingsSectionId } from '@/shared/settingsCatalog';
+import {
+  SETTINGS_SECTIONS,
+  shouldShowSettingsStartHere,
+  type SettingsSectionId,
+} from '@/shared/settingsCatalog';
+import {
+  PLAIN_ENGLISH_PITCH,
+  EXPORT_KEEP_FILE_NOTICE,
+  BACKUP_SECTION_PITCH,
+} from '@/shared/productCopy';
 import { SettingsDiagnosticsPanel } from '../components/SettingsDiagnosticsPanel';
 import { useNotice } from '../components/NoticeProvider';
 import { formatUserError } from '../utils/formatUserError';
@@ -28,7 +37,11 @@ import '../styles/curator-settings.css';
 import '../styles/settings-nav.css';
 import '../styles/settings-oauth.css';
 
-export function Settings() {
+export interface SettingsProps {
+  onNavigate?: (page: 'search' | 'home' | 'library') => void;
+}
+
+export function Settings({ onNavigate }: SettingsProps = {}) {
   const { showNotice } = useNotice();
   const [prefs, setPrefs] = useState<UserPreferences | null>(null);
   const [saving, setSaving] = useState(false);
@@ -214,6 +227,7 @@ export function Settings() {
     document.body.appendChild(downloadAnchorNode);
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
+      showNotice(EXPORT_KEEP_FILE_NOTICE, 'success');
     } catch (err) {
       showNotice(`Failed to export library: ${formatUserError(err)}`, 'error');
     }
@@ -460,18 +474,10 @@ export function Settings() {
     );
   }
 
-  return (
-    <div className="page-container settings-page">
-      <header className="sanctuary-header">
-        <div className="sanctuary-header-meta">
-          <span className="sanctuary-subtitle">Settings</span>
-        </div>
-        <h2 className="sanctuary-title">Settings</h2>
-        <p className="sanctuary-description">
-          Choose a category below. Each section explains what it controls, with no jargon without a plain description.
-        </p>
-      </header>
+  const showStartHere = shouldShowSettingsStartHere(prefs.firstInscriptionComplete);
 
+  const settingsNavAndPanels = (
+    <>
       <nav className="settings-section-nav" aria-label="Settings categories">
         {SETTINGS_SECTIONS.map((section) => (
           <button
@@ -1089,6 +1095,9 @@ export function Settings() {
         <div className="settings-panel">
           <h3 className="settings-panel-heading">Backup &amp; sync</h3>
           <p className="settings-panel-description">
+            {BACKUP_SECTION_PITCH}
+          </p>
+          <p className="settings-panel-hint">
             Export a portable JSON of your sanctuary, optionally mirror to Google Drive, or restore from a previous backup.
           </p>
 
@@ -1196,6 +1205,62 @@ export function Settings() {
 
         {activeSection === 'diagnostics' && <SettingsDiagnosticsPanel />}
       </div>
+    </>
+  );
+
+  return (
+    <div className="page-container settings-page">
+      <header className="sanctuary-header">
+        <div className="sanctuary-header-meta">
+          <span className="sanctuary-subtitle">Settings</span>
+        </div>
+        <h2 className="sanctuary-title">Settings</h2>
+        <p className="sanctuary-description">
+          {showStartHere
+            ? 'Start with one reflection — advanced options stay under More options until you need them.'
+            : 'Choose a category below. Each section explains what it controls, with no jargon without a plain description.'}
+        </p>
+      </header>
+
+      {showStartHere && (
+        <div className="settings-panel settings-start-here">
+          <h3 className="settings-panel-heading">Start here</h3>
+          <p className="settings-start-here-pitch">{PLAIN_ENGLISH_PITCH}</p>
+          <p className="settings-start-here-help">
+            Your first inscription is a short note about a film, show, or book that stayed with you.
+            Search for a title, then save what you felt — that unlocks the full house layout.
+          </p>
+          <div className="settings-start-here-actions">
+            {onNavigate && (
+              <button
+                type="button"
+                className="btn-sanctuary-primary"
+                onClick={() => onNavigate('search')}
+              >
+                Open Search
+              </button>
+            )}
+            {onNavigate && (
+              <button
+                type="button"
+                className="btn-sanctuary-restraint"
+                onClick={() => onNavigate('home')}
+              >
+                Go to Discovery
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showStartHere ? (
+        <details className="settings-more-options">
+          <summary>More options</summary>
+          {settingsNavAndPanels}
+        </details>
+      ) : (
+        settingsNavAndPanels
+      )}
 
       <div className="settings-footer-row settings-footer-sticky">
         <div className="settings-footer-left">

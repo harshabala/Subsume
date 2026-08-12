@@ -69,3 +69,35 @@ export const SETTINGS_SECTIONS: SettingsSectionMeta[] = [
 export function getSettingsSection(id: SettingsSectionId): SettingsSectionMeta {
   return SETTINGS_SECTIONS.find((s) => s.id === id) ?? SETTINGS_SECTIONS[0];
 }
+
+/**
+ * New users (before first archive inscription) land on a "Start here" panel.
+ * Advanced settings stay available under collapsed "More options".
+ */
+export function shouldShowSettingsStartHere(
+  firstInscriptionComplete: boolean | undefined
+): boolean {
+  return firstInscriptionComplete !== true;
+}
+
+/** Section ids treated as advanced for progressive disclosure (under More options). */
+export const SETTINGS_ADVANCED_SECTION_IDS: SettingsSectionId[] = [
+  'appearance',
+  'taste',
+  'discovery',
+  'credentials',
+  'ai',
+  'browsing',
+  'data',
+  'diagnostics',
+];
+
+/**
+ * Which catalog sections to list in the settings nav.
+ * Full catalog always available; Start-here mode only changes default presentation.
+ */
+export function getSettingsNavSections(
+  _firstInscriptionComplete: boolean | undefined
+): SettingsSectionMeta[] {
+  return SETTINGS_SECTIONS;
+}
