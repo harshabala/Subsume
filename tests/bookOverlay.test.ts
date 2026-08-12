@@ -170,6 +170,47 @@ describe('BookPlaqueManager (bookOverlay.ts)', () => {
     manager.destroy();
   });
 
+  it('shows role=alert when ADD_TO_ARCHIVE fails', async () => {
+    vi.mocked(chrome.runtime.sendMessage).mockImplementation((_msg, cb) => {
+      if (typeof cb === 'function') {
+        cb({ success: false, error: 'network down' });
+      }
+      return true as unknown as void;
+    });
+
+    const manager = new BookPlaqueManager();
+    const el = document.createElement('div');
+    document.body.appendChild(el);
+    manager.attachNear(
+      el,
+      baseMatch({
+        media: {
+          id: 'openlibrary_work_OL123W',
+          canonicalTitle: 'The Great Gatsby',
+          type: 'book',
+          year: 1925,
+          genres: [],
+          ratings: [],
+          cast: [],
+          directors: [],
+          createdAt: 0,
+          updatedAt: 0,
+        },
+      })
+    );
+
+    const host = document.querySelector('[data-subsume-book-plaque]') as HTMLElement | null;
+    const add = plaqueShadow(host)?.querySelector('.plaque-add') as HTMLButtonElement;
+    dispatchTrustedClick(add);
+
+    await vi.waitFor(() => {
+      const alert = plaqueShadow(host)?.querySelector('[role="alert"]');
+      expect(alert?.textContent).toMatch(/Could not update archive/i);
+    });
+
+    manager.destroy();
+  });
+
   it('ignores untrusted Add click (no ADD_TO_ARCHIVE)', async () => {
     vi.mocked(chrome.runtime.sendMessage).mockImplementation((_msg, cb) => {
       if (typeof cb === 'function') cb({ success: true, data: { added: true } });

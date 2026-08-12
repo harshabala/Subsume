@@ -11,7 +11,11 @@ import { MessageType, type MediaItem } from '@/shared/types';
 import { logger } from '@/shared/logger';
 import { setupShadowStyles } from '@/shared/shadowTokens';
 import { truncateForExcerpt } from '@/shared/textTruncate';
-import { ADD_TO_ARCHIVE_LABEL, IN_ARCHIVE_LABEL } from '@/shared/productCopy';
+import {
+  ADD_TO_ARCHIVE_LABEL,
+  IN_ARCHIVE_LABEL,
+  ARCHIVE_UPDATE_ERROR,
+} from '@/shared/productCopy';
 import { attachClosedShadow, isTrustedGesture } from '@/content/closedShadow';
 
 const HOST_ATTR = 'data-subsume-book-plaque';
@@ -194,6 +198,22 @@ const PLAQUE_STYLES = `
   .plaque-add:disabled {
     opacity: 0.5;
     cursor: default;
+  }
+
+  .plaque-error {
+    display: block;
+    max-width: 220px;
+    margin-top: 4px;
+    padding: 4px 6px;
+    border-radius: var(--radius-sm);
+    background: var(--danger-bg, rgba(180, 40, 40, 0.2));
+    color: var(--danger-fg-strong, #f5a8a8);
+    border: 1px solid var(--danger-border, rgba(218, 41, 28, 0.4));
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: normal;
   }
 
   /* In-library open control — keyboard operable, Fitts min hit */
@@ -538,6 +558,8 @@ export class BookPlaqueManager {
   private async handleAdd(state: PlaqueState, button: HTMLButtonElement): Promise<void> {
     button.disabled = true;
     const { match } = state;
+    // Clear any prior error alert before retry
+    state.shadowRoot.querySelector('.plaque-error')?.remove();
     try {
       if (match.media) {
         await sendMessage(MessageType.ADD_TO_ARCHIVE, {
@@ -556,7 +578,24 @@ export class BookPlaqueManager {
     } catch (err) {
       button.disabled = false;
       logger.warn('[Subsume] Book plaque ADD_TO_ARCHIVE failed:', err);
+      this.showPlaqueError(state);
     }
+  }
+
+  /** User-visible archive failure (role=alert) for ≥3s — not console-only. */
+  private showPlaqueError(state: PlaqueState): void {
+    const root = state.shadowRoot.querySelector('.book-plaque');
+    if (!root) return;
+    state.shadowRoot.querySelector('.plaque-error')?.remove();
+    const alert = document.createElement('div');
+    alert.className = 'plaque-error';
+    alert.setAttribute('role', 'alert');
+    alert.textContent = ARCHIVE_UPDATE_ERROR;
+    // Wrap plaque content so the alert can sit below the row without breaking layout.
+    root.appendChild(alert);
+    window.setTimeout(() => {
+      alert.remove();
+    }, 3000);
   }
 }
 
