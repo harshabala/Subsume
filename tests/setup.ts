@@ -30,7 +30,11 @@ const chromeMock = {
   tabs: {
     query: vi.fn().mockResolvedValue([]),
     create: vi.fn().mockResolvedValue({}),
+    update: vi.fn().mockResolvedValue({}),
     sendMessage: vi.fn().mockResolvedValue({}),
+  },
+  windows: {
+    update: vi.fn().mockResolvedValue({}),
   },
   action: {
     setBadgeText: vi.fn(),

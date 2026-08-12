@@ -16,6 +16,7 @@ import {
 } from '../originRateLimit';
 import { discoverySearch } from '../discoverySearch';
 import { isSafeNavMediaId } from '@/shared/mediaIds';
+import { openCaptureCanvasTab } from '../openCaptureTab';
 import {
   searchTitle,
   searchTitles,
@@ -403,9 +404,7 @@ export const titleHandlers: MessageHandlerMap = {
       logger.warn('[Subsume] OPEN_CAPTURE_CANVAS rejected invalid mediaId:', req.mediaId);
       return { success: false, error: 'Invalid mediaId format' };
     }
-    chrome.tabs.create({
-      url: chrome.runtime.getURL(`ui/index.html?act=capture&mediaId=${req.mediaId}`)
-    });
-    return { success: true };
+    // Prefer reusing an open extension UI tab; else create one (see openCaptureTab.ts).
+    return openCaptureCanvasTab(req.mediaId);
   },
 };
