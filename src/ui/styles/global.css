@@ -614,7 +614,7 @@ nav a.active {
   border: 0;
 }
 
-/* ─── Reduced Motion ──────────────────────────────────────────────── */
+/* ─── Reduced Motion (motion only — not materials) ───────────────── */
 
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -631,18 +631,62 @@ nav a.active {
     transform: none;
   }
 
-  .sanctuary-modal-backdrop,
-  .sanctuary-modal-content,
-  [class*="plaque"],
-  .media-card.sanctuary-media-card {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-  }
-
+  /* Film grain is motion/vestibular — hide under reduced motion */
   .film-grain,
   .film-grain-app,
   .film-grain-popup {
     display: none !important;
     opacity: 0 !important;
+  }
+}
+
+/*
+ * Reduced transparency — independent of motion (Apple Design §14).
+ * Previously incorrectly nested under prefers-reduced-motion.
+ */
+@media (prefers-reduced-transparency: reduce) {
+  .sanctuary-modal-backdrop,
+  .sanctuary-modal-content,
+  [class*='plaque'],
+  .media-card.sanctuary-media-card,
+  .fixed-top-nav,
+  .side-nav-backdrop,
+  .nav-bg,
+  [class*='overlay'] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .fixed-top-nav {
+    background: var(--bg-base, #181818) !important;
+  }
+
+  .sanctuary-modal-backdrop {
+    background: color-mix(in srgb, var(--bg-base, #181818) 75%, transparent) !important;
+  }
+}
+
+/* Higher contrast: solid chrome, stronger borders */
+@media (prefers-contrast: more) {
+  :root {
+    --border: hsla(0, 0%, 100%, 0.28);
+    --border-restraint: hsla(0, 0%, 100%, 0.22);
+    --nav-border: hsla(0, 0%, 100%, 0.28);
+  }
+
+  .btn-primary,
+  .sanctuary-btn-primary,
+  .sanctuary-btn-gold,
+  .btn-sanctuary-primary,
+  .btn-sanctuary-gold {
+    outline: 2px solid var(--fg-base, #fff);
+    outline-offset: 2px;
+  }
+
+  .tag-filter-chip.active,
+  .collection-tab-btn.active,
+  .settings-chip.active,
+  .alerts-chip.active {
+    border-width: 2px;
   }
 }

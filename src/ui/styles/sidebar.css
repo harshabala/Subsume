@@ -107,31 +107,22 @@
   color: var(--nav-tab-fg-active);
 }
 
-/* Backdrop for Slide-out Navigation */
+/* Backdrop for Slide-out Navigation — opacity driven by spring progress */
 .side-nav-backdrop {
   position: fixed;
   inset: 0;
   background: var(--overlay-bg);
   backdrop-filter: blur(8px);
   z-index: 1999;
-  animation: fadeInBackdrop var(--duration-slow) ease forwards;
 }
 
-.side-nav-backdrop.closing {
-  animation: fadeOutBackdrop var(--duration-slow) ease forwards;
+.side-nav-backdrop--spring {
+  /* opacity set inline from spring progress */
+  will-change: opacity;
+  touch-action: none;
 }
 
-@keyframes fadeInBackdrop {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes fadeOutBackdrop {
-  from { opacity: 1; }
-  to { opacity: 0; }
-}
-
-/* Slide-out Navigation Menu Drawer — enter/exit: opacity + translateX */
+/* Spring-driven drawer: transform/opacity set by useSpringDrawer (JS) */
 .side-menu-drawer {
   position: fixed;
   top: 0;
@@ -143,25 +134,29 @@
   z-index: 2000;
   display: flex;
   flex-direction: column;
-  transform: translateX(100%);
+  transform: translate3d(320px, 0, 0);
   opacity: 0;
   pointer-events: none;
-  transition:
-    transform var(--duration-slow) cubic-bezier(0.16, 1, 0.3, 1),
-    opacity var(--duration-slow) ease;
   box-shadow: var(--shadow-drawer);
+  /* No CSS transition — spring loop owns motion (interruptible) */
+  transition: none;
+  will-change: transform, opacity;
+  touch-action: pan-y;
+  cursor: grab;
 }
 
-.side-menu-drawer.open {
-  transform: translateX(0);
-  opacity: 1;
-  pointer-events: auto;
+.side-menu-drawer--spring.is-open {
+  cursor: grab;
 }
 
-.side-menu-drawer.closing {
-  transform: translateX(100%);
-  opacity: 0;
-  pointer-events: none;
+.side-menu-drawer--spring:active {
+  cursor: grabbing;
+}
+
+/* Interactive children keep default cursors */
+.side-menu-drawer button,
+.side-menu-drawer a {
+  cursor: pointer;
 }
 
 .side-menu-header {
@@ -295,12 +290,39 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .side-menu-drawer {
-    transition: none;
+  .side-menu-drawer,
+  .side-nav-backdrop {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* Materials preference — independent of motion (Apple Design §14) */
+@media (prefers-reduced-transparency: reduce) {
+  .side-nav-backdrop {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: color-mix(in srgb, var(--bg-base, #181818) 88%, transparent);
   }
 
-  .side-nav-backdrop,
-  .side-nav-backdrop.closing {
-    animation: none;
+  .fixed-top-nav {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: var(--bg-base, #181818);
+  }
+}
+
+@media (prefers-contrast: more) {
+  .side-menu-drawer {
+    border-left: 2px solid var(--fg-base, #fff);
+  }
+
+  .fixed-top-nav {
+    border-bottom: 2px solid var(--fg-base, #fff);
+  }
+
+  .side-menu-item.active {
+    outline: 2px solid var(--primary, #da291c);
+    outline-offset: 0;
   }
 }

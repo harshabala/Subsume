@@ -20,6 +20,7 @@ import { ensureDemoLibraryIfEmpty } from './lib/ensureDemoLibrary';
 import { useNotice } from './components/NoticeProvider';
 import { formatUserError } from './utils/formatUserError';
 import { Icon, type IconName } from './components/icons';
+import { useSpringDrawer } from './hooks/useSpringDrawer';
 import './styles/sidebar.css';
 import './styles/app-nav.css';
 
@@ -102,72 +103,36 @@ export function App() {
   const [prefs, setPrefs] = useState<UserPreferences | null>(null);
   const [stats, setStats] = useState<LibraryStats>({ movieCount: 0, tvCount: 0 });
   const [peopleCount, setPeopleCount] = useState(0);
-  const [navMenuOpen, setNavMenuOpen] = useState(false);
-  const [navMenuClosing, setNavMenuClosing] = useState(false);
-  const navMenuVisible = navMenuOpen || navMenuClosing;
-  const drawerOpen = navMenuOpen && !navMenuClosing;
   const initialPrefetchDone = useRef(false);
-  const navCloseDoneRef = useRef(false);
   const menuToggleRef = useRef<HTMLButtonElement>(null);
-  const drawerRef = useRef<HTMLElement>(null);
 
-  const prefersReducedMotion = () =>
-    typeof window !== 'undefined' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const prefersReducedMotion = useCallback(
+    () =>
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    [],
+  );
 
-  const openNavMenu = () => {
-    navCloseDoneRef.current = false;
-    setNavMenuClosing(false);
-    setNavMenuOpen(true);
-  };
-
-  const finishNavMenuClose = useCallback(() => {
-    if (navCloseDoneRef.current) return;
-    navCloseDoneRef.current = true;
-    setNavMenuOpen(false);
-    setNavMenuClosing(false);
-    // Restore focus to menu toggle after drawer fully closes
-    requestAnimationFrame(() => {
-      menuToggleRef.current?.focus();
-    });
-  }, []);
-
-  const closeNavMenu = useCallback(() => {
-    if (!navMenuOpen || navMenuClosing) return;
-    if (prefersReducedMotion()) {
-      navCloseDoneRef.current = true;
-      setNavMenuOpen(false);
-      setNavMenuClosing(false);
+  const springDrawer = useSpringDrawer({
+    prefersReducedMotion,
+    onSettledClosed: () => {
       requestAnimationFrame(() => {
         menuToggleRef.current?.focus();
       });
-      return;
-    }
-    navCloseDoneRef.current = false;
-    setNavMenuClosing(true);
-  }, [navMenuOpen, navMenuClosing]);
+    },
+  });
+
+  const drawerOpen = springDrawer.isOpen;
+  const navMenuVisible = springDrawer.isVisible;
+  const openNavMenu = springDrawer.open;
+  const closeNavMenu = springDrawer.close;
+  const drawerRef = springDrawer.drawerRef;
 
   const goToPage = (page: Page) => {
     setCurrentPage(page);
     prefetchPage(page);
     closeNavMenu();
   };
-
-  useEffect(() => {
-    if (!navMenuClosing) return;
-    const drawer = drawerRef.current ?? document.getElementById('app-side-menu');
-    const onEnd = (e: TransitionEvent) => {
-      if (e.target !== drawer) return;
-      if (e.propertyName !== 'transform' && e.propertyName !== 'opacity') return;
-      finishNavMenuClose();
-    };
-    drawer?.addEventListener('transitionend', onEnd);
-    const fallback = window.setTimeout(finishNavMenuClose, 280);
-    return () => {
-      drawer?.removeEventListener('transitionend', onEnd);
-      window.clearTimeout(fallback);
-    };
-  }, [navMenuClosing, finishNavMenuClose]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -225,16 +190,16 @@ export function App() {
     return () => chrome.runtime.onMessage.removeListener(handleMessage);
   }, []);
 
-  // Drawer open: move focus in, trap Tab, Esc closes with animation
+  // Drawer open: move focus in, trap Tab, Esc closes (interruptible spring)
   useEffect(() => {
     if (!drawerOpen) return;
 
-    const drawer = drawerRef.current;
+    const drawer = drawerRef.current as HTMLElement | null;
     const focusFirst = () => {
       if (!drawer) return;
       const focusable = Array.from(
-        drawer.querySelectorAll<HTMLElement>(DRAWER_FOCUSABLE_SELECTOR),
-      );
+        drawer.querySelectorAll(DRAWER_FOCUSABLE_SELECTOR),
+      ) as HTMLElement[];
       (focusable[0] ?? drawer).focus();
     };
     const focusTimer = window.setTimeout(focusFirst, 0);
@@ -248,12 +213,12 @@ export function App() {
       if (e.key !== 'Tab' || !drawer) return;
 
       const focusable = Array.from(
-        drawer.querySelectorAll<HTMLElement>(DRAWER_FOCUSABLE_SELECTOR),
-      );
+        drawer.querySelectorAll(DRAWER_FOCUSABLE_SELECTOR),
+      ) as HTMLElement[];
       if (focusable.length === 0) return;
 
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
+      const first = focusable[0]!;
+      const last = focusable[focusable.length - 1]!;
 
       if (e.shiftKey && document.activeElement === first) {
         e.preventDefault();
@@ -269,7 +234,7 @@ export function App() {
       window.clearTimeout(focusTimer);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [drawerOpen, closeNavMenu]);
+  }, [drawerOpen, closeNavMenu, drawerRef]);
 
   const completeOnboarding = async (patch: OnboardingPatch) => {
     if (!prefs) return;
@@ -383,8 +348,8 @@ export function App() {
             aria-expanded={drawerOpen}
             aria-controls="app-side-menu"
             onClick={() => {
-              if (drawerOpen) closeNavMenu();
-              else if (!navMenuVisible) openNavMenu();
+              // Interruptible: open while closing is allowed (spring retarget)
+              springDrawer.toggle();
             }}
           >
             <Icon name="menu" size={22} />
@@ -409,18 +374,21 @@ export function App() {
 
       {navMenuVisible && (
         <div
-          className={`side-nav-backdrop app-mobile-nav-layer ${navMenuClosing ? 'closing' : ''}`}
+          className="side-nav-backdrop app-mobile-nav-layer side-nav-backdrop--spring"
           role="presentation"
+          style={springDrawer.backdropStyle}
           onClick={closeNavMenu}
         />
       )}
       <aside
         ref={drawerRef}
         id="app-side-menu"
-        className={`side-menu-drawer app-mobile-nav-layer ${drawerOpen ? 'open' : ''}${navMenuClosing ? ' closing' : ''}`}
+        className={`side-menu-drawer app-mobile-nav-layer side-menu-drawer--spring${drawerOpen ? ' is-open' : ''}`}
+        style={springDrawer.style}
         aria-hidden={!drawerOpen}
         // Drawer is not a modal dialog; tabbability controlled via tabIndex when closed
         tabIndex={drawerOpen ? -1 : undefined}
+        onPointerDown={(e) => springDrawer.onDrawerPointerDown(e as unknown as PointerEvent)}
       >
         <div className="side-menu-header">
           <span className="side-menu-title">Browse the house</span>
