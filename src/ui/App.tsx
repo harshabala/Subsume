@@ -11,6 +11,10 @@ import { Stats } from './pages/Stats';
 import { People } from './pages/People';
 import { Alerts } from './pages/Alerts';
 import { PoeticCaptureCanvas } from './components/PoeticCaptureCanvas';
+import {
+  FirstInscriptionGate,
+  FIRST_INSCRIPTION_GATE_SESSION_KEY,
+} from './components/FirstInscriptionGate';
 import { sendMessage } from '../shared/messages';
 import { MessageType, UserPreferences, LibraryItem, MediaItem, PersonItem } from '../shared/types';
 import { usePrefetch, prefetchPage, prefetchProps, type Page } from './hooks/usePrefetch';
@@ -21,6 +25,7 @@ import { useNotice } from './components/NoticeProvider';
 import { formatUserError } from './utils/formatUserError';
 import { Icon, type IconName } from './components/icons';
 import { useSpringDrawer } from './hooks/useSpringDrawer';
+import { incrementAppOpens } from '../shared/activationMetrics';
 import './styles/sidebar.css';
 import './styles/app-nav.css';
 
@@ -104,7 +109,15 @@ export function App() {
   const [stats, setStats] = useState<LibraryStats>({ movieCount: 0, tvCount: 0 });
   const [peopleCount, setPeopleCount] = useState(0);
   const initialPrefetchDone = useRef(false);
+  const appOpenCounted = useRef(false);
   const menuToggleRef = useRef<HTMLButtonElement>(null);
+  const [gateSoftSkipped, setGateSoftSkipped] = useState(() => {
+    try {
+      return sessionStorage.getItem(FIRST_INSCRIPTION_GATE_SESSION_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
 
   const prefersReducedMotion = useCallback(
     () =>
@@ -152,6 +165,11 @@ export function App() {
         applyThemePreference(theme);
         watchSystemTheme(theme);
         applyCinemaAtmosphere(res.data.cinemaAtmosphere ?? 'default');
+        // Device-only activation: one app open per options-page session
+        if (!appOpenCounted.current) {
+          appOpenCounted.current = true;
+          void incrementAppOpens().catch(() => {});
+        }
       }
     }).catch(() => {});
 
@@ -167,6 +185,33 @@ export function App() {
       }
     }).catch(() => {});
   }, []);
+
+  // After first archive add, refresh prefs so the first-inscription gate can dismiss
+  useEffect(() => {
+    if (!prefs || prefs.firstInscriptionComplete) return;
+
+    const refreshPrefs = () => {
+      sendMessage<Record<string, unknown>, UserPreferences>(MessageType.GET_PREFERENCES, {})
+        .then((res) => {
+          if (res.success && res.data) setPrefs(res.data);
+        })
+        .catch(() => {});
+    };
+
+    const handleMessage = (message: unknown) => {
+      if (
+        message &&
+        typeof message === 'object' &&
+        'type' in message &&
+        (message as { type: string }).type === 'LIBRARY_UPDATED' &&
+        (message as { action?: string }).action === 'add'
+      ) {
+        refreshPrefs();
+      }
+    };
+    chrome.runtime.onMessage.addListener(handleMessage);
+    return () => chrome.runtime.onMessage.removeListener(handleMessage);
+  }, [prefs]);
 
   useEffect(() => {
     if (!initialPrefetchDone.current) {
@@ -289,6 +334,38 @@ export function App() {
     return <Onboarding onComplete={completeOnboarding} />;
   }
 
+  const showFirstInscriptionGate =
+    !prefs.firstInscriptionComplete && !gateSoftSkipped;
+
+  const handleGateNavigateSearch = () => {
+    // Soft-dismiss full-screen only so Search is usable; Discovery banner stays until complete
+    try {
+      sessionStorage.setItem(FIRST_INSCRIPTION_GATE_SESSION_KEY, '1');
+    } catch {
+      /* non-fatal */
+    }
+    setGateSoftSkipped(true);
+    setCurrentPage('search');
+    prefetchPage('search');
+  };
+
+  const handleGateSkipLater = async () => {
+    const skippedAt = Date.now();
+    const newPrefs = { ...prefs, firstInscriptionSkippedAt: skippedAt };
+    try {
+      await sendMessage(MessageType.SET_PREFERENCES, newPrefs);
+      setPrefs(newPrefs);
+    } catch (err) {
+      console.error('[Subsume] Failed to save firstInscriptionSkippedAt:', err);
+    }
+    try {
+      sessionStorage.setItem(FIRST_INSCRIPTION_GATE_SESSION_KEY, '1');
+    } catch {
+      /* non-fatal */
+    }
+    setGateSoftSkipped(true);
+  };
+
   const renderPage = () => {
     switch (currentPage) {
       case 'home':
@@ -316,12 +393,20 @@ export function App() {
       case 'alerts':
         return <Alerts />;
       case 'settings':
-        return <Settings />;
+        return <Settings onNavigate={setCurrentPage} />;
     }
   };
 
   return (
     <div className="app-layout">
+      {showFirstInscriptionGate && (
+        <FirstInscriptionGate
+          onNavigate={handleGateNavigateSearch}
+          onSkipLater={() => {
+            void handleGateSkipLater();
+          }}
+        />
+      )}
       <FilmGrain variant="app" />
       <header className="app-nav-shell">
         <nav className="fixed-top-nav" aria-label="Primary">

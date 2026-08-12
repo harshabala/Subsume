@@ -12,6 +12,12 @@ import {
   GOOGLE_OAUTH_REDIRECT_URI_REGISTERED,
 } from '@/shared/googleDriveOAuth';
 import type { SystemLog } from '@/shared/types';
+import {
+  ACTIVATION_METRICS_KEY,
+  getActivationMetrics,
+  type ActivationMetrics,
+  DEFAULT_ACTIVATION_METRICS,
+} from '@/shared/activationMetrics';
 
 const PAGE_SIZE = 20;
 
@@ -97,12 +103,14 @@ export function SettingsDiagnosticsPanel() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
+  const [activation, setActivation] = useState<ActivationMetrics>(DEFAULT_ACTIVATION_METRICS);
 
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const logs = await loadAllEntries();
+      const [logs, metrics] = await Promise.all([loadAllEntries(), getActivationMetrics()]);
       setEntries(logs);
+      setActivation(metrics);
       if (logs.length) {
         setSelectedId((prev) => prev ?? logs[logs.length - 1].id);
       }
@@ -117,7 +125,12 @@ export function SettingsDiagnosticsPanel() {
       changes: { [key: string]: chrome.storage.StorageChange },
       area: string
     ) => {
-      if (area === 'local' && (changes.subsumeDiagnosticLog || changes.system_logs)) {
+      if (
+        area === 'local' &&
+        (changes.subsumeDiagnosticLog ||
+          changes.system_logs ||
+          changes[ACTIVATION_METRICS_KEY])
+      ) {
         void refresh();
       }
     };
@@ -190,6 +203,11 @@ export function SettingsDiagnosticsPanel() {
     { value: 'debug', label: 'Technical detail' },
   ];
 
+  const firstInscriptionLabel =
+    typeof activation.firstInscriptionAt === 'number'
+      ? new Date(activation.firstInscriptionAt).toLocaleString()
+      : 'Not yet';
+
   return (
     <div id="settings-diagnostics" className="settings-panel diagnostics-panel">
       <h3 className="settings-panel-heading">Diagnostics</h3>
@@ -197,6 +215,37 @@ export function SettingsDiagnosticsPanel() {
         A readable activity log for Google Drive sign-in, sync, and background errors. Copy the full log when you need
         help troubleshooting.
       </p>
+
+      <section
+        className="diagnostics-activation"
+        data-testid="activation-metrics"
+        aria-labelledby="activation-metrics-heading"
+      >
+        <h4 id="activation-metrics-heading" className="settings-panel-subheading">
+          Activation (this device)
+        </h4>
+        <p className="settings-panel-description diagnostics-activation-privacy">
+          Stored only on this device. Never uploaded.
+        </p>
+        <dl className="diagnostics-activation-grid">
+          <div>
+            <dt>App opens</dt>
+            <dd>{activation.appOpens}</dd>
+          </div>
+          <div>
+            <dt>Inscriptions total</dt>
+            <dd>{activation.inscriptionsTotal}</dd>
+          </div>
+          <div>
+            <dt>First inscription</dt>
+            <dd>{firstInscriptionLabel}</dd>
+          </div>
+          <div>
+            <dt>Weekly selection opens</dt>
+            <dd>{activation.weeklySelectionOpens}</dd>
+          </div>
+        </dl>
+      </section>
 
       <div className="diagnostics-toolbar">
         <input

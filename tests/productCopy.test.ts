@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import {
   mediumLabel,
   MEDIUM_LABEL,
+  PLAIN_ENGLISH_PITCH,
+  WEEKLY_SELECTION_LABEL,
   ADD_TO_ARCHIVE_LABEL,
   IN_ARCHIVE_LABEL,
   REMOVE_FROM_ARCHIVE_LABEL,
@@ -25,11 +27,21 @@ import {
   STATS_BOOK_PAGES_PARTIAL_NOTE,
   failedToAddToArchiveMessage,
   failedToRemoveFromArchiveMessage,
+  ARCHIVE_UPDATE_ERROR,
+  EXPORT_KEEP_FILE_NOTICE,
+  BACKUP_SECTION_PITCH,
 } from '@/shared/productCopy';
 import { legacyStatusLabel } from '@/shared/statusLabels';
 import { INTENT_LABELS_V2 } from '@/shared/statusLabels';
 
 describe('productCopy lexicon', () => {
+  it('exports plain-English pitch and weekly selection label', () => {
+    expect(PLAIN_ENGLISH_PITCH).toMatch(/private movie & book journal/i);
+    expect(PLAIN_ENGLISH_PITCH).toMatch(/save what stayed with you/i);
+    expect(WEEKLY_SELECTION_LABEL).toBe('Weekly selection');
+    expect(WEEKLY_SELECTION_LABEL.toLowerCase()).not.toContain('dispatch');
+  });
+
   it('uses Film | Series | Book for medium badges', () => {
     expect(mediumLabel('movie')).toBe('Film');
     expect(mediumLabel('tv')).toBe('Series');
@@ -83,6 +95,14 @@ describe('productCopy lexicon', () => {
     expect(failedToRemoveFromArchiveMessage()).toBe('Failed to remove item from archive.');
     expect(failedToAddToArchiveMessage()).not.toMatch(/library/i);
     expect(failedToRemoveFromArchiveMessage()).not.toMatch(/library/i);
+  });
+
+  it('content-script archive failure and product pitch constants', () => {
+    expect(ARCHIVE_UPDATE_ERROR).toBe('Could not update archive. Try again.');
+    expect(PLAIN_ENGLISH_PITCH).toMatch(/Private movie & book journal/i);
+    expect(EXPORT_KEEP_FILE_NOTICE).toMatch(/only full copy/i);
+    expect(BACKUP_SECTION_PITCH).toMatch(/never sells/i);
+    expect(BACKUP_SECTION_PITCH).toMatch(/Free forever on this device/i);
   });
 
   it('book status labels stay book-aware (not To Watch)', () => {

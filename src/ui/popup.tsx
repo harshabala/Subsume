@@ -365,7 +365,7 @@ function Popup() {
               <span className="popup-brand-mark"></span>
               Subsume
             </div>
-            <div className="popup-tagline">Capture what stayed with you</div>
+            <div className="popup-tagline">Private movie &amp; book journal</div>
           </div>
           <div className="popup-header-actions">
             <button
@@ -417,7 +417,13 @@ function Popup() {
           <div className="popup-section-title">Recently inscribed</div>
           {items.length === 0 ? (
             <div className="popup-empty">
-              <p>Your vault is empty. The first inscription is yours to make.</p>
+              <p>
+                Your archive is empty. Search a title and save what stayed with you —
+                a private movie &amp; book journal on this device.
+              </p>
+              <p className="popup-empty-secondary" style={{ opacity: 0.75, marginTop: '6px' }}>
+                The first inscription is yours to make.
+              </p>
               <button
                 className="popup-btn"
                 style={{ marginTop: '4px' }}

@@ -1,0 +1,61 @@
+/* First-inscription gate — full-screen overlay over the app shell */
+
+.first-inscription-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--onboarding-bg, var(--bg-base, #0a0a0a));
+  overflow: hidden;
+  font-family: var(--font-ui);
+}
+
+.first-inscription-gate-content {
+  position: relative;
+  text-align: center;
+  max-width: 520px;
+  padding: 0 40px;
+  z-index: 1;
+}
+
+.first-inscription-gate-headline {
+  font-size: clamp(28px, 5vw, 40px);
+}
+
+.first-inscription-gate-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.first-inscription-gate-skip {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 8px 12px;
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--fg-muted, #969696);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.first-inscription-gate-skip:hover,
+.first-inscription-gate-skip:focus-visible {
+  color: var(--fg-base, #fff);
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .first-inscription-gate * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

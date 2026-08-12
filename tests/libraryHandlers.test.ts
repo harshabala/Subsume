@@ -333,6 +333,9 @@ describe('ADD_TO_LIST', () => {
 
   it('sets to-watch for new library entries', async () => {
     vi.mocked(getLibraryItem).mockResolvedValue(undefined);
+    vi.mocked(getPreferences).mockResolvedValue({
+      firstInscriptionComplete: false,
+    } as any);
 
     const handler = handlers[MessageType.ADD_TO_LIST]!;
     const result = await handler(
@@ -344,6 +347,38 @@ describe('ADD_TO_LIST', () => {
     expect(putLibraryItem).toHaveBeenCalledWith(
       expect.objectContaining({ status: 'to-watch' })
     );
+    expect(savePreferences).toHaveBeenCalledWith(
+      expect.objectContaining({ firstInscriptionComplete: true }),
+    );
+  });
+
+  it('does not re-save firstInscriptionComplete when already true', async () => {
+    vi.mocked(getLibraryItem).mockResolvedValue(undefined);
+    vi.mocked(getPreferences).mockResolvedValue({
+      firstInscriptionComplete: true,
+    } as any);
+
+    const handler = handlers[MessageType.ADD_TO_LIST]!;
+    await handler({ mediaItem: sampleMedia, type: 'movie' }, sender);
+
+    expect(savePreferences).not.toHaveBeenCalled();
+  });
+
+  it('does not mark first inscription when re-adding existing library item', async () => {
+    vi.mocked(getLibraryItem).mockResolvedValue({
+      mediaId: 'tmdb_movie_99',
+      status: 'watched',
+      addedAt: 1000,
+      updatedAt: 1000,
+    });
+    vi.mocked(getPreferences).mockResolvedValue({
+      firstInscriptionComplete: false,
+    } as any);
+
+    const handler = handlers[MessageType.ADD_TO_LIST]!;
+    await handler({ mediaItem: sampleMedia, type: 'movie' }, sender);
+
+    expect(savePreferences).not.toHaveBeenCalled();
   });
 
   it('sets default sanctuaryIntent to wishlist for new library entries', async () => {
