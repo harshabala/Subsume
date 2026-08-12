@@ -124,7 +124,6 @@ export function App() {
 
   const drawerOpen = springDrawer.isOpen;
   const navMenuVisible = springDrawer.isVisible;
-  const openNavMenu = springDrawer.open;
   const closeNavMenu = springDrawer.close;
   const drawerRef = springDrawer.drawerRef;
 
@@ -374,9 +373,9 @@ export function App() {
 
       {navMenuVisible && (
         <div
+          ref={springDrawer.backdropRef}
           className="side-nav-backdrop app-mobile-nav-layer side-nav-backdrop--spring"
           role="presentation"
-          style={springDrawer.backdropStyle}
           onClick={closeNavMenu}
         />
       )}
@@ -384,11 +383,14 @@ export function App() {
         ref={drawerRef}
         id="app-side-menu"
         className={`side-menu-drawer app-mobile-nav-layer side-menu-drawer--spring${drawerOpen ? ' is-open' : ''}`}
-        style={springDrawer.style}
         aria-hidden={!drawerOpen}
         // Drawer is not a modal dialog; tabbability controlled via tabIndex when closed
         tabIndex={drawerOpen ? -1 : undefined}
-        onPointerDown={(e) => springDrawer.onDrawerPointerDown(e as unknown as PointerEvent)}
+        onPointerDown={(e) => {
+          // Preact synthetic event → native fields for capture/velocity
+          const ne = e as unknown as PointerEvent;
+          springDrawer.onDrawerPointerDown(ne);
+        }}
       >
         <div className="side-menu-header">
           <span className="side-menu-title">Browse the house</span>

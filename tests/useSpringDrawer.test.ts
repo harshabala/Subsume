@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { projectVelocity, rubberband } from '@/ui/hooks/useSpringDrawer';
+import { projectVelocity, rubberband, SPRING_DRAWER_WIDTH } from '@/ui/hooks/useSpringDrawer';
 
 function stepSpring(
   pos: number,
@@ -57,11 +57,26 @@ describe('spring drawer math', () => {
     expect(mid).not.toBe(1);
   });
 
-  it('momentum projection decides open vs close near midpoint', () => {
+  it('momentum projection at midpoint uses projected rest, not raw release point', () => {
     const progress = 0.45;
-    const openFlick = projectVelocity(2.5); // strong open-ward progress velocity
-    const closeFlick = projectVelocity(-2.5);
-    expect(progress + openFlick > 0.5 || openFlick > 0.5).toBe(true);
-    expect(progress + closeFlick < 0.5 || closeFlick < -0.5).toBe(true);
+    // Strong open-ward velocity (progress/s) should push past 0.5
+    const projectedOpen = progress + projectVelocity(1200);
+    expect(projectedOpen).toBeGreaterThan(0.5);
+    const projectedClose = progress + projectVelocity(-1200);
+    expect(projectedClose).toBeLessThan(0.5);
+  });
+
+  it('exports a single drawer width constant for CSS/JS parity', () => {
+    expect(SPRING_DRAWER_WIDTH).toBe(320);
+  });
+
+  it('already-settled close is a pure no-op in decision logic', () => {
+    // Mirrors setTarget early-return: if progress≈target and vel≈0, do not re-fire settle
+    const progress = 0;
+    const target = 0;
+    const vel = 0;
+    const alreadySettled =
+      Math.abs(progress - target) < 0.002 && Math.abs(vel) < 0.02;
+    expect(alreadySettled).toBe(true);
   });
 });

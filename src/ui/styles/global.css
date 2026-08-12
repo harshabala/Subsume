@@ -666,12 +666,12 @@ nav a.active {
   }
 }
 
-/* Higher contrast: solid chrome, stronger borders */
+/* Higher contrast: solid chrome, stronger borders (theme-aware via fg-base) */
 @media (prefers-contrast: more) {
   :root {
-    --border: hsla(0, 0%, 100%, 0.28);
-    --border-restraint: hsla(0, 0%, 100%, 0.22);
-    --nav-border: hsla(0, 0%, 100%, 0.28);
+    --border: color-mix(in srgb, var(--fg-base, #fff) 28%, transparent);
+    --border-restraint: color-mix(in srgb, var(--fg-base, #fff) 22%, transparent);
+    --nav-border: color-mix(in srgb, var(--fg-base, #fff) 28%, transparent);
   }
 
   .btn-primary,
@@ -679,7 +679,7 @@ nav a.active {
   .sanctuary-btn-gold,
   .btn-sanctuary-primary,
   .btn-sanctuary-gold {
-    outline: 2px solid var(--fg-base, #fff);
+    outline: 2px solid var(--fg-base, currentColor);
     outline-offset: 2px;
   }
 

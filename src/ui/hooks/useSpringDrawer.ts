@@ -6,18 +6,13 @@ import type { RefObject } from 'preact';
  * - Progress 0 = fully closed (off-screen right), 1 = fully open
  * - Always animates from the *current* progress (interruptible / retargetable)
  * - 1:1 drag with release-velocity handoff + momentum projection
- *
- * No external spring library — keeps the extension lean.
+ * - Visuals are imperative (no per-frame React re-renders)
  */
 
-const DRAWER_WIDTH_PX = 320;
+export const SPRING_DRAWER_WIDTH = 320;
 
-/** Stiffness tuned for ~0.35s settle (Apple response ≈ 0.3–0.4). */
 const STIFFNESS = 280;
-/** Critical damping: ζ = 1 → 2√k */
 const DAMPING = 2 * Math.sqrt(STIFFNESS);
-
-/** Settled when close to target with near-zero velocity. */
 const SETTLE_POS = 0.002;
 const SETTLE_VEL = 0.02;
 
@@ -38,24 +33,20 @@ export interface UseSpringDrawerOptions {
 }
 
 export interface UseSpringDrawerResult {
-  /** True when drawer is open enough for a11y (focus trap / inert). */
+  /** A11y open: true from open start until fully settled closed. */
   isOpen: boolean;
-  /** True while progress > 0 — mount backdrop. */
+  /** Mount backdrop while animating or open. */
   isVisible: boolean;
-  /** 0–1 current progress (for backdrop opacity). */
-  progress: number;
   drawerRef: RefObject<HTMLElement>;
+  backdropRef: RefObject<HTMLDivElement>;
   open: () => void;
   close: () => void;
   toggle: () => void;
-  /** Bind to drawer surface for drag-to-dismiss (not buttons). */
   onDrawerPointerDown: (e: PointerEvent) => void;
-  style: { transform: string; opacity: number; pointerEvents: 'auto' | 'none' };
-  backdropStyle: { opacity: number };
 }
 
 export function useSpringDrawer(options: UseSpringDrawerOptions = {}): UseSpringDrawerResult {
-  const width = options.width ?? DRAWER_WIDTH_PX;
+  const width = options.width ?? SPRING_DRAWER_WIDTH;
   const prefersReducedMotion =
     options.prefersReducedMotion ??
     (() =>
@@ -68,6 +59,7 @@ export function useSpringDrawer(options: UseSpringDrawerOptions = {}): UseSpring
   onSettledClosedRef.current = options.onSettledClosed;
 
   const drawerRef = useRef<HTMLElement>(null!);
+  const backdropRef = useRef<HTMLDivElement>(null!);
   const progressRef = useRef(0);
   const velocityRef = useRef(0);
   const targetRef = useRef(0);
@@ -77,10 +69,11 @@ export function useSpringDrawer(options: UseSpringDrawerOptions = {}): UseSpring
   const dragStartXRef = useRef(0);
   const dragStartProgressRef = useRef(0);
   const pointerSamplesRef = useRef<Array<{ t: number; x: number }>>([]);
+  /** True while target is open OR progress still visible (a11y window). */
+  const a11yOpenRef = useRef(false);
 
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const [progress, setProgress] = useState(0);
 
   const applyVisual = useCallback(
     (p: number) => {
@@ -91,11 +84,30 @@ export function useSpringDrawer(options: UseSpringDrawerOptions = {}): UseSpring
         el.style.opacity = String(Math.min(1, Math.max(0, p * 1.15)));
         el.style.pointerEvents = p > 0.05 ? 'auto' : 'none';
       }
-      setProgress(p);
-      setIsVisible(p > 0.001 || targetRef.current > 0.5 || draggingRef.current);
+      const backdrop = backdropRef.current;
+      if (backdrop) {
+        backdrop.style.opacity = String(Math.min(1, Math.max(0, p)));
+      }
     },
     [width],
   );
+
+  const syncDiscrete = useCallback((p: number, target: number, dragging: boolean) => {
+    // Visible if anything is showing
+    const visible = p > 0.001 || target > 0.5 || dragging;
+    setIsVisible((v) => (v === visible ? v : visible));
+
+    // A11y open: stay true from open start until fully settled closed
+    // (avoids aria-hidden + focus still inside mid-close)
+    if (target > 0.5 || dragging || p > 0.05) {
+      a11yOpenRef.current = true;
+    }
+    if (target < 0.5 && p <= SETTLE_POS * 4 && !dragging) {
+      a11yOpenRef.current = false;
+    }
+    const nextOpen = a11yOpenRef.current;
+    setIsOpen((prev) => (prev === nextOpen ? prev : nextOpen));
+  }, []);
 
   const stopRaf = useCallback(() => {
     if (rafRef.current != null) {
@@ -137,6 +149,7 @@ export function useSpringDrawer(options: UseSpringDrawerOptions = {}): UseSpring
       progressRef.current = pos;
       velocityRef.current = vel;
       applyVisual(pos);
+      syncDiscrete(pos, target, false);
 
       const settled =
         Math.abs(pos - target) < SETTLE_POS && Math.abs(vel) < SETTLE_VEL;
@@ -145,7 +158,7 @@ export function useSpringDrawer(options: UseSpringDrawerOptions = {}): UseSpring
         progressRef.current = target;
         velocityRef.current = 0;
         applyVisual(target);
-        setIsOpen(target >= 0.5);
+        syncDiscrete(target, target, false);
         rafRef.current = null;
         lastTimeRef.current = null;
         if (target >= 0.5) onSettledOpenRef.current?.();
@@ -155,7 +168,7 @@ export function useSpringDrawer(options: UseSpringDrawerOptions = {}): UseSpring
 
       rafRef.current = requestAnimationFrame(tick);
     },
-    [applyVisual],
+    [applyVisual, syncDiscrete],
   );
 
   const startSpring = useCallback(() => {
@@ -167,15 +180,35 @@ export function useSpringDrawer(options: UseSpringDrawerOptions = {}): UseSpring
 
   const setTarget = useCallback(
     (open: boolean) => {
-      targetRef.current = open ? 1 : 0;
-      setIsOpen(open);
-      setIsVisible(true);
+      const next = open ? 1 : 0;
+      const alreadySettled =
+        Math.abs(progressRef.current - next) < SETTLE_POS &&
+        Math.abs(velocityRef.current) < SETTLE_VEL &&
+        Math.abs(targetRef.current - next) < SETTLE_POS &&
+        rafRef.current == null &&
+        !draggingRef.current;
+
+      // No-op if already settled on this target (fixes focus-steal on goToPage)
+      if (alreadySettled) {
+        return;
+      }
+
+      targetRef.current = next;
+      if (open) {
+        a11yOpenRef.current = true;
+        setIsOpen(true);
+        setIsVisible(true);
+      } else {
+        // Keep a11y open until settle; still ensure visible for exit animation
+        setIsVisible(true);
+      }
 
       if (prefersReducedMotion()) {
         stopRaf();
-        progressRef.current = open ? 1 : 0;
+        progressRef.current = next;
         velocityRef.current = 0;
-        applyVisual(open ? 1 : 0);
+        applyVisual(next);
+        a11yOpenRef.current = open;
         setIsOpen(open);
         setIsVisible(open);
         if (open) onSettledOpenRef.current?.();
@@ -183,7 +216,6 @@ export function useSpringDrawer(options: UseSpringDrawerOptions = {}): UseSpring
         return;
       }
 
-      // Retarget from current progress — never lock during close (item 3)
       startSpring();
     },
     [applyVisual, prefersReducedMotion, startSpring, stopRaf],
@@ -192,6 +224,7 @@ export function useSpringDrawer(options: UseSpringDrawerOptions = {}): UseSpring
   const open = useCallback(() => setTarget(true), [setTarget]);
   const close = useCallback(() => setTarget(false), [setTarget]);
   const toggle = useCallback(() => {
+    // Toggle based on target (not progress) so open-while-closing works cleanly
     setTarget(targetRef.current < 0.5);
   }, [setTarget]);
 
@@ -207,32 +240,44 @@ export function useSpringDrawer(options: UseSpringDrawerOptions = {}): UseSpring
       const el = drawerRef.current;
       if (!el) return;
 
+      // Measure live width so CSS/media changes stay in sync
+      const liveWidth = el.getBoundingClientRect().width || width;
+
       draggingRef.current = true;
+      a11yOpenRef.current = true;
+      setIsOpen(true);
       stopRaf();
       dragStartXRef.current = e.clientX;
       dragStartProgressRef.current = progressRef.current;
       pointerSamplesRef.current = [{ t: performance.now(), x: e.clientX }];
       velocityRef.current = 0;
+      el.style.userSelect = 'none';
 
       el.setPointerCapture(e.pointerId);
 
       const onMove = (ev: PointerEvent) => {
         if (!draggingRef.current) return;
+        ev.preventDefault();
         const dx = ev.clientX - dragStartXRef.current;
-        let next = dragStartProgressRef.current - dx / width;
+        let next = dragStartProgressRef.current - dx / liveWidth;
         if (next < 0) next = rubberband(next, 1);
         if (next > 1) next = 1 + rubberband(next - 1, 1);
         progressRef.current = next;
         applyVisual(next);
 
+        const now = performance.now();
         const samples = pointerSamplesRef.current;
-        samples.push({ t: performance.now(), x: ev.clientX });
-        if (samples.length > 6) samples.shift();
+        samples.push({ t: now, x: ev.clientX });
+        // Keep only last ~80ms for velocity
+        while (samples.length > 1 && now - samples[0].t > 80) {
+          samples.shift();
+        }
       };
 
       const onUp = (ev: PointerEvent) => {
         if (!draggingRef.current) return;
         draggingRef.current = false;
+        el.style.userSelect = '';
         try {
           el.releasePointerCapture(ev.pointerId);
         } catch {
@@ -245,13 +290,13 @@ export function useSpringDrawer(options: UseSpringDrawerOptions = {}): UseSpring
         const samples = pointerSamplesRef.current;
         let velPx = 0;
         if (samples.length >= 2) {
-          const a = samples[0];
+          // Prefer last two samples in trailing window
+          const a = samples[Math.max(0, samples.length - 2)];
           const b = samples[samples.length - 1];
           const dt = (b.t - a.t) / 1000;
           if (dt > 0) velPx = (b.x - a.x) / dt;
         }
-        // Right drag → closing → negative progress velocity
-        const velProgress = -velPx / width;
+        const velProgress = -velPx / liveWidth;
         velocityRef.current = velProgress;
 
         const projected = progressRef.current + projectVelocity(velProgress);
@@ -260,7 +305,10 @@ export function useSpringDrawer(options: UseSpringDrawerOptions = {}): UseSpring
         const finalOpen = openByFlick ? true : closeByFlick ? false : projected > 0.5;
 
         targetRef.current = finalOpen ? 1 : 0;
-        setIsOpen(finalOpen);
+        if (finalOpen) {
+          a11yOpenRef.current = true;
+          setIsOpen(true);
+        }
         startSpring();
       };
 
@@ -276,31 +324,14 @@ export function useSpringDrawer(options: UseSpringDrawerOptions = {}): UseSpring
     return () => stopRaf();
   }, [applyVisual, stopRaf]);
 
-  const style = {
-    transform: `translate3d(${(1 - progress) * width}px, 0, 0)`,
-    opacity: Math.min(1, Math.max(0, progress * 1.15)),
-    pointerEvents: (progress > 0.05 ? 'auto' : 'none') as 'auto' | 'none',
-  };
-
-  const backdropStyle = {
-    opacity: Math.min(1, Math.max(0, progress)),
-  };
-
-  // a11y "open" when mostly open OR settling toward open
-  const a11yOpen = isOpen || progress > 0.5 || targetRef.current > 0.5;
-
   return {
-    isOpen: a11yOpen,
+    isOpen,
     isVisible,
-    progress,
     drawerRef,
+    backdropRef,
     open,
     close,
     toggle,
     onDrawerPointerDown,
-    style,
-    backdropStyle,
   };
 }
-
-export const SPRING_DRAWER_WIDTH = DRAWER_WIDTH_PX;
