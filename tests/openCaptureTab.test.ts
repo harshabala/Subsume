@@ -23,19 +23,39 @@ describe('openCaptureTab pure helpers', () => {
     );
   });
 
-  it('isExtensionUiTabUrl matches options UI pages only', () => {
-    expect(isExtensionUiTabUrl('chrome-extension://id/ui/index.html')).toBe(true);
+  it('isExtensionUiTabUrl matches own origin or relative paths only', () => {
+    const ourOrigin = 'chrome-extension://test-extension-id/';
+
+    // Own origin + ui/index.html
+    expect(isExtensionUiTabUrl(`${ourOrigin}ui/index.html`, ourOrigin)).toBe(true);
     expect(
-      isExtensionUiTabUrl('chrome-extension://id/ui/index.html?act=capture&mediaId=x')
+      isExtensionUiTabUrl(
+        `${ourOrigin}ui/index.html?act=capture&mediaId=x`,
+        ourOrigin,
+      ),
     ).toBe(true);
-    // Relative path for unit tests
+
+    // Other extension must not match when our origin is provided
+    expect(
+      isExtensionUiTabUrl(
+        'chrome-extension://other-extension-id/ui/index.html',
+        ourOrigin,
+      ),
+    ).toBe(false);
+
+    // Relative path for unit tests without origin
     expect(isExtensionUiTabUrl('ui/index.html')).toBe(true);
     expect(isExtensionUiTabUrl('ui/index.html?act=capture&mediaId=x')).toBe(true);
+
+    // Without origin: absolute chrome-extension URLs are rejected
+    expect(isExtensionUiTabUrl('chrome-extension://id/ui/index.html')).toBe(false);
+
     // Random web URLs must not match even if path string appears
+    expect(isExtensionUiTabUrl('https://example.com/ui/index.html', ourOrigin)).toBe(false);
     expect(isExtensionUiTabUrl('https://example.com/ui/index.html')).toBe(false);
     expect(isExtensionUiTabUrl('https://evil.example/path/ui/index.html?q=1')).toBe(false);
     expect(isExtensionUiTabUrl('http://localhost:5173/ui/index.html')).toBe(false);
-    expect(isExtensionUiTabUrl('chrome-extension://id/popup.html')).toBe(false);
+    expect(isExtensionUiTabUrl('chrome-extension://id/popup.html', ourOrigin)).toBe(false);
     expect(isExtensionUiTabUrl(undefined)).toBe(false);
     expect(isExtensionUiTabUrl(null)).toBe(false);
   });
@@ -47,6 +67,21 @@ describe('openCaptureCanvasTab reuse', () => {
     vi.mocked(chrome.tabs.create).mockReset().mockResolvedValue({} as chrome.tabs.Tab);
     vi.mocked(chrome.tabs.update).mockReset().mockResolvedValue({} as chrome.tabs.Tab);
     vi.mocked(chrome.windows.update).mockReset().mockResolvedValue({} as chrome.windows.Window);
+  });
+
+  it('ignores other-extension UI tabs and creates a new tab', async () => {
+    vi.mocked(chrome.tabs.query).mockResolvedValue([
+      {
+        id: 99,
+        windowId: 1,
+        url: 'chrome-extension://other-extension-id/ui/index.html',
+      } as chrome.tabs.Tab,
+    ]);
+
+    await openCaptureCanvasTab('tmdb_movie_1');
+
+    expect(chrome.tabs.update).not.toHaveBeenCalled();
+    expect(chrome.tabs.create).toHaveBeenCalled();
   });
 
   it('reuses an existing extension UI tab', async () => {

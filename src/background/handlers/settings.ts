@@ -103,19 +103,14 @@ function isValidUserPreferences(prefs: any): prefs is UserPreferences {
 
 export const settingHandlers: MessageHandlerMap = {
   [MessageType.GET_PREFERENCES]: async () => {
-    // Heal upgrade installs: library non-empty ⇒ firstInscriptionComplete
-    try {
-      const { healFirstInscriptionIfLibraryNonEmpty } = await import('../activationHooks');
-      await healFirstInscriptionIfLibraryNonEmpty();
-    } catch {
-      /* non-fatal */
-    }
+    // Content-script path: no heal side effects (heal on SW startup + GET_FULL_PREFERENCES)
     const prefs = await getPreferences();
     return sanitizePreferencesForContentScript(prefs);
   },
 
   [MessageType.GET_FULL_PREFERENCES]: async (payload) => {
     const { revealKeys } = (payload as { revealKeys?: boolean } | undefined) ?? {};
+    // Heal upgrade installs: library non-empty ⇒ firstInscriptionComplete
     try {
       const { healFirstInscriptionIfLibraryNonEmpty } = await import('../activationHooks');
       await healFirstInscriptionIfLibraryNonEmpty();

@@ -158,7 +158,8 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    sendMessage<Record<string, unknown>, UserPreferences>(MessageType.GET_PREFERENCES, {}).then((res) => {
+    // Full prefs so heal runs (startup + options shell); keys are masked unless Settings reveals
+    sendMessage<Record<string, unknown>, UserPreferences>(MessageType.GET_FULL_PREFERENCES, {}).then((res) => {
       if (res.success && res.data) {
         setPrefs(res.data);
         const theme = res.data.theme ?? 'dark';
@@ -191,7 +192,7 @@ export function App() {
     if (!prefs || prefs.firstInscriptionComplete) return;
 
     const refreshPrefs = () => {
-      sendMessage<Record<string, unknown>, UserPreferences>(MessageType.GET_PREFERENCES, {})
+      sendMessage<Record<string, unknown>, UserPreferences>(MessageType.GET_FULL_PREFERENCES, {})
         .then((res) => {
           if (res.success && res.data) setPrefs(res.data);
         })
@@ -361,7 +362,7 @@ export function App() {
       const firstId = library[0]?.media?.id ?? library[0]?.library?.mediaId;
       // Refresh prefs so heal can mark firstInscriptionComplete when library non-empty
       const prefsRes = await sendMessage<Record<string, unknown>, UserPreferences>(
-        MessageType.GET_PREFERENCES,
+        MessageType.GET_FULL_PREFERENCES,
         {},
       );
       if (prefsRes.success && prefsRes.data) {

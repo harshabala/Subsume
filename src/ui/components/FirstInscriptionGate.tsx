@@ -1,9 +1,21 @@
 import { h } from 'preact';
-import { useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import '../styles/onboarding.css';
 import '../styles/first-inscription-gate.css';
 
 export const FIRST_INSCRIPTION_GATE_SESSION_KEY = 'subsume_first_inscription_gate_skipped';
+
+const FOCUSABLE_SELECTOR =
+  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/** Pure: Discovery first-inscription banner when incomplete and library empty. */
+export function shouldShowDiscoveryFirstInscriptionBanner(
+  firstInscriptionComplete: boolean | undefined,
+  libraryCount: number,
+  loading = false,
+): boolean {
+  return !loading && !firstInscriptionComplete && libraryCount === 0;
+}
 
 interface FirstInscriptionGateProps {
   /** Navigate primary shell (e.g. Search). */
@@ -27,6 +39,46 @@ export function FirstInscriptionGate({
   onPracticeTitle,
 }: FirstInscriptionGateProps) {
   const [practiceBusy, setPracticeBusy] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const primaryCtaRef = useRef<HTMLButtonElement>(null);
+
+  // Focus primary CTA on mount; trap Tab; Escape soft-skips (matches drawer / capture modals)
+  useEffect(() => {
+    const focusTimer = window.setTimeout(() => {
+      primaryCtaRef.current?.focus();
+    }, 0);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onSkipLater();
+        return;
+      }
+      if (e.key !== 'Tab' || !dialogRef.current) return;
+
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+      );
+      if (focusable.length === 0) return;
+
+      const first = focusable[0]!;
+      const last = focusable[focusable.length - 1]!;
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.clearTimeout(focusTimer);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onSkipLater]);
 
   const handlePractice = async () => {
     if (!onPracticeTitle || practiceBusy) return;
@@ -40,6 +92,7 @@ export function FirstInscriptionGate({
 
   return (
     <div
+      ref={dialogRef}
       className="first-inscription-gate"
       role="dialog"
       aria-modal="true"
@@ -60,6 +113,7 @@ export function FirstInscriptionGate({
         </p>
         <div className="first-inscription-gate-actions">
           <button
+            ref={primaryCtaRef}
             type="button"
             className="onboarding-cta"
             onClick={() => onNavigate('search')}

@@ -21,21 +21,19 @@ export function buildCaptureCanvasUrl(
 
 /**
  * True when a tab URL is this extension's options/UI shell.
- * Prefer chrome-extension origin match; fall back to path for tests.
+ * When extensionOrigin is provided (production), only match that origin + ui/index.html.
+ * Without origin (unit tests): relative paths containing ui/index.html only.
+ * Never match other extensions or http(s) URLs.
  */
 export function isExtensionUiTabUrl(
   url: string | undefined | null,
   extensionOrigin?: string,
 ): boolean {
   if (!url) return false;
-  if (extensionOrigin && url.startsWith(extensionOrigin) && url.includes('ui/index.html')) {
-    return true;
+  if (extensionOrigin) {
+    return url.startsWith(extensionOrigin) && url.includes('ui/index.html');
   }
-  // Extension pages only — reject random web URLs that happen to include the path string
-  if (url.startsWith('chrome-extension://') && url.includes('ui/index.html')) {
-    return true;
-  }
-  // Unit tests may pass relative paths
+  // Unit tests may pass relative paths (no scheme)
   if (!url.includes('://') && url.includes('ui/index.html')) {
     return true;
   }
@@ -48,9 +46,12 @@ export function isExtensionUiTabUrl(
  */
 export async function openCaptureCanvasTab(mediaId: string): Promise<{ success: true }> {
   const url = buildCaptureCanvasUrl(mediaId);
+  // Derive own origin from getURL. Avoid URL.origin — chrome-extension: yields "null" in Node/tests.
   let extensionOrigin: string | undefined;
   try {
-    extensionOrigin = new URL(chrome.runtime.getURL('ui/index.html')).origin + '/';
+    const indexUrl = chrome.runtime.getURL('ui/index.html');
+    const match = /^chrome-extension:\/\/[^/]+\//.exec(indexUrl);
+    extensionOrigin = match?.[0];
   } catch {
     extensionOrigin = undefined;
   }

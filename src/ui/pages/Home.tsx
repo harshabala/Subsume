@@ -28,6 +28,7 @@ import { useNotice } from '../components/NoticeProvider';
 import { formatUserError } from '../utils/formatUserError';
 import { LIVE_FEED_LABEL, TRY_AGAIN_LABEL } from '@/shared/productCopy';
 import { incrementWeeklySelectionOpens } from '@/shared/activationMetrics';
+import { shouldShowDiscoveryFirstInscriptionBanner } from '../components/FirstInscriptionGate';
 
 interface JoinedItem {
   library: LibraryItem;
@@ -377,7 +378,11 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
           <p className="lobby-desc">
             The lobby of your picture palace. Search the vault, follow what is moving on the live feed, and return to titles whose afterglow you have already inscribed.
           </p>
-          {!loading && !prefs?.firstInscriptionComplete && libraryCount === 0 && (
+          {shouldShowDiscoveryFirstInscriptionBanner(
+            prefs?.firstInscriptionComplete,
+            libraryCount,
+            loading,
+          ) && (
             <div
               className="discovery-first-inscription"
               data-testid="discovery-first-inscription"
