@@ -20,7 +20,7 @@ import { MessageType, UserPreferences, LibraryItem, MediaItem, PersonItem } from
 import { usePrefetch, prefetchPage, prefetchProps, type Page } from './hooks/usePrefetch';
 import { applyThemePreference, applyCinemaAtmosphere, watchSystemTheme } from '../shared/theme';
 import { FilmGrain } from './components/FilmGrain';
-import { ensureDemoLibraryIfEmpty } from './lib/ensureDemoLibrary';
+import { ensureDemoLibraryIfEmpty, seedPracticeLibraryIfEmpty } from './lib/ensureDemoLibrary';
 import { useNotice } from './components/NoticeProvider';
 import { formatUserError } from './utils/formatUserError';
 import { Icon, type IconName } from './components/icons';
@@ -337,16 +337,47 @@ export function App() {
   const showFirstInscriptionGate =
     !prefs.firstInscriptionComplete && !gateSoftSkipped;
 
-  const handleGateNavigateSearch = () => {
-    // Soft-dismiss full-screen only so Search is usable; Discovery banner stays until complete
+  const softDismissGateForSession = () => {
     try {
       sessionStorage.setItem(FIRST_INSCRIPTION_GATE_SESSION_KEY, '1');
     } catch {
       /* non-fatal */
     }
     setGateSoftSkipped(true);
+  };
+
+  const handleGateNavigateSearch = () => {
+    // Soft-dismiss full-screen only so Search is usable; Discovery banner stays until complete
+    softDismissGateForSession();
     setCurrentPage('search');
     prefetchPage('search');
+  };
+
+  const handleGatePracticeTitle = async () => {
+    softDismissGateForSession();
+    try {
+      // Full demo seed when empty (no single-item seed API); open capture on first row.
+      const library = await seedPracticeLibraryIfEmpty();
+      const firstId = library[0]?.media?.id ?? library[0]?.library?.mediaId;
+      // Refresh prefs so heal can mark firstInscriptionComplete when library non-empty
+      const prefsRes = await sendMessage<Record<string, unknown>, UserPreferences>(
+        MessageType.GET_PREFERENCES,
+        {},
+      );
+      if (prefsRes.success && prefsRes.data) {
+        setPrefs(prefsRes.data);
+      }
+      if (firstId) {
+        setCaptureMediaId(firstId);
+      } else {
+        setCurrentPage('search');
+        prefetchPage('search');
+      }
+    } catch (err) {
+      console.error('[Subsume] Practice title seed failed:', err);
+      setCurrentPage('search');
+      prefetchPage('search');
+    }
   };
 
   const handleGateSkipLater = async () => {
@@ -358,12 +389,7 @@ export function App() {
     } catch (err) {
       console.error('[Subsume] Failed to save firstInscriptionSkippedAt:', err);
     }
-    try {
-      sessionStorage.setItem(FIRST_INSCRIPTION_GATE_SESSION_KEY, '1');
-    } catch {
-      /* non-fatal */
-    }
-    setGateSoftSkipped(true);
+    softDismissGateForSession();
   };
 
   const renderPage = () => {
@@ -405,6 +431,7 @@ export function App() {
           onSkipLater={() => {
             void handleGateSkipLater();
           }}
+          onPracticeTitle={handleGatePracticeTitle}
         />
       )}
       <FilmGrain variant="app" />

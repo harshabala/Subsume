@@ -33,6 +33,30 @@
   margin-top: 8px;
 }
 
+.first-inscription-gate-practice {
+  appearance: none;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.18));
+  background: transparent;
+  padding: 10px 18px;
+  margin: 0;
+  border-radius: 6px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  color: var(--fg-base, #fff);
+  cursor: pointer;
+}
+
+.first-inscription-gate-practice:hover,
+.first-inscription-gate-practice:focus-visible {
+  border-color: var(--accent, #c4a574);
+  outline: none;
+}
+
+.first-inscription-gate-practice:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .first-inscription-gate-skip {
   appearance: none;
   border: none;

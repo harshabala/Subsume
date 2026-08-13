@@ -101,6 +101,9 @@ describe('productCopy lexicon', () => {
     expect(ARCHIVE_UPDATE_ERROR).toBe('Could not update archive. Try again.');
     expect(PLAIN_ENGLISH_PITCH).toMatch(/Private movie & book journal/i);
     expect(EXPORT_KEEP_FILE_NOTICE).toMatch(/only full copy/i);
+    expect(BACKUP_SECTION_PITCH).toBe(
+      'Free forever on this device. Optional private backup (coming) — never sells your data.',
+    );
     expect(BACKUP_SECTION_PITCH).toMatch(/never sells/i);
     expect(BACKUP_SECTION_PITCH).toMatch(/Free forever on this device/i);
   });

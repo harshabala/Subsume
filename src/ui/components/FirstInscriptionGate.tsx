@@ -1,4 +1,5 @@
 import { h } from 'preact';
+import { useState } from 'preact/hooks';
 import '../styles/onboarding.css';
 import '../styles/first-inscription-gate.css';
 
@@ -9,13 +10,34 @@ interface FirstInscriptionGateProps {
   onNavigate: (page: 'search') => void;
   /** Soft-skip: persist firstInscriptionSkippedAt + dismiss full-screen for this session. */
   onSkipLater: () => void;
+  /**
+   * One-tap practice title: seed demo library if empty, then open capture/search.
+   * Optional so unit tests can omit it.
+   */
+  onPracticeTitle?: () => void | Promise<void>;
 }
 
 /**
  * Blocking-but-skippable full-screen gate after onboarding until first archive inscription.
  * Soft skip hides only this overlay for the session; Discovery banner remains until complete.
  */
-export function FirstInscriptionGate({ onNavigate, onSkipLater }: FirstInscriptionGateProps) {
+export function FirstInscriptionGate({
+  onNavigate,
+  onSkipLater,
+  onPracticeTitle,
+}: FirstInscriptionGateProps) {
+  const [practiceBusy, setPracticeBusy] = useState(false);
+
+  const handlePractice = async () => {
+    if (!onPracticeTitle || practiceBusy) return;
+    setPracticeBusy(true);
+    try {
+      await onPracticeTitle();
+    } finally {
+      setPracticeBusy(false);
+    }
+  };
+
   return (
     <div
       className="first-inscription-gate"
@@ -44,6 +66,19 @@ export function FirstInscriptionGate({ onNavigate, onSkipLater }: FirstInscripti
           >
             Search for a title
           </button>
+          {onPracticeTitle && (
+            <button
+              type="button"
+              className="first-inscription-gate-practice"
+              data-testid="practice-title-cta"
+              disabled={practiceBusy}
+              onClick={() => {
+                void handlePractice();
+              }}
+            >
+              {practiceBusy ? 'Preparing…' : 'Try with a practice title'}
+            </button>
+          )}
           <button
             type="button"
             className="first-inscription-gate-skip"

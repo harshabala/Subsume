@@ -108,4 +108,4 @@ export const EXPORT_KEEP_FILE_NOTICE =
 
 /** Settings Backup & sync section honesty line. */
 export const BACKUP_SECTION_PITCH =
-  'Free forever on this device. Optional private backup (Drive) is optional — Subsume never sells your library.';
+  'Free forever on this device. Optional private backup (coming) — never sells your data.';

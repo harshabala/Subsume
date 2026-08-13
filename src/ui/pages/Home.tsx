@@ -21,7 +21,7 @@ import { EmotionalWeatherChart } from '../components/EmotionalWeatherChart';
 import { getEmotionalSpectrum, hasEmotionalData } from '@/shared/emotions';
 import { getPlatformNameById } from '@/shared/platforms';
 import '../styles/discovery-layout.css';
-import { ensureDemoLibraryIfEmpty } from '../lib/ensureDemoLibrary';
+import { ensureDemoLibraryIfEmpty, seedPracticeLibraryIfEmpty } from '../lib/ensureDemoLibrary';
 import { getReflectionExcerpt } from '../components/archive/constants';
 import { truncateForExcerpt } from '@/shared/textTruncate';
 import { useNotice } from '../components/NoticeProvider';
@@ -377,7 +377,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
           <p className="lobby-desc">
             The lobby of your picture palace. Search the vault, follow what is moving on the live feed, and return to titles whose afterglow you have already inscribed.
           </p>
-          {!loading && !prefs?.firstInscriptionComplete && (
+          {!loading && !prefs?.firstInscriptionComplete && libraryCount === 0 && (
             <div
               className="discovery-first-inscription"
               data-testid="discovery-first-inscription"
@@ -396,6 +396,40 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
                   onClick={() => onNavigate('search')}
                 >
                   Search for a title
+                </button>
+                <button
+                  type="button"
+                  className="optical-button sm"
+                  data-testid="practice-title-cta"
+                  onClick={() => {
+                    // Full demo seed when empty (no single-item seed API); open capture on first row.
+                    void (async () => {
+                      try {
+                        const library = await seedPracticeLibraryIfEmpty();
+                        const firstId =
+                          library[0]?.media?.id ?? library[0]?.library?.mediaId;
+                        setLibraryItems(library as JoinedItem[]);
+                        setLibraryCount(library.length);
+                        if (firstId && onOpenCapture) {
+                          onOpenCapture(firstId);
+                        } else {
+                          onNavigate('search');
+                        }
+                        // Heal may set firstInscriptionComplete when library non-empty
+                        const prefsRes = await sendMessage<
+                          Record<string, unknown>,
+                          UserPreferences
+                        >(MessageType.GET_PREFERENCES, {});
+                        if (prefsRes.success && prefsRes.data) {
+                          setPrefs(prefsRes.data);
+                        }
+                      } catch {
+                        onNavigate('search');
+                      }
+                    })();
+                  }}
+                >
+                  Try with a practice title
                 </button>
                 <button
                   type="button"
