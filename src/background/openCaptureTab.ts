@@ -20,12 +20,26 @@ export function buildCaptureCanvasUrl(
 }
 
 /**
- * True when a tab URL is this extension's options/UI shell
- * (path contains ui/index.html). Used to find a tab to reuse.
+ * True when a tab URL is this extension's options/UI shell.
+ * Prefer chrome-extension origin match; fall back to path for tests.
  */
-export function isExtensionUiTabUrl(url: string | undefined | null): boolean {
+export function isExtensionUiTabUrl(
+  url: string | undefined | null,
+  extensionOrigin?: string,
+): boolean {
   if (!url) return false;
-  return url.includes('ui/index.html');
+  if (extensionOrigin && url.startsWith(extensionOrigin) && url.includes('ui/index.html')) {
+    return true;
+  }
+  // Extension pages only — reject random web URLs that happen to include the path string
+  if (url.startsWith('chrome-extension://') && url.includes('ui/index.html')) {
+    return true;
+  }
+  // Unit tests may pass relative paths
+  if (!url.includes('://') && url.includes('ui/index.html')) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -34,9 +48,17 @@ export function isExtensionUiTabUrl(url: string | undefined | null): boolean {
  */
 export async function openCaptureCanvasTab(mediaId: string): Promise<{ success: true }> {
   const url = buildCaptureCanvasUrl(mediaId);
+  let extensionOrigin: string | undefined;
+  try {
+    extensionOrigin = new URL(chrome.runtime.getURL('ui/index.html')).origin + '/';
+  } catch {
+    extensionOrigin = undefined;
+  }
 
   const tabs = await chrome.tabs.query({});
-  const existing = tabs.find((t) => isExtensionUiTabUrl(t.url) && typeof t.id === 'number');
+  const existing = tabs.find(
+    (t) => isExtensionUiTabUrl(t.url, extensionOrigin) && typeof t.id === 'number',
+  );
 
   if (existing?.id != null) {
     // Reuse: navigate existing options/UI tab to capture deep link and focus it.

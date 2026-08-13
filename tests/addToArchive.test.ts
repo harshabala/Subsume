@@ -4,6 +4,8 @@ import {
   putMediaItem,
   getMediaItem,
   getLibraryItem,
+  getPreferences,
+  savePreferences,
 } from '@/background/storage';
 import { bookHandlers } from '@/background/handlers/books';
 
@@ -178,6 +180,57 @@ describe('ADD_TO_ARCHIVE', () => {
     await expect(handler({}, sender)).rejects.toThrow(
       /requires workId or mediaItem/,
     );
+  });
+
+  it('marks firstInscriptionComplete on new library item (activation parity)', async () => {
+    const prefs = await getPreferences();
+    await savePreferences({ ...prefs, firstInscriptionComplete: false });
+
+    const unique: MediaItem = {
+      ...sampleBook,
+      id: 'openlibrary_work_OL900001W',
+      canonicalTitle: 'Activation Parity Title',
+    };
+
+    await handler({ mediaItem: unique, status: 'to-watch' }, sender);
+
+    const after = await getPreferences();
+    expect(after.firstInscriptionComplete).toBe(true);
+    expect(await getLibraryItem(unique.id)).toBeDefined();
+  });
+
+  it('keeps firstInscriptionComplete true when adding another new item', async () => {
+    const prefs = await getPreferences();
+    await savePreferences({ ...prefs, firstInscriptionComplete: true });
+
+    const unique: MediaItem = {
+      ...sampleBook,
+      id: 'openlibrary_work_OL900002W',
+      canonicalTitle: 'Already Complete Title',
+    };
+
+    await handler({ mediaItem: unique, status: 'to-watch' }, sender);
+
+    expect((await getPreferences()).firstInscriptionComplete).toBe(true);
+    expect(await getLibraryItem(unique.id)).toBeDefined();
+  });
+
+  it('does not mark first inscription when re-adding existing library item', async () => {
+    const unique: MediaItem = {
+      ...sampleBook,
+      id: 'openlibrary_work_OL900003W',
+      canonicalTitle: 'Readd Title',
+    };
+    await putMediaItem(unique);
+    await handler({ mediaItem: unique, status: 'watched' }, sender);
+
+    // Reset flag after first add to exercise re-add-only path
+    const prefs = await getPreferences();
+    await savePreferences({ ...prefs, firstInscriptionComplete: false });
+
+    await handler({ mediaItem: unique, status: 'watching' }, sender);
+
+    expect((await getPreferences()).firstInscriptionComplete).toBe(false);
   });
 });
 

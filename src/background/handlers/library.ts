@@ -31,14 +31,11 @@ import {
   isValidMediaItem,
   seedDemoLibraryIfEmpty,
   mergeSeedCatalog,
-  getPreferences,
-  savePreferences,
 } from '../storage';
 import { isSafeNavMediaId } from '@/shared/mediaIds';
 import { invalidateProfileCache } from '../context';
 import { mergeMediaItems } from '../mediaMerge';
 import { broadcastMessage, parseSetUserNotesRequest, parseUpdateStatusRequest } from './utils';
-import { recordInscription } from '@/shared/activationMetrics';
 import type { RatingHistoryEntry } from '@/shared/types';
 
 /** Max entries kept on `LibraryItem.ratingHistory`. */
@@ -131,20 +128,8 @@ export const libraryHandlers: MessageHandlerMap = {
     await putLibraryItem(libraryItem);
 
     if (isNewLibraryItem) {
-      // First-inscription activation + device-only counters
-      try {
-        const prefs = await getPreferences();
-        if (!prefs.firstInscriptionComplete) {
-          await savePreferences({ ...prefs, firstInscriptionComplete: true });
-        }
-      } catch (err) {
-        logger.warn('[Subsume] Failed to mark firstInscriptionComplete:', err);
-      }
-      try {
-        await recordInscription();
-      } catch (err) {
-        logger.warn('[Subsume] Failed to record inscription metrics:', err);
-      }
+      const { onNewLibraryItemCreated } = await import('../activationHooks');
+      await onNewLibraryItemCreated();
     }
 
     invalidateProfileCache();

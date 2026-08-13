@@ -286,12 +286,13 @@ export const bookHandlers: MessageHandlerMap = {
     }
 
     const existing = await getLibraryItem(mediaId);
+    const isNewLibraryItem = !existing;
     const now = Date.now();
     const status: LibraryStatus =
       (req.status as LibraryStatus | undefined) ||
       existing?.status ||
       'to-watch';
-    await putLibraryItem({
+    const libraryItem = {
       mediaId,
       status,
       addedAt: existing?.addedAt ?? now,
@@ -299,7 +300,25 @@ export const bookHandlers: MessageHandlerMap = {
       sanctuaryIntent: existing?.sanctuaryIntent ?? intentForStatus(status),
       notes: existing?.notes,
       emotionalRecall: existing?.emotionalRecall,
-    });
+    };
+    await putLibraryItem(libraryItem);
+    if (isNewLibraryItem) {
+      const { onNewLibraryItemCreated } = await import('../activationHooks');
+      await onNewLibraryItemCreated();
+      try {
+        const { broadcastMessage } = await import('./utils');
+        const { invalidateProfileCache } = await import('../context');
+        invalidateProfileCache();
+        await broadcastMessage({
+          type: 'LIBRARY_UPDATED',
+          action: 'add',
+          mediaId,
+          libraryItem,
+        });
+      } catch {
+        /* non-fatal */
+      }
+    }
     return { added: true, mediaId };
   },
 

@@ -28,7 +28,13 @@ describe('openCaptureTab pure helpers', () => {
     expect(
       isExtensionUiTabUrl('chrome-extension://id/ui/index.html?act=capture&mediaId=x')
     ).toBe(true);
-    expect(isExtensionUiTabUrl('https://example.com/ui/index.html')).toBe(true);
+    // Relative path for unit tests
+    expect(isExtensionUiTabUrl('ui/index.html')).toBe(true);
+    expect(isExtensionUiTabUrl('ui/index.html?act=capture&mediaId=x')).toBe(true);
+    // Random web URLs must not match even if path string appears
+    expect(isExtensionUiTabUrl('https://example.com/ui/index.html')).toBe(false);
+    expect(isExtensionUiTabUrl('https://evil.example/path/ui/index.html?q=1')).toBe(false);
+    expect(isExtensionUiTabUrl('http://localhost:5173/ui/index.html')).toBe(false);
     expect(isExtensionUiTabUrl('chrome-extension://id/popup.html')).toBe(false);
     expect(isExtensionUiTabUrl(undefined)).toBe(false);
     expect(isExtensionUiTabUrl(null)).toBe(false);
