@@ -32,3 +32,17 @@ export async function restoreDemoLibrary(): Promise<JoinedLibraryItem[]> {
   );
   return refreshed.data ?? [];
 }
+
+/**
+ * Practice-title path for first-inscription CTAs.
+ * There is no single-item seed API — RESTORE_DEMO_LIBRARY seeds the full demo
+ * catalogue only when the media store is empty, then returns library rows.
+ * Caller should open capture/search for the first mediaId.
+ */
+export async function seedPracticeLibraryIfEmpty(): Promise<JoinedLibraryItem[]> {
+  const existing = await ensureDemoLibraryIfEmpty();
+  if (existing.length > 0) {
+    return existing;
+  }
+  return restoreDemoLibrary();
+}

@@ -761,7 +761,8 @@ export async function getAllLibraryItems(): Promise<LibraryItem[]> {
 
 // ─── Preferences Interface ───────────────────────────────────────────
 
-const DEFAULT_PREFS: UserPreferences = {
+/** Defaults for new installs — exported for unit tests. */
+export const DEFAULT_PREFS: UserPreferences = {
   favoriteGenres: [],
   platforms: ['8', '9'], // Netflix, Prime Video
   region: 'US',
@@ -773,6 +774,7 @@ const DEFAULT_PREFS: UserPreferences = {
   theme: 'dark',
   screenplayDockEnabled: false,
   onboardingComplete: false,
+  firstInscriptionComplete: false,
   omdbApiKey: undefined,
   // Books expansion defaults (all media on)
   enabledMedia: { movie: true, tv: true, book: true },
@@ -782,7 +784,8 @@ const DEFAULT_PREFS: UserPreferences = {
   coverOverlaysEnabled: true,
   crossMediumRecommendationsEnabled: false,
   recommendationPrivacyMode: 'summarized_reflections',
-  dispatchEnabled: false,
+  // Free weekly selection on by default (catalog-only; no API keys required)
+  dispatchEnabled: true,
   dispatchWeekday: 4, // Thursday (0 = Sunday)
   dispatchLocalTime: '19:00',
   dispatchMaxSearches: 5,

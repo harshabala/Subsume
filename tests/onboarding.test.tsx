@@ -20,9 +20,16 @@ describe('Onboarding wizard (2-step activation)', () => {
     mockValidateOmdb.mockResolvedValue({ valid: true });
   });
 
-  it('shows welcome step with Begin', () => {
+  it('shows welcome step with plain-English pitch and Begin', () => {
     render(<Onboarding onComplete={vi.fn()} />);
 
+    expect(
+      screen.getByRole('heading', {
+        name: /private movie & book journal for chrome/i,
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/save what stayed with you while you browse/i)).toBeInTheDocument();
+    // Poetry remains secondary
     expect(screen.getByText(/picture palace/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^begin$/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/step 1 of 2/i)).toBeInTheDocument();

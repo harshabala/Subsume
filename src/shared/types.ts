@@ -171,6 +171,16 @@ export interface UserPreferences {
   theme?: ThemePreference;
   cinemaAtmosphere?: CinemaAtmosphere;
   onboardingComplete: boolean;
+  /**
+   * True after the user creates their first archive inscription (ADD_TO_LIST).
+   * Default false for new installs; drives first-inscription gate + Discovery banner.
+   */
+  firstInscriptionComplete?: boolean;
+  /**
+   * Soft-skip timestamp when user chooses "I'll do this later" on the first-inscription gate.
+   * Full-screen gate can hide for the session; Discovery banner remains until firstInscriptionComplete.
+   */
+  firstInscriptionSkippedAt?: number;
   /** Persona sent before taste profile on every LLM curator call. */
   llmCuratorSystemPrompt?: string;
   /** Task block after TASTE PROFILE on Recommendations. Empty = built-in default. */

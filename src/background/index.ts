@@ -50,6 +50,15 @@ getPreferences()
     logger.error('[Subsume] Failed to initialize background API preferences:', err);
   });
 
+// Upgrade heal: existing libraries should not stay behind first-inscription gate
+import('./activationHooks')
+  .then(({ healFirstInscriptionIfLibraryNonEmpty }) =>
+    healFirstInscriptionIfLibraryNonEmpty(),
+  )
+  .catch((err) => {
+    logger.warn('[Subsume] firstInscription heal on startup failed:', err);
+  });
+
 mergeSeedCatalogIfVersionBehind().catch((err) => {
   logger.error('[Subsume] Seed catalogue merge failed:', err);
 });

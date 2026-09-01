@@ -1,6 +1,6 @@
 # Subsume
 
-> A Chrome extension for people who want to own their taste across films, shows, and books — not just consume it.
+> Private movie & book journal for Chrome. Save what stayed with you while you browse.
 
 <!-- Add a screenshot or short GIF here of the Poetic Capture Canvas or the museum plaque hover reveal.
      This is the single highest-leverage addition to this README — a portfolio reader decides
@@ -220,11 +220,14 @@ A short GIF or still of the Poetic Capture Canvas or a museum plaque hover revea
 
 ## Chrome Web Store
 
+**Short description (paste-ready):** Private movie & book journal for Chrome. Save what stayed with you while you browse.
+
 Subsume is prepared for Chrome Web Store packaging and review. Status and materials:
 
 | Item | Location / command |
 | :--- | :--- |
 | **Package upload zip** | `npm run package` — builds `dist/`, then zips package contents to `subsume.zip` (source maps excluded; see `scripts/package-extension.mjs`) |
+| **Listing copy** | [`store/LISTING.md`](./store/LISTING.md) — short + detailed description |
 | **Privacy policy** | [`docs/PRIVACY.md`](./docs/PRIVACY.md) — host this URL (or a rendered copy) for the CWS privacy field |
 | **Listing / review notes** | [`store/`](./store/) — `MANIFEST_NOTES.md` (permission rationale), `assets/` (promo tile sizes), `screenshots/` (required screenshot frames) |
 | **Stable extension ID** | Manifest `key` pins ID `ehbkfdgpbemaimepgeeflenhbbpgokoj` for OAuth redirect URIs |

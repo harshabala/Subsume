@@ -15,6 +15,7 @@ import {
   mediumLabel,
   ADD_TO_ARCHIVE_LABEL,
   REMOVE_FROM_ARCHIVE_LABEL,
+  ARCHIVE_UPDATE_ERROR,
 } from '@/shared/productCopy';
 import { attachClosedShadow, isTrustedGesture } from '@/content/closedShadow';
 
@@ -609,6 +610,7 @@ export class HoverCardManager {
       }
     } catch (err) {
       console.error('[Subsume] Failed to add to list:', err);
+      this.showArchiveError();
     }
   }
 
@@ -636,7 +638,23 @@ export class HoverCardManager {
       }
     } catch (err) {
       console.error('[Subsume] Failed to remove from archive:', err);
+      this.showArchiveError();
     }
+  }
+
+  /** Visible failure for add/remove — role=alert for ≥3s (not console-only). */
+  private showArchiveError(): void {
+    const mount = this.shadowRoot.getElementById('subsume-mount');
+    if (!mount) return;
+    render(
+      <div className="subsume-hover-card subsume-visible subsume-added">
+        <div className="subsume-error-alert" role="alert">
+          {ARCHIVE_UPDATE_ERROR}
+        </div>
+      </div>,
+      mount
+    );
+    setTimeout(() => this.hideCard(), 3000);
   }
 }
 
@@ -1063,6 +1081,15 @@ const HOVER_CARD_STYLES = `
     padding: var(--spacing-xl);
     color: var(--text-control);
     font-size: 13px;
+  }
+
+  .subsume-error-alert {
+    text-align: center;
+    padding: var(--spacing-md) var(--spacing-lg);
+    color: var(--danger-fg-strong, var(--destructive));
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
   }
 
   @media (prefers-reduced-motion: reduce) {

@@ -2,7 +2,7 @@
   "name": "subsume",
   "version": "0.3.0",
   "private": true,
-  "description": "Private sanctuary for films, shows, and books that stay with you.",
+  "description": "Private movie & book journal for Chrome. Save what stayed with you while you browse.",
   "type": "module",
   "scripts": {
     "dev": "vite build --watch",

@@ -21,12 +21,14 @@ import { EmotionalWeatherChart } from '../components/EmotionalWeatherChart';
 import { getEmotionalSpectrum, hasEmotionalData } from '@/shared/emotions';
 import { getPlatformNameById } from '@/shared/platforms';
 import '../styles/discovery-layout.css';
-import { ensureDemoLibraryIfEmpty } from '../lib/ensureDemoLibrary';
+import { ensureDemoLibraryIfEmpty, seedPracticeLibraryIfEmpty } from '../lib/ensureDemoLibrary';
 import { getReflectionExcerpt } from '../components/archive/constants';
 import { truncateForExcerpt } from '@/shared/textTruncate';
 import { useNotice } from '../components/NoticeProvider';
 import { formatUserError } from '../utils/formatUserError';
 import { LIVE_FEED_LABEL, TRY_AGAIN_LABEL } from '@/shared/productCopy';
+import { incrementWeeklySelectionOpens } from '@/shared/activationMetrics';
+import { shouldShowDiscoveryFirstInscriptionBanner } from '../components/FirstInscriptionGate';
 
 interface JoinedItem {
   library: LibraryItem;
@@ -376,17 +378,21 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
           <p className="lobby-desc">
             The lobby of your picture palace. Search the vault, follow what is moving on the live feed, and return to titles whose afterglow you have already inscribed.
           </p>
-          {!loading && libraryCount === 0 && (
+          {shouldShowDiscoveryFirstInscriptionBanner(
+            prefs?.firstInscriptionComplete,
+            libraryCount,
+            loading,
+          ) && (
             <div
               className="discovery-first-inscription"
               data-testid="discovery-first-inscription"
               role="region"
               aria-label="First inscription"
             >
-              <p className="discovery-first-inscription-title">Inscribe your first title</p>
+              <p className="discovery-first-inscription-title">Save your first reflection</p>
               <p className="discovery-first-inscription-body">
-                Search the catalogue, or browse the web — when a plaque appears, open Reflect and
-                write what stayed with you. That is the whole loop.
+                Private movie &amp; book journal — search a title you care about and write what stayed
+                with you. That first inscription is the whole loop. Everything stays on this device.
               </p>
               <div className="discovery-first-inscription-actions">
                 <button
@@ -394,14 +400,48 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
                   className="optical-button"
                   onClick={() => onNavigate('search')}
                 >
-                  Inscribe your first title
+                  Search for a title
+                </button>
+                <button
+                  type="button"
+                  className="optical-button sm"
+                  data-testid="practice-title-cta"
+                  onClick={() => {
+                    // Full demo seed when empty (no single-item seed API); open capture on first row.
+                    void (async () => {
+                      try {
+                        const library = await seedPracticeLibraryIfEmpty();
+                        const firstId =
+                          library[0]?.media?.id ?? library[0]?.library?.mediaId;
+                        setLibraryItems(library as JoinedItem[]);
+                        setLibraryCount(library.length);
+                        if (firstId && onOpenCapture) {
+                          onOpenCapture(firstId);
+                        } else {
+                          onNavigate('search');
+                        }
+                        // Heal may set firstInscriptionComplete when library non-empty
+                        const prefsRes = await sendMessage<
+                          Record<string, unknown>,
+                          UserPreferences
+                        >(MessageType.GET_PREFERENCES, {});
+                        if (prefsRes.success && prefsRes.data) {
+                          setPrefs(prefsRes.data);
+                        }
+                      } catch {
+                        onNavigate('search');
+                      }
+                    })();
+                  }}
+                >
+                  Try with a practice title
                 </button>
                 <button
                   type="button"
                   className="optical-button sm"
                   onClick={() => onNavigate('library')}
                 >
-                  Open empty Archive
+                  Open Archive
                 </button>
               </div>
             </div>
@@ -492,7 +532,11 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
       )}
 
       {loading ? (
-        <div className="home-main-content">
+        <div className="home-main-content" aria-busy="true" aria-live="polite">
+          <div className="home-loading-status" role="status">
+            <p className="home-loading-status-line">Loading your archive…</p>
+            <p className="home-loading-status-line">Fetching free catalogue and weekly selection…</p>
+          </div>
           <div className="home-skeleton-card-grid">
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="skeleton skeleton-card" style={{ animationDelay: `${i * 40}ms` }} />
@@ -591,11 +635,20 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
               )}
             </section>
 
-            <section className="home-section-quiet">
+            <section
+              className="home-section-quiet"
+              data-testid="weekly-selection-section"
+              aria-labelledby="weekly-selection-heading"
+            >
               <div className="home-section-header wrap home-section-header--quiet">
                 <div>
                   <div className="home-section-title-row">
-                    <h3 className="home-section-title home-section-title--quiet">This Week</h3>
+                    <h3
+                      id="weekly-selection-heading"
+                      className="home-section-title home-section-title--quiet"
+                    >
+                      This week · Weekly selection
+                    </h3>
                     {weeklyDigest && (
                       <span
                         className={`home-digest-badge ${weeklyDigest.llmGenerated ? 'ai' : 'algo'}`}
@@ -605,11 +658,13 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
                     )}
                   </div>
                   <p className="home-section-desc">
-                    {usingFreeFeed
-                      ? 'Free live feed · Trakt trending and TV premieres'
-                      : platformNames
-                        ? `Programme arrivals on ${platformNames}`
-                        : 'Curated programme for the week'}
+                    {weeklyPicks.length > 0
+                      ? usingFreeFeed
+                        ? 'Free local picks · no API keys needed'
+                        : platformNames
+                          ? `Local weekly selection · ${platformNames}`
+                          : 'Your free local weekly selection'
+                      : 'A free local pick list, every week'}
                   </p>
                 </div>
                 <div className="home-btn-group home-btn-group--quiet">
@@ -619,7 +674,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
                     disabled={refreshingDigest}
                     onClick={handleRefreshDigest}
                   >
-                    {refreshingDigest ? 'Refreshing…' : 'Refresh'}
+                    {refreshingDigest ? 'Refreshing…' : 'Regenerate'}
                   </button>
                   <span className="discovery-lobby-link-sep" aria-hidden="true">
                     ·
@@ -636,61 +691,97 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
 
               {weeklyPicks.length === 0 ? (
                 <div className="sanctuary-empty-plaque home-empty-notice">
-                  <span className="sanctuary-plaque-index">Programme Notice</span>
+                  <span className="sanctuary-plaque-index">Weekly selection</span>
                   <p className="sanctuary-plaque-text">
-                    No programme items yet. Refresh to pull the latest from the live feed.
+                    You&apos;ll get a free local selection every week — no API keys needed.
                   </p>
+                  <button
+                    type="button"
+                    className="optical-button sm"
+                    disabled={refreshingDigest}
+                    onClick={handleRefreshDigest}
+                    style={{ marginTop: '12px' }}
+                  >
+                    {refreshingDigest ? 'Generating…' : "Generate this week's selection"}
+                  </button>
                 </div>
               ) : (
-                <div className="home-weekly-grid home-weekly-enter" key="home-weekly-digest">
-                  {weeklyPicks.map((pick) => {
-                    const media = pick.media;
-                    const rating = media ? pickRating(media) : null;
-                    const availability = platformsToAvailability(pick.platforms);
+                <>
+                  {weeklyPicks[0] && (
+                    <div className="home-weekly-lead" style={{ marginBottom: '12px' }}>
+                      <button
+                        type="button"
+                        className="optical-button sm"
+                        onClick={() => {
+                          void incrementWeeklySelectionOpens().catch(() => {});
+                          const first = weeklyPicks[0]!;
+                          if (first.mediaId && onOpenCapture) {
+                            onOpenCapture(first.mediaId);
+                          } else if (first.media) {
+                            setSelectedMedia(first.media);
+                          } else {
+                            onNavigate('search');
+                          }
+                        }}
+                      >
+                        Open first pick
+                        {weeklyPicks[0].title ? `: ${weeklyPicks[0].title}` : ''}
+                      </button>
+                    </div>
+                  )}
+                  <div className="home-weekly-grid home-weekly-enter" key="home-weekly-digest">
+                    {weeklyPicks.map((pick) => {
+                      const media = pick.media;
+                      const rating = media ? pickRating(media) : null;
+                      const availability = platformsToAvailability(pick.platforms);
 
-                    return media ? (
-                      <SanctuaryMediaCard
-                        key={pick.mediaId}
-                        media={media}
-                        title={pick.title}
-                        synopsis={pickSynopsisForMedia(media, libraryItems, pick.reason)}
-                        onOpen={setSelectedMedia}
-                        onAdd={handleAdd}
-                        added={addedIds.has(media.id)}
-                        afterSynopsis={
-                          <div className="home-chips-wrap">
-                            <PlatformChips availability={availability} max={3} compact />
+                      return media ? (
+                        <SanctuaryMediaCard
+                          key={pick.mediaId}
+                          media={media}
+                          title={pick.title}
+                          synopsis={pickSynopsisForMedia(media, libraryItems, pick.reason)}
+                          onOpen={(m) => {
+                            void incrementWeeklySelectionOpens().catch(() => {});
+                            setSelectedMedia(m);
+                          }}
+                          onAdd={handleAdd}
+                          added={addedIds.has(media.id)}
+                          afterSynopsis={
+                            <div className="home-chips-wrap">
+                              <PlatformChips availability={availability} max={3} compact />
+                            </div>
+                          }
+                          meta={
+                            <div className="sanctuary-card-meta">
+                              <span>{pick.year}</span>
+                              {rating && <span>{rating}</span>}
+                            </div>
+                          }
+                        />
+                      ) : (
+                        <article key={pick.mediaId} className="sanctuary-media-card">
+                          <div className="sanctuary-card-poster">
+                            <div className="sanctuary-poster-placeholder">
+                              <span className="sanctuary-placeholder-title">No Image</span>
+                            </div>
                           </div>
-                        }
-                        meta={
-                          <div className="sanctuary-card-meta">
-                            <span>{pick.year}</span>
-                            {rating && <span>{rating}</span>}
+                          <div className="sanctuary-card-content">
+                            <h4 className="sanctuary-card-title">{pick.title}</h4>
+                            <p className="sanctuary-card-synopsis">{pick.reason}</p>
+                            <div className="home-chips-wrap">
+                              <PlatformChips availability={availability} max={3} compact />
+                            </div>
+                            <div className="sanctuary-card-meta">
+                              <span>{pick.year}</span>
+                              {rating && <span>{rating}</span>}
+                            </div>
                           </div>
-                        }
-                      />
-                    ) : (
-                      <article key={pick.mediaId} className="sanctuary-media-card">
-                        <div className="sanctuary-card-poster">
-                          <div className="sanctuary-poster-placeholder">
-                            <span className="sanctuary-placeholder-title">No Image</span>
-                          </div>
-                        </div>
-                        <div className="sanctuary-card-content">
-                          <h4 className="sanctuary-card-title">{pick.title}</h4>
-                          <p className="sanctuary-card-synopsis">{pick.reason}</p>
-                          <div className="home-chips-wrap">
-                            <PlatformChips availability={availability} max={3} compact />
-                          </div>
-                          <div className="sanctuary-card-meta">
-                            <span>{pick.year}</span>
-                            {rating && <span>{rating}</span>}
-                          </div>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                </>
               )}
             </section>
           </div>

@@ -1,6 +1,13 @@
 import type { MediaType } from './types';
 import type { WorkMedium } from './catalogTypes';
 
+/** Plain-English product pitch (onboarding, Settings Start here, CWS). Poetry is secondary. */
+export const PLAIN_ENGLISH_PITCH =
+  'Private movie & book journal for Chrome. Save what stayed with you while you browse.';
+
+/** User-facing name for free weekly local picks (never “Dispatch”). */
+export const WEEKLY_SELECTION_LABEL = 'Weekly selection';
+
 /** Canonical medium labels for user-facing badges and meta */
 export const MEDIUM_LABEL: Record<WorkMedium | MediaType | 'movie' | 'tv' | 'book', string> = {
   movie: 'Film',
@@ -88,3 +95,17 @@ export function failedToRemoveFromArchiveMessage(detail?: string): string {
   if (detail?.trim()) return detail.trim();
   return 'Failed to remove item from archive.';
 }
+
+/**
+ * Content-script hover card / plaque: archive add or remove failed.
+ * Shown with role="alert" for ~3s so failures are never silent.
+ */
+export const ARCHIVE_UPDATE_ERROR = 'Could not update archive. Try again.';
+
+/** After successful library export — stickiness / sole off-device copy. */
+export const EXPORT_KEEP_FILE_NOTICE =
+  "Keep this file — it's the only full copy of your sanctuary off this device.";
+
+/** Settings Backup & sync section honesty line. */
+export const BACKUP_SECTION_PITCH =
+  'Free forever on this device. Optional private backup (coming) — never sells your data.';

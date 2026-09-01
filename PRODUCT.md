@@ -1,8 +1,10 @@
 # Subsume
 
-**What:** Chrome extension for film, TV, and book discovery, archive, capture, and sanctuary-style browsing.
+**What:** Private movie & book journal for Chrome. Save what stayed with you while you browse — film, TV, and books, discovery to archive, sanctuary-style.
 
 **Who:** People curating a private relationship with works that take hold of them — on the screen and on the page.
+
+**Product path:** Free core on-device forever; optional paid private backup later; never sells your library. See [`docs/PRODUCT_INTENT.md`](./docs/PRODUCT_INTENT.md).
 
 **Register:** Product UI (settings, tables, extension shell). Visual system: **Cinema Black + scarce Rosso Corsa** + monofont **Courier Prime / IBM Plex Mono** (`tokens.css`, `brand.md`, `DESIGN.md`).
 

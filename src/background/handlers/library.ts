@@ -114,6 +114,7 @@ export const libraryHandlers: MessageHandlerMap = {
     await putMediaItem(mediaToStore);
 
     const existing = await getLibraryItem(req.mediaItem.id);
+    const isNewLibraryItem = !existing;
     const libraryItem: LibraryItem = existing
       ? { ...existing, updatedAt: Date.now() }
       : {
@@ -125,6 +126,12 @@ export const libraryHandlers: MessageHandlerMap = {
         };
 
     await putLibraryItem(libraryItem);
+
+    if (isNewLibraryItem) {
+      const { onNewLibraryItemCreated } = await import('../activationHooks');
+      await onNewLibraryItemCreated();
+    }
+
     invalidateProfileCache();
     await broadcastMessage({
       type: 'LIBRARY_UPDATED',

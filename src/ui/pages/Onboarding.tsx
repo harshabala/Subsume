@@ -92,13 +92,16 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           {step === 1 && (
             <section className="onboarding-step" aria-labelledby="onboarding-welcome-title">
               <h1 id="onboarding-welcome-title" className="onboarding-headline">
-                Your private<br />picture palace.
+                Private movie &amp; book journal for Chrome.
               </h1>
               <div className="onboarding-divider" />
               <p className="onboarding-body">
-                Not a tracker. Not a spreadsheet. A place to hold films, shows, and
-                books that take hold of you — where afterglow and memory matter more
-                than any algorithm&apos;s tally.
+                Save what stayed with you while you browse. Films, shows, and books —
+                captured on this device, not a spreadsheet or someone else&apos;s cloud.
+              </p>
+              <p className="onboarding-body onboarding-body--compact onboarding-body--poetry">
+                Your private picture palace: afterglow and memory matter more than any
+                algorithm&apos;s tally.
               </p>
               <div className="onboarding-pillars">
                 {[

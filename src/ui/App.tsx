@@ -11,16 +11,21 @@ import { Stats } from './pages/Stats';
 import { People } from './pages/People';
 import { Alerts } from './pages/Alerts';
 import { PoeticCaptureCanvas } from './components/PoeticCaptureCanvas';
+import {
+  FirstInscriptionGate,
+  FIRST_INSCRIPTION_GATE_SESSION_KEY,
+} from './components/FirstInscriptionGate';
 import { sendMessage } from '../shared/messages';
 import { MessageType, UserPreferences, LibraryItem, MediaItem, PersonItem } from '../shared/types';
 import { usePrefetch, prefetchPage, prefetchProps, type Page } from './hooks/usePrefetch';
 import { applyThemePreference, applyCinemaAtmosphere, watchSystemTheme } from '../shared/theme';
 import { FilmGrain } from './components/FilmGrain';
-import { ensureDemoLibraryIfEmpty } from './lib/ensureDemoLibrary';
+import { ensureDemoLibraryIfEmpty, seedPracticeLibraryIfEmpty } from './lib/ensureDemoLibrary';
 import { useNotice } from './components/NoticeProvider';
 import { formatUserError } from './utils/formatUserError';
 import { Icon, type IconName } from './components/icons';
 import { useSpringDrawer } from './hooks/useSpringDrawer';
+import { incrementAppOpens } from '../shared/activationMetrics';
 import './styles/sidebar.css';
 import './styles/app-nav.css';
 
@@ -104,7 +109,15 @@ export function App() {
   const [stats, setStats] = useState<LibraryStats>({ movieCount: 0, tvCount: 0 });
   const [peopleCount, setPeopleCount] = useState(0);
   const initialPrefetchDone = useRef(false);
+  const appOpenCounted = useRef(false);
   const menuToggleRef = useRef<HTMLButtonElement>(null);
+  const [gateSoftSkipped, setGateSoftSkipped] = useState(() => {
+    try {
+      return sessionStorage.getItem(FIRST_INSCRIPTION_GATE_SESSION_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
 
   const prefersReducedMotion = useCallback(
     () =>
@@ -145,13 +158,19 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    sendMessage<Record<string, unknown>, UserPreferences>(MessageType.GET_PREFERENCES, {}).then((res) => {
+    // Full prefs so heal runs (startup + options shell); keys are masked unless Settings reveals
+    sendMessage<Record<string, unknown>, UserPreferences>(MessageType.GET_FULL_PREFERENCES, {}).then((res) => {
       if (res.success && res.data) {
         setPrefs(res.data);
         const theme = res.data.theme ?? 'dark';
         applyThemePreference(theme);
         watchSystemTheme(theme);
         applyCinemaAtmosphere(res.data.cinemaAtmosphere ?? 'default');
+        // Device-only activation: one app open per options-page session
+        if (!appOpenCounted.current) {
+          appOpenCounted.current = true;
+          void incrementAppOpens().catch(() => {});
+        }
       }
     }).catch(() => {});
 
@@ -167,6 +186,33 @@ export function App() {
       }
     }).catch(() => {});
   }, []);
+
+  // After first archive add, refresh prefs so the first-inscription gate can dismiss
+  useEffect(() => {
+    if (!prefs || prefs.firstInscriptionComplete) return;
+
+    const refreshPrefs = () => {
+      sendMessage<Record<string, unknown>, UserPreferences>(MessageType.GET_FULL_PREFERENCES, {})
+        .then((res) => {
+          if (res.success && res.data) setPrefs(res.data);
+        })
+        .catch(() => {});
+    };
+
+    const handleMessage = (message: unknown) => {
+      if (
+        message &&
+        typeof message === 'object' &&
+        'type' in message &&
+        (message as { type: string }).type === 'LIBRARY_UPDATED' &&
+        (message as { action?: string }).action === 'add'
+      ) {
+        refreshPrefs();
+      }
+    };
+    chrome.runtime.onMessage.addListener(handleMessage);
+    return () => chrome.runtime.onMessage.removeListener(handleMessage);
+  }, [prefs]);
 
   useEffect(() => {
     if (!initialPrefetchDone.current) {
@@ -289,6 +335,64 @@ export function App() {
     return <Onboarding onComplete={completeOnboarding} />;
   }
 
+  const showFirstInscriptionGate =
+    !prefs.firstInscriptionComplete && !gateSoftSkipped;
+
+  const softDismissGateForSession = () => {
+    try {
+      sessionStorage.setItem(FIRST_INSCRIPTION_GATE_SESSION_KEY, '1');
+    } catch {
+      /* non-fatal */
+    }
+    setGateSoftSkipped(true);
+  };
+
+  const handleGateNavigateSearch = () => {
+    // Soft-dismiss full-screen only so Search is usable; Discovery banner stays until complete
+    softDismissGateForSession();
+    setCurrentPage('search');
+    prefetchPage('search');
+  };
+
+  const handleGatePracticeTitle = async () => {
+    softDismissGateForSession();
+    try {
+      // Full demo seed when empty (no single-item seed API); open capture on first row.
+      const library = await seedPracticeLibraryIfEmpty();
+      const firstId = library[0]?.media?.id ?? library[0]?.library?.mediaId;
+      // Refresh prefs so heal can mark firstInscriptionComplete when library non-empty
+      const prefsRes = await sendMessage<Record<string, unknown>, UserPreferences>(
+        MessageType.GET_FULL_PREFERENCES,
+        {},
+      );
+      if (prefsRes.success && prefsRes.data) {
+        setPrefs(prefsRes.data);
+      }
+      if (firstId) {
+        setCaptureMediaId(firstId);
+      } else {
+        setCurrentPage('search');
+        prefetchPage('search');
+      }
+    } catch (err) {
+      console.error('[Subsume] Practice title seed failed:', err);
+      setCurrentPage('search');
+      prefetchPage('search');
+    }
+  };
+
+  const handleGateSkipLater = async () => {
+    const skippedAt = Date.now();
+    const newPrefs = { ...prefs, firstInscriptionSkippedAt: skippedAt };
+    try {
+      await sendMessage(MessageType.SET_PREFERENCES, newPrefs);
+      setPrefs(newPrefs);
+    } catch (err) {
+      console.error('[Subsume] Failed to save firstInscriptionSkippedAt:', err);
+    }
+    softDismissGateForSession();
+  };
+
   const renderPage = () => {
     switch (currentPage) {
       case 'home':
@@ -316,12 +420,21 @@ export function App() {
       case 'alerts':
         return <Alerts />;
       case 'settings':
-        return <Settings />;
+        return <Settings onNavigate={setCurrentPage} />;
     }
   };
 
   return (
     <div className="app-layout">
+      {showFirstInscriptionGate && (
+        <FirstInscriptionGate
+          onNavigate={handleGateNavigateSearch}
+          onSkipLater={() => {
+            void handleGateSkipLater();
+          }}
+          onPracticeTitle={handleGatePracticeTitle}
+        />
+      )}
       <FilmGrain variant="app" />
       <header className="app-nav-shell">
         <nav className="fixed-top-nav" aria-label="Primary">
