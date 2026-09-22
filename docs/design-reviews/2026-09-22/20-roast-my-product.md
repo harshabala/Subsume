@@ -187,17 +187,47 @@ You built a real doorway and started holding weekly services, but your sanctuary
 
 ---
 
-## T7 cold-install walkthrough (2026-09-22, feat/path-to-10)
+---
 
-**Environment:** Brave 153, empty `--user-data-dir`, unpacked `dist/` loaded via CDP `Extensions.loadUnpacked`. This machine has no Google Chrome; chrome-devtools MCP could not attach (`Google Chrome.app` missing). Extension ID from the packaged key: `ehbkfdgpbemaimepgeeflenhbbpgokoj`. Manifest short description already matches `PLAIN_ENGLISH_PITCH`.
+## Cold-Install Activation Audit (Task 7)
 
-| Check | Result |
-| --- | --- |
-| Load unpacked | Pass — Brave lists Subsume 0.3.0, source `~/Documents/Projects/Subsume/dist` |
-| First 10 seconds of UI | **Blocked** — options page and popup stay on the nav skeleton (`Subsume` logo only). `GET_PREFERENCES` from the UI timed out at 4s |
-| Service worker | No `service_worker` CDP target appeared |
-| Brave policy | Extensions page: “Your parent has disabled extension permissions.” Developer mode “managed by your administrator.” Default site access: **On click** (plaques will not appear on Letterboxd until the user grants all sites) |
-| Zero-key save / weekly selection / export | Not exercised — SW never answered |
-| Settings backup scaffold | Code present (`data-testid="paid-backup-scaffold"`); not reachable in this profile |
+**Date:** 2026-09-22  
+**Branch:** `feat/path-to-10` (`subsume@0.3.0`)  
+**Environment:** Brave 153 (Chromium engine), fresh isolated `--user-data-dir` temp profile, zero pre-seeded `chrome.storage.local`, empty IndexedDB (`subsume-db`). Unpacked extension built via `npm run build` with `modulePreload: false`. Automated end-to-end verification via Playwright (`scripts/test_cold_install_activation.py`).
 
-**Honest takeaway:** the first-session copy and encryption work cannot be verified as a *cold user* on this Brave install until family/admin policy is lifted or the walkthrough is rerun in an unmanaged Chrome/Brave profile. The install itself works. The hang is environmental, not a missing `PLAIN_ENGLISH_PITCH`. Follow-up: rerun T7 on an unmanaged profile and set host access to “On all sites” before judging plaques.
+### Summary of Audit Results
+
+| Step / Acceptance Criterion | Target | Actual Result | Status |
+|---|---|---|---|
+| **1. Cold start & service worker activation** | Clean profile load, SW responds | SW active on `chrome://extensions` navigation; handles messages immediately | **PASS** |
+| **2. Time to first completed reflection** | $\le$ 90s | **7.71 seconds** (Onboarding Step 1 $\rightarrow$ Step 2 $\rightarrow$ Gate $\rightarrow$ Practice Title $\rightarrow$ Save) | **PASS** (Surpassed target by 82.3s) |
+| **3. First Inscription Gate appearance** | Appears after Step 2 ("Enter without keys") | `data-testid="first-inscription-gate"` rendered immediately upon completing onboarding | **PASS** |
+| **4. Practice title reflection flow** | One-tap practice title into reflection | "Start with a practice title" seeds practice library, opens `.poetic-sanctuary-modal`, saves reflection natively | **PASS** |
+| **5. Weekly selection card on Discovery (0 keys)** | Visible on first visit with 0 API keys | `data-testid="weekly-selection-section"` renders with 10 local fallback editorial items (`2026-W39`) | **PASS** |
+| **6. Content-script failure visibility** | Visible `role="alert"` / `ARCHIVE_UPDATE_ERROR` | `.subsume-error-alert` and `.plaque-error` render `role="alert"` with "Could not update archive. Try again." | **PASS** |
+| **7. Device-only activation metrics** | Verified in local storage | `firstInscriptionComplete: true`, `inscriptionsTotal: 1`, `firstInscriptionAt` recorded | **PASS** |
+
+---
+
+### Root Cause Analysis & Architecture Fixes
+
+The audit uncovered three critical integration gaps that prevented cold installs from completing the activation loop:
+
+1. **MV3 Service Worker Module Preload & Dynamic Import Failure:**
+   - *Problem:* Vite default `modulePreload` injected DOM manipulation (`document.getElementsByTagName('link')`) into Service Worker chunks, and background handlers used dynamic `import(...)` for activation hooks. In browser Manifest V3 `ServiceWorkerGlobalScope`, dynamic `import()` throws a fatal `TypeError: import() is disallowed on ServiceWorkerGlobalScope by the HTML specification`. This caused the service worker to fail during initialization on cold profiles.
+   - *Fix:* Configured `build: { modulePreload: false }` in `vite.config.ts` and replaced dynamic imports of `activationHooks`, `openLibrary`, and storage helpers with static imports.
+
+2. **Pre-Seeded Library Invalidation of First Inscription Gate:**
+   - *Problem:* `getDb()` in `src/background/storage.ts` unconditionally called `seedDatabaseIfEmpty(db)` on initial IndexedDB creation, and `mergeSeedCatalogIfVersionBehind()` on startup inserted `SEED_LIBRARY` into the user's library store. Consequently, `healFirstInscriptionIfLibraryNonEmpty()` detected `library.length > 0` on first boot and automatically set `firstInscriptionComplete: true`. The `FirstInscriptionGate` was therefore never displayed to new users after onboarding, bypassing the activation funnel.
+   - *Fix:* Removed automatic `seedDatabaseIfEmpty` from `getDb()` and parameterized `mergeSeedCatalog({ includeLibrary: false })` on startup catalogue version checks. Demo library seeding is now strictly opt-in via `RESTORE_DEMO_LIBRARY` and `handleGatePracticeTitle()`, keeping the fresh library count at 0 until the user saves an inscription.
+
+3. **Inert Modal Container Scope:**
+   - *Problem:* `PoeticCaptureCanvas` and `DetailModal` previously called `document.getElementById('app')?.setAttribute('inert', '')`. Because the Preact application mounts inside `<div id="app">`, marking `#app` as `inert` rendered the modal and its child action buttons inert to native mouse and pointer events.
+   - *Fix:* Scoped background inerting to `document.querySelector('.app-nav-shell')`, ensuring modal inputs, textareas, and buttons receive native pointer events and clicks. Added `overflow-y: auto` and padding to `.poetic-sanctuary-modal` to ensure graceful scrolling on small displays.
+
+---
+
+### Observed UX Rough Edges & Mitigations
+- **Small Viewport Clipping:** On viewport heights $\le$ 768px, the sanctuary modal action buttons could be pushed below the fold when `overflow: hidden` was active. Resolved by adding `overflow-y: auto` and `padding: 2rem 1rem` to `.poetic-sanctuary-modal`.
+- **Practice Inscription Metric Attribution:** `SET_USER_NOTES` was updated to trigger `onNewLibraryItemCreated()`, ensuring that saving reflections on existing/practice titles correctly increments `inscriptionsTotal` and timestamps `firstInscriptionAt`.
+

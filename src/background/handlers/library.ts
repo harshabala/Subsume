@@ -14,6 +14,7 @@ import {
 } from '@/shared/types';
 import { v4 as uuidv4 } from 'uuid';
 import type { Reflection } from '@/shared/catalogTypes';
+import { onNewLibraryItemCreated } from '../activationHooks';
 import {
   getMediaItem,
   putMediaItem,
@@ -128,7 +129,6 @@ export const libraryHandlers: MessageHandlerMap = {
     await putLibraryItem(libraryItem);
 
     if (isNewLibraryItem) {
-      const { onNewLibraryItemCreated } = await import('../activationHooks');
       await onNewLibraryItemCreated();
     }
 
@@ -239,6 +239,9 @@ export const libraryHandlers: MessageHandlerMap = {
         existing.emotionalRecall,
         existing.notes,
       );
+      if (existing.emotionalRecall || existing.notes) {
+        await onNewLibraryItemCreated();
+      }
     } catch (err) {
       logger.warn('[Subsume] SET_USER_NOTES reflection append failed:', err);
     }

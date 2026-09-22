@@ -129,7 +129,7 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
 
     previousFocusRef.current = document.activeElement as HTMLElement;
 
-    const shell = document.getElementById('app');
+    const shell = document.querySelector('.app-nav-shell');
     if (shell) {
       shell.setAttribute('inert', '');
       shell.setAttribute('aria-hidden', 'true');

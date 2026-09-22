@@ -8,6 +8,7 @@ import { getFreeDataSourceStatuses } from '../dataSources';
 import { reconcileDispatchAlarm } from '../dispatch';
 import { logger } from '@/shared/logger';
 import { SENSITIVE_PREF_KEYS } from '@/shared/keyCrypto';
+import { healFirstInscriptionIfLibraryNonEmpty } from '../activationHooks';
 
 const API_KEY_FIELDS: readonly (keyof UserPreferences)[] = SENSITIVE_PREF_KEYS;
 
@@ -107,7 +108,6 @@ export const settingHandlers: MessageHandlerMap = {
     const { revealKeys } = (payload as { revealKeys?: boolean } | undefined) ?? {};
     // Heal upgrade installs: library non-empty ⇒ firstInscriptionComplete
     try {
-      const { healFirstInscriptionIfLibraryNonEmpty } = await import('../activationHooks');
       await healFirstInscriptionIfLibraryNonEmpty();
     } catch {
       /* non-fatal */

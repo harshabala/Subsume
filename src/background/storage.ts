@@ -188,19 +188,20 @@ let dbPromise: Promise<IDBPDatabase<SubsumeDB>> | null = null;
 
 export async function seedDemoLibraryIfEmpty(): Promise<boolean> {
   const db = await getDb();
-  const mediaCount = await db.count('media');
-  if (mediaCount > 0) return false;
+  const libraryCount = await db.count('library');
+  if (libraryCount > 0) return false;
   await seedDatabaseIfEmpty(db);
   return true;
 }
 
 /** Add any missing catalogue titles, reflections, and filmmaker rows (safe for existing libraries). */
-export async function mergeSeedCatalog(): Promise<{
+export async function mergeSeedCatalog(options?: { includeLibrary?: boolean }): Promise<{
   mediaAdded: number;
   libraryAdded: number;
   libraryUpdated: number;
   peopleUpserted: number;
 }> {
+  const includeLibrary = options?.includeLibrary ?? true;
   const db = await getDb();
   let mediaAdded = 0;
   let libraryAdded = 0;
@@ -227,13 +228,14 @@ export async function mergeSeedCatalog(): Promise<{
     }
   }
 
-  for (const item of SEED_LIBRARY) {
-    const existing = await db.get('library', item.mediaId);
-    if (!existing) {
-      await db.put('library', item);
-      await dualWriteLibrary(db, item);
-      libraryAdded++;
-    } else {
+  if (includeLibrary) {
+    for (const item of SEED_LIBRARY) {
+      const existing = await db.get('library', item.mediaId);
+      if (!existing) {
+        await db.put('library', item);
+        await dualWriteLibrary(db, item);
+        libraryAdded++;
+      } else {
       const legacyNotes = (existing as unknown as Record<string, unknown>).userNotes;
       if (!existing.notes && typeof legacyNotes === 'string' && legacyNotes.length > 0) {
         const updated = {
@@ -258,6 +260,7 @@ export async function mergeSeedCatalog(): Promise<{
         libraryUpdated++;
       }
     }
+  }
   }
 
   for (const person of SEED_PEOPLE) {
@@ -301,15 +304,15 @@ export async function mergeSeedCatalogIfVersionBehind(): Promise<void> {
     ? stored[SEED_CATALOGUE_VERSION_KEY]
     : 0;
   if (current >= SEED_CATALOGUE_VERSION) return;
-  await mergeSeedCatalog();
+  await mergeSeedCatalog({ includeLibrary: false });
   await chrome.storage.local.set({ [SEED_CATALOGUE_VERSION_KEY]: SEED_CATALOGUE_VERSION });
 }
 
 async function seedDatabaseIfEmpty(db: IDBPDatabase<SubsumeDB>) {
-  // Populate a starter sanctuary library on first install so new users see the archive vision.
+  // Populate a starter sanctuary library on explicit demo restore.
   try {
-    const mediaCount = await db.count('media');
-    if (mediaCount === 0) {
+    const libraryCount = await db.count('library');
+    if (libraryCount === 0) {
       const tx = db.transaction(['media', 'library'], 'readwrite');
       const mediaStore = tx.objectStore('media');
       const libraryStore = tx.objectStore('library');
@@ -639,8 +642,6 @@ export function getDb() {
         }
       },
     }).then(async (db) => {
-      // Seed legacy stores first so migration can copy them into v4 stores.
-      await seedDatabaseIfEmpty(db);
       await migrateV3ToV4IfNeeded(db);
       return db;
     });
