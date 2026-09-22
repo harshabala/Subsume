@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { SystemLog } from './types';
-import { logDiagnostic } from './diagnosticLog';
+import { logDiagnostic, redactSecrets } from './diagnosticLog';
 
 const DEBUG = import.meta.env.DEV;
 const MAX_PERSISTED_DETAIL_LENGTH = 200;
@@ -14,12 +14,12 @@ function truncateForStorage(value: string): string {
 
 function sanitizeForStorage(value: unknown): unknown {
   if (typeof value === 'string') {
-    return truncateForStorage(value);
+    return truncateForStorage(redactSecrets(value));
   }
   if (value instanceof Error) {
     return {
       name: value.name,
-      message: truncateForStorage(value.message),
+      message: truncateForStorage(redactSecrets(value.message)),
     };
   }
   if (Array.isArray(value)) {
@@ -28,7 +28,11 @@ function sanitizeForStorage(value: unknown): unknown {
   if (value && typeof value === 'object') {
     const sanitized: Record<string, unknown> = {};
     for (const [key, entry] of Object.entries(value)) {
-      sanitized[key] = sanitizeForStorage(entry);
+      if (/(?:api[_-]?key|secret|token|password)/i.test(key)) {
+        sanitized[key] = '[REDACTED]';
+      } else {
+        sanitized[key] = sanitizeForStorage(entry);
+      }
     }
     return sanitized;
   }
@@ -43,6 +47,7 @@ function pushLog(level: 'info' | 'warn' | 'error', args: any[]) {
   if (args.length > 0) {
     message = typeof args[0] === 'string' ? args[0] : JSON.stringify(args[0]);
   }
+  message = redactSecrets(message);
   
   const logEntry: SystemLog = {
     timestamp: Date.now(),

@@ -41,6 +41,23 @@ import {
   SEED_CATALOGUE_VERSION,
   SEED_CATALOGUE_VERSION_KEY,
 } from './seedData';
+import {
+  encryptUserPreferences,
+  decryptUserPreferences,
+  encryptKey,
+  decryptKey,
+  isEncryptedKey,
+  SENSITIVE_PREF_KEYS,
+} from '@/shared/keyCrypto';
+
+export {
+  encryptUserPreferences,
+  decryptUserPreferences,
+  encryptKey,
+  decryptKey,
+  isEncryptedKey,
+  SENSITIVE_PREF_KEYS,
+};
 
 /**
  * Full catalogue rows re-applied on version bump for existing `seed_*` media.
@@ -587,7 +604,7 @@ async function dualWritePerson(db: IDBPDatabase<SubsumeDB>, person: PersonItem):
   await db.put('creators', personItemToCreator(person));
 }
 
-function getDb() {
+export function getDb() {
   if (!dbPromise) {
     dbPromise = openDB<SubsumeDB>(DB_NAME, DB_VERSION, {
       upgrade(db, oldVersion) {
@@ -795,14 +812,32 @@ export const DEFAULT_PREFS: UserPreferences = {
 
 export async function getPreferences(): Promise<UserPreferences> {
   const db = await getDb();
-  const prefs = await db.get('preferences', 'user-prefs');
-  return { ...DEFAULT_PREFS, ...prefs };
+  const rawPrefs = await db.get('preferences', 'user-prefs');
+  const merged = { ...DEFAULT_PREFS, ...rawPrefs };
+
+  const { decrypted, needsMigration } = await decryptUserPreferences(merged);
+
+  // If raw preferences existed in storage and contained plaintext keys,
+  // silently migrate them in place by writing back the encrypted version.
+  if (needsMigration && rawPrefs) {
+    try {
+      const encrypted = await encryptUserPreferences(decrypted);
+      await db.put('preferences', encrypted, 'user-prefs');
+    } catch {
+      // Non-fatal if write-back fails; decrypted in-memory values are valid
+    }
+  }
+
+  return decrypted;
 }
 
 export async function savePreferences(prefs: UserPreferences): Promise<void> {
   const db = await getDb();
-  await db.put('preferences', prefs, 'user-prefs');
+  const encrypted = await encryptUserPreferences(prefs);
+  await db.put('preferences', encrypted, 'user-prefs');
 }
+
+export const setPreferences = savePreferences;
 
 export async function getWeeklyDigest(): Promise<WeeklyDigest | undefined> {
   const db = await getDb();
