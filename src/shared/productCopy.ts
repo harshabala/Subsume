@@ -207,3 +207,13 @@ export const EXPORT_KEEP_FILE_NOTICE =
 /** Settings Backup & sync section honesty line. */
 export const BACKUP_SECTION_PITCH =
   'Free forever on this device. Optional private backup (coming) — never sells your data.';
+
+/** Honest paid-backup scaffold — no price, no checkout. */
+export const PAID_BACKUP_ROW_TITLE = 'Encrypted private backup (coming soon)';
+export const PAID_BACKUP_ROW_BODY =
+  'A future paid option: encrypted, multi-device backup you control. No price yet, no buy button, and nothing leaves this device until that product actually exists.';
+export const PAID_BACKUP_NOTIFY_LABEL = 'Notify me on this device when it is ready';
+export const PAID_BACKUP_NOTIFY_HINT =
+  'Saves a yes/no flag here only. No email, no account, no network call.';
+export const PRIVACY_STANCE =
+  'Free core forever on this device. Optional paid private backup later. Never sells your data.';

@@ -808,6 +808,7 @@ export const DEFAULT_PREFS: UserPreferences = {
   dispatchMaxSearches: 5,
   webGroundedDispatchEnabled: false,
   dispatchWebSearchEnabled: false,
+  paidBackupNotifyRequested: false,
 };
 
 export async function getPreferences(): Promise<UserPreferences> {
@@ -870,6 +871,7 @@ export async function exportLibraryData(): Promise<ImportLibraryData> {
       'experiences',
       'reflections',
       'creators',
+      'work_relations',
     ],
     'readonly'
   );
@@ -921,6 +923,9 @@ export async function exportLibraryData(): Promise<ImportLibraryData> {
   if (experiences.length > 0) result.experiences = experiences;
   if (reflections.length > 0) result.reflections = reflections;
   if (creators.length > 0) result.creators = creators;
+
+  const workRelations = await tx.objectStore('work_relations').getAll();
+  if (workRelations.length > 0) result.workRelations = workRelations;
 
   return result;
 }
@@ -1091,6 +1096,29 @@ function isValidCreator(c: unknown): c is Creator {
   return true;
 }
 
+const VALID_WORK_RELATIONS = new Set([
+  'adaptation_of',
+  'adapted_as',
+  'based_on',
+  'inspired_by',
+  'remake_of',
+  'sequel_to',
+  'prequel_to',
+  'series_member',
+  'companion_to',
+  'same_universe',
+]);
+
+function isValidWorkRelation(r: unknown): r is WorkRelation {
+  if (!r || typeof r !== 'object') return false;
+  const item = r as Record<string, unknown>;
+  if (typeof item.id !== 'string' || !item.id) return false;
+  if (typeof item.fromWorkId !== 'string' || !item.fromWorkId) return false;
+  if (typeof item.toWorkId !== 'string' || !item.toWorkId) return false;
+  if (!VALID_WORK_RELATIONS.has(item.relation as string)) return false;
+  return true;
+}
+
 /**
  * Import library backup.
  * Accepts legacy v1 (no schemaVersion) and v2 multi-medium exports.
@@ -1113,6 +1141,7 @@ export async function importLibraryData(data: ImportLibraryData) {
       'experiences',
       'reflections',
       'creators',
+      'work_relations',
     ],
     'readwrite'
   );
@@ -1213,6 +1242,15 @@ export async function importLibraryData(data: ImportLibraryData) {
           await tx.objectStore('creators').put(c);
         } else {
           console.warn('[Subsume] Import skipped invalid creator:', c);
+        }
+      }
+    }
+    if (Array.isArray(data.workRelations)) {
+      for (const rel of data.workRelations) {
+        if (isValidWorkRelation(rel)) {
+          await tx.objectStore('work_relations').put(rel);
+        } else {
+          console.warn('[Subsume] Import skipped invalid work relation:', rel);
         }
       }
     }

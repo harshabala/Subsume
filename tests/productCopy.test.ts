@@ -66,6 +66,9 @@ import {
   ARCHIVE_UPDATE_ERROR,
   EXPORT_KEEP_FILE_NOTICE,
   BACKUP_SECTION_PITCH,
+  PAID_BACKUP_ROW_TITLE,
+  PAID_BACKUP_NOTIFY_LABEL,
+  PRIVACY_STANCE,
 } from '@/shared/productCopy';
 import { legacyStatusLabel } from '@/shared/statusLabels';
 import { INTENT_LABELS_V2 } from '@/shared/statusLabels';
@@ -142,6 +145,10 @@ describe('productCopy lexicon', () => {
     );
     expect(BACKUP_SECTION_PITCH).toMatch(/never sells/i);
     expect(BACKUP_SECTION_PITCH).toMatch(/Free forever on this device/i);
+    expect(PAID_BACKUP_ROW_TITLE).toMatch(/coming soon/i);
+    expect(PAID_BACKUP_ROW_TITLE).not.toMatch(/buy now/i);
+    expect(PAID_BACKUP_NOTIFY_LABEL).toMatch(/this device/i);
+    expect(PRIVACY_STANCE).toMatch(/Never sells your data/i);
   });
 
   it('book status labels stay book-aware (not To Watch)', () => {

@@ -211,6 +211,12 @@ export interface UserPreferences {
   /** @deprecated Prefer webGroundedDispatchEnabled; still read as opt-in alias. */
   dispatchWebSearchEnabled?: boolean;
   dispatchMaxSearches?: number;
+  /**
+   * Local-only waitlist for a future encrypted private backup.
+   * No network call. Timestamp is set when the user opts in.
+   */
+  paidBackupNotifyRequested?: boolean;
+  paidBackupNotifyAt?: number;
 }
 
 // ─── Message Types ───────────────────────────────────────────────────
@@ -461,6 +467,8 @@ export interface ImportLibraryData {
   experiences?: import('./catalogTypes').Experience[];
   reflections?: import('./catalogTypes').Reflection[];
   creators?: import('./catalogTypes').Creator[];
+  /** Cross-medium links (adaptation_of, companion_to, …). User-owned. */
+  workRelations?: import('./catalogTypes').WorkRelation[];
 }
 
 /**

@@ -27,6 +27,10 @@ import {
   PLAIN_ENGLISH_PITCH,
   EXPORT_KEEP_FILE_NOTICE,
   BACKUP_SECTION_PITCH,
+  PAID_BACKUP_ROW_TITLE,
+  PAID_BACKUP_ROW_BODY,
+  PAID_BACKUP_NOTIFY_LABEL,
+  PAID_BACKUP_NOTIFY_HINT,
 } from '@/shared/productCopy';
 import { SettingsDiagnosticsPanel } from '../components/SettingsDiagnosticsPanel';
 import { useNotice } from '../components/NoticeProvider';
@@ -1135,6 +1139,35 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
                   Restore from Drive
                 </button>
               </div>
+            </div>
+
+            <div className="settings-section-divider" data-testid="paid-backup-scaffold">
+              <span className="settings-field-label">{PAID_BACKUP_ROW_TITLE}</span>
+              <p className="settings-panel-hint">{PAID_BACKUP_ROW_BODY}</p>
+              <label className="settings-toggle-label">
+                <input
+                  type="checkbox"
+                  className="settings-toggle-checkbox"
+                  checked={Boolean(prefs?.paidBackupNotifyRequested)}
+                  onChange={async (e) => {
+                    if (!prefs) return;
+                    const requested = e.currentTarget.checked;
+                    const next = {
+                      ...prefs,
+                      paidBackupNotifyRequested: requested,
+                      paidBackupNotifyAt: requested ? Date.now() : undefined,
+                    };
+                    setPrefs(next);
+                    try {
+                      await sendMessage(MessageType.SET_PREFERENCES, next);
+                    } catch (err) {
+                      showNotice(`Could not save that preference: ${formatUserError(err)}`, 'error');
+                    }
+                  }}
+                />
+                <span className="settings-toggle-text-sm">{PAID_BACKUP_NOTIFY_LABEL}</span>
+              </label>
+              <p className="settings-toggle-help">{PAID_BACKUP_NOTIFY_HINT}</p>
             </div>
 
             <div className="settings-section-divider">

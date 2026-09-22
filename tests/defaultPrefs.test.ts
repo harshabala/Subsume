@@ -13,4 +13,8 @@ describe('DEFAULT_PREFS (new installs)', () => {
   it('does not mark onboarding complete by default', () => {
     expect(DEFAULT_PREFS.onboardingComplete).toBe(false);
   });
+
+  it('does not opt into paid-backup notify by default', () => {
+    expect(DEFAULT_PREFS.paidBackupNotifyRequested).toBe(false);
+  });
 });
