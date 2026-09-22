@@ -184,3 +184,20 @@ You built a real doorway and started holding weekly services, but your sanctuary
 ---
 
 *Roast baseline re-run: roast-my-product framework · Commit `6976165` · 2026-09-22*
+
+---
+
+## T7 cold-install walkthrough (2026-09-22, feat/path-to-10)
+
+**Environment:** Brave 153, empty `--user-data-dir`, unpacked `dist/` loaded via CDP `Extensions.loadUnpacked`. This machine has no Google Chrome; chrome-devtools MCP could not attach (`Google Chrome.app` missing). Extension ID from the packaged key: `ehbkfdgpbemaimepgeeflenhbbpgokoj`. Manifest short description already matches `PLAIN_ENGLISH_PITCH`.
+
+| Check | Result |
+| --- | --- |
+| Load unpacked | Pass — Brave lists Subsume 0.3.0, source `~/Documents/Projects/Subsume/dist` |
+| First 10 seconds of UI | **Blocked** — options page and popup stay on the nav skeleton (`Subsume` logo only). `GET_PREFERENCES` from the UI timed out at 4s |
+| Service worker | No `service_worker` CDP target appeared |
+| Brave policy | Extensions page: “Your parent has disabled extension permissions.” Developer mode “managed by your administrator.” Default site access: **On click** (plaques will not appear on Letterboxd until the user grants all sites) |
+| Zero-key save / weekly selection / export | Not exercised — SW never answered |
+| Settings backup scaffold | Code present (`data-testid="paid-backup-scaffold"`); not reachable in this profile |
+
+**Honest takeaway:** the first-session copy and encryption work cannot be verified as a *cold user* on this Brave install until family/admin policy is lifted or the walkthrough is rerun in an unmanaged Chrome/Brave profile. The install itself works. The hang is environmental, not a missing `PLAIN_ENGLISH_PITCH`. Follow-up: rerun T7 on an unmanaged profile and set host access to “On all sites” before judging plaques.

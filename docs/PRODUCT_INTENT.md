@@ -17,5 +17,7 @@
 ## Related
 
 - User-facing Backup copy: Settings → Backup & sync (`BACKUP_SECTION_PITCH` in `src/shared/productCopy.ts`)
+- Honest paid-backup scaffold: Settings → Backup & sync → “Encrypted private backup (coming soon)” (`PAID_BACKUP_ROW_*` in `src/shared/productCopy.ts`). Local “notify me” flag only — no email, no checkout.
+- Export completeness & switching-cost position: [`docs/EXPORT_MOAT.md`](./EXPORT_MOAT.md)
 - Short product pointer: [`PRODUCT.md`](../PRODUCT.md)
 - Privacy: [`docs/PRIVACY.md`](./PRIVACY.md)

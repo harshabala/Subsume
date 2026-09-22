@@ -2,6 +2,8 @@
 
 > Private movie & book journal for Chrome. Save what stayed with you while you browse.
 
+**Free core forever on this device.** Optional paid private backup later. Never sells your data.
+
 <!-- Add a screenshot or short GIF here of the Poetic Capture Canvas or the museum plaque hover reveal.
      This is the single highest-leverage addition to this README — a portfolio reader decides
      whether to keep reading in about 3 seconds, and a visual does that work instantly.
