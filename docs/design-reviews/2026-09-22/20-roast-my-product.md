@@ -89,6 +89,11 @@ You built a real doorway and started holding weekly services, but your sanctuary
   - Privacy-preserving instrumentation: `activationMetrics.ts` tracks activation events purely in local storage with zero network leakage.
   - Content script resilience: `hoverCard.tsx` and `bookOverlay.ts` show user-visible error alerts (`ARCHIVE_UPDATE_ERROR`) rather than silent console errors.
 - **Why it cannot get a 9/10:** **Critical security hole:** API keys (TMDb, OMDb, OpenAI, Anthropic, Gemini) are stored in cleartext in IndexedDB `preferences`. Any malicious extension with storage permissions or local disk access can exfiltrate raw LLM credentials. Furthermore, there is no end-to-end automated test verifying a clean-slate cold install in an actual headless browser.
+- **Baseline Codebase Verification (Task 8 Audit):**
+  - TypeScript: `npx tsc --noEmit` passes with **0 errors**.
+  - Vitest: `vitest run` executes **83 test files with 585/585 tests passing** (0 failed, 0 unhandled errors).
+  - Lint: `eslint src --max-warnings 200` passes with **0 errors** (107 warnings triaged).
+  - Discovery Cold Load Performance: `Home.tsx` parallelizes preferences, weekly digest, recommendations, and discovery feeds using `Promise.allSettled`; handles rejected or empty states with honest explanatory notices (`setFeedError`) rather than infinite loading spinners.
 
 ### 8. Naming & Messaging (Weight: 1×)
 - **Aug-11 Score:** 4/10

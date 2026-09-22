@@ -7,7 +7,7 @@ import type { DetectionCandidate } from '@/shared/catalogTypes';
 
 /** "Title by Author" — common in reviews and blurbs. */
 const TITLE_BY_AUTHOR_RE =
-  /[“"«]?([A-Z0-9][^"“”»\n]{2,80}?)[”"»]?\s+by\s+([A-Z][a-zA-Z.''\-]+(?:\s+[A-Z][a-zA-Z.''\-]+){0,4})/g;
+  /[“"«]?([A-Z0-9][^"“”»\n]{2,80}?)[”"»]?\s+by\s+([A-Z][a-zA-Z.''-]+(?:\s+[A-Z][a-zA-Z.''-]+){0,4})/g;
 
 /** Review-page headline patterns */
 const REVIEW_TITLE_RE =
@@ -20,7 +20,7 @@ const MAX_CANDIDATES = 12;
 function cleanTitle(raw: string): string {
   return raw
     .replace(/\s+/g, ' ')
-    .replace(/^[\s:–—\-]+|[\s:–—\-]+$/g, '')
+    .replace(/^[\s:–—-]+|[\s:–—-]+$/g, '')
     .replace(/[“”«»"']/g, '')
     .trim();
 }
@@ -142,7 +142,7 @@ export function detectTitleAuthorHeuristics(
         Math.min(bodyText.length, (m.index ?? 0) + m[0].length + 160)
       );
       const byMatch = nearby.match(
-        /\bby\s+([A-Z][a-zA-Z.''\-]+(?:\s+[A-Z][a-zA-Z.''\-]+){0,3})/
+        /\bby\s+([A-Z][a-zA-Z.''-]+(?:\s+[A-Z][a-zA-Z.''-]+){0,3})/
       );
       const author = byMatch ? cleanAuthor(byMatch[1]) : undefined;
 
