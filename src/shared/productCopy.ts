@@ -5,6 +5,104 @@ import type { WorkMedium } from './catalogTypes';
 export const PLAIN_ENGLISH_PITCH =
   'Private movie & book journal for Chrome. Save what stayed with you while you browse.';
 
+/** First-session copy: headlines, primary CTAs, and prompts before the user's first save */
+export const FIRST_SESSION_HEADLINE = 'Private movie & book journal for Chrome.';
+export const FIRST_SESSION_PITCH =
+  'Save what stayed with you while you browse. Films, shows, and books — captured on this device, not a spreadsheet or someone else’s cloud.';
+export const FIRST_SESSION_POETRY_SUBTEXT =
+  'Your private picture palace: afterglow and memory matter more than any algorithm’s tally.';
+
+export const FIRST_SESSION_PILLARS = [
+  {
+    label: 'Discover',
+    description:
+      'Quiet overlays on the pages you browse — screen and page — without breaking your flow.',
+  },
+  {
+    label: 'Capture',
+    description:
+      'A quiet canvas asks what stayed with you. Resonance before metadata, always.',
+  },
+  {
+    label: 'Archive',
+    description:
+      'An editorial ledger of screen and books, arranged by intent, not date filed.',
+  },
+] as const;
+
+export const FIRST_SESSION_MINUTE_NOTE =
+  'You can save your first reflection in under a minute. Optional catalogue keys (TMDb) can wait until you want richer posters and search.';
+
+export const ONBOARDING_BEGIN_LABEL = 'Begin';
+export const ONBOARDING_STEP2_HEADLINE = 'Optional catalogue key';
+export const ONBOARDING_STEP2_SKIP_LABEL = 'Enter without keys';
+export const ONBOARDING_STEP2_VALIDATE_LABEL = 'Validate & enter';
+
+export const FIRST_REFLECTION_HEADLINE = 'Save your first reflection';
+export const FIRST_REFLECTION_BODY =
+  'Private movie & book journal. Save your first reflection — search a title you care about and write what stayed with you. Everything stays on this device.';
+
+export const FIRST_GATE_SEARCH_CTA = 'Search for a title';
+export const FIRST_GATE_PRACTICE_CTA = 'Start with a practice title';
+export const FIRST_GATE_SKIP_CTA = "I'll do this later";
+
+export const POPUP_TAGLINE = 'Private movie & book journal';
+export const POPUP_PRIMARY_CTA = 'Save a reflection';
+export const POPUP_OPEN_JOURNAL_CTA = 'Open journal';
+export const POPUP_SEARCH_HEADER = 'Save a reflection';
+export const POPUP_SEARCH_TAGLINE = 'From this page or search';
+export const POPUP_SEARCH_PROMPT = 'Search for a film, series, or book...';
+export const POPUP_SEARCH_ARIA_LABEL = 'Search titles to save';
+export const POPUP_SEARCHING_PROMPT = 'Searching titles…';
+export const POPUP_RECENT_ENTRIES_LABEL = 'Recent entries';
+export const POPUP_EMPTY_PITCH =
+  'Your archive is empty. Search a title and save what stayed with you — a private movie & book journal on this device.';
+export const POPUP_EMPTY_FLAVOR = 'Your first entry is ready to be saved.';
+export const POPUP_LOAD_SAMPLE_CTA = 'Load sample entries';
+
+export const EMPTY_HOME_HERO_TITLE = 'Your journal awaits';
+export const EMPTY_HOME_HERO_PROMPT = 'Add a film or book to your journal';
+export const EMPTY_HOME_HERO_QUOTE =
+  'Browse the live feed below or search to save your first reflection.';
+
+export const DISCOVERY_FIRST_BANNER_TITLE = 'Save your first reflection';
+export const DISCOVERY_FIRST_BANNER_BODY =
+  'Private movie & book journal — search a title you care about and write what stayed with you. That first reflection is the whole loop. Everything stays on this device.';
+
+export const FIRST_SESSION_COPY = {
+  headline: FIRST_SESSION_HEADLINE,
+  pitch: FIRST_SESSION_PITCH,
+  poetrySubtext: FIRST_SESSION_POETRY_SUBTEXT,
+  pillars: FIRST_SESSION_PILLARS,
+  minuteNote: FIRST_SESSION_MINUTE_NOTE,
+  onboardingBegin: ONBOARDING_BEGIN_LABEL,
+  onboardingStep2Headline: ONBOARDING_STEP2_HEADLINE,
+  onboardingStep2Skip: ONBOARDING_STEP2_SKIP_LABEL,
+  onboardingStep2Validate: ONBOARDING_STEP2_VALIDATE_LABEL,
+  firstReflectionHeadline: FIRST_REFLECTION_HEADLINE,
+  firstReflectionBody: FIRST_REFLECTION_BODY,
+  firstGateSearch: FIRST_GATE_SEARCH_CTA,
+  firstGatePractice: FIRST_GATE_PRACTICE_CTA,
+  firstGateSkip: FIRST_GATE_SKIP_CTA,
+  popupTagline: POPUP_TAGLINE,
+  popupPrimaryCta: POPUP_PRIMARY_CTA,
+  popupOpenJournalCta: POPUP_OPEN_JOURNAL_CTA,
+  popupSearchHeader: POPUP_SEARCH_HEADER,
+  popupSearchTagline: POPUP_SEARCH_TAGLINE,
+  popupSearchPrompt: POPUP_SEARCH_PROMPT,
+  popupSearchAriaLabel: POPUP_SEARCH_ARIA_LABEL,
+  popupSearchingPrompt: POPUP_SEARCHING_PROMPT,
+  popupRecentEntries: POPUP_RECENT_ENTRIES_LABEL,
+  popupEmptyPitch: POPUP_EMPTY_PITCH,
+  popupEmptyFlavor: POPUP_EMPTY_FLAVOR,
+  popupLoadSampleCta: POPUP_LOAD_SAMPLE_CTA,
+  emptyHomeHeroTitle: EMPTY_HOME_HERO_TITLE,
+  emptyHomeHeroPrompt: EMPTY_HOME_HERO_PROMPT,
+  emptyHomeHeroQuote: EMPTY_HOME_HERO_QUOTE,
+  discoveryFirstBannerTitle: DISCOVERY_FIRST_BANNER_TITLE,
+  discoveryFirstBannerBody: DISCOVERY_FIRST_BANNER_BODY,
+};
+
 /** User-facing name for free weekly local picks (never “Dispatch”). */
 export const WEEKLY_SELECTION_LABEL = 'Weekly selection';
 

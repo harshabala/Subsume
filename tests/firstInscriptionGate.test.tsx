@@ -24,7 +24,7 @@ describe('FirstInscriptionGate', () => {
     expect(screen.getByText(/private movie & book journal/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /search for a title/i })).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /try with a practice title/i }),
+      screen.getByRole('button', { name: /start with a practice title/i }),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /i'll do this later/i })).toBeInTheDocument();
   });

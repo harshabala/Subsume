@@ -9,7 +9,21 @@ import { AuraVisualizer } from './components/AuraVisualizer';
 import { FilmGrain } from './components/FilmGrain';
 import { InlineNotice } from './components/NoticeProvider';
 import { formatUserError } from './utils/formatUserError';
-import { mediumLabel } from '../shared/productCopy';
+import {
+  mediumLabel,
+  POPUP_TAGLINE,
+  POPUP_PRIMARY_CTA,
+  POPUP_OPEN_JOURNAL_CTA,
+  POPUP_SEARCH_HEADER,
+  POPUP_SEARCH_TAGLINE,
+  POPUP_SEARCH_PROMPT,
+  POPUP_SEARCH_ARIA_LABEL,
+  POPUP_SEARCHING_PROMPT,
+  POPUP_RECENT_ENTRIES_LABEL,
+  POPUP_EMPTY_PITCH,
+  POPUP_EMPTY_FLAVOR,
+  POPUP_LOAD_SAMPLE_CTA,
+} from '../shared/productCopy';
 import { legacyStatusLabel } from '../shared/statusLabels';
 import { Icon } from './components/icons';
 import '../shared/tokens.css';
@@ -321,11 +335,11 @@ function Popup() {
             <span className="popup-brand-mark"></span>
             Subsume
           </div>
-          <div className="popup-tagline">Your picture palace</div>
+          <div className="popup-tagline">{POPUP_TAGLINE}</div>
         </header>
         <div className="popup-empty">
           <p>{error}</p>
-          <button className="popup-btn popup-btn-primary" onClick={() => openSanctuary()}>Open the house</button>
+          <button className="popup-btn popup-btn-primary" onClick={() => openSanctuary()}>{POPUP_OPEN_JOURNAL_CTA}</button>
         </div>
       </div>
     );
@@ -365,7 +379,7 @@ function Popup() {
               <span className="popup-brand-mark"></span>
               Subsume
             </div>
-            <div className="popup-tagline">Private movie &amp; book journal</div>
+            <div className="popup-tagline">{POPUP_TAGLINE}</div>
           </div>
           <div className="popup-header-actions">
             <button
@@ -414,15 +428,12 @@ function Popup() {
         </div>
 
         <div className="popup-section">
-          <div className="popup-section-title">Recently inscribed</div>
+          <div className="popup-section-title">{POPUP_RECENT_ENTRIES_LABEL}</div>
           {items.length === 0 ? (
             <div className="popup-empty">
-              <p>
-                Your archive is empty. Search a title and save what stayed with you —
-                a private movie &amp; book journal on this device.
-              </p>
+              <p>{POPUP_EMPTY_PITCH}</p>
               <p className="popup-empty-secondary" style={{ opacity: 0.75, marginTop: '6px' }}>
-                The first inscription is yours to make.
+                {POPUP_EMPTY_FLAVOR}
               </p>
               <button
                 className="popup-btn"
@@ -436,7 +447,7 @@ function Popup() {
                   }
                 }}
               >
-                Load the highlight reel
+                {POPUP_LOAD_SAMPLE_CTA}
               </button>
             </div>
           ) : (
@@ -472,11 +483,11 @@ function Popup() {
         <div className="popup-actions">
           <button className="popup-btn popup-btn-primary" onClick={() => setActiveView('log')}>
             <Icon name="capture" size={18} className="popup-btn-icon" />
-            Inscribe a title
+            {POPUP_PRIMARY_CTA}
           </button>
           <button className="popup-btn popup-btn-secondary" onClick={() => openSanctuary()} type="button">
             <Icon name="external" size={18} className="popup-btn-icon" />
-            Open the house
+            {POPUP_OPEN_JOURNAL_CTA}
           </button>
         </div>
       </div>
@@ -487,9 +498,9 @@ function Popup() {
           <div className="popup-brand-area">
             <div className="popup-brand">
               <Icon name="capture" size={18} className="popup-brand-capture-icon" />
-              Inscribe a title
+              {POPUP_SEARCH_HEADER}
             </div>
-            <div className="popup-tagline">From this page or the catalogue</div>
+            <div className="popup-tagline">{POPUP_SEARCH_TAGLINE}</div>
           </div>
           <div className="popup-header-actions">
             <button
@@ -526,7 +537,7 @@ function Popup() {
               type="text"
               className="search-input"
               role="combobox"
-              aria-label="Search titles to inscribe"
+              aria-label={POPUP_SEARCH_ARIA_LABEL}
               aria-expanded={showSuggestions && (suggestions.length > 0 || searchLoading)}
               aria-controls="popup-suggestions-list"
               aria-autocomplete="list"
@@ -556,7 +567,7 @@ function Popup() {
                   setHighlightedIndex(-1);
                 }
               }}
-              placeholder="Search the repertoire..."
+              placeholder={POPUP_SEARCH_PROMPT}
               autoComplete="off"
             />
             
@@ -568,7 +579,7 @@ function Popup() {
                 key={searchLoading ? 'searching' : 'suggestions-list'}
               >
                 {searchLoading ? (
-                  <li className="suggestion-item suggestion-item--static" role="option" style={{ fontStyle: 'italic', justifyContent: 'center' }}>Searching the repertoire…</li>
+                  <li className="suggestion-item suggestion-item--static" role="option" style={{ fontStyle: 'italic', justifyContent: 'center' }}>{POPUP_SEARCHING_PROMPT}</li>
                 ) : (
                   suggestions.map((movie, index) => (
                     <li
@@ -644,7 +655,7 @@ function Popup() {
             <span className="intent-selector-label">
               {selectedMovie?.type === 'book' ? 'Reading status' : 'Screening status'}
             </span>
-            <div className="intent-pills" role="group" aria-label="Sanctuary intent">
+            <div className="intent-pills" role="group" aria-label="Reading or screening status">
               <button
                 type="button"
                 className={`intent-pill ${sanctuaryIntent === 'keep_memory' ? 'active' : ''}`}

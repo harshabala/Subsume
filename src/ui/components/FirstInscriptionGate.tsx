@@ -1,5 +1,12 @@
 import { h } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
+import {
+  FIRST_REFLECTION_HEADLINE,
+  FIRST_REFLECTION_BODY,
+  FIRST_GATE_SEARCH_CTA,
+  FIRST_GATE_PRACTICE_CTA,
+  FIRST_GATE_SKIP_CTA,
+} from '@/shared/productCopy';
 import '../styles/onboarding.css';
 import '../styles/first-inscription-gate.css';
 
@@ -104,12 +111,11 @@ export function FirstInscriptionGate({
       <div className="first-inscription-gate-content">
         <div className="onboarding-monogram">SUBSUME</div>
         <h1 id="first-inscription-gate-title" className="onboarding-headline first-inscription-gate-headline">
-          Save your first reflection
+          {FIRST_REFLECTION_HEADLINE}
         </h1>
         <div className="onboarding-divider" />
         <p className="onboarding-body">
-          Private movie &amp; book journal. Save your first reflection — search a title you care about
-          and write what stayed with you. Everything stays on this device.
+          {FIRST_REFLECTION_BODY}
         </p>
         <div className="first-inscription-gate-actions">
           <button
@@ -118,7 +124,7 @@ export function FirstInscriptionGate({
             className="onboarding-cta"
             onClick={() => onNavigate('search')}
           >
-            Search for a title
+            {FIRST_GATE_SEARCH_CTA}
           </button>
           {onPracticeTitle && (
             <button
@@ -130,7 +136,7 @@ export function FirstInscriptionGate({
                 void handlePractice();
               }}
             >
-              {practiceBusy ? 'Preparing…' : 'Try with a practice title'}
+              {practiceBusy ? 'Preparing…' : FIRST_GATE_PRACTICE_CTA}
             </button>
           )}
           <button
@@ -138,7 +144,7 @@ export function FirstInscriptionGate({
             className="first-inscription-gate-skip"
             onClick={onSkipLater}
           >
-            I&apos;ll do this later
+            {FIRST_GATE_SKIP_CTA}
           </button>
         </div>
       </div>

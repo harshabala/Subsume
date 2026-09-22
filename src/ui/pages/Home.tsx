@@ -26,7 +26,17 @@ import { getReflectionExcerpt } from '../components/archive/constants';
 import { truncateForExcerpt } from '@/shared/textTruncate';
 import { useNotice } from '../components/NoticeProvider';
 import { formatUserError } from '../utils/formatUserError';
-import { LIVE_FEED_LABEL, TRY_AGAIN_LABEL } from '@/shared/productCopy';
+import {
+  LIVE_FEED_LABEL,
+  TRY_AGAIN_LABEL,
+  EMPTY_HOME_HERO_TITLE,
+  EMPTY_HOME_HERO_PROMPT,
+  EMPTY_HOME_HERO_QUOTE,
+  DISCOVERY_FIRST_BANNER_TITLE,
+  DISCOVERY_FIRST_BANNER_BODY,
+  FIRST_GATE_SEARCH_CTA,
+  FIRST_GATE_PRACTICE_CTA,
+} from '@/shared/productCopy';
 import { incrementWeeklySelectionOpens } from '@/shared/activationMetrics';
 import { shouldShowDiscoveryFirstInscriptionBanner } from '../components/FirstInscriptionGate';
 
@@ -304,8 +314,8 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
     picks[0]?.media ||
     heroFromFeed ||
     null;
-  const heroTitle = heroMedia?.canonicalTitle || 'Your marquee awaits';
-  const heroDirector = heroMedia?.wikidataDirectorBio || 'Add a title to begin reflecting';
+  const heroTitle = heroMedia?.canonicalTitle || EMPTY_HOME_HERO_TITLE;
+  const heroDirector = heroMedia?.wikidataDirectorBio || EMPTY_HOME_HERO_PROMPT;
   const heroRating = heroMedia ? pickRating(heroMedia) : null;
   const heroLibraryMatch = libraryItems.find(({ media }) => media.id === heroMedia?.id);
   const heroReflection = heroLibraryMatch
@@ -316,7 +326,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
     ? truncateForExcerpt(heroReflection)
     : heroMedia?.overview
       ? truncateForExcerpt(heroMedia.overview)
-      : 'Browse the live feed below or open Search to find your first title in the repertoire.';
+      : EMPTY_HOME_HERO_QUOTE;
   const heroPoster = heroMedia?.posterUrl || '';
   const canReflect = Boolean(heroMedia);
 
@@ -387,12 +397,11 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
               className="discovery-first-inscription"
               data-testid="discovery-first-inscription"
               role="region"
-              aria-label="First inscription"
+              aria-label="First reflection"
             >
-              <p className="discovery-first-inscription-title">Save your first reflection</p>
+              <p className="discovery-first-inscription-title">{DISCOVERY_FIRST_BANNER_TITLE}</p>
               <p className="discovery-first-inscription-body">
-                Private movie &amp; book journal — search a title you care about and write what stayed
-                with you. That first inscription is the whole loop. Everything stays on this device.
+                {DISCOVERY_FIRST_BANNER_BODY}
               </p>
               <div className="discovery-first-inscription-actions">
                 <button
@@ -400,7 +409,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
                   className="optical-button"
                   onClick={() => onNavigate('search')}
                 >
-                  Search for a title
+                  {FIRST_GATE_SEARCH_CTA}
                 </button>
                 <button
                   type="button"
@@ -434,7 +443,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
                     })();
                   }}
                 >
-                  Try with a practice title
+                  {FIRST_GATE_PRACTICE_CTA}
                 </button>
                 <button
                   type="button"
