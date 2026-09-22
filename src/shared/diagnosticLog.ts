@@ -154,8 +154,9 @@ export function redactSecrets(text: string): string {
     .replace(/Bearer\s+[A-Za-z0-9._~+/-]+/gi, 'Bearer [REDACTED]')
     // Standard JWT patterns
     .replace(/eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]+/g, '[REDACTED_JWT]')
-    // OpenAI / Anthropic key patterns
+    // OpenAI / Anthropic / Google AI key patterns
     .replace(/sk-(?:proj-|ant-)?[A-Za-z0-9_-]{15,}/g, '[REDACTED_API_KEY]')
+    .replace(/\bAIza[0-9A-Za-z_-]{35}\b/g, '[REDACTED_API_KEY]')
     // Query parameter keys: ?apikey=... &key=... ?api_key=...
     .replace(/([?&](?:apikey|api_key|key|token|secret)=)[^&\s"'`]+/gi, '$1[REDACTED]')
     // Specific preference fields in JSON: "tmdbApiKey": "...", etc.

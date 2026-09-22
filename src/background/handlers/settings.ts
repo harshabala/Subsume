@@ -7,14 +7,9 @@ import { buildContentPrefs } from '../contentPrefs';
 import { getFreeDataSourceStatuses } from '../dataSources';
 import { reconcileDispatchAlarm } from '../dispatch';
 import { logger } from '@/shared/logger';
+import { SENSITIVE_PREF_KEYS } from '@/shared/keyCrypto';
 
-const API_KEY_FIELDS: (keyof UserPreferences)[] = [
-  'tmdbApiKey',
-  'omdbApiKey',
-  'llmApiKey',
-  'llmSecondaryApiKey',
-  'googleBooksApiKey',
-];
+const API_KEY_FIELDS: readonly (keyof UserPreferences)[] = SENSITIVE_PREF_KEYS;
 
 /**
  * Returns a copy of UserPreferences with all sensitive API key fields removed.

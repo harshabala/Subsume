@@ -29,6 +29,7 @@ export type SensitivePrefKey = (typeof SENSITIVE_PREF_KEYS)[number];
 
 let cachedCryptoKey: CryptoKey | null = null;
 let inMemoryKeyFallback: string | null = null;
+let installKeyPromise: Promise<CryptoKey> | null = null;
 
 function uint8ArrayToBase64(bytes: Uint8Array): string {
   const bufObj = (globalThis as unknown as {
@@ -136,51 +137,61 @@ async function setStorageItem(key: string, value: string): Promise<void> {
 
 /**
  * Retrieve or generate the per-install WebCrypto key.
+ * Uses promise memoization to guard against concurrent first-run initialization races.
  */
 export async function getOrCreateInstallKey(): Promise<CryptoKey> {
   if (cachedCryptoKey) {
     return cachedCryptoKey;
   }
-
-  const subtle = getSubtleCrypto();
-  const storedKeyBase64 = await getStorageItem(INSTALL_KEY_STORAGE_KEY);
-
-  if (storedKeyBase64) {
-    try {
-      const keyBytes = base64ToUint8Array(storedKeyBase64);
-      cachedCryptoKey = await subtle.importKey(
-        'raw',
-        keyBytes as unknown as BufferSource,
-        { name: ALGORITHM, length: KEY_LENGTH },
-        false,
-        ['encrypt', 'decrypt']
-      );
-      return cachedCryptoKey;
-    } catch {
-      // If corrupted in storage, fall through to regenerate
-    }
+  if (installKeyPromise) {
+    return installKeyPromise;
   }
 
-  // Generate a new 256-bit AES-GCM key
-  const generatedKey = await subtle.generateKey(
-    { name: ALGORITHM, length: KEY_LENGTH },
-    true,
-    ['encrypt', 'decrypt']
-  );
+  installKeyPromise = (async () => {
+    const subtle = getSubtleCrypto();
+    const storedKeyBase64 = await getStorageItem(INSTALL_KEY_STORAGE_KEY);
 
-  const raw = await subtle.exportKey('raw', generatedKey);
-  const base64Key = uint8ArrayToBase64(new Uint8Array(raw));
-  await setStorageItem(INSTALL_KEY_STORAGE_KEY, base64Key);
+    if (storedKeyBase64) {
+      try {
+        const keyBytes = base64ToUint8Array(storedKeyBase64);
+        cachedCryptoKey = await subtle.importKey(
+          'raw',
+          keyBytes as unknown as BufferSource,
+          { name: ALGORITHM, length: KEY_LENGTH },
+          false,
+          ['encrypt', 'decrypt']
+        );
+        return cachedCryptoKey;
+      } catch {
+        // If corrupted in storage, fall through to regenerate
+      }
+    }
 
-  cachedCryptoKey = generatedKey;
-  return cachedCryptoKey;
+    // Generate a new 256-bit AES-GCM key
+    const generatedKey = await subtle.generateKey(
+      { name: ALGORITHM, length: KEY_LENGTH },
+      true,
+      ['encrypt', 'decrypt']
+    );
+
+    const raw = await subtle.exportKey('raw', generatedKey);
+    const base64Key = uint8ArrayToBase64(new Uint8Array(raw));
+    await setStorageItem(INSTALL_KEY_STORAGE_KEY, base64Key);
+
+    cachedCryptoKey = generatedKey;
+    return cachedCryptoKey;
+  })().finally(() => {
+    installKeyPromise = null;
+  });
+
+  return installKeyPromise;
 }
 
 /**
  * Check whether a string value is an encrypted key token.
  */
 export function isEncryptedKey(value: unknown): boolean {
-  return typeof value === 'string' && value.startsWith(PREFIX);
+  return typeof value === 'string' && value.trim().startsWith(PREFIX);
 }
 
 /**
@@ -300,7 +311,13 @@ export async function decryptUserPreferences(
         needsMigration = true;
         prefAccessor[key] = val; // Already plaintext, will be migrated
       } else {
-        prefAccessor[key] = await decryptKey(val);
+        try {
+          prefAccessor[key] = await decryptKey(val);
+        } catch {
+          // If decryption fails (e.g. key mismatch or corrupted storage), reset to undefined so app loads cleanly
+          prefAccessor[key] = undefined;
+          needsMigration = true;
+        }
       }
     }
   }
@@ -315,7 +332,12 @@ export async function decryptUserPreferences(
           needsMigration = true;
           decryptedApiKeys[provider] = keyVal;
         } else {
-          decryptedApiKeys[provider] = await decryptKey(keyVal);
+          try {
+            decryptedApiKeys[provider] = await decryptKey(keyVal);
+          } catch {
+            delete decryptedApiKeys[provider];
+            needsMigration = true;
+          }
         }
       }
     }
@@ -331,4 +353,5 @@ export async function decryptUserPreferences(
 export function _resetCryptoKeyCacheForTesting(): void {
   cachedCryptoKey = null;
   inMemoryKeyFallback = null;
+  installKeyPromise = null;
 }
