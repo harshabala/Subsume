@@ -1,4 +1,5 @@
 import { h, Fragment } from 'preact';
+import type { JSX } from 'preact';
 import { useState } from 'preact/hooks';
 import { LibraryStatus } from '@/shared/types';
 import { INTENT_LABELS_V2 } from '@/shared/statusLabels';
@@ -69,13 +70,32 @@ export function IntentNavigation({
   const isScreen =
     activeTab === 'screen' || activeTab === 'movies' || activeTab === 'tv';
 
+  const handleTabListKeyDown = (e: JSX.TargetedKeyboardEvent<HTMLElement>) => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    const target = e.target as HTMLElement;
+    if (!target || target.getAttribute('role') !== 'tab') return;
+    const tablist = e.currentTarget as HTMLElement;
+    const tabs = Array.from(tablist.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+    const idx = tabs.indexOf(target as HTMLButtonElement);
+    if (idx === -1) return;
+    e.preventDefault();
+    const nextIdx =
+      e.key === 'ArrowRight'
+        ? (idx + 1) % tabs.length
+        : (idx - 1 + tabs.length) % tabs.length;
+    const nextTab = tabs[nextIdx];
+    nextTab?.focus();
+    nextTab?.click();
+  };
+
   return (
     <Fragment>
-      <div className="tab-bar" role="tablist" aria-label="Medium">
+      <div className="tab-bar" role="tablist" aria-label="Medium" onKeyDown={handleTabListKeyDown}>
         <button
           type="button"
           role="tab"
           aria-selected={activeTab === 'all'}
+          tabIndex={activeTab === 'all' ? 0 : -1}
           className={`tab-item ${activeTab === 'all' ? 'active' : ''}`}
           onClick={() => setActiveTab('all')}
         >
@@ -85,6 +105,7 @@ export function IntentNavigation({
           type="button"
           role="tab"
           aria-selected={isScreen}
+          tabIndex={isScreen ? 0 : -1}
           className={`tab-item ${isScreen ? 'active' : ''}`}
           onClick={() => setActiveTab('screen')}
         >
@@ -94,6 +115,7 @@ export function IntentNavigation({
           type="button"
           role="tab"
           aria-selected={activeTab === 'books'}
+          tabIndex={activeTab === 'books' ? 0 : -1}
           className={`tab-item ${activeTab === 'books' ? 'active' : ''}`}
           onClick={() => setActiveTab('books')}
         >
@@ -102,11 +124,12 @@ export function IntentNavigation({
       </div>
 
       {isScreen && (
-        <div className="tab-bar tab-bar-secondary" role="tablist" aria-label="Screen type">
+        <div className="tab-bar tab-bar-secondary" role="tablist" aria-label="Screen type" onKeyDown={handleTabListKeyDown}>
           <button
             type="button"
             role="tab"
             aria-selected={activeTab === 'screen' || activeTab === 'movies'}
+            tabIndex={activeTab === 'screen' || activeTab === 'movies' ? 0 : -1}
             className={`tab-item ${activeTab === 'screen' || activeTab === 'movies' ? 'active' : ''}`}
             onClick={() => setActiveTab('movies')}
           >
@@ -116,6 +139,7 @@ export function IntentNavigation({
             type="button"
             role="tab"
             aria-selected={activeTab === 'tv'}
+            tabIndex={activeTab === 'tv' ? 0 : -1}
             className={`tab-item ${activeTab === 'tv' ? 'active' : ''}`}
             onClick={() => setActiveTab('tv')}
           >
@@ -124,20 +148,26 @@ export function IntentNavigation({
         </div>
       )}
 
-      <div className="collection-filter-bar" role="tablist" aria-label="Library by status">
-        {collectionTabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            aria-selected={collectionFilter === tab.id}
-            data-collection={tab.id}
-            onClick={() => setCollectionFilter(tab.id)}
-            className={`collection-tab-btn ${collectionFilter === tab.id ? 'active' : ''}`}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <div className="collection-filter-bar" role="tablist" aria-label="Library by status" onKeyDown={handleTabListKeyDown}>
+        {collectionTabs.map((tab, idx) => {
+          const isSelected = collectionFilter === tab.id;
+          const hasSelected = collectionTabs.some((t) => t.id === collectionFilter);
+          const tabIndex = isSelected || (!hasSelected && idx === 0) ? 0 : -1;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={isSelected}
+              tabIndex={tabIndex}
+              data-collection={tab.id}
+              onClick={() => setCollectionFilter(tab.id)}
+              className={`collection-tab-btn ${isSelected ? 'active' : ''}`}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
       <details
@@ -166,20 +196,27 @@ export function IntentNavigation({
           className="intent-filter-bar"
           role="tablist"
           aria-label="Sanctuary intent"
+          onKeyDown={handleTabListKeyDown}
         >
-          {INTENT_TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              role="tab"
-              aria-selected={intentFilter === tab.id}
-              data-intent={tab.id}
-              onClick={() => setIntentFilter(tab.id)}
-              className={`intent-tab-btn ${intentFilter === tab.id ? 'active' : ''}`}
-            >
-              {tab.label}
-            </button>
-          ))}
+          {INTENT_TABS.map((tab, idx) => {
+            const isSelected = intentFilter === tab.id;
+            const hasSelected = INTENT_TABS.some((t) => t.id === intentFilter);
+            const tabIndex = isSelected || (!hasSelected && idx === 0) ? 0 : -1;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={isSelected}
+                tabIndex={tabIndex}
+                data-intent={tab.id}
+                onClick={() => setIntentFilter(tab.id)}
+                className={`intent-tab-btn ${isSelected ? 'active' : ''}`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
       </details>
     </Fragment>

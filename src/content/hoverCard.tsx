@@ -562,6 +562,11 @@ export class HoverCardManager {
       return;
     }
 
+    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) {
+      this.clearMount();
+      return;
+    }
+
     this.isExiting = true;
     cardEl.classList.remove('subsume-visible');
     cardEl.classList.add('subsume-exiting');
@@ -1021,7 +1026,7 @@ const HOVER_CARD_STYLES = `
 
   .subsume-btn-primary {
     background: linear-gradient(135deg, var(--ring), var(--primary-hover));
-    color: var(--background);
+    color: var(--on-primary-fg, #ffffff);
     box-shadow: var(--shadow-sm);
   }
 

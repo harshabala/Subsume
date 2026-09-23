@@ -352,8 +352,9 @@
 }
 
 .diagnostics-severity-pill.level-error {
-  color: var(--danger, #f87171);
-  background: hsla(0, 72%, 55%, 0.12);
+  color: var(--danger-fg-strong, var(--danger-fg));
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
 }
 
 .diagnostics-severity-pill.level-warn {
@@ -454,8 +455,8 @@
 }
 
 .diagnostics-clear-btn:hover {
-  border-color: var(--danger, #f87171);
-  color: var(--danger, #f87171);
+  border-color: var(--danger-border, var(--danger-fg));
+  color: var(--danger-fg-strong, var(--danger-fg));
 }
 
 .diagnostics-clear-confirm {
@@ -465,8 +466,8 @@
   gap: 6px;
   padding: 12px 14px;
   border-radius: var(--radius-md, 8px);
-  border: 1px solid var(--danger-border, rgba(239, 68, 68, 0.25));
-  background: var(--danger-bg, rgba(239, 68, 68, 0.1));
+  border: 1px solid var(--danger-border);
+  background: var(--danger-bg);
 }
 
 .diagnostics-clear-confirm-title {
@@ -490,8 +491,8 @@
 }
 
 .diagnostics-clear-confirm-btn {
-  border-color: var(--danger, #f87171);
-  color: var(--danger, #f87171);
+  border-color: var(--danger-border, var(--danger-fg));
+  color: var(--danger-fg-strong, var(--danger-fg));
 }
 
 @media (max-width: 640px) {

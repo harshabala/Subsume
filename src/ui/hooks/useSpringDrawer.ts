@@ -11,10 +11,11 @@ import type { RefObject } from 'preact';
 
 export const SPRING_DRAWER_WIDTH = 320;
 
-const STIFFNESS = 280;
+const STIFFNESS = 550;
 const DAMPING = 2 * Math.sqrt(STIFFNESS);
-const SETTLE_POS = 0.002;
-const SETTLE_VEL = 0.02;
+const SETTLE_POS = 0.005;
+const SETTLE_VEL = 0.04;
+export const MAX_SPRING_DURATION_MS = 280;
 
 /** Exponential projection (Apple sample: d ≈ 0.998). */
 export function projectVelocity(velocity: number, decelerationRate = 0.998): number {
@@ -65,6 +66,7 @@ export function useSpringDrawer(options: UseSpringDrawerOptions = {}): UseSpring
   const targetRef = useRef(0);
   const rafRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number | null>(null);
+  const springStartTimeRef = useRef<number | null>(null);
   const draggingRef = useRef(false);
   const dragStartXRef = useRef(0);
   const dragStartProgressRef = useRef(0);
@@ -115,14 +117,21 @@ export function useSpringDrawer(options: UseSpringDrawerOptions = {}): UseSpring
       rafRef.current = null;
     }
     lastTimeRef.current = null;
+    springStartTimeRef.current = null;
   }, []);
 
   const tick = useCallback(
     (now: number) => {
       if (draggingRef.current) {
         rafRef.current = null;
+        springStartTimeRef.current = null;
         return;
       }
+
+      if (springStartTimeRef.current == null) {
+        springStartTimeRef.current = now;
+      }
+      const elapsed = now - springStartTimeRef.current;
 
       const last = lastTimeRef.current ?? now;
       let dt = (now - last) / 1000;
@@ -152,7 +161,8 @@ export function useSpringDrawer(options: UseSpringDrawerOptions = {}): UseSpring
       syncDiscrete(pos, target, false);
 
       const settled =
-        Math.abs(pos - target) < SETTLE_POS && Math.abs(vel) < SETTLE_VEL;
+        (Math.abs(pos - target) < SETTLE_POS && Math.abs(vel) < SETTLE_VEL) ||
+        elapsed >= MAX_SPRING_DURATION_MS;
 
       if (settled) {
         progressRef.current = target;
@@ -161,6 +171,7 @@ export function useSpringDrawer(options: UseSpringDrawerOptions = {}): UseSpring
         syncDiscrete(target, target, false);
         rafRef.current = null;
         lastTimeRef.current = null;
+        springStartTimeRef.current = null;
         if (target >= 0.5) onSettledOpenRef.current?.();
         else onSettledClosedRef.current?.();
         return;
@@ -175,6 +186,7 @@ export function useSpringDrawer(options: UseSpringDrawerOptions = {}): UseSpring
     if (draggingRef.current) return;
     if (rafRef.current != null) return;
     lastTimeRef.current = null;
+    springStartTimeRef.current = null;
     rafRef.current = requestAnimationFrame(tick);
   }, [tick]);
 

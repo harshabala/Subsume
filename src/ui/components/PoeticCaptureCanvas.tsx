@@ -125,20 +125,50 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
   }, [loading, loadError, media]);
 
   useEffect(() => {
-    if (loading || loadError) return;
+    previousFocusRef.current = document.activeElement as HTMLElement | null;
 
-    previousFocusRef.current = document.activeElement as HTMLElement;
+    const inertedElements: Array<{ el: Element; hadInert: boolean; prevAriaHidden: string | null }> = [];
+    const applyInert = (el: Element) => {
+      inertedElements.push({
+        el,
+        hadInert: el.hasAttribute('inert'),
+        prevAriaHidden: el.getAttribute('aria-hidden'),
+      });
+      el.setAttribute('inert', '');
+      el.setAttribute('aria-hidden', 'true');
+    };
 
     const shell = document.querySelector('.app-nav-shell');
-    if (shell) {
-      shell.setAttribute('inert', '');
-      shell.setAttribute('aria-hidden', 'true');
+    if (shell && (!dialogRef.current || !shell.contains(dialogRef.current))) {
+      applyInert(shell);
     }
 
-    const focusTextarea = () => {
-      textareaRef.current?.focus();
+    const modalEl = dialogRef.current;
+    if (modalEl) {
+      const mainContent = document.querySelector('.main-content') || document.body;
+      let curr: Element | null = modalEl;
+      while (curr && curr !== mainContent && curr.parentElement) {
+        const parentEl: HTMLElement | null = curr.parentElement;
+        if (!parentEl) break;
+        const children: Element[] = Array.from(parentEl.children);
+        for (const sibling of children) {
+          if (sibling !== curr && !sibling.contains(modalEl)) {
+            applyInert(sibling);
+          }
+        }
+        if (parentEl === mainContent) break;
+        curr = parentEl;
+      }
+    }
+
+    const focusInitial = () => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      } else {
+        dialogRef.current?.focus();
+      }
     };
-    const focusTimer = window.setTimeout(focusTextarea, 0);
+    const focusTimer = window.setTimeout(focusInitial, 0);
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -151,7 +181,11 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
 
       const focusable = Array.from(
         dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
-      );
+      ).filter((el) => {
+        if (el.getAttribute('tabindex') === '-1') return false;
+        if (el.closest('[aria-hidden="true"], [inert]')) return false;
+        return el.offsetWidth > 0 || el.offsetHeight > 0 || el.getClientRects().length > 0;
+      });
       if (focusable.length === 0) return;
 
       const first = focusable[0];
@@ -170,13 +204,27 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
     return () => {
       window.clearTimeout(focusTimer);
       document.removeEventListener('keydown', handleKeyDown);
-      if (shell) {
-        shell.removeAttribute('inert');
-        shell.removeAttribute('aria-hidden');
+      for (const { el, hadInert, prevAriaHidden } of inertedElements) {
+        if (hadInert) {
+          el.setAttribute('inert', '');
+        } else {
+          el.removeAttribute('inert');
+        }
+        if (prevAriaHidden !== null) {
+          el.setAttribute('aria-hidden', prevAriaHidden);
+        } else {
+          el.removeAttribute('aria-hidden');
+        }
       }
       previousFocusRef.current?.focus();
     };
-  }, [requestClose, loading, loadError]);
+  }, [requestClose]);
+
+  useEffect(() => {
+    if (!loading && !loadError && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [loading, loadError]);
 
   useEffect(() => {
     return () => {
@@ -288,6 +336,7 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
       ref={dialogRef}
       role="dialog"
       aria-modal="true"
+      tabIndex={-1}
       aria-labelledby={headingId}
     >
       <div class="poetic-backdrop">
@@ -389,13 +438,15 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
                   </button>
                 </div>
 
-                <div class="rating-control" data-testid="rating-control">
+                <div class="rating-control" data-testid="rating-control" role="group" aria-label="Rating scale (1 to 10)">
                   {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
                     <button
                       key={num}
                       type="button"
                       data-rating={`${num}`}
                       class={rating === num ? 'active' : ''}
+                      aria-label={`Rate ${num} of 10`}
+                      aria-pressed={rating === num}
                       onClick={() => setRating(num)}
                     >
                       {['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][num - 1]}

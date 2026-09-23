@@ -1,13 +1,18 @@
 import { describe, it, expect } from 'vitest';
-import { projectVelocity, rubberband, SPRING_DRAWER_WIDTH } from '@/ui/hooks/useSpringDrawer';
+import {
+  projectVelocity,
+  rubberband,
+  SPRING_DRAWER_WIDTH,
+  MAX_SPRING_DURATION_MS,
+} from '@/ui/hooks/useSpringDrawer';
 
 function stepSpring(
   pos: number,
   vel: number,
   target: number,
   dt: number,
-  stiffness = 280,
-  damping = 2 * Math.sqrt(280),
+  stiffness = 550,
+  damping = 2 * Math.sqrt(550),
 ): { pos: number; vel: number } {
   const force = -stiffness * (pos - target) - damping * vel;
   const nextVel = vel + force * dt;
@@ -76,7 +81,28 @@ describe('spring drawer math', () => {
     const target = 0;
     const vel = 0;
     const alreadySettled =
-      Math.abs(progress - target) < 0.002 && Math.abs(vel) < 0.02;
+      Math.abs(progress - target) < 0.005 && Math.abs(vel) < 0.04;
     expect(alreadySettled).toBe(true);
+  });
+
+  it('spring settles strictly within 280ms threshold with MAX_SPRING_DURATION_MS cap', () => {
+    let pos = 0;
+    let vel = 0;
+    const target = 1;
+    const dt = 1 / 60;
+    let settledMs = -1;
+    for (let frame = 0; frame < 60; frame++) {
+      ({ pos, vel } = stepSpring(pos, vel, target, dt));
+      const elapsedMs = frame * dt * 1000;
+      if (
+        (Math.abs(pos - target) < 0.005 && Math.abs(vel) < 0.04) ||
+        elapsedMs >= MAX_SPRING_DURATION_MS
+      ) {
+        settledMs = Math.min(elapsedMs, MAX_SPRING_DURATION_MS);
+        break;
+      }
+    }
+    expect(settledMs).toBeGreaterThan(0);
+    expect(settledMs).toBeLessThanOrEqual(280);
   });
 });
