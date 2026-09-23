@@ -5,6 +5,31 @@ const BASE_URL = 'https://www.omdbapi.com/';
 
 const CACHE = new Map<string, { data: MediaRating[]; timestamp: number }>();
 const CACHE_TTL = 1000 * 60 * 60 * 24; // 24 hours
+export const MAX_CACHE_SIZE = 500;
+
+function setCacheEntry(key: string, data: MediaRating[]): void {
+  if (CACHE.has(key)) {
+    CACHE.delete(key);
+  } else if (CACHE.size >= MAX_CACHE_SIZE) {
+    const oldestKey = CACHE.keys().next().value;
+    if (oldestKey !== undefined) {
+      CACHE.delete(oldestKey);
+    }
+  }
+  CACHE.set(key, { data, timestamp: Date.now() });
+}
+
+export function clearOmdbCache(): void {
+  CACHE.clear();
+}
+
+export function getOmdbCacheSizeForTesting(): number {
+  return CACHE.size;
+}
+
+export function setOmdbCacheEntryForTesting(key: string, data: MediaRating[]): void {
+  setCacheEntry(key, data);
+}
 
 let omdbApiKey: string | null = null;
 
@@ -87,7 +112,7 @@ export async function fetchOmdbRatings(
       const isTransientError =
         error.includes('Invalid API key') || error.toLowerCase().includes('limit');
       if (!isTransientError) {
-        CACHE.set(cacheKey, { data: [], timestamp: Date.now() });
+        setCacheEntry(cacheKey, []);
       }
       return [];
     }
@@ -112,7 +137,7 @@ export async function fetchOmdbRatings(
       }
     }
 
-    CACHE.set(cacheKey, { data: ratings, timestamp: Date.now() });
+    setCacheEntry(cacheKey, ratings);
     return ratings;
   } catch (err) {
     console.error('[Subsume OMDb] Fetch failed', err);

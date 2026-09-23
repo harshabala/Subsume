@@ -1,4 +1,3 @@
-import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { sendMessage } from '@/shared/messages';
 import {
@@ -163,21 +162,6 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
       setFeedError(err instanceof Error ? err.message : 'Live feed failed to load.');
     }
     return null;
-  };
-
-  const loadWeeklyDigest = async () => {
-    const digestRes = await sendMessage<{}, WeeklyDigest>(MessageType.GET_WEEKLY_DIGEST, {});
-    if (digestRes.success && digestRes.data && digestRes.data.items.length > 0) {
-      setWeeklyDigest(digestRes.data);
-      setUsingFreeFeed(false);
-      await hydrateDigestPicks(digestRes.data);
-      return;
-    }
-
-    const feed = await loadDiscoveryFeed();
-    if (feed && feed.items.length > 0) {
-      applyDiscoveryFeedFallback(feed);
-    }
   };
 
   useEffect(() => {

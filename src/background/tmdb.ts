@@ -7,6 +7,31 @@ export const POSTER_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
 const CACHE = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_TTL = 1000 * 60 * 60 * 24; // 24 hours
+export const MAX_CACHE_SIZE = 500;
+
+function setCacheEntry(key: string, data: unknown): void {
+  if (CACHE.has(key)) {
+    CACHE.delete(key);
+  } else if (CACHE.size >= MAX_CACHE_SIZE) {
+    const oldestKey = CACHE.keys().next().value;
+    if (oldestKey !== undefined) {
+      CACHE.delete(oldestKey);
+    }
+  }
+  CACHE.set(key, { data, timestamp: Date.now() });
+}
+
+export function clearTmdbCache(): void {
+  CACHE.clear();
+}
+
+export function getTmdbCacheSizeForTesting(): number {
+  return CACHE.size;
+}
+
+export function setTmdbCacheEntryForTesting(key: string, data: unknown): void {
+  setCacheEntry(key, data);
+}
 
 let tmdbApiKey: string | null = null;
 
@@ -317,7 +342,7 @@ export async function fetchWatchProviders(
       theatricalReleaseDates,
     });
 
-    CACHE.set(cacheKey, { data: mapped, timestamp: Date.now() });
+    setCacheEntry(cacheKey, mapped);
     return mapped;
   } catch (err) {
     console.error('[Subsume TMDB] Watch providers fetch failed', err);
@@ -466,7 +491,7 @@ export async function searchTitle(
     const baseItem = mapTmdbToMediaItem(bestResult, finalType);
     const withRatings = await enrichMediaWithOmdbRatings(baseItem);
     const resultItem = await enrichMediaWithStreaming(withRatings, undefined, releaseDate);
-    CACHE.set(cacheKey, { data: resultItem, timestamp: Date.now() });
+    setCacheEntry(cacheKey, resultItem);
     return resultItem;
   } catch (err) {
     console.error('[Subsume TMDB] Search failed', err);
@@ -530,7 +555,7 @@ export async function searchTitles(
       enrichMediaWithOmdbRatings,
       3
     );
-    CACHE.set(cacheKey, { data: limited, timestamp: Date.now() });
+    setCacheEntry(cacheKey, limited);
     return limited;
   } catch (err) {
     console.error('[Subsume TMDB] Multi-search failed', err);

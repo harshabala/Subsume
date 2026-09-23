@@ -19,8 +19,15 @@ import {
   getMediaItem,
   getAllPeople,
   putCreator,
+  putMediaItem,
 } from '../storage';
-import { creatorToPersonItem, isOpenLibraryAuthorId } from '@/shared/compatibility';
+import {
+  creatorToPersonItem,
+  isOpenLibraryAuthorId,
+  catalogWorkToMediaItem,
+  personItemToCreator,
+} from '@/shared/compatibility';
+import { searchOpenLibraryAuthors, getOpenLibraryAuthorWorks } from '../openLibrary';
 import type { Creator } from '@/shared/catalogTypes';
 import { logger } from '@/shared/logger';
 import { broadcastMessage } from './utils';
@@ -49,7 +56,6 @@ function creatorToSearchResult(creator: Creator): PersonSearchResult {
 
 async function searchOpenLibraryAuthorsAsPeople(query: string): Promise<PersonSearchResult[]> {
   try {
-    const { searchOpenLibraryAuthors } = await import('../openLibrary');
     const creators = await searchOpenLibraryAuthors(query);
     return creators.map(creatorToSearchResult);
   } catch (err) {
@@ -118,19 +124,15 @@ export const peopleHandlers: MessageHandlerMap = {
 
       const now = Date.now();
       let workIds: string[] = [];
-      const biography: string | undefined = undefined;
       let profileImageUrl: string | undefined =
         req.profilePath && /^https?:\/\//i.test(req.profilePath)
           ? req.profilePath
           : undefined;
 
       try {
-        const ol = await import('../openLibrary');
-        const works = await ol.getOpenLibraryAuthorWorks(req.personId);
+        const works = await getOpenLibraryAuthorWorks(req.personId);
         workIds = works.map((w) => w.id);
         // Persist works lightly so filmography/archive views can resolve them
-        const { putMediaItem } = await import('../storage');
-        const { catalogWorkToMediaItem } = await import('@/shared/compatibility');
         for (const work of works.slice(0, 40)) {
           const media = catalogWorkToMediaItem(work);
           media.type = 'book';
@@ -146,10 +148,9 @@ export const peopleHandlers: MessageHandlerMap = {
         name: req.name,
         roles: ['author'],
         biography:
-          biography ||
-          (req.knownFor?.length
+          req.knownFor?.length
             ? `Known for ${req.knownFor.map((k) => k.title).join(', ')}`
-            : undefined),
+            : undefined,
         profileImageUrl,
         knownForWorkIds: workIds,
         followedAt: now,
@@ -256,10 +257,7 @@ export const peopleHandlers: MessageHandlerMap = {
     // For Open Library authors, resolve stored work ids (books)
     if (isOpenLibraryAuthorId(req.personId) && person.filmographyIds.length === 0) {
       try {
-        const ol = await import('../openLibrary');
-        const works = await ol.getOpenLibraryAuthorWorks(req.personId);
-        const { putMediaItem } = await import('../storage');
-        const { catalogWorkToMediaItem } = await import('@/shared/compatibility');
+        const works = await getOpenLibraryAuthorWorks(req.personId);
         const ids: string[] = [];
         for (const work of works.slice(0, 50)) {
           const media = catalogWorkToMediaItem(work);
@@ -288,10 +286,7 @@ export const peopleHandlers: MessageHandlerMap = {
       const person = await getPersonById(req.personId);
       if (!person) return { synced: 0 };
       try {
-        const ol = await import('../openLibrary');
-        const works = await ol.getOpenLibraryAuthorWorks(req.personId);
-        const { putMediaItem, putCreator: putC } = await import('../storage');
-        const { catalogWorkToMediaItem, personItemToCreator } = await import('@/shared/compatibility');
+        const works = await getOpenLibraryAuthorWorks(req.personId);
         const ids: string[] = [];
         for (const work of works.slice(0, 50)) {
           const media = catalogWorkToMediaItem(work);
@@ -303,7 +298,7 @@ export const peopleHandlers: MessageHandlerMap = {
         await updatePersonSync(req.personId, ids);
         const updated = await getPersonById(req.personId);
         if (updated) {
-          await putC(personItemToCreator(updated));
+          await putCreator(personItemToCreator(updated));
         }
         return { synced: ids.length };
       } catch (err) {

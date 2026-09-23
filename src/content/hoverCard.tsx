@@ -273,6 +273,7 @@ export class HoverCardManager {
   private isExiting = false;
   private libraryItems: Map<string, LibraryItem> = new Map();
   private prefetchCache = new Map<string, PrefetchEntry>();
+  private abortController = new AbortController();
   private static readonly SHOW_DELAY_MS = 150;
   private static readonly PREFETCH_DEBOUNCE_MS = 50;
   private syncListener: ((message: unknown, sender: chrome.runtime.MessageSender) => void) | null = null;
@@ -372,17 +373,26 @@ export class HoverCardManager {
       render(null, mount);
     }
 
+    this.abortController.abort();
     this.container.remove();
   }
 
   attachToElement(element: HTMLElement, title: string, yearGuess?: number): void {
-    element.addEventListener('mouseenter', () => {
-      this.schedulePrefetch(title, yearGuess);
-      this.scheduleShow(element, title, yearGuess);
-    });
-    element.addEventListener('mouseleave', () => {
-      this.scheduleHide();
-    });
+    element.addEventListener(
+      'mouseenter',
+      () => {
+        this.schedulePrefetch(title, yearGuess);
+        this.scheduleShow(element, title, yearGuess);
+      },
+      { signal: this.abortController.signal }
+    );
+    element.addEventListener(
+      'mouseleave',
+      () => {
+        this.scheduleHide();
+      },
+      { signal: this.abortController.signal }
+    );
   }
 
   private prefetchKey(title: string, yearGuess?: number): string {

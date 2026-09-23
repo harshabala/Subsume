@@ -106,13 +106,31 @@ function cacheGet<T>(key: string): T | undefined {
   return entry.data as T;
 }
 
+export const MAX_CACHE_SIZE = 500;
+
 function cacheSet(key: string, data: unknown): void {
+  if (CACHE.has(key)) {
+    CACHE.delete(key);
+  } else if (CACHE.size >= MAX_CACHE_SIZE) {
+    const oldestKey = CACHE.keys().next().value;
+    if (oldestKey !== undefined) {
+      CACHE.delete(oldestKey);
+    }
+  }
   CACHE.set(key, { data, timestamp: Date.now() });
 }
 
 /** Test helper — clears in-memory cache. */
 export function clearGoogleBooksCache(): void {
   CACHE.clear();
+}
+
+export function getGoogleBooksCacheSizeForTesting(): number {
+  return CACHE.size;
+}
+
+export function setGoogleBooksCacheEntryForTesting(key: string, data: unknown): void {
+  cacheSet(key, data);
 }
 
 // ─── ID helpers ──────────────────────────────────────────────────────

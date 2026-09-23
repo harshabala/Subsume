@@ -11,6 +11,7 @@ import {
   getAllMediaMap,
   putMediaItem,
 } from './storage';
+import { searchOpenLibrary } from './openLibrary';
 import { logger } from '@/shared/logger';
 
 const DEFAULT_LIMIT = 10;
@@ -98,14 +99,6 @@ export async function generateCatalogBookRecommendations(
   }
 
   if (queries.length === 0) return [];
-
-  let searchOpenLibrary: typeof import('./openLibrary').searchOpenLibrary;
-  try {
-    ({ searchOpenLibrary } = await import('./openLibrary'));
-  } catch (err) {
-    logger.warn('[Subsume] Open Library unavailable for book recs:', err);
-    return [];
-  }
 
   const results: MediaItem[] = [];
   const seenResultIds = new Set<string>();

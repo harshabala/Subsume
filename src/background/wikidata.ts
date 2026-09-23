@@ -1,4 +1,14 @@
+import { v4 as uuidv4 } from 'uuid';
 import { fetchWithRetry } from './tmdb';
+import { searchOpenLibrary } from './openLibrary';
+import {
+  putWorkRelation,
+  getWorkRelationsForWork,
+  putMediaItem,
+  putWork,
+  getMediaItem,
+} from './storage';
+import { catalogWorkToMediaItem, mediaItemToCatalogWork } from '@/shared/compatibility';
 
 const CACHE = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_TTL = 86400000; // 24 hours
@@ -172,12 +182,6 @@ export async function matchAndStoreWikidataAdaptations(
     // Film adaptations of books need screen search; skip auto-store for books in light path.
     return 0;
   }
-
-  const { searchOpenLibrary } = await import('./openLibrary');
-  const { putWorkRelation, getWorkRelationsForWork, putMediaItem, putWork, getMediaItem } =
-    await import('./storage');
-  const { catalogWorkToMediaItem, mediaItemToCatalogWork } = await import('@/shared/compatibility');
-  const { v4: uuidv4 } = await import('uuid');
 
   let stored = 0;
   const existing = await getWorkRelationsForWork(workId);

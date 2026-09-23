@@ -78,7 +78,13 @@ export default defineConfig(({ command }) => ({
           if (chunkInfo.name === 'content') return 'content.js';
           return 'ui/assets/[name]-[hash].js';
         },
-        chunkFileNames: 'ui/assets/[name]-[hash].js',
+        chunkFileNames: (chunkInfo) => {
+          const isBackground = chunkInfo.moduleIds?.some((id) => id.includes('/src/background/'));
+          if (isBackground) {
+            return 'chunks/[name]-[hash].js';
+          }
+          return 'ui/assets/[name]-[hash].js';
+        },
         assetFileNames: (assetInfo) => {
           if (assetInfo.name && assetInfo.name.endsWith('.css')) {
             if (assetInfo.name.includes('content')) return 'content.css';

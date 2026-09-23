@@ -8,6 +8,7 @@ import { catalogWorkToMediaItem } from '@/shared/compatibility';
 import { putMediaItem, findMediaByTitle } from './storage';
 import { searchTitles, searchTitle, setTmdbApiKey } from './tmdb';
 import { discoverySearch } from './discoverySearch';
+import { searchOpenLibrary } from './openLibrary';
 import { logger } from '@/shared/logger';
 
 const MAX_RESOLVED = 15;
@@ -49,7 +50,6 @@ function titlesClose(a: string, b: string): boolean {
 async function resolveBookCandidate(
   candidate: RecommendationCandidate
 ): Promise<MediaItem | null> {
-  const { searchOpenLibrary } = await import('./openLibrary');
   const hits = await searchOpenLibrary({ query: candidate.title, limit: 5 });
   if (!hits.length) return null;
 

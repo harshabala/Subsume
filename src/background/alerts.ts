@@ -14,6 +14,7 @@ import {
   putWatchAlert,
   putMediaItems,
 } from './storage';
+import { searchOpenLibrary } from './openLibrary';
 
 const GENRE_ID_TO_NAME: Record<string, string> = Object.fromEntries(
   AVAILABLE_GENRES.map((genre) => [genre.id, genre.name])
@@ -240,7 +241,6 @@ export async function checkBookAlerts(
   const enabled = bookAlerts.filter((a) => a.enabled && a.type === 'book');
   if (enabled.length === 0) return [];
 
-  const { searchOpenLibrary } = await import('./openLibrary');
   const allMedia: MediaItem[] = [];
   const seen = new Set<string>();
 
