@@ -404,7 +404,7 @@ function Popup() {
           </div>
           <div className="popup-stat">
             <div className="popup-stat-value">{stats.watched}</div>
-            <div className="popup-stat-label">Projected</div>
+            <div className="popup-stat-label">Watched & Read</div>
           </div>
           <div className="popup-stat">
             <div className="popup-stat-value">{stats.toWatch}</div>
@@ -647,7 +647,11 @@ function Popup() {
             aria-label="Journal notes"
             value={logNotes}
             onInput={(e) => setLogNotes((e.target as HTMLTextAreaElement).value)}
-            placeholder="What resonance did this screening leave? A line, a scene, an afterglow..."
+            placeholder={
+              selectedMovie?.type === 'book'
+                ? 'What resonance did this book leave? A line, a thought, an afterglow...'
+                : 'What resonance did this leave? A line, a scene, an afterglow...'
+            }
           />
 
           {/* Sanctuary Status Intent Selector — medium-aware operational labels */}

@@ -325,7 +325,10 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
     }
   };
 
-  const director = media?.wikidataDirectorBio;
+  const director =
+    media?.type === 'book'
+      ? (media?.authors?.length ? media.authors.join(', ') : media?.wikidataDirectorBio)
+      : media?.wikidataDirectorBio;
   const showProgressiveControls =
     emotionalRecall.length >= RECALL_DISCLOSURE_CHARS || recallBlurredWithContent;
   const modalClass = `poetic-sanctuary-modal${isWriting ? ' staging-one-focal-point' : ''}${saveCeremony ? ' save-ceremony' : ''}${closing ? ' closing' : ''}`;
@@ -353,11 +356,11 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
         {loading ? (
           <div class="poetic-loading" data-testid="poetic-loading">
             <div class="poetic-loading-pulse" />
-            <p class="poetic-loading-text">Opening the frame…</p>
+            <p class="poetic-loading-text">Opening canvas…</p>
           </div>
         ) : loadError ? (
           <div class="poetic-error" data-testid="poetic-error">
-            <p class="poetic-error-text">This title could not be retrieved from the vault.</p>
+            <p class="poetic-error-text">Could not load title details. Please try again.</p>
             <button type="button" class="poetic-retry-btn" data-testid="poetic-retry-btn" onClick={handleRetry}>
               Try Again
             </button>
@@ -371,7 +374,9 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
                   {media.year ? ` (${media.year})` : ''}
                 </h2>
                 {director && (
-                  <p class="poetic-film-director">Directed by {director}</p>
+                  <p class="poetic-film-director">
+                    {media?.type === 'book' ? `By ${director}` : `Directed by ${director}`}
+                  </p>
                 )}
               </div>
             )}
@@ -446,6 +451,7 @@ export function PoeticCaptureCanvas({ mediaId, onClose, onSave }: PoeticCaptureC
                       data-rating={`${num}`}
                       class={rating === num ? 'active' : ''}
                       aria-label={`Rate ${num} of 10`}
+                      title={`Rate ${num} of 10`}
                       aria-pressed={rating === num}
                       onClick={() => setRating(num)}
                     >

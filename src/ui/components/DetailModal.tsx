@@ -746,7 +746,9 @@ export function DetailModal({
 
         {media.streamingAvailability && media.streamingAvailability.length > 0 && (
           <div className="sanctuary-detail-section">
-            <h3 className="sanctuary-detail-section-title">Where to screen</h3>
+            <h3 className="sanctuary-detail-section-title">
+              {isBook ? 'Where to find or acquire' : 'Where to screen'}
+            </h3>
             <PlatformChips availability={media.streamingAvailability} />
           </div>
         )}
@@ -1152,7 +1154,7 @@ export function DetailModal({
                     <input
                       id={tagsFieldId}
                       type="text"
-                      placeholder="Tag this screening, press Enter"
+                      placeholder={isBook ? 'Tag this reading, press Enter' : 'Tag this title, press Enter'}
                       className="sanctuary-detail-input"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
@@ -1202,7 +1204,11 @@ export function DetailModal({
                     <textarea
                       id={notesFieldId}
                       value={notes}
-                      placeholder="What stayed with you after the credits?"
+                      placeholder={
+                        isBook
+                          ? 'What stayed with you after the final page?'
+                          : 'What stayed with you after the credits?'
+                      }
                       onInput={(e) =>
                         handleNotesChange((e.currentTarget as HTMLTextAreaElement).value)
                       }

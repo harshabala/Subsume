@@ -8,7 +8,7 @@ export const PLAIN_ENGLISH_PITCH =
 /** First-session copy: headlines, primary CTAs, and prompts before the user's first save */
 export const FIRST_SESSION_HEADLINE = 'Private movie & book journal for Chrome.';
 export const FIRST_SESSION_PITCH =
-  'Save what stayed with you while you browse. Films, shows, and books — captured on this device, not a spreadsheet or someone else’s cloud.';
+  'Save what stayed with you while you browse. Films, shows, and books, captured on this device, not a spreadsheet or someone else’s cloud.';
 export const FIRST_SESSION_POETRY_SUBTEXT =
   'Your private picture palace: afterglow and memory matter more than any algorithm’s tally.';
 
@@ -16,7 +16,7 @@ export const FIRST_SESSION_PILLARS = [
   {
     label: 'Discover',
     description:
-      'Quiet overlays on the pages you browse — screen and page — without breaking your flow.',
+      'Quiet overlays on the pages you browse, screen and page, without breaking your flow.',
   },
   {
     label: 'Capture',
@@ -26,7 +26,7 @@ export const FIRST_SESSION_PILLARS = [
   {
     label: 'Archive',
     description:
-      'An editorial ledger of screen and books, arranged by intent, not date filed.',
+      'An editorial archive of screen and books, arranged by intent, not date filed.',
   },
 ] as const;
 
@@ -40,7 +40,7 @@ export const ONBOARDING_STEP2_VALIDATE_LABEL = 'Validate & enter';
 
 export const FIRST_REFLECTION_HEADLINE = 'Save your first reflection';
 export const FIRST_REFLECTION_BODY =
-  'Private movie & book journal. Save your first reflection — search a title you care about and write what stayed with you. Everything stays on this device.';
+  'Private movie & book journal. Save your first reflection: search a title you care about and write what stayed with you. Everything stays on this device.';
 
 export const FIRST_GATE_SEARCH_CTA = 'Search for a title';
 export const FIRST_GATE_PRACTICE_CTA = 'Start with a practice title';
@@ -56,7 +56,7 @@ export const POPUP_SEARCH_ARIA_LABEL = 'Search titles to save';
 export const POPUP_SEARCHING_PROMPT = 'Searching titles…';
 export const POPUP_RECENT_ENTRIES_LABEL = 'Recent entries';
 export const POPUP_EMPTY_PITCH =
-  'Your archive is empty. Search a title and save what stayed with you — a private movie & book journal on this device.';
+  'Your archive is empty. Search a title and save what stayed with you: a private movie & book journal on this device.';
 export const POPUP_EMPTY_FLAVOR = 'Your first entry is ready to be saved.';
 export const POPUP_LOAD_SAMPLE_CTA = 'Load sample entries';
 
@@ -67,7 +67,7 @@ export const EMPTY_HOME_HERO_QUOTE =
 
 export const DISCOVERY_FIRST_BANNER_TITLE = 'Save your first reflection';
 export const DISCOVERY_FIRST_BANNER_BODY =
-  'Private movie & book journal — search a title you care about and write what stayed with you. That first reflection is the whole loop. Everything stays on this device.';
+  'Private movie & book journal: search a title you care about and write what stayed with you. That first reflection is the whole loop. Everything stays on this device.';
 
 export const FIRST_SESSION_COPY = {
   headline: FIRST_SESSION_HEADLINE,
@@ -160,7 +160,7 @@ export const PREFERRED_EDITION_BADGE = 'Preferred';
  * preferred edition is not a multi-work merge.
  */
 export const EDITIONS_SHARE_ARCHIVE_NOTE =
-  'Editions of this work share one archive relationship (status, notes, and verdict). “Use as preferred” marks the printing you mean — it does not merge separate catalog works.';
+  'Editions of this work share one archive relationship (status, notes, and verdict). “Use as preferred” marks the printing you mean: it does not merge separate catalog works.';
 
 /** Stats page — book reading section title (literary tone). */
 export const STATS_BOOK_SECTION_TITLE = 'On the page';
@@ -173,7 +173,7 @@ export const STATS_BOOK_PAGES_LABEL = 'pages among them';
 
 /** Stats footnote when page totals are partial */
 export const STATS_BOOK_PAGES_PARTIAL_NOTE =
-  'Page totals appear when an edition or progress records them — not every volume carries a count.';
+  'Page totals appear when an edition or progress records them: not every volume carries a count.';
 
 export function mediumLabel(type: WorkMedium | MediaType | 'movie' | 'tv' | 'book' | string): string {
   if (type === 'book') return MEDIUM_LABEL.book;
@@ -202,11 +202,11 @@ export const ARCHIVE_UPDATE_ERROR = 'Could not update archive. Try again.';
 
 /** After successful library export — stickiness / sole off-device copy. */
 export const EXPORT_KEEP_FILE_NOTICE =
-  "Keep this file — it's the only full copy of your sanctuary off this device.";
+  "Keep this file: it's the only full copy of your archive off this device.";
 
 /** Settings Backup & sync section honesty line. */
 export const BACKUP_SECTION_PITCH =
-  'Free forever on this device. Optional private backup (coming) — never sells your data.';
+  'Free forever on this device. Optional private backup (coming): never sells your data.';
 
 /** Honest paid-backup scaffold — no price, no checkout. */
 export const PAID_BACKUP_ROW_TITLE = 'Encrypted private backup (coming soon)';

@@ -386,7 +386,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
           <span className="lobby-act">Act I</span>
           <h2 className="lobby-heading">Discovery</h2>
           <p className="lobby-desc">
-            The lobby of your picture palace. Search the vault, follow what is moving on the live feed, and return to titles whose afterglow you have already inscribed.
+            The lobby of your picture palace. Search the archive, follow what is moving on the live feed, and return to titles whose reflections you have saved.
           </p>
           {shouldShowDiscoveryFirstInscriptionBanner(
             prefs?.firstInscriptionComplete,
@@ -461,14 +461,14 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
               className="optical-button"
               onClick={() => onNavigate('library')}
             >
-              {loading ? 'Open vault' : `Open vault (${libraryCount})`}
+              {loading ? 'Open archive' : `Open archive (${libraryCount})`}
             </button>
             <button
               type="button"
               className="optical-button sm"
               onClick={() => onNavigate('search')}
             >
-              Search the repertoire
+              Search titles
             </button>
             <span className="discovery-lobby-links" role="navigation" aria-label="More discovery paths">
               <button

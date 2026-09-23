@@ -81,14 +81,14 @@ The **Hardcover Library Archive** organizes everything you've captured — each 
 | **Book detection & catalogue** | Notice books on any page; resolve works via Open Library (no key) with optional Google Books enrichment | Content-script stages (JSON-LD, ISBN, domain adapters), Open Library + Google Books background clients |
 | **Screen + book page detection** | Structured title-page detection for films, series, documentaries, and books | JSON-LD + domain adapters; offline harness **27/30** correct medium (see `docs/detection-accuracy-report.md`) |
 | **Cross-medium recommendations** | Film/TV ↔ book bridges from catalogue relations and taste (opt-in) | Pref-gated generator; every candidate resolves to a real catalogue work |
-| **Subsume Dispatch** | Opt-in weekly multi-medium picks (screen + books) | Catalog-only by default; web-grounded path only when a real search adapter is capable |
+| **Weekly selection** | Opt-in weekly multi-medium picks (screen + books) | Catalog-only by default; web-grounded path only when a real search adapter is capable |
 | **Book alerts & import** | Author/keyword alerts; optional translation/edition kinds; Goodreads CSV seed | Best-effort OL matching; CSV is one-shot import, not continuous sync |
 | **Auteur Screenplay Dock** | Floating reflection notepad on any page | Shadow DOM, toggle collapse/expand, `destroy()` lifecycle |
 | **Chronological Filmography Tracking** | Follow directors, DPs, actors, writers across their full body of work | TMDb Person API, IndexedDB people store |
 | **Cross-Site Hover Cards** | Instant synopsis and status on film, show, or book titles | Isolated DOM injection, debounced pointer controllers, O(1) cache |
 | **Contextual LLM Recommendations** | AI discovery from your actual taste profile and notes | Two-stage prompting pipeline, OpenAI / Anthropic / Gemini adapters; catalog validation |
 | **Weekly Automated Digests** | Curated new release picks across streaming subscriptions | Chrome background alarms, dynamic rule/AI hybrid curation |
-| **Google Drive Sync** | Full library backup and restore via Google Drive | OAuth 2.0, multipart Drive API upload/download |
+| **Google Drive Backup** | On-demand and scheduled library backup to private Drive appData (snapshot archive, not live cross-device sync) | OAuth 2.0, multipart Drive API upload/download |
 
 ---
 
@@ -151,7 +151,7 @@ LLM calls (OpenAI, Anthropic, Gemini) are made **directly from the background se
 - Do **not** ship a public Chrome Web Store build that embeds shared or enterprise keys.
 - For team or enterprise distribution, route LLM calls through a **server-side proxy** that holds keys and enforces rate limits — do not rely on client-side key storage.
 
-### Google Drive Sync
+### Google Drive Backup
 
 Drive backup uses a **Web application OAuth client** (implicit grant via `chrome.identity.launchWebAuthFlow`). The client ID lives in [`src/shared/googleDriveOAuth.ts`](./src/shared/googleDriveOAuth.ts) — not in `manifest.json`. Production OAuth is registered for the **fixed extension ID** pinned by the manifest `key` (`ehbkfdgpbemaimepgeeflenhbbpgokoj`). Forks need their own Google Cloud OAuth client and redirect URI. See [Setup → Google Drive OAuth](#google-drive-oauth-optional) and [`docs/GOOGLE_DRIVE_SETUP.md`](./docs/GOOGLE_DRIVE_SETUP.md).
 
@@ -262,7 +262,7 @@ Subsume stands on the shoulders of incredible open-source tools and open data pr
 
 ## v0.3.0 — Multi-medium books expansion (Phase 0–3)
 
-Subsume treats **books as first-class** alongside film and TV: Open Library catalogue, ISBN/page detection, archive filters, author follow, catalog recommendations, multi-medium dispatch, adaptation relations, editions, reading stats, and optional Goodreads CSV import.
+Subsume treats **books as first-class** alongside film and TV: Open Library catalogue, ISBN/page detection, archive filters, author follow, catalog recommendations, multi-medium weekly curation, adaptation relations, editions, reading stats, and optional Goodreads CSV import.
 
 **Honest limits (production):**
 
