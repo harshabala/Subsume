@@ -28,6 +28,31 @@ async function writeEntries(entries: DiagnosticEntry[]): Promise<void> {
   await chrome.storage.local.set({ [STORAGE_KEY]: entries.slice(-MAX_ENTRIES) });
 }
 
+let writeQueue = Promise.resolve();
+
+/**
+ * Redact an email address for safe display in diagnostics and logs.
+ * e.g., "alice@example.com" -> "a***e@example.com"
+ * "me@domain.org" -> "m***@domain.org"
+ */
+export function redactEmail(email?: string): string {
+  if (!email || typeof email !== 'string') return '';
+  const trimmed = email.trim();
+  const atIndex = trimmed.indexOf('@');
+  if (atIndex <= 0) return '[REDACTED_EMAIL]';
+  const local = trimmed.slice(0, atIndex);
+  const domain = trimmed.slice(atIndex + 1);
+  if (local.includes('*')) return trimmed;
+  if (local.length <= 2) {
+    return `${local[0]}***@${domain}`;
+  }
+  return `${local[0]}***${local[local.length - 1]}@${domain}`;
+}
+
+export function _flushDiagnosticQueue(): Promise<void> {
+  return writeQueue;
+}
+
 /** Append a log line (safe from UI, background, or content script). */
 export async function appendDiagnosticLog(
   level: DiagnosticLevel,
@@ -45,13 +70,20 @@ export async function appendDiagnosticLog(
     message: cleanMessage,
     ...(cleanDetail ? { detail: cleanDetail } : {}),
   };
-  try {
-    const entries = await readEntries();
-    entries.push(entry);
-    await writeEntries(entries);
-  } catch {
-    console.warn('[Subsume diagnostic]', level, source, cleanMessage, cleanDetail);
-  }
+
+  writeQueue = writeQueue
+    .then(async () => {
+      try {
+        const entries = await readEntries();
+        entries.push(entry);
+        await writeEntries(entries);
+      } catch {
+        console.warn('[Subsume diagnostic]', level, source, cleanMessage, cleanDetail);
+      }
+    })
+    .catch(() => {});
+
+  return writeQueue;
 }
 
 export function logDiagnostic(
@@ -157,10 +189,15 @@ export function redactSecrets(text: string): string {
     // OpenAI / Anthropic / Google AI key patterns
     .replace(/sk-(?:proj-|ant-)?[A-Za-z0-9_-]{15,}/g, '[REDACTED_API_KEY]')
     .replace(/\bAIza[0-9A-Za-z_-]{35}\b/g, '[REDACTED_API_KEY]')
-    // Query parameter keys: ?apikey=... &key=... ?api_key=...
-    .replace(/([?&](?:apikey|api_key|key|token|secret)=)[^&\s"'`]+/gi, '$1[REDACTED]')
+    // Query parameter keys: ?apikey=... &key=... ?api_key=... &token=... &email=...
+    .replace(
+      /([?&](?:apikey|api_key|key|token|secret|access_token|refresh_token|id_token|auth|code|state|client_secret|password|email|user|username|session|signature|sig)=)[^&\s"'`]+/gi,
+      '$1[REDACTED]'
+    )
     // Specific preference fields in JSON: "tmdbApiKey": "...", etc.
     .replace(/("(?:tmdbApiKey|omdbApiKey|llmApiKey|llmSecondaryApiKey|googleBooksApiKey)"\s*:\s*")[^"]*(")/gi, '$1[REDACTED]$2')
     // Key/value pairs: apiKey: "...", api_key = "..."
-    .replace(/((?:api[_-]?key|client[_-]?secret|access[_-]?token|secret|password)["']?\s*[:=]\s*["']?)[^"'\s,;&`]+/gi, '$1[REDACTED]');
+    .replace(/((?:api[_-]?key|client[_-]?secret|access[_-]?token|secret|password)["']?\s*[:=]\s*["']?)[^"'\s,;&`]+/gi, '$1[REDACTED]')
+    // Email addresses in plaintext (do not match if preceded by asterisk or email characters)
+    .replace(/(?<![*A-Za-z0-9._%+-])[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g, (match) => redactEmail(match));
 }

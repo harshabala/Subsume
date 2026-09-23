@@ -1,4 +1,5 @@
 import { MediaRating } from '@/shared/types';
+import { getPreferences } from './storage';
 
 const BASE_URL = 'https://www.omdbapi.com/';
 
@@ -10,6 +11,24 @@ let omdbApiKey: string | null = null;
 export function setOmdbApiKey(key: string): void {
   omdbApiKey = key;
 }
+
+export async function ensureOmdbApiKey(): Promise<string | null> {
+  if (omdbApiKey && omdbApiKey.trim()) {
+    return omdbApiKey;
+  }
+  try {
+    const prefs = await getPreferences();
+    if (prefs?.omdbApiKey && prefs.omdbApiKey.trim()) {
+      omdbApiKey = prefs.omdbApiKey;
+      return omdbApiKey;
+    }
+  } catch {
+    // Non-fatal
+  }
+  return null;
+}
+
+export const getOmdbApiKey = ensureOmdbApiKey;
 
 interface OmdbRating {
   Source: string;
@@ -42,7 +61,8 @@ export async function fetchOmdbRatings(
   year: number,
   type: 'movie' | 'tv'
 ): Promise<MediaRating[]> {
-  if (!omdbApiKey || !omdbApiKey.trim()) {
+  const key = await ensureOmdbApiKey();
+  if (!key || !key.trim()) {
     return [];
   }
 
@@ -53,7 +73,7 @@ export async function fetchOmdbRatings(
   }
 
   const omdbType = type === 'tv' ? 'series' : 'movie';
-  const url = `${BASE_URL}?apikey=${encodeURIComponent(omdbApiKey)}&t=${encodeURIComponent(title)}&y=${year}&type=${omdbType}`;
+  const url = `${BASE_URL}?apikey=${encodeURIComponent(key)}&t=${encodeURIComponent(title)}&y=${year}&type=${omdbType}`;
 
   try {
     const res = await fetch(url);

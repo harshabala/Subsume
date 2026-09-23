@@ -3,6 +3,7 @@ import { MessageType, UserPreferences } from '@/shared/types';
 import { getPreferences, savePreferences } from '../storage';
 import { setTmdbApiKey } from '../tmdb';
 import { setOmdbApiKey } from '../omdb';
+import { setGoogleBooksApiKey } from '../googleBooks';
 import { buildContentPrefs } from '../contentPrefs';
 import { getFreeDataSourceStatuses } from '../dataSources';
 import { reconcileDispatchAlarm } from '../dispatch';
@@ -126,6 +127,7 @@ export const settingHandlers: MessageHandlerMap = {
     await savePreferences(merged);
     setTmdbApiKey(merged.tmdbApiKey ?? '');
     setOmdbApiKey(merged.omdbApiKey ?? '');
+    setGoogleBooksApiKey(merged.googleBooksApiKey ?? '');
     try {
       await reconcileDispatchAlarm(merged);
     } catch (err) {

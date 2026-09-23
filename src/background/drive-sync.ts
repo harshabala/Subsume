@@ -1,5 +1,6 @@
-import { logDiagnostic } from '../shared/diagnosticLog';
+import { logDiagnostic, redactEmail } from '../shared/diagnosticLog';
 import { GOOGLE_CLIENT_ID, GOOGLE_OAUTH_SCOPES } from './driveConfig';
+import { encryptKey, decryptKey, isEncryptedKey } from '../shared/keyCrypto';
 
 export { CONNECT_GOOGLE_DRIVE_TIMEOUT_MS } from '../shared/messages';
 
@@ -82,22 +83,42 @@ function buildAuthorizationUrl(interactive: boolean): string {
 
 async function readStoredToken(): Promise<{ accessToken: string; expiresAt: number } | null> {
   return new Promise((resolve) => {
-    chrome.storage.local.get(TOKEN_STORAGE_KEY, (result) => {
+    chrome.storage.local.get(TOKEN_STORAGE_KEY, async (result) => {
       const raw = result[TOKEN_STORAGE_KEY] as { accessToken?: string; expiresAt?: number } | undefined;
       if (!raw?.accessToken || typeof raw.expiresAt !== 'number') {
         resolve(null);
         return;
       }
-      resolve({ accessToken: raw.accessToken, expiresAt: raw.expiresAt });
+      try {
+        let token = raw.accessToken;
+        if (isEncryptedKey(token)) {
+          token = await decryptKey(token);
+        } else {
+          // Plaintext token detected: migrate transparently on read
+          try {
+            const encrypted = await encryptKey(token);
+            chrome.storage.local.set({
+              [TOKEN_STORAGE_KEY]: { accessToken: encrypted, expiresAt: raw.expiresAt },
+            });
+          } catch {
+            // non-fatal migration error
+          }
+        }
+        resolve({ accessToken: token, expiresAt: raw.expiresAt });
+      } catch {
+        logDiagnostic('warn', 'drive.token', 'Failed to decrypt stored Google Drive token');
+        resolve(null);
+      }
     });
   });
 }
 
 async function storeAccessToken(accessToken: string, expiresAt: number): Promise<void> {
   const safeExpiry = expiresAt - EXPIRY_BUFFER_MS;
+  const encrypted = await encryptKey(accessToken);
   return new Promise((resolve) => {
     chrome.storage.local.set(
-      { [TOKEN_STORAGE_KEY]: { accessToken, expiresAt: safeExpiry } },
+      { [TOKEN_STORAGE_KEY]: { accessToken: encrypted, expiresAt: safeExpiry } },
       () => resolve()
     );
   });
@@ -236,7 +257,7 @@ export async function connectGoogleDrive(): Promise<{ email?: string }> {
     try {
       const token = await persistFromFlow(true);
       const email = await resolveConnectedAccountLabel(token);
-      logDiagnostic('info', 'drive.connect', 'Google Drive connect succeeded', email ? `email=${email}` : undefined);
+      logDiagnostic('info', 'drive.connect', 'Google Drive connect succeeded', email ? `email=${redactEmail(email)}` : 'connected=true');
       return { email };
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);

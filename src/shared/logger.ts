@@ -28,7 +28,7 @@ function sanitizeForStorage(value: unknown): unknown {
   if (value && typeof value === 'object') {
     const sanitized: Record<string, unknown> = {};
     for (const [key, entry] of Object.entries(value)) {
-      if (/(?:api[_-]?key|secret|token|password)/i.test(key)) {
+      if (/(?:api[_-]?key|secret|token|password|email)/i.test(key)) {
         sanitized[key] = '[REDACTED]';
       } else {
         sanitized[key] = sanitizeForStorage(entry);

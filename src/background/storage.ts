@@ -563,20 +563,10 @@ async function dualWriteMedia(db: IDBPDatabase<SubsumeDB>, item: MediaItem): Pro
   await db.put('works', existing ? mergeDualWriteCatalogWork(mapped, existing) : mapped);
 }
 
-async function dualWriteLibrary(db: IDBPDatabase<SubsumeDB>, item: LibraryItem): Promise<void> {
-  if (!db.objectStoreNames.contains('relationships')) return;
-  const mapped = libraryItemToRelationship(item);
-  const existingRel = await db.get('relationships', item.mediaId);
-  // Preserve multi-session / edition fields that live only on the relationship.
-  await db.put('relationships', {
-    ...mapped,
-    preferredEditionId: item.preferredEditionId ?? existingRel?.preferredEditionId,
-    currentExperienceId: existingRel?.currentExperienceId,
-    ratingHistory: item.ratingHistory ?? existingRel?.ratingHistory,
-    latestReflectionExcerpt:
-      existingRel?.latestReflectionExcerpt ?? mapped.latestReflectionExcerpt,
-  });
-
+async function seedLibraryReflectionsAndExperiences(
+  db: IDBPDatabase<SubsumeDB>,
+  item: LibraryItem
+): Promise<void> {
   const media = await db.get('media', item.mediaId);
   const medium = media ? mediaTypeToMedium(media.type) : 'movie';
 
@@ -600,6 +590,23 @@ async function dualWriteLibrary(db: IDBPDatabase<SubsumeDB>, item: LibraryItem):
       }
     }
   }
+}
+
+async function dualWriteLibrary(db: IDBPDatabase<SubsumeDB>, item: LibraryItem): Promise<void> {
+  if (!db.objectStoreNames.contains('relationships')) return;
+  const mapped = libraryItemToRelationship(item);
+  const existingRel = await db.get('relationships', item.mediaId);
+  // Preserve multi-session / edition fields that live only on the relationship.
+  await db.put('relationships', {
+    ...mapped,
+    preferredEditionId: item.preferredEditionId ?? existingRel?.preferredEditionId,
+    currentExperienceId: existingRel?.currentExperienceId,
+    ratingHistory: item.ratingHistory ?? existingRel?.ratingHistory,
+    latestReflectionExcerpt:
+      existingRel?.latestReflectionExcerpt ?? mapped.latestReflectionExcerpt,
+  });
+
+  await seedLibraryReflectionsAndExperiences(db, item);
 }
 
 async function dualWritePerson(db: IDBPDatabase<SubsumeDB>, person: PersonItem): Promise<void> {
@@ -656,8 +663,18 @@ export function getDb() {
 
 export async function putMediaItem(item: MediaItem): Promise<void> {
   const db = await getDb();
-  await db.put('media', item);
-  await dualWriteMedia(db, item);
+  if (!db.objectStoreNames.contains('works')) {
+    await db.put('media', item);
+    return;
+  }
+  const tx = db.transaction(['media', 'works'], 'readwrite');
+  await tx.objectStore('media').put(item);
+  const mapped = mediaItemToCatalogWork(item);
+  const existing = await tx.objectStore('works').get(item.id);
+  await tx.objectStore('works').put(
+    existing ? mergeDualWriteCatalogWork(mapped, existing) : mapped,
+  );
+  await tx.done;
 }
 
 export async function putMediaItems(items: MediaItem[]): Promise<void> {
@@ -740,8 +757,26 @@ export async function putLibraryItem(item: LibraryItem): Promise<void> {
   const db = await getDb();
   normalizeLibraryItem(item);
   item.updatedAt = Date.now();
-  await db.put('library', item);
-  await dualWriteLibrary(db, item);
+  if (!db.objectStoreNames.contains('relationships')) {
+    await db.put('library', item);
+    return;
+  }
+  const tx = db.transaction(['library', 'relationships'], 'readwrite');
+  await tx.objectStore('library').put(item);
+  const mapped = libraryItemToRelationship(item);
+  const existingRel = await tx.objectStore('relationships').get(item.mediaId);
+  // Preserve multi-session / edition fields that live only on the relationship.
+  await tx.objectStore('relationships').put({
+    ...mapped,
+    preferredEditionId: item.preferredEditionId ?? existingRel?.preferredEditionId,
+    currentExperienceId: existingRel?.currentExperienceId,
+    ratingHistory: item.ratingHistory ?? existingRel?.ratingHistory,
+    latestReflectionExcerpt:
+      existingRel?.latestReflectionExcerpt ?? mapped.latestReflectionExcerpt,
+  });
+  await tx.done;
+
+  await seedLibraryReflectionsAndExperiences(db, item);
 }
 
 export async function getLibraryItem(mediaId: string): Promise<LibraryItem | undefined> {
