@@ -31,20 +31,6 @@ export function pickDisplayRating(ratings: MediaRating[]): { provider: RatingPro
   return null;
 }
 
-function ensureWrapper(img: HTMLImageElement): HTMLElement {
-  const parent = img.parentElement;
-  if (parent?.classList.contains(WRAP_CLASS)) {
-    return parent;
-  }
-
-  const wrap = document.createElement('span');
-  wrap.className = WRAP_CLASS;
-  wrap.style.cssText = 'position:relative;display:inline-block;line-height:0;vertical-align:top;';
-  img.parentNode?.insertBefore(wrap, img);
-  wrap.appendChild(img);
-  return wrap;
-}
-
 interface PlaqueProps {
   match: PosterMatch;
   inLibrary: boolean;
@@ -209,10 +195,26 @@ interface BadgeState {
 export class MuseumPlaqueManager {
   private badges = new Map<HTMLImageElement, BadgeState>();
   private libraryIds = new Set<string>();
+  private createdWrappers = new Set<HTMLElement>();
   private syncListener: ((message: unknown, sender: chrome.runtime.MessageSender) => void) | null = null;
 
   constructor() {
     this.setupSyncListener();
+  }
+
+  private ensureWrapper(img: HTMLImageElement): HTMLElement {
+    const parent = img.parentElement;
+    if (parent?.classList.contains(WRAP_CLASS)) {
+      return parent;
+    }
+
+    const wrap = document.createElement('span');
+    wrap.className = WRAP_CLASS;
+    wrap.style.cssText = 'position:relative;display:inline-block;line-height:0;vertical-align:top;';
+    img.parentNode?.insertBefore(wrap, img);
+    wrap.appendChild(img);
+    this.createdWrappers.add(wrap);
+    return wrap;
   }
 
   private setupSyncListener(): void {
@@ -252,7 +254,25 @@ export class MuseumPlaqueManager {
       render(null, state.mount);
       state.host.remove();
       img.removeAttribute(BADGE_ATTR);
+
+      const parent = img.parentElement;
+      if (parent && this.createdWrappers.has(parent)) {
+        parent.parentNode?.insertBefore(img, parent);
+        parent.remove();
+        this.createdWrappers.delete(parent);
+      }
     }
+
+    // Clean up any remaining wrapper elements created
+    for (const wrapper of this.createdWrappers) {
+      if (wrapper.parentNode) {
+        while (wrapper.firstChild) {
+          wrapper.parentNode.insertBefore(wrapper.firstChild, wrapper);
+        }
+        wrapper.remove();
+      }
+    }
+    this.createdWrappers.clear();
     this.badges.clear();
     this.libraryIds.clear();
   }
@@ -261,7 +281,7 @@ export class MuseumPlaqueManager {
     if (img.hasAttribute(BADGE_ATTR)) return;
 
     const mediaId = `tmdb_${match.type}_${match.tmdbId}`;
-    const wrapper = ensureWrapper(img);
+    const wrapper = this.ensureWrapper(img);
 
     const host = document.createElement('div');
     host.setAttribute(BADGE_ATTR, 'true');

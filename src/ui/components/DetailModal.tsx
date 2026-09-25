@@ -88,7 +88,9 @@ export function DetailModal({
     libraryItem?.preferredEditionId ?? media.preferredEditionId ?? '',
   );
   const [editionSaving, setEditionSaving] = useState(false);
+  const [editionError, setEditionError] = useState<string | null>(null);
   const [againBusy, setAgainBusy] = useState(false);
+  const [againError, setAgainError] = useState<string | null>(null);
   /** Draft while dragging the verdict range; commit only on pointer-up / blur / key change-end. */
   const [draftRating, setDraftRating] = useState(libraryItem?.userRating || 5);
   const draftRatingRef = useRef(draftRating);
@@ -277,13 +279,17 @@ export function DetailModal({
     setPreferredEditionId(editionId);
     if (!editionId) return;
     setEditionSaving(true);
+    setEditionError(null);
     try {
-      await sendMessage(MessageType.SET_PREFERRED_EDITION, {
+      const res = await sendMessage(MessageType.SET_PREFERRED_EDITION, {
         workId: media.id,
         editionId,
       });
-    } catch {
-      /* non-fatal */
+      if (res && !res.success) {
+        setEditionError(res.error || 'Failed to update preferred edition');
+      }
+    } catch (err) {
+      setEditionError(err instanceof Error ? err.message : 'Failed to update preferred edition');
     } finally {
       setEditionSaving(false);
     }
@@ -292,19 +298,24 @@ export function DetailModal({
   const handleReadOrWatchAgain = async () => {
     if (againBusy || !libraryItem) return;
     setAgainBusy(true);
+    setAgainError(null);
     try {
       const kind = isBook ? 'read' : 'watch';
-      await sendMessage(MessageType.CREATE_EXPERIENCE, {
+      const res = await sendMessage(MessageType.CREATE_EXPERIENCE, {
         workId: media.id,
         kind,
         status: 'in_progress',
         editionId: preferredEditionId || undefined,
       });
+      if (res && !res.success) {
+        setAgainError(res.error || 'Failed to start experience');
+        return;
+      }
       onUpdateStatus?.('watching');
       setExperienceRefreshKey((k) => k + 1);
       playSaveCeremony();
-    } catch {
-      /* non-fatal */
+    } catch (err) {
+      setAgainError(err instanceof Error ? err.message : 'Failed to start experience');
     } finally {
       setAgainBusy(false);
     }
@@ -348,8 +359,9 @@ export function DetailModal({
     }, 400);
   };
 
-  /** Flush pending debounced notes + progress so unmount/close cannot drop user input. */
+  /** Flush pending debounced notes + progress + draft rating so unmount/close cannot drop user input. */
   const flushPendingSaves = useCallback(() => {
+    commitDraftRating();
     if (notesDebounceRef.current) {
       clearTimeout(notesDebounceRef.current);
       notesDebounceRef.current = undefined;
@@ -373,7 +385,7 @@ export function DetailModal({
       pendingProgressRef.current = null;
       commitReadingProgress(pending.page, pending.total);
     }
-  }, [commitReadingProgress, onUpdateNotes]);
+  }, [commitDraftRating, commitReadingProgress, onUpdateNotes]);
 
   const flushPendingSavesRef = useRef(flushPendingSaves);
   flushPendingSavesRef.current = flushPendingSaves;
@@ -532,14 +544,42 @@ export function DetailModal({
   const requestCloseRef = useRef(requestClose);
   requestCloseRef.current = requestClose;
 
-  // Focus trap + Esc + restore focus + inert app shell (Wave 4 a11y)
+  // Focus trap + Esc + restore focus + inert background isolation (Wave 4 a11y)
   useEffect(() => {
     previousFocusRef.current = document.activeElement as HTMLElement | null;
 
-    const shell = document.getElementById('app');
-    if (shell) {
-      shell.setAttribute('inert', '');
-      shell.setAttribute('aria-hidden', 'true');
+    const inertedElements: Array<{ el: Element; hadInert: boolean; prevAriaHidden: string | null }> = [];
+    const applyInert = (el: Element) => {
+      inertedElements.push({
+        el,
+        hadInert: el.hasAttribute('inert'),
+        prevAriaHidden: el.getAttribute('aria-hidden'),
+      });
+      el.setAttribute('inert', '');
+      el.setAttribute('aria-hidden', 'true');
+    };
+
+    const shell = document.querySelector('.app-nav-shell');
+    if (shell && (!modalRef.current || !shell.contains(modalRef.current))) {
+      applyInert(shell);
+    }
+
+    const modalEl = modalRef.current;
+    if (modalEl) {
+      const mainContent = document.querySelector('.main-content') || document.body;
+      let curr: Element | null = modalEl;
+      while (curr && curr !== mainContent && curr.parentElement) {
+        const parentEl: HTMLElement | null = curr.parentElement;
+        if (!parentEl) break;
+        const children: Element[] = Array.from(parentEl.children);
+        for (const sibling of children) {
+          if (sibling !== curr && !sibling.contains(modalEl)) {
+            applyInert(sibling);
+          }
+        }
+        if (parentEl === mainContent) break;
+        curr = parentEl;
+      }
     }
 
     const focusDialog = () => {
@@ -582,9 +622,17 @@ export function DetailModal({
     return () => {
       window.clearTimeout(focusTimer);
       document.removeEventListener('keydown', handleKeyDown);
-      if (shell) {
-        shell.removeAttribute('inert');
-        shell.removeAttribute('aria-hidden');
+      for (const { el, hadInert, prevAriaHidden } of inertedElements) {
+        if (hadInert) {
+          el.setAttribute('inert', '');
+        } else {
+          el.removeAttribute('inert');
+        }
+        if (prevAriaHidden !== null) {
+          el.setAttribute('aria-hidden', prevAriaHidden);
+        } else {
+          el.removeAttribute('aria-hidden');
+        }
       }
       previousFocusRef.current?.focus();
     };
@@ -698,7 +746,9 @@ export function DetailModal({
 
         {media.streamingAvailability && media.streamingAvailability.length > 0 && (
           <div className="sanctuary-detail-section">
-            <h3 className="sanctuary-detail-section-title">Where to screen</h3>
+            <h3 className="sanctuary-detail-section-title">
+              {isBook ? 'Where to find or acquire' : 'Where to screen'}
+            </h3>
             <PlatformChips availability={media.streamingAvailability} />
           </div>
         )}
@@ -991,6 +1041,11 @@ export function DetailModal({
                           ))}
                         </select>
                       </label>
+                      {editionError && (
+                        <p className="sanctuary-detail-related-error" role="alert" style={{ marginTop: '8px' }}>
+                          {editionError}
+                        </p>
+                      )}
                     </div>
                   )}
 
@@ -1058,6 +1113,11 @@ export function DetailModal({
                       >
                         {againBusy ? 'Starting…' : againLabel}
                       </button>
+                      {againError && (
+                        <p className="sanctuary-detail-related-error" role="alert" style={{ marginTop: '8px' }}>
+                          {againError}
+                        </p>
+                      )}
                     </div>
                   )}
 
@@ -1094,7 +1154,7 @@ export function DetailModal({
                     <input
                       id={tagsFieldId}
                       type="text"
-                      placeholder="Tag this screening, press Enter"
+                      placeholder={isBook ? 'Tag this reading, press Enter' : 'Tag this title, press Enter'}
                       className="sanctuary-detail-input"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
@@ -1144,7 +1204,11 @@ export function DetailModal({
                     <textarea
                       id={notesFieldId}
                       value={notes}
-                      placeholder="What stayed with you after the credits?"
+                      placeholder={
+                        isBook
+                          ? 'What stayed with you after the final page?'
+                          : 'What stayed with you after the credits?'
+                      }
                       onInput={(e) =>
                         handleNotesChange((e.currentTarget as HTMLTextAreaElement).value)
                       }

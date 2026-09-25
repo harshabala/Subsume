@@ -44,12 +44,22 @@
   font-size: 14px;
   color: var(--fg-base, #fff);
   cursor: pointer;
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
-.first-inscription-gate-practice:hover,
+.first-inscription-gate-practice:hover {
+  border-color: var(--accent, #c4a574);
+}
+
 .first-inscription-gate-practice:focus-visible {
   border-color: var(--accent, #c4a574);
-  outline: none;
+  outline: 2px solid var(--ring, var(--primary));
+  outline-offset: 2px;
 }
 
 .first-inscription-gate-practice:disabled {
@@ -69,12 +79,22 @@
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 3px;
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
-.first-inscription-gate-skip:hover,
+.first-inscription-gate-skip:hover {
+  color: var(--fg-base, #fff);
+}
+
 .first-inscription-gate-skip:focus-visible {
   color: var(--fg-base, #fff);
-  outline: none;
+  outline: 2px solid var(--ring, var(--primary));
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {

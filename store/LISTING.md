@@ -28,6 +28,8 @@ Save films, shows, and books from any page. Capture what stayed with you and dis
 ## Detailed description
 
 ```
+Subsume is a private movie and book journal for Chrome. Free core forever on this device. Optional paid private backup later. Never sells your data.
+
 Subsume is a private sanctuary for films, shows, and books in your browser—not a social feed, not an ad surface.
 
 While you browse, Subsume can quietly notice posters, titles, and books (including ISBNs on the page), and offer a restrained plaque or hover card so you can reflect without leaving the page. When something stays with you, capture it with notes, emotional ratings, and living intents (memory, revisit, wishlist). Your archive is organized like a hardcover catalogue, not a spreadsheet of algorithmic scores.

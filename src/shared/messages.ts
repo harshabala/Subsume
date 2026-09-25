@@ -57,11 +57,18 @@ export type MessageHandlerMap = Partial<{
   [K in MessageType]: (payload: unknown, sender: chrome.runtime.MessageSender) => Promise<unknown> | unknown;
 }>;
 
+export interface MessageRouterOptions {
+  onBeforeDispatch?: () => Promise<unknown>;
+}
+
 /**
  * Create a message router for the background service worker.
  * Registers chrome.runtime.onMessage and dispatches to handlers.
  */
-export function createMessageRouter(handlers: MessageHandlerMap): void {
+export function createMessageRouter(
+  handlers: MessageHandlerMap,
+  options?: MessageRouterOptions
+): void {
   chrome.runtime.onMessage.addListener(
     (
       message: ExtensionMessage,
@@ -87,8 +94,16 @@ export function createMessageRouter(handlers: MessageHandlerMap): void {
       ]);
 
       if (!isExtensionOrigin && !ALLOWED_CONTENT_SCRIPT_MESSAGES.has(message.type)) {
-        console.warn(`[Subsume] Blocked unauthorized message type ${message.type} from origin ${sender.url}`);
-        logDiagnostic('warn', 'bg.router', `Blocked message ${message.type}`, sender.url ?? '');
+        let sanitizedOrigin = '';
+        if (sender.url) {
+          try {
+            sanitizedOrigin = new URL(sender.url).origin;
+          } catch {
+            sanitizedOrigin = '[invalid-url]';
+          }
+        }
+        console.warn(`[Subsume] Blocked unauthorized message type ${message.type} from origin ${sanitizedOrigin}`);
+        logDiagnostic('warn', 'bg.router', `Blocked message ${message.type}`, sanitizedOrigin);
         sendResponse({
           success: false,
           error: `Unauthorized message type for this origin: ${message.type}`,
@@ -105,6 +120,24 @@ export function createMessageRouter(handlers: MessageHandlerMap): void {
           error: `Unknown message type: ${message.type}`,
         });
         return false;
+      }
+
+      if (options?.onBeforeDispatch) {
+        Promise.resolve(options.onBeforeDispatch())
+          .catch((err) => {
+            console.error('[Subsume] Error in onBeforeDispatch:', err);
+          })
+          .then(() => handler(message.payload, sender))
+          .then((data) => sendResponse({ success: true, data }))
+          .catch((err) => {
+            const msg = err instanceof Error ? err.message : String(err);
+            logDiagnostic('error', 'bg.handler', msg, `type=${message.type}`);
+            sendResponse({
+              success: false,
+              error: msg,
+            });
+          });
+        return true;
       }
 
       const result = handler(message.payload, sender);

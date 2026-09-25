@@ -7,6 +7,31 @@ export const POSTER_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
 const CACHE = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_TTL = 1000 * 60 * 60 * 24; // 24 hours
+export const MAX_CACHE_SIZE = 500;
+
+function setCacheEntry(key: string, data: unknown): void {
+  if (CACHE.has(key)) {
+    CACHE.delete(key);
+  } else if (CACHE.size >= MAX_CACHE_SIZE) {
+    const oldestKey = CACHE.keys().next().value;
+    if (oldestKey !== undefined) {
+      CACHE.delete(oldestKey);
+    }
+  }
+  CACHE.set(key, { data, timestamp: Date.now() });
+}
+
+export function clearTmdbCache(): void {
+  CACHE.clear();
+}
+
+export function getTmdbCacheSizeForTesting(): number {
+  return CACHE.size;
+}
+
+export function setTmdbCacheEntryForTesting(key: string, data: unknown): void {
+  setCacheEntry(key, data);
+}
 
 let tmdbApiKey: string | null = null;
 
@@ -53,12 +78,25 @@ export function makeBearerHeaders(key: string): RequestInit {
   return { headers: { Authorization: `Bearer ${key}` } };
 }
 
-function getTmdbApiKey(): string {
-  if (!tmdbApiKey) {
-    throw new Error('TMDB API key not configured. Please set it in Settings.');
+export async function ensureTmdbApiKey(): Promise<string> {
+  if (tmdbApiKey && tmdbApiKey.trim()) {
+    return tmdbApiKey;
   }
-  return tmdbApiKey;
+  try {
+    const prefs = await getPreferences();
+    if (prefs?.tmdbApiKey && prefs.tmdbApiKey.trim()) {
+      tmdbApiKey = prefs.tmdbApiKey;
+      loadGenreMap().catch(() => {});
+      return tmdbApiKey;
+    }
+  } catch {
+    // Non-fatal, fallback to error below
+  }
+  throw new Error('TMDB API key not configured. Please set it in Settings.');
 }
+
+export const getTmdbApiKey = ensureTmdbApiKey;
+
 
 interface TmdbSearchDetails {
   id: number;
@@ -89,7 +127,7 @@ async function loadGenreMap(): Promise<void> {
   if (!genreMapPromise) {
     genreMapPromise = (async () => {
       try {
-        const key = getTmdbApiKey();
+        const key = await ensureTmdbApiKey();
         const [movieRes, tvRes] = await Promise.all([
           fetchWithRetry(`${BASE_URL}/genre/movie/list?language=en-US`, 3, 500, makeBearerHeaders(key)),
           fetchWithRetry(`${BASE_URL}/genre/tv/list?language=en-US`, 3, 500, makeBearerHeaders(key)),
@@ -248,7 +286,7 @@ async function fetchTheatricalReleaseDates(
   region: string
 ): Promise<string[]> {
   try {
-    const key = getTmdbApiKey();
+    const key = await ensureTmdbApiKey();
     const url = `${BASE_URL}/movie/${tmdbNumericId}/release_dates`;
     const res = await fetchWithRetry(url, 3, 500, makeBearerHeaders(key));
     if (!res.ok) return [];
@@ -287,7 +325,7 @@ export async function fetchWatchProviders(
   }
 
   try {
-    const key = getTmdbApiKey();
+    const key = await ensureTmdbApiKey();
     const url = `${BASE_URL}/${type}/${tmdbNumericId}/watch/providers`;
     const res = await fetchWithRetry(url, 3, 500, makeBearerHeaders(key));
     if (!res.ok) return [];
@@ -304,7 +342,7 @@ export async function fetchWatchProviders(
       theatricalReleaseDates,
     });
 
-    CACHE.set(cacheKey, { data: mapped, timestamp: Date.now() });
+    setCacheEntry(cacheKey, mapped);
     return mapped;
   } catch (err) {
     console.error('[Subsume TMDB] Watch providers fetch failed', err);
@@ -388,7 +426,8 @@ export async function searchTitle(
   // If we don't know the type, we search both and take the best match.
   // Better approach: use Multi-Search, but multi-search doesn't easily let us filter by year.
   
-  const authOpts = makeBearerHeaders(getTmdbApiKey());
+  const key = await ensureTmdbApiKey();
+  const authOpts = makeBearerHeaders(key);
 
   const searchMovie = async () => {
     let url = `${BASE_URL}/search/movie?query=${encodeURIComponent(title)}&include_adult=false`;
@@ -452,7 +491,7 @@ export async function searchTitle(
     const baseItem = mapTmdbToMediaItem(bestResult, finalType);
     const withRatings = await enrichMediaWithOmdbRatings(baseItem);
     const resultItem = await enrichMediaWithStreaming(withRatings, undefined, releaseDate);
-    CACHE.set(cacheKey, { data: resultItem, timestamp: Date.now() });
+    setCacheEntry(cacheKey, resultItem);
     return resultItem;
   } catch (err) {
     console.error('[Subsume TMDB] Search failed', err);
@@ -472,7 +511,8 @@ export async function searchTitles(
     return cached.data as MediaItem[] || [];
   }
 
-  const authOpts = makeBearerHeaders(getTmdbApiKey());
+  const key = await ensureTmdbApiKey();
+  const authOpts = makeBearerHeaders(key);
 
   const searchMovie = async () => {
     let url = `${BASE_URL}/search/movie?query=${encodeURIComponent(query)}&include_adult=false&page=1`;
@@ -515,7 +555,7 @@ export async function searchTitles(
       enrichMediaWithOmdbRatings,
       3
     );
-    CACHE.set(cacheKey, { data: limited, timestamp: Date.now() });
+    setCacheEntry(cacheKey, limited);
     return limited;
   } catch (err) {
     console.error('[Subsume TMDB] Multi-search failed', err);
@@ -543,7 +583,8 @@ export async function getLatestReleases(
   await loadGenreMap();
   let url = `${BASE_URL}`;
   
-  const authOpts = makeBearerHeaders(getTmdbApiKey());
+  const key = await ensureTmdbApiKey();
+  const authOpts = makeBearerHeaders(key);
 
   if (prefs && (prefs.favoriteGenres.length > 0 || prefs.platforms.length > 0 || recentDays !== 60)) {
     url += `/discover/${type}?language=en-US&page=1&sort_by=popularity.desc`;

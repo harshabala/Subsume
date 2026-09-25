@@ -1,15 +1,59 @@
 import { MediaRating } from '@/shared/types';
+import { getPreferences } from './storage';
 
 const BASE_URL = 'https://www.omdbapi.com/';
 
 const CACHE = new Map<string, { data: MediaRating[]; timestamp: number }>();
 const CACHE_TTL = 1000 * 60 * 60 * 24; // 24 hours
+export const MAX_CACHE_SIZE = 500;
+
+function setCacheEntry(key: string, data: MediaRating[]): void {
+  if (CACHE.has(key)) {
+    CACHE.delete(key);
+  } else if (CACHE.size >= MAX_CACHE_SIZE) {
+    const oldestKey = CACHE.keys().next().value;
+    if (oldestKey !== undefined) {
+      CACHE.delete(oldestKey);
+    }
+  }
+  CACHE.set(key, { data, timestamp: Date.now() });
+}
+
+export function clearOmdbCache(): void {
+  CACHE.clear();
+}
+
+export function getOmdbCacheSizeForTesting(): number {
+  return CACHE.size;
+}
+
+export function setOmdbCacheEntryForTesting(key: string, data: MediaRating[]): void {
+  setCacheEntry(key, data);
+}
 
 let omdbApiKey: string | null = null;
 
 export function setOmdbApiKey(key: string): void {
   omdbApiKey = key;
 }
+
+export async function ensureOmdbApiKey(): Promise<string | null> {
+  if (omdbApiKey && omdbApiKey.trim()) {
+    return omdbApiKey;
+  }
+  try {
+    const prefs = await getPreferences();
+    if (prefs?.omdbApiKey && prefs.omdbApiKey.trim()) {
+      omdbApiKey = prefs.omdbApiKey;
+      return omdbApiKey;
+    }
+  } catch {
+    // Non-fatal
+  }
+  return null;
+}
+
+export const getOmdbApiKey = ensureOmdbApiKey;
 
 interface OmdbRating {
   Source: string;
@@ -42,7 +86,8 @@ export async function fetchOmdbRatings(
   year: number,
   type: 'movie' | 'tv'
 ): Promise<MediaRating[]> {
-  if (!omdbApiKey || !omdbApiKey.trim()) {
+  const key = await ensureOmdbApiKey();
+  if (!key || !key.trim()) {
     return [];
   }
 
@@ -53,7 +98,7 @@ export async function fetchOmdbRatings(
   }
 
   const omdbType = type === 'tv' ? 'series' : 'movie';
-  const url = `${BASE_URL}?apikey=${encodeURIComponent(omdbApiKey)}&t=${encodeURIComponent(title)}&y=${year}&type=${omdbType}`;
+  const url = `${BASE_URL}?apikey=${encodeURIComponent(key)}&t=${encodeURIComponent(title)}&y=${year}&type=${omdbType}`;
 
   try {
     const res = await fetch(url);
@@ -67,7 +112,7 @@ export async function fetchOmdbRatings(
       const isTransientError =
         error.includes('Invalid API key') || error.toLowerCase().includes('limit');
       if (!isTransientError) {
-        CACHE.set(cacheKey, { data: [], timestamp: Date.now() });
+        setCacheEntry(cacheKey, []);
       }
       return [];
     }
@@ -92,7 +137,7 @@ export async function fetchOmdbRatings(
       }
     }
 
-    CACHE.set(cacheKey, { data: ratings, timestamp: Date.now() });
+    setCacheEntry(cacheKey, ratings);
     return ratings;
   } catch (err) {
     console.error('[Subsume OMDb] Fetch failed', err);

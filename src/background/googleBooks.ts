@@ -12,12 +12,38 @@ import type {
 } from '@/shared/catalogTypes';
 import { isValidIsbn, normalizeIsbn, toIsbn13 } from '@/shared/isbn';
 import type { BookSearchResult } from './openLibrary';
+import { getPreferences } from './storage';
 
 const GB_BASE = 'https://www.googleapis.com/books/v1/volumes';
 const REQUEST_TIMEOUT_MS = 12_000;
 const CACHE_TTL_MS = 1000 * 60 * 60 * 6; // 6 hours
 
 const CACHE = new Map<string, { data: unknown; timestamp: number }>();
+
+let googleBooksApiKey: string | null = null;
+
+export function setGoogleBooksApiKey(key: string): void {
+  googleBooksApiKey = key;
+}
+
+export async function ensureGoogleBooksApiKey(): Promise<string | null> {
+  if (googleBooksApiKey && googleBooksApiKey.trim()) {
+    return googleBooksApiKey;
+  }
+  try {
+    const prefs = await getPreferences();
+    if (prefs?.googleBooksApiKey && prefs.googleBooksApiKey.trim()) {
+      googleBooksApiKey = prefs.googleBooksApiKey;
+      return googleBooksApiKey;
+    }
+  } catch {
+    // Non-fatal
+  }
+  return null;
+}
+
+export const getGoogleBooksApiKey = ensureGoogleBooksApiKey;
+
 
 // ─── Google Books raw API shapes (subset) ────────────────────────────
 
@@ -80,13 +106,31 @@ function cacheGet<T>(key: string): T | undefined {
   return entry.data as T;
 }
 
+export const MAX_CACHE_SIZE = 500;
+
 function cacheSet(key: string, data: unknown): void {
+  if (CACHE.has(key)) {
+    CACHE.delete(key);
+  } else if (CACHE.size >= MAX_CACHE_SIZE) {
+    const oldestKey = CACHE.keys().next().value;
+    if (oldestKey !== undefined) {
+      CACHE.delete(oldestKey);
+    }
+  }
   CACHE.set(key, { data, timestamp: Date.now() });
 }
 
 /** Test helper — clears in-memory cache. */
 export function clearGoogleBooksCache(): void {
   CACHE.clear();
+}
+
+export function getGoogleBooksCacheSizeForTesting(): number {
+  return CACHE.size;
+}
+
+export function setGoogleBooksCacheEntryForTesting(key: string, data: unknown): void {
+  cacheSet(key, data);
 }
 
 // ─── ID helpers ──────────────────────────────────────────────────────
@@ -334,8 +378,9 @@ export async function searchGoogleBooks(
   const q = query?.trim();
   if (!q) return [];
 
+  const effectiveKey = apiKey ?? (await ensureGoogleBooksApiKey()) ?? undefined;
   const maxResults = Math.min(Math.max(limit ?? 10, 1), 40);
-  const cacheKey = `gb_search_${q.toLowerCase()}_${maxResults}_${apiKey ? 'k' : 'anon'}`;
+  const cacheKey = `gb_search_${q.toLowerCase()}_${maxResults}_${effectiveKey ? 'k' : 'anon'}`;
   const cached = cacheGet<BookSearchResult[]>(cacheKey);
   if (cached) return cached;
 
@@ -344,8 +389,8 @@ export async function searchGoogleBooks(
     maxResults,
     printType: 'books',
   };
-  if (apiKey?.trim()) {
-    params.key = apiKey.trim();
+  if (effectiveKey?.trim()) {
+    params.key = effectiveKey.trim();
   }
 
   const data = await fetchJson<GbVolumesResponse>(buildVolumesUrl(params));
@@ -383,8 +428,9 @@ export async function resolveGoogleBooksIsbn(
   const normalized = normalizeIsbn(isbn);
   if (!isValidIsbn(normalized)) return null;
 
+  const effectiveKey = apiKey ?? (await ensureGoogleBooksApiKey()) ?? undefined;
   const lookup = toIsbn13(normalized) ?? normalized;
-  const cacheKey = `gb_isbn_${lookup}_${apiKey ? 'k' : 'anon'}`;
+  const cacheKey = `gb_isbn_${lookup}_${effectiveKey ? 'k' : 'anon'}`;
   const cached = cacheGet<{ work: CatalogWork; edition: BookEdition } | null>(cacheKey);
   if (cached !== undefined) return cached;
 
@@ -393,8 +439,8 @@ export async function resolveGoogleBooksIsbn(
     maxResults: 1,
     printType: 'books',
   };
-  if (apiKey?.trim()) {
-    params.key = apiKey.trim();
+  if (effectiveKey?.trim()) {
+    params.key = effectiveKey.trim();
   }
 
   const data = await fetchJson<GbVolumesResponse>(buildVolumesUrl(params));

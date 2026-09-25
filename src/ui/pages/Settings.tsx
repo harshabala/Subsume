@@ -27,6 +27,10 @@ import {
   PLAIN_ENGLISH_PITCH,
   EXPORT_KEEP_FILE_NOTICE,
   BACKUP_SECTION_PITCH,
+  PAID_BACKUP_ROW_TITLE,
+  PAID_BACKUP_ROW_BODY,
+  PAID_BACKUP_NOTIFY_LABEL,
+  PAID_BACKUP_NOTIFY_HINT,
 } from '@/shared/productCopy';
 import { SettingsDiagnosticsPanel } from '../components/SettingsDiagnosticsPanel';
 import { useNotice } from '../components/NoticeProvider';
@@ -643,10 +647,10 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
                 }
                 className="settings-toggle-checkbox"
               />
-              <span className="settings-toggle-text-lg">Web-grounded dispatch</span>
+              <span className="settings-toggle-text-lg">Web-grounded curation</span>
             </label>
             <p className="settings-toggle-help">
-              When your LLM provider has a working web-search adapter, dispatch may run bounded
+              When your LLM provider has a working web-search adapter, weekly curation may run bounded
               web searches and attach source citations. Default is off.
             </p>
             <p className="settings-help-text-italic" role="note">
@@ -672,7 +676,7 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
               Generate now
             </button>
             <p className="settings-help-text-italic">
-              Builds a fresh multi-medium selection when dispatch is enabled; otherwise regenerates the screen digest.
+              Builds a fresh multi-medium selection when weekly selection is enabled; otherwise regenerates the screen digest.
             </p>
           </div>
         </div>
@@ -1137,6 +1141,35 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
               </div>
             </div>
 
+            <div className="settings-section-divider" data-testid="paid-backup-scaffold">
+              <span className="settings-field-label">{PAID_BACKUP_ROW_TITLE}</span>
+              <p className="settings-panel-hint">{PAID_BACKUP_ROW_BODY}</p>
+              <label className="settings-toggle-label">
+                <input
+                  type="checkbox"
+                  className="settings-toggle-checkbox"
+                  checked={Boolean(prefs?.paidBackupNotifyRequested)}
+                  onChange={async (e) => {
+                    if (!prefs) return;
+                    const requested = e.currentTarget.checked;
+                    const next = {
+                      ...prefs,
+                      paidBackupNotifyRequested: requested,
+                      paidBackupNotifyAt: requested ? Date.now() : undefined,
+                    };
+                    setPrefs(next);
+                    try {
+                      await sendMessage(MessageType.SET_PREFERENCES, next);
+                    } catch (err) {
+                      showNotice(`Could not save that preference: ${formatUserError(err)}`, 'error');
+                    }
+                  }}
+                />
+                <span className="settings-toggle-text-sm">{PAID_BACKUP_NOTIFY_LABEL}</span>
+              </label>
+              <p className="settings-toggle-help">{PAID_BACKUP_NOTIFY_HINT}</p>
+            </div>
+
             <div className="settings-section-divider">
               <span className="settings-field-label">Indian cinema highlight catalogue</span>
               <p className="settings-panel-hint">
@@ -1227,8 +1260,8 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
           <h3 className="settings-panel-heading">Start here</h3>
           <p className="settings-start-here-pitch">{PLAIN_ENGLISH_PITCH}</p>
           <p className="settings-start-here-help">
-            Your first inscription is a short note about a film, show, or book that stayed with you.
-            Search for a title, then save what you felt — that unlocks the full house layout.
+            Your first reflection is a short note about a film, show, or book that stayed with you.
+            Search for a title, then save what you felt: that unlocks the full house layout.
           </p>
           <div className="settings-start-here-actions">
             {onNavigate && (

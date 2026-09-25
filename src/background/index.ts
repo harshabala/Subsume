@@ -3,6 +3,7 @@ import { logDiagnostic } from '@/shared/diagnosticLog';
 import { logger } from '@/shared/logger';
 import { setTmdbApiKey } from './tmdb';
 import { setOmdbApiKey } from './omdb';
+import { setGoogleBooksApiKey } from './googleBooks';
 import { getPreferences, mergeSeedCatalogIfVersionBehind } from './storage';
 import { setupLifecycleAndAlarms } from './events';
 
@@ -32,32 +33,50 @@ const handlers: MessageHandlerMap = {
 
 export { handlers };
 
-createMessageRouter(handlers);
+let initPreferencesPromise: Promise<void> | null = null;
+
+export function ensurePreferencesLoaded(): Promise<void> {
+  if (!initPreferencesPromise) {
+    initPreferencesPromise = getPreferences()
+      .then((prefs) => {
+        if (prefs.tmdbApiKey) {
+          setTmdbApiKey(prefs.tmdbApiKey);
+        }
+        if (prefs.omdbApiKey) {
+          setOmdbApiKey(prefs.omdbApiKey);
+        }
+        if (prefs.googleBooksApiKey) {
+          setGoogleBooksApiKey(prefs.googleBooksApiKey);
+        }
+      })
+      .catch((err) => {
+        initPreferencesPromise = null;
+        logger.error('[Subsume] Failed to initialize background API preferences:', err);
+      });
+  }
+  return initPreferencesPromise;
+}
+
+export function _resetInitPreferencesPromiseForTesting(): void {
+  initPreferencesPromise = null;
+}
+
+// Ensure startup hydration begins immediately
+ensurePreferencesLoaded();
+
+// Register message router, awaiting preference hydration before dispatching
+createMessageRouter(handlers, {
+  onBeforeDispatch: () => ensurePreferencesLoaded(),
+});
 
 console.info('[Subsume] Extension ID (compare to Google OAuth Chrome client Item ID):', chrome.runtime.id);
 logDiagnostic('info', 'bg.startup', 'Background service worker started', `extensionId=${chrome.runtime.id}`);
 
-getPreferences()
-  .then((prefs) => {
-    if (prefs.tmdbApiKey) {
-      setTmdbApiKey(prefs.tmdbApiKey);
-    }
-    if (prefs.omdbApiKey) {
-      setOmdbApiKey(prefs.omdbApiKey);
-    }
-  })
-  .catch((err) => {
-    logger.error('[Subsume] Failed to initialize background API preferences:', err);
-  });
+import { healFirstInscriptionIfLibraryNonEmpty } from './activationHooks';
 
-// Upgrade heal: existing libraries should not stay behind first-inscription gate
-import('./activationHooks')
-  .then(({ healFirstInscriptionIfLibraryNonEmpty }) =>
-    healFirstInscriptionIfLibraryNonEmpty(),
-  )
-  .catch((err) => {
-    logger.warn('[Subsume] firstInscription heal on startup failed:', err);
-  });
+healFirstInscriptionIfLibraryNonEmpty().catch((err) => {
+  logger.warn('[Subsume] firstInscription heal on startup failed:', err);
+});
 
 mergeSeedCatalogIfVersionBehind().catch((err) => {
   logger.error('[Subsume] Seed catalogue merge failed:', err);

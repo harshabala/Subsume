@@ -4,7 +4,7 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { MediaItem, LibraryItem } from '@/shared/types';
-import type { CatalogWork, BookEdition, LibraryRelationship } from '@/shared/catalogTypes';
+import type { CatalogWork, BookEdition, LibraryRelationship, WorkRelation } from '@/shared/catalogTypes';
 import type { IDBPDatabase } from 'idb';
 
 const openConnections: IDBPDatabase[] = [];
@@ -271,6 +271,31 @@ describe('Export / import v2 multi-medium', () => {
     const media = await storage2.getMediaItem(bookWork.id);
     expect(media?.type).toBe('book');
     expect(media?.canonicalTitle).toBe('The Great Gatsby');
+  });
+
+  it('export includes cross-medium workRelations and reimports them', async () => {
+    const storage = await loadStorage();
+    const link: WorkRelation = {
+      id: 'rel_gatsby_luhrmann',
+      fromWorkId: 'tmdb_movie_42',
+      toWorkId: bookWork.id,
+      relation: 'adaptation_of',
+      confidence: 'user_asserted',
+      createdAt: 4_000,
+    };
+    await storage.putMediaItem(legacyMedia);
+    await storage.putWork(bookWork);
+    await storage.putWorkRelation(link);
+
+    const exported = await storage.exportLibraryData();
+    expect(exported.workRelations?.some((r) => r.id === link.id)).toBe(true);
+    expect(exported.workRelations?.[0]?.relation).toBe('adaptation_of');
+
+    await resetStorageState();
+    const storage2 = await loadStorage();
+    await storage2.importLibraryData(exported);
+    const restored = await storage2.getWorkRelationsForWork(bookWork.id);
+    expect(restored.some((r) => r.id === link.id && r.fromWorkId === 'tmdb_movie_42')).toBe(true);
   });
 
   it('import still accepts legacy v1 export (no schemaVersion)', async () => {

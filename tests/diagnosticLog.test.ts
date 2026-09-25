@@ -65,4 +65,50 @@ describe('diagnosticLog', () => {
     const again = await getDiagnosticLogs();
     expect(again.filter((e) => e.message === 'should not import again')).toHaveLength(0);
   });
+
+  it('appendDiagnosticLog processes concurrent calls sequentially without losing entries', async () => {
+    const { appendDiagnosticLog, getDiagnosticLogs } = await import('@/shared/diagnosticLog');
+
+    // Launch 15 concurrent appends
+    await Promise.all(
+      Array.from({ length: 15 }, (_, i) =>
+        appendDiagnosticLog('info', 'concurrent.test', `Message ${i}`)
+      )
+    );
+
+    const logs = await getDiagnosticLogs();
+    const testLogs = logs.filter((l) => l.source === 'concurrent.test');
+    expect(testLogs).toHaveLength(15);
+  });
+
+  it('redacts email addresses and URL query parameters in diagnostics', async () => {
+    const { appendDiagnosticLog, getDiagnosticLogs, redactEmail, redactSecrets } = await import(
+      '@/shared/diagnosticLog'
+    );
+
+    expect(redactEmail('john.doe@example.com')).toBe('j***e@example.com');
+    expect(redactEmail('me@subsume.org')).toBe('m***@subsume.org');
+
+    const inputUrl = 'https://example.com/callback?code=oauth_code_123&state=state_secret&session=sess_abc';
+    const cleanUrl = redactSecrets(inputUrl);
+    expect(cleanUrl).toContain('code=[REDACTED]');
+    expect(cleanUrl).toContain('state=[REDACTED]');
+    expect(cleanUrl).toContain('session=[REDACTED]');
+    expect(cleanUrl).not.toContain('oauth_code_123');
+
+    await appendDiagnosticLog(
+      'warn',
+      'user.test',
+      'User user.name@domain.com encountered error',
+      'Request url was https://api.service.com/user?token=xyz987'
+    );
+
+    const logs = await getDiagnosticLogs();
+    const entry = logs.find((l) => l.source === 'user.test');
+    expect(entry).toBeDefined();
+    expect(entry?.message).toContain('u***e@domain.com');
+    expect(entry?.message).not.toContain('user.name@domain.com');
+    expect(entry?.detail).toContain('token=[REDACTED]');
+    expect(entry?.detail).not.toContain('xyz987');
+  });
 });

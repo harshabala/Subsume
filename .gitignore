@@ -26,3 +26,5 @@ vite.config.ts.timestamp-*.mjs
 package-lock\ 2.json
 # Git worktrees
 .worktrees/
+__pycache__/
+*.pyc

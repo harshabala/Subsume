@@ -51,6 +51,11 @@ import {
 } from '@/shared/goodreadsImport';
 import { titleMatchScore } from '../crossMediumRecommendations';
 import { invalidateProfileCache } from '../context';
+import * as openLibrary from '../openLibrary';
+import * as googleBooks from '../googleBooks';
+import { onNewLibraryItemCreated } from '../activationHooks';
+import { broadcastMessage } from './utils';
+import { getAllLibraryItems, getAllMediaMap } from '../storage';
 
 /** Same title-closeness bar as web-grounded / cross-medium OL resolve. */
 const MIN_GOODREADS_TITLE_SCORE = 0.5;
@@ -63,11 +68,11 @@ const ARCHIVE_STATUSES = new Set<LibraryStatus>([
 ]);
 
 async function loadOpenLibrary() {
-  return import('../openLibrary');
+  return openLibrary;
 }
 
 async function loadGoogleBooks() {
-  return import('../googleBooks');
+  return googleBooks;
 }
 
 /** Dedupe key: lowercased title + sorted authors. */
@@ -303,11 +308,8 @@ export const bookHandlers: MessageHandlerMap = {
     };
     await putLibraryItem(libraryItem);
     if (isNewLibraryItem) {
-      const { onNewLibraryItemCreated } = await import('../activationHooks');
       await onNewLibraryItemCreated();
       try {
-        const { broadcastMessage } = await import('./utils');
-        const { invalidateProfileCache } = await import('../context');
         invalidateProfileCache();
         await broadcastMessage({
           type: 'LIBRARY_UPDATED',
@@ -344,7 +346,6 @@ export const bookHandlers: MessageHandlerMap = {
 
   [MessageType.GET_ARCHIVE]: async (payload) => {
     // Same payload/response contract as GET_LIBRARY (archive = library for now).
-    const { getAllLibraryItems, getAllMediaMap } = await import('../storage');
     const req = (payload || {}) as { status?: string; type?: string };
     const libraryItems = await getAllLibraryItems();
     const mediaMap = await getAllMediaMap(libraryItems.map((i) => i.mediaId));

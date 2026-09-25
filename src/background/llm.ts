@@ -16,6 +16,7 @@ import {
   buildTasteProfilePayload,
 } from '@/shared/prompts';
 import { showRateLimitNotification, showAuthErrorNotification } from './notifications';
+import { resolveRecommendationCandidates } from './catalogValidate';
 import { logger } from '@/shared/logger';
 
 export interface LLMRawRecommendation {
@@ -576,7 +577,6 @@ export async function getPersonalizedRecommendations(
 
   // Step 5 — Resolve against real catalogs (TMDb / Open Library / discovery).
   // Unresolved titles are dropped — never invent catalog works.
-  const { resolveRecommendationCandidates } = await import('./catalogValidate');
   const catalogResolved = await resolveRecommendationCandidates(
     candidates.map((c) => ({
       title: c.title,

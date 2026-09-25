@@ -190,6 +190,8 @@ export function ReflectionTimeline({
 
       <div className="reflection-timeline-form">
         <textarea
+          id="reflection-timeline-input"
+          aria-label="Reflection text"
           className="sanctuary-detail-input sanctuary-detail-textarea"
           rows={3}
           value={body}
@@ -224,6 +226,8 @@ export function ReflectionTimeline({
                 Quotation (user-entered only)
               </span>
               <textarea
+                id="reflection-quote-text"
+                aria-label="Quotation text"
                 className="sanctuary-detail-input sanctuary-detail-textarea"
                 rows={2}
                 value={quoteText}
@@ -232,7 +236,9 @@ export function ReflectionTimeline({
                 data-testid="reflection-quote-text"
               />
               <input
+                id="reflection-quote-location"
                 type="text"
+                aria-label="Quotation location"
                 className="sanctuary-detail-input"
                 value={locationLabel}
                 placeholder="Location (e.g. ch. 4, p. 112)"

@@ -1,6 +1,17 @@
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import { validateTmdbKey } from '../lib/validateKeys';
+import {
+  FIRST_SESSION_HEADLINE,
+  FIRST_SESSION_PITCH,
+  FIRST_SESSION_POETRY_SUBTEXT,
+  FIRST_SESSION_PILLARS,
+  FIRST_SESSION_MINUTE_NOTE,
+  ONBOARDING_BEGIN_LABEL,
+  ONBOARDING_STEP2_HEADLINE,
+  ONBOARDING_STEP2_SKIP_LABEL,
+  ONBOARDING_STEP2_VALIDATE_LABEL,
+} from '@/shared/productCopy';
 import '../styles/onboarding.css';
 
 /**
@@ -92,35 +103,17 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           {step === 1 && (
             <section className="onboarding-step" aria-labelledby="onboarding-welcome-title">
               <h1 id="onboarding-welcome-title" className="onboarding-headline">
-                Private movie &amp; book journal for Chrome.
+                {FIRST_SESSION_HEADLINE}
               </h1>
               <div className="onboarding-divider" />
               <p className="onboarding-body">
-                Save what stayed with you while you browse. Films, shows, and books —
-                captured on this device, not a spreadsheet or someone else&apos;s cloud.
+                {FIRST_SESSION_PITCH}
               </p>
               <p className="onboarding-body onboarding-body--compact onboarding-body--poetry">
-                Your private picture palace: afterglow and memory matter more than any
-                algorithm&apos;s tally.
+                {FIRST_SESSION_POETRY_SUBTEXT}
               </p>
               <div className="onboarding-pillars">
-                {[
-                  {
-                    label: 'Discover',
-                    description:
-                      'Quiet plaques on the pages you browse — screen and page — without breaking your flow.',
-                  },
-                  {
-                    label: 'Capture',
-                    description:
-                      'A quiet canvas asks what stayed with you. Resonance before metadata, always.',
-                  },
-                  {
-                    label: 'Archive',
-                    description:
-                      'An editorial ledger of screen and books, arranged by intent, not date filed.',
-                  },
-                ].map((item) => (
+                {FIRST_SESSION_PILLARS.map((item) => (
                   <div key={item.label} className="onboarding-pillar">
                     <span className="onboarding-pillar-label">{item.label}</span>
                     <span className="onboarding-pillar-desc">{item.description}</span>
@@ -128,15 +121,14 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 ))}
               </div>
               <p className="onboarding-body onboarding-body--compact">
-                You can inscribe a title in under a minute. Optional catalogue keys
-                (TMDb) can wait until you want richer posters and search.
+                {FIRST_SESSION_MINUTE_NOTE}
               </p>
               <button
                 type="button"
                 className="onboarding-cta"
                 onClick={() => goTo(2)}
               >
-                Begin
+                {ONBOARDING_BEGIN_LABEL}
               </button>
             </section>
           )}
@@ -144,7 +136,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           {step === 2 && (
             <section className="onboarding-step" aria-labelledby="onboarding-tmdb-title">
               <h1 id="onboarding-tmdb-title" className="onboarding-headline onboarding-headline--step">
-                Optional catalogue key
+                {ONBOARDING_STEP2_HEADLINE}
               </h1>
               <div className="onboarding-divider" />
               <p className="onboarding-body onboarding-body--compact">
@@ -192,7 +184,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     onClick={handleEnterWithoutKeys}
                     disabled={validating}
                   >
-                    Enter without keys
+                    {ONBOARDING_STEP2_SKIP_LABEL}
                   </button>
                   <button
                     type="button"
@@ -200,7 +192,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     onClick={handleTmdbContinue}
                     disabled={validating}
                   >
-                    {validating ? 'Validating…' : 'Validate & enter'}
+                    {validating ? 'Validating…' : ONBOARDING_STEP2_VALIDATE_LABEL}
                   </button>
                 </div>
               </div>

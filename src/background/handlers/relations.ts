@@ -18,6 +18,9 @@ import {
   putWork,
   putWorkRelation,
 } from '../storage';
+import { fetchWikidataAdaptations, matchAndStoreWikidataAdaptations } from '../wikidata';
+import { discoverySearch } from '../discoverySearch';
+import { searchOpenLibrary } from '../openLibrary';
 
 const DISPLAY_RELATIONS = new Set<WorkRelationType>(['adaptation_of', 'adapted_as']);
 
@@ -104,9 +107,6 @@ function inverseRelation(relation: WorkRelationType): WorkRelationType | null {
 
 async function maybeEnrichFromWikidata(workId: string, media: MediaItem): Promise<void> {
   try {
-    const { fetchWikidataAdaptations, matchAndStoreWikidataAdaptations } = await import(
-      '../wikidata'
-    );
     const imdb = media.providers?.find((p) => p.provider === 'imdb')?.externalId;
     const hints = await fetchWikidataAdaptations({
       imdbId: imdb,
@@ -256,7 +256,6 @@ export const relationHandlers: MessageHandlerMap = {
 
     // Book → search screen (TMDb / discovery). Movie/TV → search books (Open Library).
     if (isBook) {
-      const { discoverySearch } = await import('../discoverySearch');
       const hits = await discoverySearch(title, undefined);
       const candidates = hits
         .filter((h) => h.type === 'movie' || h.type === 'tv')
@@ -271,8 +270,7 @@ export const relationHandlers: MessageHandlerMap = {
       };
     }
 
-    const ol = await import('../openLibrary');
-    const hits = await ol.searchOpenLibrary({ query: title, limit });
+    const hits = await searchOpenLibrary({ query: title, limit });
     // Map to MediaItem without putting into storage (candidates only).
     const candidates: MediaItem[] = hits.map((hit) => {
       const item = catalogWorkToMediaItem(hit.work);

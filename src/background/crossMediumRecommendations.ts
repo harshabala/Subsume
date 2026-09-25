@@ -19,6 +19,8 @@ import {
   getWorkRelationsForWork,
   putMediaItem,
 } from './storage';
+import { discoverySearch } from './discoverySearch';
+import { searchOpenLibrary } from './openLibrary';
 
 const DEFAULT_LIMIT = 8;
 const HIGH_RATING = 7;
@@ -253,7 +255,6 @@ export async function generateCrossMediumRecommendations(
       searches += 1;
       try {
         if (seed.type === 'book') {
-          const { discoverySearch } = await import('./discoverySearch');
           const hits = await discoverySearch(title, undefined);
           for (const hit of hits) {
             if (results.length >= cap) break;
@@ -280,7 +281,6 @@ export async function generateCrossMediumRecommendations(
         } else {
           // Screen → book: OL matchScore is rank-only (1 - i*0.05), not title
           // closeness. Gate on titleMatchScore like book→screen / web-grounded.
-          const { searchOpenLibrary } = await import('./openLibrary');
           const hits = await searchOpenLibrary({ query: title, limit: 5 });
           for (const hit of hits) {
             if (results.length >= cap) break;

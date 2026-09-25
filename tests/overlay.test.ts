@@ -140,9 +140,38 @@ describe('Act I Discovery Plaque Injection (overlay.ts)', () => {
       manager.destroy();
 
       expect(chrome.runtime.onMessage.removeListener).toHaveBeenCalled();
-      const wrapper = img.parentElement;
-      const host = wrapper?.querySelector('div[data-subsume-badge]');
+      const host = document.body.querySelector('div[data-subsume-badge]');
       expect(host).toBeNull();
+    });
+
+    it('cleanly unwraps subsume-poster-wrap spans on destroy', () => {
+      const manager = new MuseumPlaqueManager();
+      const parentContainer = document.createElement('div');
+      parentContainer.id = 'target-container';
+      const img = document.createElement('img');
+      parentContainer.appendChild(img);
+      document.body.appendChild(parentContainer);
+
+      const match: PosterMatch = {
+        tmdbId: '54321',
+        title: 'Solaris',
+        year: 1972,
+        type: 'movie',
+        posterPath: '/solaris.jpg',
+        ratings: [{ provider: 'imdb', score: 8.0 }],
+        inLibrary: true,
+      };
+
+      manager.attachBadge(img, match);
+
+      expect(img.parentElement?.classList.contains('subsume-poster-wrap')).toBe(true);
+      expect(parentContainer.querySelector('.subsume-poster-wrap')).not.toBeNull();
+
+      manager.destroy();
+
+      // The wrapper should be removed and img restored to its parent container
+      expect(parentContainer.querySelector('.subsume-poster-wrap')).toBeNull();
+      expect(img.parentElement).toBe(parentContainer);
     });
   });
 });

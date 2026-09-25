@@ -50,7 +50,7 @@
 .discovery-first-inscription-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 12px;
+  gap: var(--spacing-sm, 8px) 12px;
 }
 
 /* Quiet lobby CTAs — one primary, one secondary, text links for the rest */
@@ -58,7 +58,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px 14px;
+  gap: var(--spacing-sm, 8px) var(--spacing-md, 16px);
   margin-top: clamp(16px, 2vw, 24px);
 }
 
@@ -125,7 +125,7 @@
 
 .home-section-quiet .home-section-header--quiet {
   margin-bottom: 16px;
-  padding-bottom: 10px;
+  padding-bottom: var(--spacing-sm, 8px);
   border-bottom-color: color-mix(in srgb, var(--border-restraint, var(--card-border)) 70%, transparent);
 }
 
@@ -318,7 +318,7 @@
 }
 
 .discovery-feed-meta span {
-  padding: 6px 10px;
+  padding: 6px var(--spacing-sm, 8px);
   border: 1px solid var(--border-restraint);
   border-radius: 2px;
   background: var(--bg-plaque);

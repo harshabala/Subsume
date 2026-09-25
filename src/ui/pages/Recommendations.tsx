@@ -1,4 +1,3 @@
-import { h } from 'preact';
 import { useState, useEffect, useMemo } from 'preact/hooks';
 import { sendMessage } from '@/shared/messages';
 import {
@@ -48,7 +47,6 @@ export function Recommendations({ onOpenCuratorSettings, onNavigate }: Recommend
   const [loading, setLoading] = useState(true);
   const [ledgerError, setLedgerError] = useState<string | null>(null);
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
-  const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
   const [mediumChip, setMediumChip] = useState<MediumChip>('all');
   const [crossMediumEnabled, setCrossMediumEnabled] = useState(false);
@@ -221,7 +219,6 @@ export function Recommendations({ onOpenCuratorSettings, onNavigate }: Recommend
     setActionError(null);
     try {
       await sendMessage(MessageType.ADD_TO_LIST, { mediaItem: media, type: media.type });
-      setAddedIds((prev) => new Set(prev).add(media.id));
       setAiAddedIds((prev) => new Set(prev).add(media.id));
     } catch (err) {
       console.error('Failed to add to archive', err);

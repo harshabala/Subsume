@@ -3,18 +3,15 @@ import { MessageType, UserPreferences } from '@/shared/types';
 import { getPreferences, savePreferences } from '../storage';
 import { setTmdbApiKey } from '../tmdb';
 import { setOmdbApiKey } from '../omdb';
+import { setGoogleBooksApiKey } from '../googleBooks';
 import { buildContentPrefs } from '../contentPrefs';
 import { getFreeDataSourceStatuses } from '../dataSources';
 import { reconcileDispatchAlarm } from '../dispatch';
 import { logger } from '@/shared/logger';
+import { SENSITIVE_PREF_KEYS } from '@/shared/keyCrypto';
+import { healFirstInscriptionIfLibraryNonEmpty } from '../activationHooks';
 
-const API_KEY_FIELDS: (keyof UserPreferences)[] = [
-  'tmdbApiKey',
-  'omdbApiKey',
-  'llmApiKey',
-  'llmSecondaryApiKey',
-  'googleBooksApiKey',
-];
+const API_KEY_FIELDS: readonly (keyof UserPreferences)[] = SENSITIVE_PREF_KEYS;
 
 /**
  * Returns a copy of UserPreferences with all sensitive API key fields removed.
@@ -112,7 +109,6 @@ export const settingHandlers: MessageHandlerMap = {
     const { revealKeys } = (payload as { revealKeys?: boolean } | undefined) ?? {};
     // Heal upgrade installs: library non-empty ⇒ firstInscriptionComplete
     try {
-      const { healFirstInscriptionIfLibraryNonEmpty } = await import('../activationHooks');
       await healFirstInscriptionIfLibraryNonEmpty();
     } catch {
       /* non-fatal */
@@ -131,6 +127,7 @@ export const settingHandlers: MessageHandlerMap = {
     await savePreferences(merged);
     setTmdbApiKey(merged.tmdbApiKey ?? '');
     setOmdbApiKey(merged.omdbApiKey ?? '');
+    setGoogleBooksApiKey(merged.googleBooksApiKey ?? '');
     try {
       await reconcileDispatchAlarm(merged);
     } catch (err) {

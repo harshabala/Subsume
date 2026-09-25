@@ -41,6 +41,23 @@ import {
   SEED_CATALOGUE_VERSION,
   SEED_CATALOGUE_VERSION_KEY,
 } from './seedData';
+import {
+  encryptUserPreferences,
+  decryptUserPreferences,
+  encryptKey,
+  decryptKey,
+  isEncryptedKey,
+  SENSITIVE_PREF_KEYS,
+} from '@/shared/keyCrypto';
+
+export {
+  encryptUserPreferences,
+  decryptUserPreferences,
+  encryptKey,
+  decryptKey,
+  isEncryptedKey,
+  SENSITIVE_PREF_KEYS,
+};
 
 /**
  * Full catalogue rows re-applied on version bump for existing `seed_*` media.
@@ -171,19 +188,20 @@ let dbPromise: Promise<IDBPDatabase<SubsumeDB>> | null = null;
 
 export async function seedDemoLibraryIfEmpty(): Promise<boolean> {
   const db = await getDb();
-  const mediaCount = await db.count('media');
-  if (mediaCount > 0) return false;
+  const libraryCount = await db.count('library');
+  if (libraryCount > 0) return false;
   await seedDatabaseIfEmpty(db);
   return true;
 }
 
 /** Add any missing catalogue titles, reflections, and filmmaker rows (safe for existing libraries). */
-export async function mergeSeedCatalog(): Promise<{
+export async function mergeSeedCatalog(options?: { includeLibrary?: boolean }): Promise<{
   mediaAdded: number;
   libraryAdded: number;
   libraryUpdated: number;
   peopleUpserted: number;
 }> {
+  const includeLibrary = options?.includeLibrary ?? true;
   const db = await getDb();
   let mediaAdded = 0;
   let libraryAdded = 0;
@@ -210,13 +228,14 @@ export async function mergeSeedCatalog(): Promise<{
     }
   }
 
-  for (const item of SEED_LIBRARY) {
-    const existing = await db.get('library', item.mediaId);
-    if (!existing) {
-      await db.put('library', item);
-      await dualWriteLibrary(db, item);
-      libraryAdded++;
-    } else {
+  if (includeLibrary) {
+    for (const item of SEED_LIBRARY) {
+      const existing = await db.get('library', item.mediaId);
+      if (!existing) {
+        await db.put('library', item);
+        await dualWriteLibrary(db, item);
+        libraryAdded++;
+      } else {
       const legacyNotes = (existing as unknown as Record<string, unknown>).userNotes;
       if (!existing.notes && typeof legacyNotes === 'string' && legacyNotes.length > 0) {
         const updated = {
@@ -241,6 +260,7 @@ export async function mergeSeedCatalog(): Promise<{
         libraryUpdated++;
       }
     }
+  }
   }
 
   for (const person of SEED_PEOPLE) {
@@ -284,15 +304,15 @@ export async function mergeSeedCatalogIfVersionBehind(): Promise<void> {
     ? stored[SEED_CATALOGUE_VERSION_KEY]
     : 0;
   if (current >= SEED_CATALOGUE_VERSION) return;
-  await mergeSeedCatalog();
+  await mergeSeedCatalog({ includeLibrary: false });
   await chrome.storage.local.set({ [SEED_CATALOGUE_VERSION_KEY]: SEED_CATALOGUE_VERSION });
 }
 
 async function seedDatabaseIfEmpty(db: IDBPDatabase<SubsumeDB>) {
-  // Populate a starter sanctuary library on first install so new users see the archive vision.
+  // Populate a starter sanctuary library on explicit demo restore.
   try {
-    const mediaCount = await db.count('media');
-    if (mediaCount === 0) {
+    const libraryCount = await db.count('library');
+    if (libraryCount === 0) {
       const tx = db.transaction(['media', 'library'], 'readwrite');
       const mediaStore = tx.objectStore('media');
       const libraryStore = tx.objectStore('library');
@@ -543,20 +563,10 @@ async function dualWriteMedia(db: IDBPDatabase<SubsumeDB>, item: MediaItem): Pro
   await db.put('works', existing ? mergeDualWriteCatalogWork(mapped, existing) : mapped);
 }
 
-async function dualWriteLibrary(db: IDBPDatabase<SubsumeDB>, item: LibraryItem): Promise<void> {
-  if (!db.objectStoreNames.contains('relationships')) return;
-  const mapped = libraryItemToRelationship(item);
-  const existingRel = await db.get('relationships', item.mediaId);
-  // Preserve multi-session / edition fields that live only on the relationship.
-  await db.put('relationships', {
-    ...mapped,
-    preferredEditionId: item.preferredEditionId ?? existingRel?.preferredEditionId,
-    currentExperienceId: existingRel?.currentExperienceId,
-    ratingHistory: item.ratingHistory ?? existingRel?.ratingHistory,
-    latestReflectionExcerpt:
-      existingRel?.latestReflectionExcerpt ?? mapped.latestReflectionExcerpt,
-  });
-
+async function seedLibraryReflectionsAndExperiences(
+  db: IDBPDatabase<SubsumeDB>,
+  item: LibraryItem
+): Promise<void> {
   const media = await db.get('media', item.mediaId);
   const medium = media ? mediaTypeToMedium(media.type) : 'movie';
 
@@ -582,12 +592,29 @@ async function dualWriteLibrary(db: IDBPDatabase<SubsumeDB>, item: LibraryItem):
   }
 }
 
+async function dualWriteLibrary(db: IDBPDatabase<SubsumeDB>, item: LibraryItem): Promise<void> {
+  if (!db.objectStoreNames.contains('relationships')) return;
+  const mapped = libraryItemToRelationship(item);
+  const existingRel = await db.get('relationships', item.mediaId);
+  // Preserve multi-session / edition fields that live only on the relationship.
+  await db.put('relationships', {
+    ...mapped,
+    preferredEditionId: item.preferredEditionId ?? existingRel?.preferredEditionId,
+    currentExperienceId: existingRel?.currentExperienceId,
+    ratingHistory: item.ratingHistory ?? existingRel?.ratingHistory,
+    latestReflectionExcerpt:
+      existingRel?.latestReflectionExcerpt ?? mapped.latestReflectionExcerpt,
+  });
+
+  await seedLibraryReflectionsAndExperiences(db, item);
+}
+
 async function dualWritePerson(db: IDBPDatabase<SubsumeDB>, person: PersonItem): Promise<void> {
   if (!db.objectStoreNames.contains('creators')) return;
   await db.put('creators', personItemToCreator(person));
 }
 
-function getDb() {
+export function getDb() {
   if (!dbPromise) {
     dbPromise = openDB<SubsumeDB>(DB_NAME, DB_VERSION, {
       upgrade(db, oldVersion) {
@@ -622,8 +649,6 @@ function getDb() {
         }
       },
     }).then(async (db) => {
-      // Seed legacy stores first so migration can copy them into v4 stores.
-      await seedDatabaseIfEmpty(db);
       await migrateV3ToV4IfNeeded(db);
       return db;
     });
@@ -638,8 +663,18 @@ function getDb() {
 
 export async function putMediaItem(item: MediaItem): Promise<void> {
   const db = await getDb();
-  await db.put('media', item);
-  await dualWriteMedia(db, item);
+  if (!db.objectStoreNames.contains('works')) {
+    await db.put('media', item);
+    return;
+  }
+  const tx = db.transaction(['media', 'works'], 'readwrite');
+  await tx.objectStore('media').put(item);
+  const mapped = mediaItemToCatalogWork(item);
+  const existing = await tx.objectStore('works').get(item.id);
+  await tx.objectStore('works').put(
+    existing ? mergeDualWriteCatalogWork(mapped, existing) : mapped,
+  );
+  await tx.done;
 }
 
 export async function putMediaItems(items: MediaItem[]): Promise<void> {
@@ -722,8 +757,26 @@ export async function putLibraryItem(item: LibraryItem): Promise<void> {
   const db = await getDb();
   normalizeLibraryItem(item);
   item.updatedAt = Date.now();
-  await db.put('library', item);
-  await dualWriteLibrary(db, item);
+  if (!db.objectStoreNames.contains('relationships')) {
+    await db.put('library', item);
+    return;
+  }
+  const tx = db.transaction(['library', 'relationships'], 'readwrite');
+  await tx.objectStore('library').put(item);
+  const mapped = libraryItemToRelationship(item);
+  const existingRel = await tx.objectStore('relationships').get(item.mediaId);
+  // Preserve multi-session / edition fields that live only on the relationship.
+  await tx.objectStore('relationships').put({
+    ...mapped,
+    preferredEditionId: item.preferredEditionId ?? existingRel?.preferredEditionId,
+    currentExperienceId: existingRel?.currentExperienceId,
+    ratingHistory: item.ratingHistory ?? existingRel?.ratingHistory,
+    latestReflectionExcerpt:
+      existingRel?.latestReflectionExcerpt ?? mapped.latestReflectionExcerpt,
+  });
+  await tx.done;
+
+  await seedLibraryReflectionsAndExperiences(db, item);
 }
 
 export async function getLibraryItem(mediaId: string): Promise<LibraryItem | undefined> {
@@ -791,18 +844,37 @@ export const DEFAULT_PREFS: UserPreferences = {
   dispatchMaxSearches: 5,
   webGroundedDispatchEnabled: false,
   dispatchWebSearchEnabled: false,
+  paidBackupNotifyRequested: false,
 };
 
 export async function getPreferences(): Promise<UserPreferences> {
   const db = await getDb();
-  const prefs = await db.get('preferences', 'user-prefs');
-  return { ...DEFAULT_PREFS, ...prefs };
+  const rawPrefs = await db.get('preferences', 'user-prefs');
+  const merged = { ...DEFAULT_PREFS, ...rawPrefs };
+
+  const { decrypted, needsMigration } = await decryptUserPreferences(merged);
+
+  // If raw preferences existed in storage and contained plaintext keys,
+  // silently migrate them in place by writing back the encrypted version.
+  if (needsMigration && rawPrefs) {
+    try {
+      const encrypted = await encryptUserPreferences(decrypted);
+      await db.put('preferences', encrypted, 'user-prefs');
+    } catch {
+      // Non-fatal if write-back fails; decrypted in-memory values are valid
+    }
+  }
+
+  return decrypted;
 }
 
 export async function savePreferences(prefs: UserPreferences): Promise<void> {
   const db = await getDb();
-  await db.put('preferences', prefs, 'user-prefs');
+  const encrypted = await encryptUserPreferences(prefs);
+  await db.put('preferences', encrypted, 'user-prefs');
 }
+
+export const setPreferences = savePreferences;
 
 export async function getWeeklyDigest(): Promise<WeeklyDigest | undefined> {
   const db = await getDb();
@@ -835,6 +907,7 @@ export async function exportLibraryData(): Promise<ImportLibraryData> {
       'experiences',
       'reflections',
       'creators',
+      'work_relations',
     ],
     'readonly'
   );
@@ -886,6 +959,9 @@ export async function exportLibraryData(): Promise<ImportLibraryData> {
   if (experiences.length > 0) result.experiences = experiences;
   if (reflections.length > 0) result.reflections = reflections;
   if (creators.length > 0) result.creators = creators;
+
+  const workRelations = await tx.objectStore('work_relations').getAll();
+  if (workRelations.length > 0) result.workRelations = workRelations;
 
   return result;
 }
@@ -1056,6 +1132,29 @@ function isValidCreator(c: unknown): c is Creator {
   return true;
 }
 
+const VALID_WORK_RELATIONS = new Set([
+  'adaptation_of',
+  'adapted_as',
+  'based_on',
+  'inspired_by',
+  'remake_of',
+  'sequel_to',
+  'prequel_to',
+  'series_member',
+  'companion_to',
+  'same_universe',
+]);
+
+function isValidWorkRelation(r: unknown): r is WorkRelation {
+  if (!r || typeof r !== 'object') return false;
+  const item = r as Record<string, unknown>;
+  if (typeof item.id !== 'string' || !item.id) return false;
+  if (typeof item.fromWorkId !== 'string' || !item.fromWorkId) return false;
+  if (typeof item.toWorkId !== 'string' || !item.toWorkId) return false;
+  if (!VALID_WORK_RELATIONS.has(item.relation as string)) return false;
+  return true;
+}
+
 /**
  * Import library backup.
  * Accepts legacy v1 (no schemaVersion) and v2 multi-medium exports.
@@ -1078,6 +1177,7 @@ export async function importLibraryData(data: ImportLibraryData) {
       'experiences',
       'reflections',
       'creators',
+      'work_relations',
     ],
     'readwrite'
   );
@@ -1178,6 +1278,15 @@ export async function importLibraryData(data: ImportLibraryData) {
           await tx.objectStore('creators').put(c);
         } else {
           console.warn('[Subsume] Import skipped invalid creator:', c);
+        }
+      }
+    }
+    if (Array.isArray(data.workRelations)) {
+      for (const rel of data.workRelations) {
+        if (isValidWorkRelation(rel)) {
+          await tx.objectStore('work_relations').put(rel);
+        } else {
+          console.warn('[Subsume] Import skipped invalid work relation:', rel);
         }
       }
     }
