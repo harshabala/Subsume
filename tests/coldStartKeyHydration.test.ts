@@ -3,8 +3,10 @@ import { ensureTmdbApiKey, setTmdbApiKey } from '@/background/tmdb';
 import { ensureOmdbApiKey, setOmdbApiKey, fetchOmdbRatings } from '@/background/omdb';
 import { ensureGoogleBooksApiKey, setGoogleBooksApiKey } from '@/background/googleBooks';
 import { DEFAULT_PREFS, savePreferences } from '@/background/storage';
+import * as storage from '@/background/storage';
 import { createMessageRouter } from '@/shared/messages';
 import { MessageType } from '@/shared/types';
+import { ensurePreferencesLoaded, _resetInitPreferencesPromiseForTesting } from '@/background/index';
 
 describe('Cold-start key hydration', () => {
   beforeEach(async () => {
@@ -123,6 +125,34 @@ describe('Cold-start key hydration', () => {
 
       expect(response).toEqual({ success: true, data: { inLibrary: true } });
       expect(handlerRanAfterPrefs).toBe(true);
+    });
+  });
+
+  describe('ensurePreferencesLoaded retry on failure', () => {
+    it('resets initPreferencesPromise on failure so subsequent attempts retry', async () => {
+      _resetInitPreferencesPromiseForTesting();
+      let callCount = 0;
+      const getPrefsSpy = vi.spyOn(storage, 'getPreferences').mockImplementation(async () => {
+        callCount++;
+        if (callCount === 1) {
+          throw new Error('Transient storage load failure');
+        }
+        return {
+          ...DEFAULT_PREFS,
+          tmdbApiKey: 'retried-tmdb-key',
+        };
+      });
+
+      // First attempt fails and catches
+      await ensurePreferencesLoaded();
+      expect(callCount).toBe(1);
+
+      // Second attempt retries instead of staying failed
+      await ensurePreferencesLoaded();
+      expect(callCount).toBe(2);
+      expect(await ensureTmdbApiKey()).toBe('retried-tmdb-key');
+
+      getPrefsSpy.mockRestore();
     });
   });
 });

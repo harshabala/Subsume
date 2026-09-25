@@ -7,6 +7,7 @@ import {
   decryptUserPreferences,
   _resetCryptoKeyCacheForTesting,
   INSTALL_KEY_STORAGE_KEY,
+  getOrCreateInstallKey,
 } from '@/shared/keyCrypto';
 import {
   getPreferences,
@@ -143,6 +144,40 @@ describe('keyCrypto - WebCrypto AES-GCM encryption', () => {
 
     // Attempting to decrypt the old ciphertext with the new key should fail
     await expect(decryptKey(encrypted)).rejects.toThrow(/authentication failed|corrupted/i);
+  });
+
+  it('does not generate a new key or overwrite existing key when storage read errors', async () => {
+    // 1. Establish an existing install key in storage
+    const originalKey = await encryptKey('initial-seed-key');
+    const storedInstallKey = storageMock[INSTALL_KEY_STORAGE_KEY];
+    expect(storedInstallKey).toBeDefined();
+
+    // Reset in-memory cache so next call must read from storage
+    _resetCryptoKeyCacheForTesting();
+
+    // 2. Simulate storage read failure via chrome.runtime.lastError
+    const originalGet = chrome.storage.local.get;
+    chrome.storage.local.get = vi.fn((_keys, callback) => {
+      if (typeof callback === 'function') {
+        (chrome.runtime as unknown as { lastError: { message: string } }).lastError = {
+          message: 'Simulated chrome.storage.local read failure',
+        };
+        callback({});
+        delete (chrome.runtime as unknown as { lastError?: unknown }).lastError;
+      }
+    }) as unknown as typeof chrome.storage.local.get;
+
+    // 3. Attempting to get or create install key should reject due to read failure
+    await expect(getOrCreateInstallKey()).rejects.toThrow(/read failure/i);
+
+    // 4. Verify existing key was NEVER overwritten
+    expect(storageMock[INSTALL_KEY_STORAGE_KEY]).toBe(storedInstallKey);
+
+    // 5. Restore normal storage read and verify recovery without key generation
+    chrome.storage.local.get = originalGet;
+    const decrypted = await decryptKey(originalKey);
+    expect(decrypted).toBe('initial-seed-key');
+    expect(storageMock[INSTALL_KEY_STORAGE_KEY]).toBe(storedInstallKey);
   });
 
   describe('UserPreferences encryption and decryption helpers', () => {

@@ -50,10 +50,15 @@ export function ensurePreferencesLoaded(): Promise<void> {
         }
       })
       .catch((err) => {
+        initPreferencesPromise = null;
         logger.error('[Subsume] Failed to initialize background API preferences:', err);
       });
   }
   return initPreferencesPromise;
+}
+
+export function _resetInitPreferencesPromiseForTesting(): void {
+  initPreferencesPromise = null;
 }
 
 // Ensure startup hydration begins immediately

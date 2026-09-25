@@ -81,30 +81,26 @@ function getSubtleCrypto(): SubtleCrypto {
 
 async function getStorageItem(key: string): Promise<string | null> {
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-    try {
-      const res = await new Promise<Record<string, unknown>>((resolve, reject) => {
-        try {
-          const maybePromise: unknown = chrome.storage.local.get(key, (items) => {
-            if (chrome.runtime?.lastError) {
-              reject(new Error(chrome.runtime.lastError.message));
-            } else {
-              resolve(items || {});
-            }
-          });
-          if (maybePromise && typeof (maybePromise as Promise<Record<string, unknown>>).then === 'function') {
-            (maybePromise as Promise<Record<string, unknown>>).then(resolve).catch(reject);
+    const res = await new Promise<Record<string, unknown>>((resolve, reject) => {
+      try {
+        const maybePromise: unknown = chrome.storage.local.get(key, (items) => {
+          if (chrome.runtime?.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+          } else {
+            resolve(items || {});
           }
-        } catch (err) {
-          reject(err);
+        });
+        if (maybePromise && typeof (maybePromise as Promise<Record<string, unknown>>).then === 'function') {
+          (maybePromise as Promise<Record<string, unknown>>).then(resolve).catch(reject);
         }
-      });
-      if (res && typeof res[key] === 'string' && (res[key] as string).length > 0) {
-        return res[key] as string;
+      } catch (err) {
+        reject(err);
       }
-      return inMemoryKeyFallback;
-    } catch {
-      return inMemoryKeyFallback;
+    });
+    if (res && typeof res[key] === 'string' && (res[key] as string).length > 0) {
+      return res[key] as string;
     }
+    return inMemoryKeyFallback;
   }
   return inMemoryKeyFallback;
 }
@@ -138,6 +134,8 @@ async function setStorageItem(key: string, value: string): Promise<void> {
 /**
  * Retrieve or generate the per-install WebCrypto key.
  * Uses promise memoization to guard against concurrent first-run initialization races.
+ * Never generates a new key or overwrites storage if a storage read merely errored;
+ * only generates when the key is genuinely absent.
  */
 export async function getOrCreateInstallKey(): Promise<CryptoKey> {
   if (cachedCryptoKey) {
@@ -162,12 +160,14 @@ export async function getOrCreateInstallKey(): Promise<CryptoKey> {
           ['encrypt', 'decrypt']
         );
         return cachedCryptoKey;
-      } catch {
-        // If corrupted in storage, fall through to regenerate
+      } catch (err) {
+        throw new Error(
+          `Failed to import existing install key from storage: ${err instanceof Error ? err.message : String(err)}`
+        );
       }
     }
 
-    // Generate a new 256-bit AES-GCM key
+    // Generate a new 256-bit AES-GCM key only when genuinely absent
     const generatedKey = await subtle.generateKey(
       { name: ALGORITHM, length: KEY_LENGTH },
       true,
