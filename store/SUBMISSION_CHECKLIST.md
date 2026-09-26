@@ -1,17 +1,19 @@
 # Chrome Web Store — Submission Checklist (Subsume)
 
-Step-by-step path from a clean build to a reviewable upload. Keep practices honest: client-side only, no Subsume backend, no remote code.
+Step-by-step path from a clean build to a reviewable upload for **v0.3.0**. Keep practices honest: client-side only, no Subsume backend, no remote code.
+
+Legend: items marked **(repo)** are already done in the repository and guarded by tests; items marked **(owner)** can only be done by you.
 
 ---
 
 ## Before you start
 
-- [ ] **Developer account** registered at [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole).
-- [ ] **One-time developer registration fee** paid (Google’s published fee; required for publishing).
-- [ ] Privacy policy **publicly reachable over HTTPS** (see hosting below).
-- [ ] Support email ready: `harsha16balakrishnan@proton.me`.
-- [ ] Confirm `manifest.json` version matches the release you intend to ship.
-- [ ] Confirm OAuth / Google Cloud setup for Drive if you advertise Drive backup (see `docs/GOOGLE_DRIVE_SETUP.md`). Do not claim Drive works if the production OAuth client is not configured.
+- [ ] **(owner)** **Developer account** registered at [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole).
+- [ ] **(owner)** **One-time developer registration fee** paid (Google’s published fee; required for publishing).
+- [ ] **(owner)** Privacy policy **publicly reachable over HTTPS** (see hosting below).
+- [x] **(repo)** Support email ready: `harsha16balakrishnan@proton.me`.
+- [x] **(repo)** `manifest.json`, `package.json`, and store docs all say 0.3.0 (`tests/releaseDocs.test.ts`).
+- [ ] **(owner)** Confirm the Google OAuth consent screen and client for Drive (see `docs/GOOGLE_DRIVE_SETUP.md`). Do not claim Drive works for everyone if the app is still in Testing or the production OAuth client is not configured. Drive is a manual snapshot backup, not live sync.
 
 ---
 
@@ -30,7 +32,7 @@ Source file: `docs/privacy.html` (Markdown twin: `docs/PRIVACY.md`).
 1. Ensure `.github/workflows/pages.yml` is on `main`.
 2. In the GitHub repo: **Settings → Pages → Build and deployment → GitHub Actions**.
 3. Push `docs/privacy.html` (or merge to `main`) so the workflow deploys.
-4. Verify the URL loads the full policy (effective date July 2026, contact email present).
+4. Verify the URL loads the full policy (last updated September 26, 2026, contact email present).
 
 ### Option B — Manual Pages or static host
 
@@ -52,7 +54,7 @@ npm run package   # rebuilds dist/ and writes subsume.zip (no nested dist/, no s
 
 Equivalents: `npm run build` then `npm run zip`, or `node scripts/package-extension.mjs` after a build.
 
-- [ ] `subsume.zip` created at repo root (or replace prior zip).
+- [ ] **(owner)** `subsume.zip` created at repo root (or replace prior zip).
 - [ ] Unzip and spot-check: `manifest.json`, `background.js`, `content.js`, icons (`16`/`48`/`128`), `ui/`.
 - [ ] **Do not** zip `src/`, `node_modules/`, tests, or the PEM key.
 - [ ] **Do not** include secrets you do not intend to ship (shared LLM keys, private tokens).
@@ -78,7 +80,7 @@ Use `store/LISTING.md` for paste-ready copy.
 - [ ] **Category:** Productivity *(or Social & Communication / Fun per current taxonomy)*  
 - [ ] **Language:** English  
 - [ ] **Icon:** 128×128 (from package)  
-- [ ] **Screenshots:** at least one; preferred **1280×800** or **640×400**  
+- [ ] **(owner)** **Screenshots:** at least one; review each for personal data; preferred **1280×800** or **640×400**  
   - Suggested shots: Hardcover library archive, Poetic Capture / detail, on-page museum plaque on a public page, Settings (keys redacted)  
 - [ ] **Small promo tile / marquee** if required by current dashboard (sizes per Google’s asset guide)  
 - [ ] **Official URL** (optional): `https://github.com/harshabala/Subsume`  
@@ -88,17 +90,17 @@ Use `store/LISTING.md` for paste-ready copy.
 
 ## Privacy & single purpose
 
-- [ ] **Privacy policy URL:** `https://harshabala.github.io/Subsume/privacy.html`  
-- [ ] **Single purpose statement** pasted (see `store/LISTING.md`)  
-- [ ] **Privacy practices** questionnaire completed accurately (see LISTING + below)  
-- [ ] **Permission justifications** filled for each permission (see `store/PERMISSIONS.md`)  
-- [ ] Certify disclosures match the zip you uploaded  
+- [ ] **(owner)** **Privacy policy URL:** `https://harshabala.github.io/Subsume/privacy.html`  
+- [ ] **(owner)** **Single purpose statement** pasted (see `store/LISTING.md`)  
+- [ ] **(owner)** **Privacy practices** questionnaire completed accurately (answers drafted in `store/LISTING.md`)  
+- [ ] **(owner)** **Permission justifications** pasted for each permission (drafted in `store/PERMISSIONS.md`)  
+- [ ] **(owner)** Certify disclosures match the zip you uploaded  
 
 ### Privacy practices (quick map)
 
 | Topic | Answer direction |
 | :--- | :--- |
-| Data collected | Local library, notes, preferences, optional API keys; optional Google identity for Drive |
+| Data collected | Local library, notes, preferences, optional API keys (AES-GCM encrypted, per-install key in the same profile); optional Google identity for Drive (manual snapshot backup); local redacted diagnostics that are never transmitted |
 | Subsume server | None |
 | Sold data | No |
 | Remote code | **No** |
@@ -109,7 +111,7 @@ Use `store/LISTING.md` for paste-ready copy.
 
 ## Permission justifications checklist
 
-Confirm each is explained in the dashboard:
+Confirm each is explained in the dashboard (all drafted in `store/PERMISSIONS.md` and `store/LISTING.md`):
 
 - [ ] `storage`  
 - [ ] `activeTab`  
@@ -126,6 +128,7 @@ Confirm each is explained in the dashboard:
 - [ ] Host: `https://query.wikidata.org/*`  
 - [ ] Host: `https://en.wikipedia.org/*`  
 - [ ] Host: `https://www.googleapis.com/*`  
+- [ ] Host: `https://openlibrary.org/*`  
 - [ ] Content scripts: `http://*/*`, `https://*/*` (broad match — write carefully)
 
 ---
@@ -159,14 +162,14 @@ If review asks to narrow hosts: explain that media discussion is web-wide; offer
 - [ ] Disabled domain stops content UI on that host  
 - [ ] Export library (no keys in export if designed so)  
 - [ ] Notifications/alarms path only if you claim digests  
-- [ ] Drive connect only if production OAuth is live  
+- [ ] Drive connect only if production OAuth is live (owner: confirm consent screen status)  
 
 ---
 
 ## Submit for review
 
-- [ ] Visibility: Public / Unlisted / Private as intended  
-- [ ] **Submit for review**  
+- [ ] **(owner)** Visibility: Public / Unlisted / Private as intended  
+- [ ] **(owner)** **Submit for review** (final click)  
 - [ ] Watch developer email for rejection notes; respond with `PERMISSIONS.md` language and privacy URL  
 
 ---
@@ -176,7 +179,7 @@ If review asks to narrow hosts: explain that media discussion is web-wide; offer
 - [ ] Install from store on a clean profile  
 - [ ] Re-verify privacy URL still live  
 - [ ] Tag git release to match store version  
-- [ ] For next update: bump `manifest.json` / `package.json` version, rebuild zip, upload, note user-facing changes  
+- [ ] For next update: bump `manifest.json` / `package.json` version and every version mention in `store/*.md` and `README.md` (the release-docs test will fail otherwise), rebuild zip, upload, note user-facing changes  
 
 ---
 

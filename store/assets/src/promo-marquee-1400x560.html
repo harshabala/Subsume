@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Subsume promo marquee 1400x560</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Brand tokens (src/shared/tokens.css, dark / Cinema Black) */
+  :root {
+    --bg-base: #181818;
+    --bg-overlay: #303030;
+    --fg-base: #ffffff;
+    --fg-muted: #969696;
+    --primary: #da291c;
+    --font-display: 'Courier Prime', 'Courier New', ui-monospace, monospace;
+    --font-ui: 'IBM Plex Mono', ui-monospace, 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1400px; height: 560px; overflow: hidden; background: var(--bg-base); }
+  .tile { position: relative; width: 1400px; height: 560px; }
+  .copy { position: absolute; left: 96px; top: 0; bottom: 0; width: 560px; display: flex; flex-direction: column; justify-content: center; }
+  .mark { display: flex; align-items: center; gap: 12px; font: 500 15px/1 var(--font-ui); letter-spacing: 0.18em; text-transform: uppercase; color: var(--fg-muted); }
+  .mark i { width: 14px; height: 14px; background: var(--primary); display: block; }
+  h1 { margin-top: 28px; font: 700 62px/1.08 var(--font-display); color: var(--fg-base); letter-spacing: -0.01em; }
+  p.lede { margin-top: 22px; font: 400 20px/1.5 var(--font-ui); color: var(--fg-muted); }
+  ul { margin: 34px 0 0; padding: 0; list-style: none; font: 400 16px/1 var(--font-ui); color: var(--fg-base); }
+  li { padding: 11px 0; border-top: 1px solid var(--bg-overlay); }
+  li:last-child { border-bottom: 1px solid var(--bg-overlay); }
+  .shot { position: absolute; left: 720px; top: 0; right: 0; height: 560px; overflow: hidden; }
+  .shot img { display: block; position: absolute; width: 1900px; left: -337px; top: -568px; }
+</style>
+</head>
+<body>
+<div class="tile">
+  <div class="copy">
+    <div class="mark"><i></i>Subsume</div>
+    <h1>Save what stayed with you.</h1>
+    <p class="lede">Private movie &amp; book journal for Chrome.</p>
+    <ul>
+      <li>Notice films and books while you browse</li>
+      <li>Write down what stayed with you</li>
+      <li>Everything stays on your device</li>
+    </ul>
+  </div>
+  <div class="shot"><img src="../../screenshots/02-library.png" alt=""></div>
+</div>
+</body>
+</html>

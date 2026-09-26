@@ -299,7 +299,8 @@ export async function encryptUserPreferences(prefs: UserPreferences): Promise<Us
  */
 export async function decryptUserPreferences(
   prefs: UserPreferences
-): Promise<{ decrypted: UserPreferences; needsMigration: boolean }> {
+): Promise<{ decrypted: UserPreferences; needsMigration: boolean; undecryptable: string[] }> {
+  const undecryptable: string[] = [];
   const decrypted: UserPreferences = { ...prefs };
   const prefAccessor = decrypted as unknown as Record<SensitivePrefKey, string | undefined>;
   let needsMigration = false;
@@ -314,9 +315,11 @@ export async function decryptUserPreferences(
         try {
           prefAccessor[key] = await decryptKey(val);
         } catch {
-          // If decryption fails (e.g. key mismatch or corrupted storage), reset to undefined so app loads cleanly
+          // Decryption failed (transient error, key mismatch, or corruption). Surface as
+          // missing in memory only; the stored ciphertext must stay untouched so a later
+          // successful read can still recover it. Never a reason to write back.
           prefAccessor[key] = undefined;
-          needsMigration = true;
+          undecryptable.push(key);
         }
       }
     }
@@ -336,7 +339,7 @@ export async function decryptUserPreferences(
             decryptedApiKeys[provider] = await decryptKey(keyVal);
           } catch {
             delete decryptedApiKeys[provider];
-            needsMigration = true;
+            undecryptable.push(`apiKeys.${provider}`);
           }
         }
       }
@@ -344,7 +347,7 @@ export async function decryptUserPreferences(
     anyPrefs.apiKeys = decryptedApiKeys;
   }
 
-  return { decrypted, needsMigration };
+  return { decrypted, needsMigration, undecryptable };
 }
 
 /**

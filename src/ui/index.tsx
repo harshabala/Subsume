@@ -1,6 +1,7 @@
 import { render } from 'preact';
 import { App } from './App';
 import { NoticeProvider } from './components/NoticeProvider';
+import '../styles/fonts.css';
 import '../shared/tokens.css';
 import '../styles/sanctuary.css';
 import './styles/global.css';
