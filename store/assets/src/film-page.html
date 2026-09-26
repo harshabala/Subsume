@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<!--
+  Local stand-in page used ONLY to photograph Subsume's museum plaques for the store listing.
+  It is not a real website: a neutral "screenings listing" with poster images carrying
+  "Title (Year)" alt text, which is what Subsume's poster scanner recognises.
+  Poster files (posters/0.jpg ...) are fetched at render time by scripts/render-store-assets.py
+  from the poster URLs in the extension's own sample library; they are not committed.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>This week at the Riverside Screening Room</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f3f1ec; color: #1c1b19; font: 16px/1.5 -apple-system, "Helvetica Neue", Arial, sans-serif; }
+  header { border-bottom: 1px solid #d9d5cc; background: #fbfaf7; }
+  .bar { max-width: 1240px; margin: 0 auto; padding: 22px 32px; display: flex; justify-content: space-between; align-items: baseline; }
+  .bar b { font-size: 20px; letter-spacing: 0.01em; }
+  .bar nav a { margin-left: 24px; color: #5b574f; text-decoration: none; font-size: 14px; }
+  main { max-width: 1240px; margin: 0 auto; padding: 36px 32px 56px; }
+  h1 { font-size: 34px; line-height: 1.15; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .lede { margin: 0 0 32px; color: #5b574f; max-width: 620px; }
+  .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 24px; }
+  figure { margin: 0; }
+  .poster { position: relative; }
+  .poster img { display: block; width: 100%; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 4px; background: #d9d5cc; }
+  .notes { display: flex; gap: 48px; margin-top: 40px; padding-top: 22px; border-top: 1px solid #d9d5cc; color: #5b574f; font-size: 14px; }
+  .notes b { display: block; color: #1c1b19; margin-bottom: 4px; }
+  figcaption { margin-top: 10px; font-size: 15px; font-weight: 600; }
+  figcaption span { display: block; font-weight: 400; font-size: 13px; color: #6b675e; }
+</style>
+</head>
+<body>
+<header><div class="bar"><b>Riverside Screening Room</b><nav><a href="#">Programme</a><a href="#">Tickets</a><a href="#">Visit</a></nav></div></header>
+<main>
+  <h1>This week's screenings</h1>
+  <p class="lede">Five films across the week, one screen, no trailers. Doors open thirty minutes before each showing.</p>
+  <div class="grid">
+    <figure><div class="poster"><img src="posters/0.jpg" alt="Parasite (2019)"></div><figcaption>Parasite<span>Fri 7:30 pm</span></figcaption></figure>
+    <figure><div class="poster"><img src="posters/1.jpg" alt="Everything Everywhere All at Once (2022)"></div><figcaption>Everything Everywhere All at Once<span>Sat 6:00 pm</span></figcaption></figure>
+    <figure><div class="poster"><img src="posters/2.jpg" alt="Get Out (2017)"></div><figcaption>Get Out<span>Sat 9:15 pm</span></figcaption></figure>
+    <figure><div class="poster"><img src="posters/3.jpg" alt="Free Solo (2018)"></div><figcaption>Free Solo<span>Sun 4:00 pm</span></figcaption></figure>
+    <figure><div class="poster"><img src="posters/4.jpg" alt="Portrait of a Lady on Fire (2019)"></div><figcaption>Portrait of a Lady on Fire<span>Sun 7:00 pm</span></figcaption></figure>
+  </div>
+  <div class="notes">
+    <div><b>Doors</b>Thirty minutes before each showing.</div>
+    <div><b>Seating</b>Unreserved. 84 seats.</div>
+    <div><b>Access</b>Step-free entrance on Mill Lane.</div>
+  </div>
+</main>
+</body>
+</html>
