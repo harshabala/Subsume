@@ -16,6 +16,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint:eslint": "eslint src --max-warnings 200",
+    "verify-package": "node scripts/verify-package.mjs",
+    "release-check": "npm run ci && npm run package && node scripts/verify-package.mjs",
     "validate:seed-people": "node scripts/validate-seed-people.mjs"
   },
   "dependencies": {

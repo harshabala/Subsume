@@ -852,13 +852,28 @@ export async function getPreferences(): Promise<UserPreferences> {
   const rawPrefs = await db.get('preferences', 'user-prefs');
   const merged = { ...DEFAULT_PREFS, ...rawPrefs };
 
-  const { decrypted, needsMigration } = await decryptUserPreferences(merged);
+  const { decrypted, needsMigration, undecryptable } = await decryptUserPreferences(merged);
 
   // If raw preferences existed in storage and contained plaintext keys,
   // silently migrate them in place by writing back the encrypted version.
   if (needsMigration && rawPrefs) {
     try {
       const encrypted = await encryptUserPreferences(decrypted);
+      // Preserve original ciphertext for values that failed to decrypt so a
+      // transient failure can never permanently erase a stored key.
+      const raw = rawPrefs as unknown as Record<string, unknown>;
+      const out = encrypted as unknown as Record<string, unknown>;
+      for (const path of undecryptable) {
+        if (path.startsWith('apiKeys.')) {
+          const provider = path.slice('apiKeys.'.length);
+          const rawKeys = raw.apiKeys as Record<string, string> | undefined;
+          if (rawKeys && provider in rawKeys) {
+            out.apiKeys = { ...((out.apiKeys as Record<string, string>) ?? {}), [provider]: rawKeys[provider] };
+          }
+        } else if (path in raw) {
+          out[path] = raw[path];
+        }
+      }
       await db.put('preferences', encrypted, 'user-prefs');
     } catch {
       // Non-fatal if write-back fails; decrypted in-memory values are valid

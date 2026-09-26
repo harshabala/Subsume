@@ -299,5 +299,74 @@ describe('keyCrypto - WebCrypto AES-GCM encryption', () => {
       expect(loaded.tmdbApiKey).toBe('brand-new-plaintext-key-999');
       expect(loaded.googleBooksApiKey).toBe('brand-new-google-key-888');
     });
+    describe('decrypt failure is never destructive', () => {
+      async function seedEncryptedTmdb(): Promise<{ cipher: string; goodInstallKey: unknown }> {
+        await savePreferences({ ...DEFAULT_PREFS, tmdbApiKey: 'tmdb-secret-abcdef-123456' });
+        const db = await getDb();
+        const raw = (await db.get('preferences', 'user-prefs')) as UserPreferences;
+        return { cipher: raw.tmdbApiKey as string, goodInstallKey: storageMock[INSTALL_KEY_STORAGE_KEY] };
+      }
+
+      async function breakInstallKey(): Promise<void> {
+        _resetCryptoKeyCacheForTesting();
+        // A different (valid) 256-bit key: decrypt fails authentication.
+        storageMock[INSTALL_KEY_STORAGE_KEY] = Buffer.from(new Uint8Array(32).fill(7)).toString('base64');
+      }
+
+      it('decryptUserPreferences does not flag migration or write back for failed ciphertext', async () => {
+        const { cipher } = await seedEncryptedTmdb();
+        await breakInstallKey();
+        const res = await decryptUserPreferences({ ...DEFAULT_PREFS, tmdbApiKey: cipher });
+        expect(res.decrypted.tmdbApiKey).toBeUndefined();
+        expect(res.needsMigration).toBe(false);
+        expect(res.undecryptable).toEqual(['tmdbApiKey']);
+      });
+
+      it('transient decrypt failure leaves stored ciphertext intact and recovers later', async () => {
+        const { cipher, goodInstallKey } = await seedEncryptedTmdb();
+        await breakInstallKey();
+
+        const during = await getPreferences();
+        expect(during.tmdbApiKey).toBeUndefined();
+        const db = await getDb();
+        const rawDuring = (await db.get('preferences', 'user-prefs')) as UserPreferences;
+        expect(rawDuring.tmdbApiKey).toBe(cipher);
+
+        // Storage recovers
+        _resetCryptoKeyCacheForTesting();
+        storageMock[INSTALL_KEY_STORAGE_KEY] = goodInstallKey;
+        const after = await getPreferences();
+        expect(after.tmdbApiKey).toBe('tmdb-secret-abcdef-123456');
+      });
+
+      it('still migrates plaintext keys, while preserving a sibling ciphertext that failed', async () => {
+        const { cipher } = await seedEncryptedTmdb();
+        const db = await getDb();
+        await db.put(
+          'preferences',
+          { ...DEFAULT_PREFS, tmdbApiKey: cipher, omdbApiKey: 'plain-omdb-key-0001' },
+          'user-prefs'
+        );
+        await breakInstallKey();
+
+        const prefs = await getPreferences();
+        expect(prefs.omdbApiKey).toBe('plain-omdb-key-0001');
+        expect(prefs.tmdbApiKey).toBeUndefined();
+
+        const raw = (await db.get('preferences', 'user-prefs')) as UserPreferences;
+        expect(isEncryptedKey(raw.omdbApiKey)).toBe(true); // plaintext migrated
+        expect(raw.tmdbApiKey).toBe(cipher); // failed ciphertext untouched
+      });
+
+      it('corrupt ciphertext is left alone and does not throw out of getPreferences', async () => {
+        const db = await getDb();
+        const corrupt = 'enc:v1:not-base64!:garbage';
+        await db.put('preferences', { ...DEFAULT_PREFS, llmApiKey: corrupt }, 'user-prefs');
+        const prefs = await getPreferences();
+        expect(prefs.llmApiKey).toBeUndefined();
+        const raw = (await db.get('preferences', 'user-prefs')) as UserPreferences;
+        expect(raw.llmApiKey).toBe(corrupt);
+      });
+    });
   });
 });
