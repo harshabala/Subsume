@@ -1,10 +1,7 @@
 /**
- * Shared design tokens + font loading for content-script Shadow DOM roots.
+ * Shared design tokens + styling for content-script Shadow DOM roots.
  * Shadow trees cannot inherit :root variables from the host page.
  */
-
-export const SHADOW_FONT_STYLESHEET =
-  'https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap';
 
 /** Key CSS variables from src/shared/tokens.css (dark / default). */
 export const SHADOW_TOKEN_CSS = `
@@ -43,10 +40,11 @@ export const SHADOW_TOKEN_CSS = `
   --text-control: #666666;
   --text-sanctuary: var(--text-reflection);
 
-  /* Typography — Courier Prime display + IBM Plex Mono UI */
-  --font-editorial: 'Courier Prime', 'Courier New', ui-monospace, monospace;
+  /* Typography — local fonts only: content scripts never request font files (no web-accessible
+     resources, no third-party origins). Courier Prime / IBM Plex Mono are used if installed. */
+  --font-editorial: 'Courier Prime', 'Courier New', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   --font-display: var(--font-editorial);
-  --font-ui: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', 'Courier New', monospace;
+  --font-ui: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, 'Cascadia Code', 'Courier New', monospace;
   --font-sans: var(--font-ui);
   --font-mono: var(--font-ui);
 
@@ -106,20 +104,6 @@ export const SHADOW_TOKEN_CSS = `
 }
 `;
 
-let fontsInjected = false;
-
-/** Inject Courier Prime + IBM Plex Mono once per document (shared across shadow roots). */
-export function injectShadowFonts(doc: Document = document): void {
-  if (fontsInjected || doc.getElementById('subsume-shadow-fonts')) return;
-
-  const link = doc.createElement('link');
-  link.id = 'subsume-shadow-fonts';
-  link.rel = 'stylesheet';
-  link.href = SHADOW_FONT_STYLESHEET;
-  doc.head.appendChild(link);
-  fontsInjected = true;
-}
-
 export function createShadowTokenStyle(): HTMLStyleElement {
   const style = document.createElement('style');
   style.setAttribute('data-subsume', 'tokens');
@@ -134,9 +118,8 @@ export function createShadowComponentStyle(css: string): HTMLStyleElement {
   return style;
 }
 
-/** Append shared fonts (document head) + token + component styles into a shadow root. */
+/** Append token + component styles into a shadow root. */
 export function setupShadowStyles(shadowRoot: ShadowRoot, componentCss: string): void {
-  injectShadowFonts();
   shadowRoot.appendChild(createShadowTokenStyle());
   shadowRoot.appendChild(createShadowComponentStyle(componentCss));
 }
