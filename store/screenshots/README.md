@@ -6,10 +6,10 @@ Five 1280x800 PNG screenshots of the built extension, ready for the Chrome Web S
 
 | File | Size | Shows |
 |------|------|-------|
-| `01-popup.png` | 1280x800 | Toolbar popup: archive counts and recent entries (left), and the "Save a reflection" form with a searched title selected (right) |
+| `01-popup.png` | 1280x800 | The real toolbar popup at its true 360x600 size (archive counts, recent entries) composed over a dimmed copy of frame 04's page |
 | `02-library.png` | 1280x800 | Archive page with the sample library: poster cards, status, reflection excerpts |
 | `03-capture.png` | 1280x800 | Capture canvas, "What stayed with you?", with a note, emotion sliders and a 1-10 mark filled in |
-| `04-plaques.png` | 1280x800 | Museum plaques on poster images of a web page; the second plaque is hovered to show "Reflect" |
+| `04-plaques.png` | 1280x800 | Museum plaques drawn by the built content script on a local stand-in page; the second plaque is hovered to show "Reflect" |
 | `05-settings.png` | 1280x800 | Settings, "Browsing & overlays" tab (no API key fields visible) |
 
 Each PNG is under 1 MB.
@@ -20,17 +20,12 @@ All frames are captured from the real built UI (`dist/`) in a throwaway Chromium
 
 Things a reviewer should know:
 
-- **Frame 1** is a composite of two real popup captures on a dark canvas. The right-hand popup was rendered at 720px tall (Chrome caps real popups at 600px) so the whole form fits. The popup's page needs a one-line harness shim (see "Findings" below).
+- Frames use the real `dist/` output only, with no shims or alternate bundles.
+- **Frame 1** composes one real popup capture (360x600, the size Chrome gives it) onto a dimmed screenshot of the frame 4 page. The popup's "Save a reflection" form is deliberately not shown: its search box and note field are `width: 100%` without `box-sizing: border-box` in `src/ui/styles/popup.css`, so they overflow the popup's right edge.
 - **Frame 3**: the note text, slider positions and the "VIII" mark were typed/set by the capture script. Nothing was saved.
-- **Frame 4** is NOT a real website. It is a local stand-in page (`../assets/src/film-page.html`, a fictional "Riverside Screening Room" listing) served from `127.0.0.1`. Poster images are fetched at capture time from the sample library's poster URLs and are not committed. The plaques are drawn by Subsume's real content script recognising the "Title (Year)" alt text. This page was used because no third-party site should be shown or scraped. Ratings on the plaques come from the sample library.
-- Frames 2, 3 and 5 were rendered at a larger viewport (1760x1100 or 1920x1200 or 1600x1000, at 2x) and downscaled to 1280x800 so the whole layout fits in the frame.
-- Sample titles are the extension's built-in Indian and world cinema catalogue, so the poster art is real TMDb artwork. Confirm you are comfortable with that before upload, and the TMDb attribution in the listing text applies.
-
-## Findings while capturing (product bugs, not fixed here because this task was assets-only)
-
-1. **Popup renders blank.** `src/ui/popup.html` mounts into `#app` but `src/ui/popup.tsx` renders into `#popup-root`. The capture script injects a tiny shim that renames the id in the harness only.
-2. **Content script does not run in the shipped `dist/`.** `dist/content.js` is emitted as an ES module with `import` statements, and Chrome loads manifest content scripts as classic scripts ("Cannot use import statement outside a module"). So plaques and hover cards never appear in the built extension. For frame 4 the script builds the same `src/content/index.ts` as a single IIFE (`scripts/store-assets-content.vite.config.mjs`) and swaps it into a temp copy of `dist/`. The repo build is untouched. Fixing the build is needed before the plaque frame is true of the shipped extension.
-3. In the popup form the search field and note box run past the right edge of the 360px popup (visible in frame 1, right panel).
+- **Frame 4** is NOT a real website. It is a local stand-in page (`../assets/src/film-page.html`, a fictional "Riverside Screening Room" listing) served from `127.0.0.1`. Poster images are fetched at capture time from the sample library's poster URLs and are not committed. The script asserts that plaque elements exist in the DOM and that no "Cannot use import statement" error occurs. Ratings on the plaques come from the sample library.
+- Frames 2, 3 and 5 are rendered at a larger viewport at 2x and downscaled to 1280x800 so the whole layout fits.
+- Sample titles are the extension's built-in catalogue, so poster art is real TMDb artwork; the TMDb attribution in the listing text applies.
 
 ## Regenerate
 
@@ -56,11 +51,11 @@ python3 scripts/render-store-assets.py         # both
 
 `python3 scripts/test_cold_install_activation.py` was re-run against the final build. This is an **automated run, not a human-timed one**: the script clicks through onboarding on a fast machine with no reading time.
 
-- Result: passed. Onboarding to first reflection saved in **6.16 s** (script threshold 90 s). First Inscription Gate appeared, practice title opened the capture canvas, save closed it, the Weekly selection card appeared.
-- Its "content-script failure visibility" step injects its own `role="alert"` element and then finds it, so it does not test the content script itself (see finding 2).
+- Result: passed. Onboarding to first reflection saved in **5.35 s** (script threshold 90 s). First Inscription Gate appeared, practice title opened the capture canvas, save closed it, the Weekly selection card appeared.
+- Its "content-script failure visibility" step injects its own `role="alert"` element and then finds it, so it does not test the content script itself (the shipped content script is checked by frame 04 instead).
 
 ## Before upload
 
-- [ ] Resolve or accept the findings above
+- [ ] Fix the popup form input overflow (see frame 1 note), then consider adding the form to the popup frame
 - [ ] Confirm frames still match the version you ship (regenerate after UI changes)
 - [ ] No secrets in frame (none present in the current set)
