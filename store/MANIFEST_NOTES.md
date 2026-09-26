@@ -28,7 +28,9 @@ Each host is called from the extension origin (service worker / options page) fo
 | `api.tvmaze.com` | TV episode / show metadata |
 | `query.wikidata.org`, `en.wikipedia.org` | People / context enrichment |
 | `api.openai.com`, `api.anthropic.com`, `generativelanguage.googleapis.com` | Optional user-supplied AI keys for recommendations |
-| `www.googleapis.com` | Google Drive appData backup API |
+| `openlibrary.org` | Default book catalogue (search, works, editions, authors) |
+| `covers.openlibrary.org` | Book cover URLs (used as image sources; no `fetch` calls, possibly redundant) |
+| `www.googleapis.com` (and `www.googleapis.com/books/*`) | Google Drive appData snapshot backup/restore, OAuth userinfo, optional Google Books API |
 
 Users supply their own API keys where required; hosts are not scraped via content scripts.
 
@@ -42,4 +44,4 @@ Users supply their own API keys where required; hosts are not scraped via conten
 ## Store listing alignment
 
 - **Short description** (manifest `description`, ≤132 chars): private film journal; capture, follow filmmakers, discover while browsing.
-- **Version** for first public store candidate: **0.2.0** (kept in sync with `package.json`).
+- **Version** for first public store candidate: **0.3.0** (kept in sync with `package.json`; enforced by `tests/releaseDocs.test.ts`).

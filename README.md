@@ -88,7 +88,7 @@ The **Hardcover Library Archive** organizes everything you've captured — each 
 | **Cross-Site Hover Cards** | Instant synopsis and status on film, show, or book titles | Isolated DOM injection, debounced pointer controllers, O(1) cache |
 | **Contextual LLM Recommendations** | AI discovery from your actual taste profile and notes | Two-stage prompting pipeline, OpenAI / Anthropic / Gemini adapters; catalog validation |
 | **Weekly Automated Digests** | Curated new release picks across streaming subscriptions | Chrome background alarms, dynamic rule/AI hybrid curation |
-| **Google Drive Backup** | On-demand and scheduled library backup to private Drive appData (snapshot archive, not live cross-device sync) | OAuth 2.0, multipart Drive API upload/download |
+| **Google Drive Backup** | Manual, button-triggered library backup and restore to private Drive appData (one snapshot file; no scheduled backup, not live cross-device sync) | OAuth 2.0, multipart Drive API upload/download |
 
 ---
 
@@ -135,10 +135,10 @@ Subsume is a client-side Chrome extension. There is no backend proxy — API key
 
 | Topic | Behavior |
 | :--- | :--- |
-| **Where keys live** | TMDb, OMDb, optional Google Books, and LLM API keys are stored in **IndexedDB** (`subsume-db`) as part of `UserPreferences`. They are **not encrypted at rest**. |
-| **Who is responsible** | You. Keys never leave your browser except when the extension calls the providers you configure. Treat your machine and Chrome profile as trusted. |
+| **Where keys live** | TMDb, OMDb, optional Google Books, and LLM API keys are stored in **IndexedDB** (`subsume-db`) as part of `UserPreferences`. Before being written they are encrypted with WebCrypto AES-GCM (`src/shared/keyCrypto.ts`) using a per-install key kept in `chrome.storage.local` in the **same browser profile**. This deters casual inspection of storage and other extensions reading raw values; it does **not** protect against someone with access to your unlocked profile/device or malicious code inside the extension. The Google Drive access token is protected the same way. Notes, ratings, and reflections in IndexedDB are **not encrypted**. |
+| **Who is responsible** | You. Keys never leave your browser except when the extension calls the providers you configure. Treat your machine and Chrome profile as trusted. Diagnostic logs stay in local `chrome.storage.local`, are secret-redacted (pattern-based, best effort), record page origins only, and are never transmitted. |
 | **Content-script exposure** | API keys are **never** sent to content scripts. `GET_CONTENT_PREFS` returns feature toggles only (see `buildContentPrefs()`). |
-| **Export/backup** | Library export (v2 multi-medium) excludes API keys and preference secrets. Media, library, works, editions, and relationships only. |
+| **Export/backup** | Library export (v2 multi-medium) excludes API keys and preference secrets. Media, library, works, editions, and relationships only. The Drive backup is this same export uploaded as plaintext JSON to Drive appData (protected by your Google account only). |
 
 ### LLM Integration
 
@@ -197,7 +197,7 @@ npm run build
 
 ### Google Drive OAuth (Optional)
 
-> **Production builds:** Drive sync is preconfigured for the stable extension ID from the manifest `key`. Load unpacked from a clean `dist/` build of this repo and Connect Google Drive should work for the registered OAuth client.
+> **Drive backup availability:** the OAuth client in `src/shared/googleDriveOAuth.ts` is registered for the stable extension ID from the manifest `key`. Whether it works for arbitrary users depends on the Google Cloud consent screen status (in “Testing”, only listed test users can connect); confirm this before relying on Drive backup. Drive is a manual snapshot backup, not live sync.
 
 OAuth is **not** configured via a `YOUR_CLIENT_ID_HERE` placeholder in `manifest.json`. The Web client ID and scopes live in:
 

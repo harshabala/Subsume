@@ -40,18 +40,18 @@ What you can do
 • Follow people—directors, cast, crew, authors—and explore their body of work
 • Resolve books via Open Library by default (no key); optional Google Books key for enrichment
 • Optionally request AI recommendations using your own OpenAI, Anthropic, or Gemini API keys
-• Optionally back up library data to Google Drive appData (you connect; you disconnect)
+• Optionally save a manual backup snapshot of your library to your own Google Drive appData folder, and restore it later (no automatic or live sync)
 • Export your library; uninstall removes local extension data
 
 How it works (honestly)
-Subsume is client-side only. There is no Subsume backend that stores your taste profile. Your library and settings live in IndexedDB and chrome.storage.local on your device. Local data is not encrypted at rest—treat your browser profile as trusted. Optional API keys you paste in Settings never go to content scripts; network calls to metadata and AI providers use the background service worker. Book resolution may send titles, authors, or ISBNs to Open Library (not full page HTML).
+Subsume is client-side only. There is no Subsume backend that stores your taste profile. Your library and settings live in IndexedDB and chrome.storage.local on your device. The API keys you paste in Settings and the Google Drive access token are encrypted with AES-GCM using a per-install key kept in the same browser profile: that guards against casual inspection of storage, not against someone using your unlocked profile or malicious code inside the extension. Your notes, ratings, and reflections are not encrypted, and neither is a Drive backup file (it is protected only by your Google account). Optional API keys never go to content scripts; network calls to metadata and AI providers use the background service worker. Book resolution may send titles, authors, or ISBNs to Open Library (not full page HTML). A local diagnostic log (secrets redacted, page origins only) stays on your device and is never sent anywhere. Settings also shows a “coming soon” row for a possible future paid backup; today it is only a local “notify me” checkbox that stores a yes/no flag on your device, with no email, account, or network call.
 
 Permissions in plain language
 • Storage — keep your library and preferences on this device
 • Active tab — interact with the page when you use the extension UI
 • Notifications — optional digests or alerts you enable
 • Alarms — schedule those digests
-• Identity — optional Google sign-in for Drive backup
+• Identity — optional Google sign-in for Drive backup and restore
 • Host access — TMDb, Open Library, optional OMDb/Google Books/LLM providers, Trakt, TVMaze, Wikidata/Wikipedia, Google APIs
 • Content scripts on http/https — poster, title, and book detection; disable per domain in Settings
 
@@ -72,7 +72,7 @@ Developer contact: harsha16balakrishnan@proton.me
 One sentence (CWS “single purpose”):
 
 ```
-Subsume helps users keep a private library of films, shows, and books—capturing titles discovered while browsing, with notes, ratings, and optional on-device AI and Drive backup—without a Subsume cloud backend.
+Subsume helps users keep a private library of films, shows, and books—capturing titles discovered while browsing, with notes, ratings, and optional AI recommendations (using the user’s own API key) and manual Google Drive backup—without a Subsume cloud backend.
 ```
 
 ---
@@ -83,7 +83,7 @@ Copy into justification fields as needed. Full matrix: `store/PERMISSIONS.md`.
 
 ### storage
 
-Stores the user’s personal media library, preferences, optional API keys, diagnostic logs, and related state in IndexedDB and `chrome.storage.local` on the device. Required for a local-first library with no Subsume server.
+Stores the user’s personal media library, preferences, optional API keys (encrypted with a per-install key), diagnostic logs, and related state in IndexedDB and `chrome.storage.local` on the device. Required for a local-first library with no Subsume server.
 
 ### activeTab
 
@@ -99,7 +99,7 @@ Schedules periodic background work such as weekly digests and other time-based c
 
 ### identity
 
-Used solely for optional Google OAuth via `chrome.identity` (e.g. `launchWebAuthFlow`) so the user can connect Google Drive appData backup/restore. Not used for Subsume accounts (there are none).
+Used solely for optional Google OAuth via `chrome.identity` (e.g. `launchWebAuthFlow`) so the user can connect Google Drive appData backup/restore (manual snapshot, not live sync). Not used for Subsume accounts (there are none).
 
 ### host_permissions
 
@@ -109,7 +109,7 @@ Used solely for optional Google OAuth via `chrome.identity` (e.g. `launchWebAuth
 | `https://www.omdbapi.com/*` | Optional OMDb metadata when the user supplies an OMDb API key. |
 | `https://openlibrary.org/*` | Open Library book search, work/edition resolution (titles, authors, ISBNs—not full page HTML). |
 | `https://covers.openlibrary.org/*` | Open Library cover images for books. |
-| `https://www.googleapis.com/books/*` | Optional Google Books API when the user supplies a Books API key. |
+| `https://www.googleapis.com/books/*` | Optional Google Books API when the user supplies a Books API key. (Also covered by the broader `www.googleapis.com/*` entry below.) |
 | `https://api.openai.com/*` | Optional OpenAI API calls with the user’s key for recommendations/digests. |
 | `https://api.anthropic.com/*` | Optional Anthropic API calls with the user’s key. |
 | `https://generativelanguage.googleapis.com/*` | Optional Google Gemini API calls with the user’s key. |
@@ -117,7 +117,7 @@ Used solely for optional Google OAuth via `chrome.identity` (e.g. `launchWebAuth
 | `https://api.tvmaze.com/*` | TVMaze API for television metadata. |
 | `https://query.wikidata.org/*` | Wikidata SPARQL/API queries for structured metadata. |
 | `https://en.wikipedia.org/*` | Wikipedia content used to enrich title/person context. |
-| `https://www.googleapis.com/*` | Google APIs for OAuth userinfo and Drive appData backup when connected. |
+| `https://www.googleapis.com/*` | Google APIs for OAuth userinfo and Drive appData backup/restore when connected, and the Google Books API. |
 
 ### content_scripts (all http/https URLs)
 
@@ -135,14 +135,14 @@ Use the live Chrome Web Store “Privacy practices” form; map answers as follo
 | **Does the extension collect user data?** | Yes, **on the user’s device** (library, notes, preferences, optional keys). No Subsume server collection. Disclose personal media library content, preferences, and optional authentication for Drive. |
 | **Personally identifiable information** | Optional Google account email/identity tokens only if the user connects Drive (via Google OAuth). No Subsume account email required for core use. |
 | **Health / financial / authentication** | Authentication: only optional Google OAuth for Drive—not a Subsume password system. Do not claim health/financial collection. |
-| **Personal communications** | Notes/reflections the user writes about films/TV (user-generated content stored locally / optional Drive). |
+| **Personal communications** | Notes/reflections the user writes about films, TV, and books (user-generated content stored locally / optional manual Drive backup, unencrypted apart from Google’s own protections). |
 | **Location / web history** | Content scripts observe page content for media detection on pages the user visits; this is not a general browsing-history product. Be accurate: disclose website content access for the declared purpose. |
-| **User activity** | Local library actions and optional diagnostics on device; no third-party analytics SDK. |
+| **User activity** | Local library actions and a local diagnostic log (secrets redacted, page origins only, never transmitted); no third-party analytics SDK. |
 | **Remote code** | **No.** All extension code is packaged in the store zip; no remote code execution. |
 | **Data sold to third parties** | **No.** |
 | **Data used for purposes unrelated to the single purpose** | **No.** |
 | **Data used for creditworthiness / lending** | **No.** |
-| **Transfer of data** | Optional: user-configured third-party APIs (TMDb, OMDb, LLMs, Trakt, TVMaze, Wikidata/Wikipedia) and optional Google Drive. Not sold. |
+| **Transfer of data** | Optional: user-configured third-party APIs (TMDb, OMDb, Open Library, Google Books, LLMs, Trakt, TVMaze, Wikidata/Wikipedia) and optional Google Drive. Not sold. |
 | **Privacy policy URL** | `https://harshabala.github.io/Subsume/privacy.html` (or your hosted `docs/privacy.html`). |
 | **Certification** | Certify that disclosures match the extension’s actual behavior. |
 
@@ -169,4 +169,4 @@ Use the live Chrome Web Store “Privacy practices” form; map answers as follo
 
 ---
 
-*Listing copy for Subsume · English · Align with manifest v0.1.x permissions before each upload.*
+*Listing copy for Subsume · English · Version 0.3.0. Re-check against `manifest.json` permissions before each upload.*
