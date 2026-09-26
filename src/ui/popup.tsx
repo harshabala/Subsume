@@ -703,7 +703,7 @@ function Popup() {
   );
 }
 
-const root = document.getElementById('popup-root');
+const root = document.getElementById('app');
 if (root) {
   render(<Popup />, root);
 }
