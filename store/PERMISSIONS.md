@@ -44,8 +44,6 @@ Declared in `manifest.json` → `host_permissions`. Each host is called from the
 | :--- | :--- | :--- | :--- | :--- |
 | `https://api.themoviedb.org/*` | TMDb | Core catalogue: search, metadata, posters, people/filmography | API key (user-configured), title/person queries, IDs | JSON metadata, image paths |
 | `https://openlibrary.org/*` | Open Library | Default book catalogue: search, work/edition and author resolution | Titles, authors, ISBNs (never full page HTML) | JSON book metadata |
-| `https://covers.openlibrary.org/*` | Open Library covers | Cover and author-photo image URLs for books. Note: the code only builds these URLs for `<img>` display; it makes no `fetch` to this host, so the permission may be redundant | Image requests (ISBN/cover id in URL) | Cover images |
-| `https://www.googleapis.com/books/*` | Google Books | Optional book enrichment when the user supplies a Books API key. Overlaps with `www.googleapis.com/*` below | User Books API key, ISBN/title/author queries | JSON book metadata |
 | `https://www.omdbapi.com/*` | OMDb | Optional supplemental metadata | User OMDb API key, title queries | JSON metadata |
 | `https://api.openai.com/*` | OpenAI | Optional AI recommendations / digests | User API key; prompts built from local taste profile / short note excerpts | Model text responses (data, not code) |
 | `https://api.anthropic.com/*` | Anthropic | Optional AI recommendations / digests | User API key; similar prompts; browser access header as required by Anthropic for browser-origin calls | Model text responses |

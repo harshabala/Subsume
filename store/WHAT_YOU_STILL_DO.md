@@ -72,7 +72,7 @@ Upload **`subsume.zip`** (repo root). Version in manifest: **0.3.0**. Click **Su
 
 ## 8. Owner decisions still open
 
-- Whether to drop `https://covers.openlibrary.org/*` from `host_permissions` (the code only builds image URLs for it, no `fetch`) and the redundant `https://www.googleapis.com/books/*` (covered by `https://www.googleapis.com/*`)
+- (Resolved) `covers.openlibrary.org/*` and the redundant `googleapis.com/books/*` were removed from `host_permissions`: cover images load as plain `<img>` sources and need no host permission.
 - Whether to add an in-app "disconnect Google Drive" button (the policy currently says there is none)
 
 ## 9. Optional later improvements (not blocking first publish)

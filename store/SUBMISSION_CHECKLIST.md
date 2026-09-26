@@ -128,9 +128,7 @@ Confirm each is explained in the dashboard (all drafted in `store/PERMISSIONS.md
 - [ ] Host: `https://query.wikidata.org/*`  
 - [ ] Host: `https://en.wikipedia.org/*`  
 - [ ] Host: `https://www.googleapis.com/*`  
-- [ ] Host: `https://www.googleapis.com/books/*`  
 - [ ] Host: `https://openlibrary.org/*`  
-- [ ] Host: `https://covers.openlibrary.org/*`  
 - [ ] Content scripts: `http://*/*`, `https://*/*` (broad match — write carefully)
 
 ---

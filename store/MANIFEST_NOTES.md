@@ -29,8 +29,7 @@ Each host is called from the extension origin (service worker / options page) fo
 | `query.wikidata.org`, `en.wikipedia.org` | People / context enrichment |
 | `api.openai.com`, `api.anthropic.com`, `generativelanguage.googleapis.com` | Optional user-supplied AI keys for recommendations |
 | `openlibrary.org` | Default book catalogue (search, works, editions, authors) |
-| `covers.openlibrary.org` | Book cover URLs (used as image sources; no `fetch` calls, possibly redundant) |
-| `www.googleapis.com` (and `www.googleapis.com/books/*`) | Google Drive appData snapshot backup/restore, OAuth userinfo, optional Google Books API |
+| `www.googleapis.com` | Google Drive appData snapshot backup/restore, OAuth userinfo, optional Google Books API |
 
 Users supply their own API keys where required; hosts are not scraped via content scripts.
 

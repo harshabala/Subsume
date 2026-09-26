@@ -23,9 +23,7 @@
     "https://query.wikidata.org/*",
     "https://en.wikipedia.org/*",
     "https://www.googleapis.com/*",
-    "https://openlibrary.org/*",
-    "https://covers.openlibrary.org/*",
-    "https://www.googleapis.com/books/*"
+    "https://openlibrary.org/*"
   ],
   "background": {
     "service_worker": "background.js",

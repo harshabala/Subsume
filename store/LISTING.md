@@ -108,8 +108,6 @@ Used solely for optional Google OAuth via `chrome.identity` (e.g. `launchWebAuth
 | `https://api.themoviedb.org/*` | TMDb API for film/TV metadata, search, people, posters. |
 | `https://www.omdbapi.com/*` | Optional OMDb metadata when the user supplies an OMDb API key. |
 | `https://openlibrary.org/*` | Open Library book search, work/edition resolution (titles, authors, ISBNs—not full page HTML). |
-| `https://covers.openlibrary.org/*` | Open Library cover images for books. |
-| `https://www.googleapis.com/books/*` | Optional Google Books API when the user supplies a Books API key. (Also covered by the broader `www.googleapis.com/*` entry below.) |
 | `https://api.openai.com/*` | Optional OpenAI API calls with the user’s key for recommendations/digests. |
 | `https://api.anthropic.com/*` | Optional Anthropic API calls with the user’s key. |
 | `https://generativelanguage.googleapis.com/*` | Optional Google Gemini API calls with the user’s key. |
