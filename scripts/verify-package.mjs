@@ -13,6 +13,7 @@ import {
   checkIcons,
   checkManifestBasics,
   checkRefsExist,
+  checkClassicScript,
   checkRemoteCode,
   findSecrets,
 } from './verify-package-lib.mjs';
@@ -52,6 +53,11 @@ try {
       ...checkIcons(manifest, (p) => (fileSet.has(p) ? readFileSync(join(tmp, p)) : null)),
       ...checkRefsExist(manifest, fileSet),
     );
+    for (const cs of manifest.content_scripts ?? []) {
+      for (const js of cs.js ?? []) {
+        if (fileSet.has(js)) problems.push(...checkClassicScript(js, readFileSync(join(tmp, js), 'utf8')));
+      }
+    }
     if (manifest.content_security_policy) {
       const csp = JSON.stringify(manifest.content_security_policy);
       if (/unsafe-eval|https?:\/\/[^ ']+/.test(csp)) problems.push(`CSP allows remote/unsafe sources: ${csp}`);

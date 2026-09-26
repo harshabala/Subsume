@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite build --watch",
-    "build": "vite build",
+    "build": "vite build && vite build --config vite.content.config.ts",
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit",
     "ci": "npm run typecheck && npm test && npm run build",

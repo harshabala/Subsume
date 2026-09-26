@@ -145,3 +145,19 @@ export function checkRemoteCode(path, text) {
   }
   return problems;
 }
+
+/**
+ * Manifest content scripts are loaded by Chrome as classic scripts, so they must not
+ * contain ES module syntax (static import/export). Returns a list of problems.
+ */
+export function checkClassicScript(path, text) {
+  const problems = [];
+  const head = text.slice(0, 4000);
+  if (/(^|[;}\s])import\s*[{*"'\w]/.test(head) && /from\s*["'][^"']+["']/.test(head)) {
+    problems.push(`${path}: contains static ES imports; content scripts must be classic (IIFE) bundles`);
+  }
+  if (/(^|[;}\s])export\s*(\{|default|const|function|class)/.test(text)) {
+    problems.push(`${path}: contains ES exports; content scripts must be classic (IIFE) bundles`);
+  }
+  return problems;
+}

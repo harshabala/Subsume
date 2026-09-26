@@ -8,6 +8,7 @@ import {
   checkForbiddenPaths,
   findSecrets,
   checkRemoteCode,
+  checkClassicScript,
   // @ts-expect-error plain .mjs module without types
 } from '../scripts/verify-package-lib.mjs';
 
@@ -89,5 +90,18 @@ describe('verify-package helpers', () => {
     expect(checkRemoteCode('a.js', 'x=eval("1")')).toHaveLength(1);
     expect(checkRemoteCode('a.js', 'new Function("a")')).toHaveLength(1);
     expect(checkRemoteCode('a.js', 'const retrieval=1;')).toEqual([]);
+  });
+});
+
+describe('checkClassicScript', () => {
+  it('rejects a content script with static ES imports', () => {
+    const esm = 'import{a as e}from"./ui/assets/chunk-abc.js";var t=e;';
+    expect(checkClassicScript('content.js', esm)).toHaveLength(1);
+  });
+  it('rejects ES exports', () => {
+    expect(checkClassicScript('content.js', 'var a=1;export{a};').length).toBeGreaterThan(0);
+  });
+  it('accepts a self-contained IIFE', () => {
+    expect(checkClassicScript('content.js', '(function(){var e=function(){return 1};e()})();')).toEqual([]);
   });
 });

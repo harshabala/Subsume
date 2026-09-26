@@ -68,14 +68,12 @@ export default defineConfig(({ command }) => ({
     rollupOptions: {
       input: {
         background: resolve(__dirname, 'src/background/index.ts'),
-        content: resolve(__dirname, 'src/content/index.ts'),
         ui: resolve(__dirname, 'src/ui/index.html'),
         popup: resolve(__dirname, 'src/ui/popup.html'),
       },
       output: {
         entryFileNames: (chunkInfo) => {
           if (chunkInfo.name === 'background') return 'background.js';
-          if (chunkInfo.name === 'content') return 'content.js';
           return 'ui/assets/[name]-[hash].js';
         },
         chunkFileNames: (chunkInfo) => {
