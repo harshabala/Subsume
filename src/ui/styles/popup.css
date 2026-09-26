@@ -329,6 +329,7 @@
 
 .search-input {
   width: 100%;
+  box-sizing: border-box;
   background-color: var(--input-bg, var(--bg-sunken));
   border: 1px solid var(--input-border, var(--border-restraint));
   border-radius: var(--radius-md, 8px);
@@ -662,6 +663,7 @@
 /* ─── Logs notes & selectors ────────────────────────────────────── */
 .ext-notes-textarea {
   width: 100%;
+  box-sizing: border-box;
   background-color: var(--input-bg, var(--bg-sunken));
   border: 1px solid var(--input-border, var(--border-restraint));
   border-radius: var(--radius-md, 8px);

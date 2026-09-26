@@ -27,3 +27,7 @@ Assertion helpers live in `scripts/verify-package-lib.mjs` and are unit-tested i
 ## Key-decrypt race (Task C)
 
 `decryptUserPreferences` no longer sets `needsMigration` when ciphertext fails to decrypt; it reports `undecryptable` paths instead, and `getPreferences` preserves the original ciphertext for them when writing back other migrated (plaintext) keys. Failed keys read as missing in memory only.
+
+## Content script format
+
+`verify-package.mjs` also asserts every manifest content script is a classic (IIFE) script with no ES `import`/`export`. Chrome loads content scripts as classic scripts, so an ES module build fails silently on every page ("Cannot use import statement outside a module"). The content bundle is built by `vite.content.config.ts` after the main build (`npm run build`).
