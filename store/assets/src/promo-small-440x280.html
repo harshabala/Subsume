@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Subsume promo tile 440x280</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Brand tokens (src/shared/tokens.css, dark / Cinema Black) */
+  :root {
+    --bg-base: #181818;
+    --bg-overlay: #303030;
+    --fg-base: #ffffff;
+    --fg-muted: #969696;
+    --primary: #da291c;
+    --font-display: 'Courier Prime', 'Courier New', ui-monospace, monospace;
+    --font-ui: 'IBM Plex Mono', ui-monospace, 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 440px; height: 280px; overflow: hidden; background: var(--bg-base); }
+  .tile { position: relative; width: 440px; height: 280px; padding: 26px 28px; }
+  .mark { display: flex; align-items: center; gap: 9px; font: 500 11px/1 var(--font-ui); letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-muted); }
+  .mark i { width: 10px; height: 10px; background: var(--primary); display: block; }
+  h1 { margin-top: 18px; font: 700 24px/1.15 var(--font-display); color: var(--fg-base); white-space: nowrap; }
+  p { margin-top: 10px; font: 400 11.5px/1.5 var(--font-ui); color: var(--fg-muted); max-width: 330px; }
+  .strip { position: absolute; left: 0; right: 0; bottom: 0; height: 118px; overflow: hidden; }
+  .strip img { display: block; position: absolute; width: 678px; left: -120px; top: -203px; }
+</style>
+</head>
+<body>
+<div class="tile">
+  <div class="mark"><i></i>Subsume</div>
+  <h1>Save what stayed with you.</h1>
+  <p>Private movie &amp; book journal for Chrome.</p>
+  <div class="strip"><img src="../../screenshots/02-library.png" alt=""></div>
+</div>
+</body>
+</html>
