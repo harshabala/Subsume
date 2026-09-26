@@ -26,6 +26,7 @@ import {
 } from '../shared/productCopy';
 import { legacyStatusLabel } from '../shared/statusLabels';
 import { Icon } from './components/icons';
+import '../styles/fonts.css';
 import '../shared/tokens.css';
 import './styles/popup.css';
 import './styles/emotional-components.css';
