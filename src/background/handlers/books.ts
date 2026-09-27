@@ -462,9 +462,9 @@ export const bookHandlers: MessageHandlerMap = {
         ? Math.min(Math.floor(req.cap), GOODREADS_IMPORT_BATCH_CAP)
         : GOODREADS_IMPORT_BATCH_CAP;
 
-    let rows: GoodreadsImportRow[] = [];
-    let totalDataRows = 0;
-    let truncated = false;
+    let rows: GoodreadsImportRow[];
+    let totalDataRows: number;
+    let truncated: boolean;
     const warnings: string[] = [];
 
     if (Array.isArray(req.rows) && req.rows.length > 0) {

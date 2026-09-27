@@ -1,4 +1,3 @@
-import { h } from 'preact';
 import { PersonalizedRecommendation, MediaItem } from '@/shared/types';
 import { mediumLabel, ADD_TO_ARCHIVE_LABEL, IN_ARCHIVE_LABEL } from '@/shared/productCopy';
 import '../styles/recommendations.css';

@@ -1,4 +1,3 @@
-import { h } from 'preact';
 import { useState, useEffect, useMemo } from 'preact/hooks';
 import { sendMessage } from '@/shared/messages';
 import { MessageType, LibraryItem, MediaItem } from '@/shared/types';
@@ -42,7 +41,7 @@ export function Stats({ onNavigate }: StatsProps = {}) {
     async function fetchLibrary() {
       setLoading(true);
       try {
-        const res = await sendMessage<any, JoinedItem[]>(MessageType.GET_LIBRARY, {});
+        const res = await sendMessage<Record<string, unknown>, JoinedItem[]>(MessageType.GET_LIBRARY, {});
         if (res.success && res.data) {
           setItems(res.data);
         }

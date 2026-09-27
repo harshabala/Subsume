@@ -162,7 +162,8 @@ export async function getOrCreateInstallKey(): Promise<CryptoKey> {
         return cachedCryptoKey;
       } catch (err) {
         throw new Error(
-          `Failed to import existing install key from storage: ${err instanceof Error ? err.message : String(err)}`
+          `Failed to import existing install key from storage: ${err instanceof Error ? err.message : String(err)}`,
+          { cause: err }
         );
       }
     }

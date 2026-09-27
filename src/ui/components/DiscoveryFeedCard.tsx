@@ -1,4 +1,3 @@
-import { h } from 'preact';
 import { DiscoveryFeedItem } from '@/shared/types';
 
 function sourceLabel(source: DiscoveryFeedItem['source']): string {

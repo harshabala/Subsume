@@ -1,4 +1,3 @@
-import { h } from 'preact';
 import { MediaItem } from '@/shared/types';
 import { mediumLabel } from '@/shared/productCopy';
 import '../styles/recommendations.css';

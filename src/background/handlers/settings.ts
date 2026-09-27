@@ -77,13 +77,15 @@ function mergePreferences(
   return merged;
 }
 
-function isValidUserPreferences(prefs: any): prefs is UserPreferences {
-  if (!prefs || typeof prefs !== 'object') return false;
-  if (!Array.isArray(prefs.favoriteGenres) || !prefs.favoriteGenres.every((g: any) => typeof g === 'string')) return false;
-  if (!Array.isArray(prefs.platforms) || !prefs.platforms.every((p: any) => typeof p === 'string')) return false;
+function isValidUserPreferences(input: unknown): input is UserPreferences {
+  if (!input || typeof input !== 'object') return false;
+  const prefs = input as Record<string, unknown>;
+  const isStringArray = (v: unknown) => Array.isArray(v) && v.every((x) => typeof x === 'string');
+  if (!isStringArray(prefs.favoriteGenres)) return false;
+  if (!isStringArray(prefs.platforms)) return false;
   if (typeof prefs.region !== 'string') return false;
   if (typeof prefs.llmEnabled !== 'boolean') return false;
-  if (prefs.llmProvider !== undefined && !['openai', 'anthropic', 'gemini', 'local'].includes(prefs.llmProvider)) return false;
+  if (prefs.llmProvider !== undefined && !['openai', 'anthropic', 'gemini', 'local'].includes(prefs.llmProvider as string)) return false;
   if (prefs.llmApiKey !== undefined && typeof prefs.llmApiKey !== 'string') return false;
   if (prefs.llmSecondaryApiKey !== undefined && typeof prefs.llmSecondaryApiKey !== 'string') return false;
   if (prefs.tmdbApiKey !== undefined && typeof prefs.tmdbApiKey !== 'string') return false;
@@ -91,10 +93,10 @@ function isValidUserPreferences(prefs: any): prefs is UserPreferences {
   if (prefs.googleBooksApiKey !== undefined && typeof prefs.googleBooksApiKey !== 'string') return false;
   if (typeof prefs.hoverCardsEnabled !== 'boolean') return false;
   if (typeof prefs.posterOverlaysEnabled !== 'boolean') return false;
-  if (!Array.isArray(prefs.disabledDomains) || !prefs.disabledDomains.every((d: any) => typeof d === 'string')) return false;
-  if (!['low', 'medium', 'high'].includes(prefs.detectionSensitivity)) return false;
+  if (!isStringArray(prefs.disabledDomains)) return false;
+  if (!['low', 'medium', 'high'].includes(prefs.detectionSensitivity as string)) return false;
   if (typeof prefs.onboardingComplete !== 'boolean') return false;
-  if (prefs.theme !== undefined && !['dark', 'light', 'system'].includes(prefs.theme)) return false;
+  if (prefs.theme !== undefined && !['dark', 'light', 'system'].includes(prefs.theme as string)) return false;
   return true;
 }
 

@@ -11,7 +11,6 @@ import { getAllLibraryItems, getAllMediaMap, getPreferences, putMediaItem, findM
 import { searchTitle } from './tmdb';
 import { buildWatchProfile, buildTasteProfileForMedium } from './context';
 import {
-  DEFAULT_PROMPTS,
   getEffectivePrompt,
   buildTasteProfilePayload,
 } from '@/shared/prompts';
@@ -230,7 +229,7 @@ export async function callLLMProvider(prompt: string, prefs: UserPreferences, us
         return callLLMProvider(prompt, prefs, true);
       } else {
         showRateLimitNotification(provider, false);
-        throw new Error(`${provider} API rate limit exceeded.`);
+        throw new Error(`${provider} API rate limit exceeded.`, { cause: err });
       }
     }
     throw err;
@@ -283,7 +282,7 @@ export async function generateLLMRecommendations(): Promise<Recommendation[] | G
         rawGroups = JSON.parse(cleaned);
       } catch (parseErr) {
         logger.error('[Subsume] Failed to parse LLM response as JSON:', parseErr);
-        throw new Error('LLM returned invalid JSON format');
+        throw new Error('LLM returned invalid JSON format', { cause: parseErr });
       }
 
       // Flatten recommendations to resolve them concurrently
@@ -360,7 +359,7 @@ export async function generateLLMRecommendations(): Promise<Recommendation[] | G
         rawRecs = JSON.parse(cleaned);
       } catch (parseErr) {
         logger.error('[Subsume] Failed to parse LLM response as JSON:', parseErr);
-        throw new Error('LLM returned invalid JSON format');
+        throw new Error('LLM returned invalid JSON format', { cause: parseErr });
       }
 
       // Resolve each title in parallel, using the local DB cache when available

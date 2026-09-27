@@ -200,7 +200,7 @@ export async function generateCrossMediumRecommendations(
   for (const seed of seeds) {
     if (results.length >= cap) break;
 
-    let relations: WorkRelation[] = [];
+    let relations: WorkRelation[];
     try {
       relations = await getWorkRelationsForWork(seed.id);
     } catch (err) {

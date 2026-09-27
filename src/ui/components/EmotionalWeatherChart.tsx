@@ -1,4 +1,3 @@
-import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
 import type { LibraryItem } from '@/shared/types';
 import {

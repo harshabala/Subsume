@@ -1,4 +1,3 @@
-import { h } from 'preact';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { sendMessage } from '@/shared/messages';
 import {
@@ -178,7 +177,7 @@ export function Alerts() {
   const loadAlerts = async () => {
     setLoading(true);
     try {
-      const res = await sendMessage<{}, WatchAlert[]>(MessageType.GET_WATCH_ALERTS, {});
+      const res = await sendMessage<Record<string, never>, WatchAlert[]>(MessageType.GET_WATCH_ALERTS, {});
       if (res.success && res.data) {
         setAlerts(res.data);
       }

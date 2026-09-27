@@ -1,10 +1,8 @@
-import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { sendMessage, CONNECT_GOOGLE_DRIVE_TIMEOUT_MS } from '@/shared/messages';
 import {
   MessageType,
   UserPreferences,
-  ImportLibraryData,
   ImportGoodreadsCsvResponse,
   ThemePreference,
   CinemaAtmosphere,
@@ -436,12 +434,19 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
       logDiagnostic('info', 'settings.drive', 'Connect Google Drive succeeded');
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      const withRedirect =
-        msg.includes('redirect') || msg.includes('Google sign-in failed')
-          ? `${msg} Add this exact redirect URI in Google Cloud → OAuth Web client: ${oauthRedirectUri}`
-          : msg;
-      setDriveStatus(withRedirect);
-      logDiagnostic('error', 'settings.drive', withRedirect);
+      // Setup problems (redirect URI not registered, client misconfigured) are the
+      // developer's to fix; readers get a plain message and the detail goes to Diagnostics.
+      const isSetupProblem = /redirect|Google sign-in failed|not configured/i.test(msg);
+      setDriveStatus(
+        isSetupProblem
+          ? 'Google Drive backup is not available on this install yet. Your library is safe on this device; use Export in the meantime. Details are in Settings → Diagnostics.'
+          : msg
+      );
+      logDiagnostic(
+        'error',
+        'settings.drive',
+        isSetupProblem ? `${msg} Redirect URI for this install: ${oauthRedirectUri}` : msg
+      );
     } finally {
       setDriveConnecting(false);
     }

@@ -39,7 +39,7 @@ function sanitizeForStorage(value: unknown): unknown {
   return value;
 }
 
-function pushLog(level: 'info' | 'warn' | 'error', args: any[]) {
+function pushLog(level: 'info' | 'warn' | 'error', args: unknown[]) {
   if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.local) return;
   
   // Format the message
@@ -66,7 +66,7 @@ function pushLog(level: 'info' | 'warn' | 'error', args: any[]) {
 
   storageQueue = storageQueue.then(async () => {
     try {
-      const result = await new Promise<any>((resolve, reject) => {
+      const result = await new Promise<{ system_logs?: SystemLog[] }>((resolve, reject) => {
         try {
           const maybePromise = chrome.storage.local.get('system_logs', (res) => {
             if (chrome.runtime?.lastError) {
@@ -74,7 +74,7 @@ function pushLog(level: 'info' | 'warn' | 'error', args: any[]) {
             } else {
               resolve(res || {});
             }
-          }) as any;
+          }) as unknown as Promise<{ system_logs?: SystemLog[] }> | undefined;
           if (maybePromise && typeof maybePromise.then === 'function') {
             maybePromise.then(resolve).catch(reject);
           }
@@ -97,7 +97,7 @@ function pushLog(level: 'info' | 'warn' | 'error', args: any[]) {
             } else {
               resolve();
             }
-          }) as any;
+          }) as unknown as Promise<void> | undefined;
           if (maybePromise && typeof maybePromise.then === 'function') {
             maybePromise.then(resolve).catch(reject);
           }
@@ -122,24 +122,24 @@ function pushLog(level: 'info' | 'warn' | 'error', args: any[]) {
 }
 
 export const logger = {
-  log: (...args: any[]) => {
+  log: (...args: unknown[]) => {
     if (DEBUG) {
       console.log(...args);
     }
   },
-  info: (...args: any[]) => {
+  info: (...args: unknown[]) => {
     if (DEBUG) {
       console.info(...args);
     }
     pushLog('info', args);
   },
-  warn: (...args: any[]) => {
+  warn: (...args: unknown[]) => {
     if (DEBUG) {
       console.warn(...args);
     }
     pushLog('warn', args);
   },
-  error: (...args: any[]) => {
+  error: (...args: unknown[]) => {
     if (DEBUG) {
       console.error(...args);
     }

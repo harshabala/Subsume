@@ -11,7 +11,7 @@
  * re-processed on subsequent scans or by the MutationObserver.
  */
 
-import { PosterMatch, MessageType } from '@/shared/types';
+import { PosterMatch, MessageType, type ExtensionResponse } from '@/shared/types';
 import { sendMessage } from '@/shared/messages';
 import { isPosterAspectRatioImage } from './catalogDetector';
 
@@ -434,7 +434,7 @@ export async function scanImages(
         }
 
         try {
-          let res: any = null;
+          let res: ExtensionResponse<{ match: PosterMatch | null }> | null = null;
 
           if (strategy === 'tmdb-cdn') {
             const parsed = extractTmdbIdFromSrc(img.src, img);
@@ -443,14 +443,14 @@ export async function scanImages(
               return;
             }
             recordPosterResolve();
-            res = await sendMessage<any, { match: PosterMatch | null }>(MessageType.RESOLVE_POSTER, {
+            res = await sendMessage<Record<string, unknown>, { match: PosterMatch | null }>(MessageType.RESOLVE_POSTER, {
               strategy: 'tmdb-cdn',
               tmdbId: parsed.tmdbId,
               mediaType: parsed.mediaType,
             });
           } else if (strategy === 'alt-text') {
             recordPosterResolve();
-            res = await sendMessage<any, { match: PosterMatch | null }>(MessageType.RESOLVE_POSTER, {
+            res = await sendMessage<Record<string, unknown>, { match: PosterMatch | null }>(MessageType.RESOLVE_POSTER, {
               strategy: 'alt-text',
               query: altText,
             });
@@ -480,7 +480,7 @@ export async function scanImages(
             }
 
             recordPosterResolve();
-            res = await sendMessage<any, { match: PosterMatch | null }>(MessageType.RESOLVE_POSTER, {
+            res = await sendMessage<Record<string, unknown>, { match: PosterMatch | null }>(MessageType.RESOLVE_POSTER, {
               strategy: 'ancestor-text',
               query: clampedText,
             });

@@ -1,4 +1,3 @@
-import { h } from 'preact';
 import { useState, useCallback } from 'preact/hooks';
 import { sendMessage } from '@/shared/messages';
 import { MessageType, MediaItem, MediaType } from '@/shared/types';

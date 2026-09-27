@@ -1,4 +1,3 @@
-import { h } from 'preact';
 import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import { LibraryItem, MediaItem, LibraryStatus } from '@/shared/types';
 import {
