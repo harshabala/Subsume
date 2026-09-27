@@ -33,7 +33,7 @@ export interface LLMRawGrouped {
 /**
  * Constructs a prompt for the LLM based on the user's local library.
  */
-function buildPrompt(watched: LibraryMediaPair[], toWatch: LibraryMediaPair[], seedTitles?: string[]): string {
+function buildPrompt(watched: LibraryMediaPair[], toWatch: LibraryMediaPair[], seedTitles: string[]): string {
   let prompt = "You are an expert movie and TV show recommender.\n\n";
 
   if (watched.length > 0) {
@@ -57,7 +57,7 @@ function buildPrompt(watched: LibraryMediaPair[], toWatch: LibraryMediaPair[], s
     prompt += JSON.stringify(toWatchJson, null, 2) + "\n\n";
   }
 
-  if (seedTitles && seedTitles.length > 0) {
+  if (seedTitles.length > 0) {
     prompt += `Given that they loved the following seed titles: ${JSON.stringify(seedTitles)}, recommend 8 NEW titles (movies or TV shows) that they haven't seen yet but would probably love, and group your recommendations under the seed title they most connect to.\n`;
     prompt += "Ensure you do NOT recommend titles already in the list.\n\n";
     prompt += "Respond strictly in the following JSON format without markdown code blocks:\n";
@@ -266,7 +266,8 @@ export async function generateLLMRecommendations(): Promise<Recommendation[] | G
   let seedTitles: string[] = [];
 
   if (isGroupedMode) {
-    const sortedHighlyRated = [...highlyRatedWatched].sort((a, b) => (b.library.userRating || 0) - (a.library.userRating || 0));
+    // Filtered to userRating >= 8 above, so every rating is present.
+    const sortedHighlyRated = [...highlyRatedWatched].sort((a, b) => b.library.userRating! - a.library.userRating!);
     seedTitles = sortedHighlyRated.slice(0, 3).map(w => w.media.canonicalTitle);
   }
 
@@ -415,13 +416,10 @@ export async function generateLLMRecommendations(): Promise<Recommendation[] | G
 function buildPersonalizedPrompt(
   profile: WatchProfile,
   prefs: UserPreferences,
-  bookProfile?: WatchProfile | null,
-  screenProfile?: WatchProfile | null
+  bookProfile: WatchProfile,
+  screenProfile: WatchProfile
 ): string {
-  const hasBookTaste = Boolean(bookProfile && bookProfile.totalWatched > 0);
-  const hasScreenSplit = Boolean(screenProfile && hasBookTaste);
-
-  if (hasScreenSplit && screenProfile && bookProfile) {
+  if (bookProfile.totalWatched > 0) {
     return [
       'SCREEN TASTE (JSON):',
       JSON.stringify(buildTasteProfilePayload(screenProfile), null, 2),
