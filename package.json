@@ -9,7 +9,7 @@
     "build": "vite build && vite build --config vite.content.config.ts",
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit",
-    "ci": "npm run typecheck && npm run lint:eslint && npm test && npm run build",
+    "ci": "npm run typecheck && npm run lint:eslint && npm run test:coverage && npm run build",
     "zip": "cd dist && zip -r ../subsume.zip .",
     "package": "npm run build && node scripts/package-extension.mjs",
     "test": "vitest run",
