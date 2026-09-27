@@ -64,8 +64,8 @@ export {
  * Adds missing titles and refreshes poster/ratings/overview without touching user library rows.
  * (Previously only SEED_MEDIA_PATCHES touched a single poster; v5 ships full metadata refresh.)
  */
-const SEED_MEDIA_PATCHES: (Partial<MediaItem> & { id: string })[] = SEED_MEDIA.map((m) => ({
-  id: m.id,
+function seedMediaPatch(m: MediaItem): Partial<MediaItem> {
+  return {
   canonicalTitle: m.canonicalTitle,
   type: m.type,
   year: m.year,
@@ -76,7 +76,8 @@ const SEED_MEDIA_PATCHES: (Partial<MediaItem> & { id: string })[] = SEED_MEDIA.m
   overview: m.overview,
   wikidataDirectorBio: m.wikidataDirectorBio,
   wikidataSummary: m.wikidataSummary,
-}));
+  };
+}
 
 interface SubsumeDB extends DBSchema {
   media: {
@@ -214,18 +215,13 @@ export async function mergeSeedCatalog(options?: { includeLibrary?: boolean }): 
       await db.put('media', m);
       await dualWriteMedia(db, m);
       mediaAdded++;
+      continue;
     }
-  }
-
-  for (const patch of SEED_MEDIA_PATCHES) {
-    const existing = await db.get('media', patch.id);
-    if (existing) {
-      const { id: _id, ...fields } = patch;
-      const merged = { ...existing, ...fields };
-      await db.put('media', merged);
-      await dualWriteMedia(db, merged);
-      mediaAdded++;
-    }
+    // Refresh catalogue metadata on existing seed rows. Not counted as "added":
+    // the Settings notice reports genuinely new titles only.
+    const merged = { ...existing, ...seedMediaPatch(m) };
+    await db.put('media', merged);
+    await dualWriteMedia(db, merged);
   }
 
   if (includeLibrary) {
@@ -310,21 +306,18 @@ export async function mergeSeedCatalogIfVersionBehind(): Promise<void> {
 
 async function seedDatabaseIfEmpty(db: IDBPDatabase<SubsumeDB>) {
   // Populate a starter sanctuary library on explicit demo restore.
+  // Only called by seedDemoLibraryIfEmpty, which has already checked the library is empty.
   try {
-    const libraryCount = await db.count('library');
-    if (libraryCount === 0) {
-      const tx = db.transaction(['media', 'library'], 'readwrite');
-      const mediaStore = tx.objectStore('media');
-      const libraryStore = tx.objectStore('library');
-      
-      for (const item of SEED_MEDIA) {
-        await mediaStore.put(item);
-      }
-      for (const item of SEED_LIBRARY) {
-        await libraryStore.put(item);
-      }
-      await tx.done;
+    const tx = db.transaction(['media', 'library'], 'readwrite');
+    const mediaStore = tx.objectStore('media');
+    const libraryStore = tx.objectStore('library');
+    for (const item of SEED_MEDIA) {
+      await mediaStore.put(item);
     }
+    for (const item of SEED_LIBRARY) {
+      await libraryStore.put(item);
+    }
+    await tx.done;
 
     const peopleCount = await db.count('people');
     if (peopleCount === 0) {
@@ -511,7 +504,7 @@ function isShallowSourceProvenance(p: SourceProvenance[]): boolean {
   return false;
 }
 
-function mergeBookDetailsForDualWrite(
+export function mergeBookDetailsForDualWrite(
   incoming?: BookWorkDetails,
   existing?: BookWorkDetails,
 ): BookWorkDetails | undefined {
@@ -537,7 +530,7 @@ function mergeBookDetailsForDualWrite(
  * Merge a MediaItem→CatalogWork conversion into an existing work so dual-write
  * does not wipe createdAt, creatorCredits, bookDetails, or sourceProvenance.
  */
-function mergeDualWriteCatalogWork(incoming: CatalogWork, existing: CatalogWork): CatalogWork {
+export function mergeDualWriteCatalogWork(incoming: CatalogWork, existing: CatalogWork): CatalogWork {
   const provenance =
     existing.sourceProvenance.length > 0 && isShallowSourceProvenance(incoming.sourceProvenance)
       ? existing.sourceProvenance
@@ -644,9 +637,8 @@ export function getDb() {
           alertsStore.createIndex('by-created', 'createdAt');
         }
 
-        if (oldVersion < 4) {
-          createV4Stores(db);
-        }
+        // upgrade only runs when oldVersion < DB_VERSION (4); createV4Stores is idempotent.
+        createV4Stores(db);
       },
     }).then(async (db) => {
       await migrateV3ToV4IfNeeded(db);
@@ -863,14 +855,13 @@ export async function getPreferences(): Promise<UserPreferences> {
       // transient failure can never permanently erase a stored key.
       const raw = rawPrefs as unknown as Record<string, unknown>;
       const out = encrypted as unknown as Record<string, unknown>;
+      // Every undecryptable path came from a ciphertext string in rawPrefs (DEFAULT_PREFS
+      // carries no keys), so the raw value, and for apiKeys.* the encrypted map, exist.
       for (const path of undecryptable) {
         if (path.startsWith('apiKeys.')) {
           const provider = path.slice('apiKeys.'.length);
-          const rawKeys = raw.apiKeys as Record<string, string> | undefined;
-          if (rawKeys && provider in rawKeys) {
-            out.apiKeys = { ...((out.apiKeys as Record<string, string>) ?? {}), [provider]: rawKeys[provider] };
-          }
-        } else if (path in raw) {
+          (out.apiKeys as Record<string, string>)[provider] = (raw.apiKeys as Record<string, string>)[provider];
+        } else {
           out[path] = raw[path];
         }
       }
