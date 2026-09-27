@@ -195,7 +195,7 @@ Before committing any future code slice, autonomous coding agents must verify al
 
 *   **GitHub Profile:** [@harshabala](https://github.com/harshabala)
 *   **Project Repository:** [github.com/harshabala/subsume](https://github.com/harshabala)
-*   **Email Contact:** [harsha16balakrishnan@proton.me](mailto:harsha16balakrishnan@proton.me)
+*   **Email Contact:** [harshabalakrishnan@proton.me](mailto:harshabalakrishnan@proton.me)
 
 ---
 *Cinema is a sacred sanctuary. Protect your contemplation.*

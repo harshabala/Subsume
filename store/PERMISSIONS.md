@@ -3,7 +3,7 @@
 For Chrome Web Store review and internal consistency checks. Aligns with `manifest.json` (Manifest V3).
 
 **Extension:** Subsume  
-**Developer:** Harsha Balakrishnan (`harsha16balakrishnan@proton.me`)  
+**Developer:** Harsha Balakrishnan (`harshabalakrishnan@proton.me`)  
 **Architecture:** Client-side only; no Subsume backend.  
 **Version:** 0.3.0  
 **Privacy policy:** `https://harshabala.github.io/Subsume/privacy.html` (source: `docs/privacy.html`)
@@ -145,7 +145,7 @@ Film and television appear across the open web: streaming UIs, review sites, new
 | Diagnostic logs | Local only, secrets redacted, page origins only; never transmitted |
 | Paid-backup “coming soon” row | Local yes/no flag in preferences only; no email, account, or network call |
 | Children’s direction | Not directed at children under 13 |
-| Contact | harsha16balakrishnan@proton.me |
+| Contact | harshabalakrishnan@proton.me |
 
 ---
 

@@ -1,6 +1,6 @@
 # Privacy Policy for Subsume
 
-**Effective date:** July 1, 2026 · **Last updated:** September 26, 2026
+**Effective date:** July 1, 2026 · **Last updated:** September 27, 2026
 
 This privacy policy describes how **Subsume**, a Chrome browser extension developed by **Harsha Balakrishnan** (“we,” “us,” or “the developer”), handles information when you install and use the extension.
 
@@ -13,7 +13,7 @@ Subsume is a private multi-medium sanctuary: a client-side tool for tracking fil
 For privacy questions or requests, contact:
 
 **Harsha Balakrishnan**  
-Email: [harsha16balakrishnan@proton.me](mailto:harsha16balakrishnan@proton.me)
+Email: [harshabalakrishnan@proton.me](mailto:harshabalakrishnan@proton.me)
 
 ---
 
@@ -50,7 +50,7 @@ If you supply them in Settings, Subsume stores keys you provide for services suc
 
 ### Optional Google Drive backup
 
-If you connect Google Drive, Subsume may back up library-related data to Google Drive **appData** (application-specific storage associated with the extension’s OAuth client). Connection uses Chrome’s identity / OAuth flow. Backup is a **manual snapshot**: it runs only when you press Backup or Restore in Settings. There is no automatic or continuous sync, and Subsume does not merge changes between devices. The snapshot is the same JSON export described under “Your controls” (it excludes API keys), uploaded to a single file in your Drive appData folder, and it contains your notes, ratings, and reflections in **unencrypted** form; it is protected only by your Google account. Sign-in uses Google’s OAuth implicit grant via `chrome.identity`; the resulting short-lived access token is stored on your device encrypted with the same per-install AES-GCM scheme described above (with the same limits). If Google returns your account email, Subsume also stores it locally to show “Connected as…”. Subsume does not currently have an in-app “disconnect” button: the access token is short-lived (about an hour), stops working when it expires, and is replaced when you reconnect; uninstalling removes it and the stored email from your device. You can revoke Subsume’s access at any time in your Google Account’s third-party access settings. Drive is optional; the extension works without it.
+If you connect Google Drive, Subsume may back up library-related data to Google Drive **appData** (application-specific storage associated with the extension’s OAuth client). Connection uses Chrome’s identity / OAuth flow. Backup is a **manual snapshot**: it runs only when you press Backup or Restore in Settings. There is no automatic or continuous sync, and Subsume does not merge changes between devices. The snapshot is the same JSON export described under “Your controls” (it excludes API keys), uploaded to a single file in your Drive appData folder, and it contains your notes, ratings, and reflections in **unencrypted** form; it is protected only by your Google account. Sign-in uses Google’s OAuth implicit grant via `chrome.identity`; the resulting short-lived access token is stored on your device encrypted with the same per-install AES-GCM scheme described above (with the same limits). If Google returns your account email, Subsume also stores it locally to show “Connected as…”. You can disconnect at any time with **Disconnect Google Drive** in Settings: Subsume asks Google to revoke the current access token and deletes the token and stored email from your device. Disconnecting does not delete the backup file already in your Drive appData folder. The access token is also short-lived (about an hour) and stops working when it expires; uninstalling removes it and the stored email from your device. You can revoke Subsume’s access at any time in your Google Account’s third-party access settings. Drive is optional; the extension works without it.
 
 ### Page context for discovery (content scripts)
 
@@ -179,4 +179,4 @@ This policy is provided to describe Subsume’s actual architecture: a client-si
 ---
 
 *Subsume — a private sanctuary for screen and page, on your device.*  
-Developer: Harsha Balakrishnan · [harsha16balakrishnan@proton.me](mailto:harsha16balakrishnan@proton.me)
+Developer: Harsha Balakrishnan · [harshabalakrishnan@proton.me](mailto:harshabalakrishnan@proton.me)

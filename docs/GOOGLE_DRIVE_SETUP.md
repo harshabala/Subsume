@@ -15,6 +15,9 @@ The OAuth **client_id** lives in `src/shared/googleDriveOAuth.ts` (Web applicati
 
      `https://ehbkfdgpbemaimepgeeflenhbbpgokoj.chromiumapp.org/`
 
+   - After the first Chrome Web Store upload, also add the store item's redirect URI:
+     `https://<store-item-id>.chromiumapp.org/` (the store package strips `key`, so the store ID differs from the dev ID; see `store/MANIFEST_NOTES.md`).
+
 4. OAuth consent screen: add yourself as a **test user** if the app is in Testing.
 
 ## Build & load
