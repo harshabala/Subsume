@@ -40,7 +40,9 @@ describe('release docs stay accurate', () => {
       const text = read(file).replace(/<[^>]+>/g, '').replace(/\*/g, '');
       expect(text, file).toContain('AES-GCM');
       expect(text, file).toContain('same browser profile');
-      expect(text, file).toContain('September 26, 2026');
+      expect(text, file).toContain('September 27, 2026');
+      expect(text, file).toContain('Disconnect Google Drive');
+      expect(text, file).not.toMatch(/does not currently have an in-app/i);
     }
   });
 });

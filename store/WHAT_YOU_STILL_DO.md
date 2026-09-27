@@ -21,7 +21,7 @@ After merging to `main`:
 
 1. Repo **Settings → Pages → Build and deployment → GitHub Actions**
 2. Confirm workflow **Deploy privacy policy to GitHub Pages** succeeds
-3. Open `https://harshabala.github.io/Subsume/privacy.html` and confirm it shows "Last updated: September 26, 2026"
+3. Open `https://harshabala.github.io/Subsume/privacy.html` and confirm it shows "Last updated: September 27, 2026"
 4. Paste that exact URL into the CWS privacy policy field
 
 ## 3. Google OAuth consent screen (Drive backup)
@@ -30,7 +30,7 @@ Drive backup only works if the production OAuth client is configured. In Google 
 
 - The Web application client ID in `src/shared/googleDriveOAuth.ts` exists and the Drive API is enabled
 - Scopes `drive.appdata` and `userinfo.email` are on the consent screen
-- Authorized redirect URI is `https://ehbkfdgpbemaimepgeeflenhbbpgokoj.chromiumapp.org/`
+- Authorized redirect URI is `https://ehbkfdgpbemaimepgeeflenhbbpgokoj.chromiumapp.org/` for dev builds. **After the first store upload**, add `https://<store-item-id>.chromiumapp.org/` too: the store package has no `key`, so the store assigns a different ID and Drive sign-in fails for store installs until that URI is registered (see `store/MANIFEST_NOTES.md`)
 - Publishing status: while the app is in "Testing", only listed test users can connect. Move it to production (and complete Google verification if required) before advertising Drive backup, or remove Drive from the listing. Do not claim Drive works for all users until this is done.
 
 ## 4. Review real screenshots
@@ -73,7 +73,7 @@ Upload **`subsume.zip`** (repo root). Version in manifest: **0.3.0**. Click **Su
 ## 8. Owner decisions still open
 
 - (Resolved) `covers.openlibrary.org/*` and the redundant `googleapis.com/books/*` were removed from `host_permissions`: cover images load as plain `<img>` sources and need no host permission.
-- Whether to add an in-app "disconnect Google Drive" button (the policy currently says there is none)
+- (Resolved) Settings now has **Disconnect Google Drive**: it revokes the token with Google and clears the token and email locally; the policy says so.
 
 ## 9. Optional later improvements (not blocking first publish)
 

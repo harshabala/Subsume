@@ -5,6 +5,8 @@ import { exportLibraryData, importLibraryData } from '../storage';
 import { invalidateProfileCache } from '../context';
 import {
   connectGoogleDrive,
+  disconnectGoogleDrive,
+  getDriveConnectionStatus,
   uploadDatabaseBackup,
   downloadDatabaseBackup,
 } from '../drive-sync';
@@ -25,6 +27,15 @@ export const syncHandlers: MessageHandlerMap = {
   [MessageType.CONNECT_GOOGLE_DRIVE]: async () => {
     const result = await connectGoogleDrive();
     return { connected: true, email: result.email };
+  },
+
+  [MessageType.DISCONNECT_GOOGLE_DRIVE]: async () => {
+    const result = await disconnectGoogleDrive();
+    return { connected: false, revoked: result.revoked };
+  },
+
+  [MessageType.GET_DRIVE_STATUS]: async () => {
+    return getDriveConnectionStatus();
   },
 
   [MessageType.BACKUP_TO_DRIVE]: async () => {

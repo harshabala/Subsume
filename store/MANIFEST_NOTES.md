@@ -1,10 +1,15 @@
 # Manifest notes for Chrome Web Store review
 
-This document explains permission choices in `manifest.json` so store reviewers (and maintainers) understand why each is required. Do not remove the `key` field or narrow `content_scripts` matches without a product redesign.
+This document explains permission choices in `manifest.json` so store reviewers (and maintainers) understand why each is required. Do not narrow `content_scripts` matches without a product redesign.
 
 ## `key` (stable extension ID)
 
-The public key in `manifest.json` pins the extension ID to `ehbkfdgpbemaimepgeeflenhbbpgokoj`. That ID is required for Google OAuth redirect URIs (`https://ehbkfdgpbemaimepgeeflenhbbpgokoj.chromiumapp.org/`). Removing or regenerating the key breaks Drive sign-in for existing installs and Google Cloud OAuth client config.
+The public key in the repo `manifest.json` pins the **unpacked development** extension ID to `ehbkfdgpbemaimepgeeflenhbbpgokoj`, which the Drive OAuth redirect URI (`https://ehbkfdgpbemaimepgeeflenhbbpgokoj.chromiumapp.org/`) depends on during development.
+
+The **store package does not contain `key`**: `scripts/package-extension.mjs` strips it, because the Chrome Web Store rejects a new item whose manifest carries `key` and assigns its own ID. The store-installed extension therefore has a different ID and a different redirect URI (`https://<store-id>.chromiumapp.org/`). After the first upload:
+
+1. Copy the item ID from the Developer Dashboard and add `https://<store-id>.chromiumapp.org/` as an authorised redirect URI on the Google Cloud Web OAuth client (keep the dev URI too).
+2. Optionally copy the dashboard's public key into `manifest.json` `key` so unpacked builds share the store ID; later uploads then use `SUBSUME_KEEP_KEY=1 npm run package`.
 
 ## `identity`
 

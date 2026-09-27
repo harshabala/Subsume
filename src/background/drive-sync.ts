@@ -130,6 +130,47 @@ export async function clearStoredDriveToken(): Promise<void> {
   });
 }
 
+/** Connection state for Settings: a stored token (even if expired) means the user connected on this device. */
+export async function getDriveConnectionStatus(): Promise<{ connected: boolean; email?: string }> {
+  const stored = await new Promise<Record<string, unknown>>((resolve) => {
+    chrome.storage.local.get([TOKEN_STORAGE_KEY, EMAIL_STORAGE_KEY], (result) => resolve(result ?? {}));
+  });
+  const token = stored[TOKEN_STORAGE_KEY] as { accessToken?: string } | undefined;
+  const email = stored[EMAIL_STORAGE_KEY];
+  return {
+    connected: Boolean(token?.accessToken),
+    email: typeof email === 'string' && email.length > 0 ? email : undefined,
+  };
+}
+
+/**
+ * Disconnect Google Drive on this device: revoke the current access token with Google
+ * (best effort; an expired token is already dead) and remove the token and email locally.
+ * The backup file in Drive appData is left in place.
+ */
+export async function disconnectGoogleDrive(): Promise<{ revoked: boolean }> {
+  let revoked = false;
+  const stored = await readStoredToken();
+  if (isTokenValid(stored)) {
+    try {
+      const res = await fetch('https://oauth2.googleapis.com/revoke', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ token: stored.accessToken }).toString(),
+      });
+      revoked = res.ok;
+      if (!res.ok) {
+        logDiagnostic('warn', 'drive.disconnect', `Token revoke returned ${res.status}`);
+      }
+    } catch (e) {
+      logDiagnostic('warn', 'drive.disconnect', 'Token revoke request failed', e instanceof Error ? e.message : String(e));
+    }
+  }
+  await clearStoredDriveToken();
+  logDiagnostic('info', 'drive.disconnect', 'Google Drive disconnected', `revoked=${revoked}`);
+  return { revoked };
+}
+
 export async function getStoredDriveAccountEmail(): Promise<string | undefined> {
   return new Promise((resolve) => {
     chrome.storage.local.get(EMAIL_STORAGE_KEY, (result) => {

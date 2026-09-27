@@ -59,6 +59,8 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
   const [activeSection, setActiveSection] = useState<SettingsSectionId>('appearance');
   const [driveStatus, setDriveStatus] = useState<string | null>(null);
   const [driveConnecting, setDriveConnecting] = useState(false);
+  const [driveConnected, setDriveConnected] = useState(false);
+  const [driveDisconnecting, setDriveDisconnecting] = useState(false);
   const [goodreadsImporting, setGoodreadsImporting] = useState(false);
   const [goodreadsSummary, setGoodreadsSummary] = useState<string | null>(null);
   const oauthRedirectUri =
@@ -86,6 +88,18 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
       }
     }
     load();
+  }, []);
+
+  useEffect(() => {
+    sendMessage<Record<string, never>, { connected: boolean; email?: string }>(MessageType.GET_DRIVE_STATUS, {})
+      .then((res) => {
+        if (!res.data?.connected) return;
+        setDriveConnected(true);
+        setDriveStatus(res.data.email ? `Connected as ${res.data.email}` : 'Connected to Google Drive.');
+      })
+      .catch(() => {
+        /* status is informational only */
+      });
   }, []);
 
   useEffect(() => {
@@ -407,11 +421,13 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
       'Opening Google sign-in… A browser window will open. Works in Chrome and Brave. First connect may take a minute.'
     );
     try {
-      const result = (await sendMessage(
+      const res = await sendMessage<Record<string, never>, { connected: boolean; email?: string }>(
         MessageType.CONNECT_GOOGLE_DRIVE,
         {},
         CONNECT_GOOGLE_DRIVE_TIMEOUT_MS
-      )) as { email?: string };
+      );
+      const result = res.data;
+      setDriveConnected(true);
       setDriveStatus(
         result?.email
           ? `Connected as ${result.email}`
@@ -428,6 +444,22 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
       logDiagnostic('error', 'settings.drive', withRedirect);
     } finally {
       setDriveConnecting(false);
+    }
+  };
+
+  const handleDisconnectDrive = async () => {
+    if (driveDisconnecting) return;
+    setDriveDisconnecting(true);
+    try {
+      await sendMessage(MessageType.DISCONNECT_GOOGLE_DRIVE, {});
+      setDriveConnected(false);
+      setDriveStatus(null);
+      showNotice('Google Drive disconnected. Your backup file stays in your Google account.', 'success');
+      logDiagnostic('info', 'settings.drive', 'Disconnect Google Drive succeeded');
+    } catch (e: unknown) {
+      showNotice(`Disconnect failed: ${formatUserError(e)}`, 'error');
+    } finally {
+      setDriveDisconnecting(false);
     }
   };
 
@@ -1113,20 +1145,24 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
                   Saves a private backup in your Google account (app data only, not visible in Drive’s main file list).
                   Sign in with your Google account when prompted.
                 </p>
-                {oauthRedirectUri && (
-                  <p className="settings-panel-hint settings-oauth-redirect" title={oauthRedirectUri}>
-                    OAuth redirect (add in Google Cloud if connect fails):{' '}
-                    <code className="settings-oauth-code">{oauthRedirectUri}</code>
-                  </p>
-                )}
                 <button
                   className="btn-sanctuary-restraint"
                   onClick={handleConnectDrive}
-                  disabled={driveConnecting}
+                  disabled={driveConnecting || driveDisconnecting}
                   aria-busy={driveConnecting}
                 >
-                  {driveConnecting ? 'Connecting…' : 'Connect Google Drive'}
+                  {driveConnecting ? 'Connecting…' : driveConnected ? 'Reconnect Google Drive' : 'Connect Google Drive'}
                 </button>
+                {driveConnected && (
+                  <button
+                    className="btn-sanctuary-restraint"
+                    onClick={handleDisconnectDrive}
+                    disabled={driveConnecting || driveDisconnecting}
+                    aria-busy={driveDisconnecting}
+                  >
+                    {driveDisconnecting ? 'Disconnecting…' : 'Disconnect Google Drive'}
+                  </button>
+                )}
                 {driveStatus && (
                   <p className={`settings-drive-status ${driveStatus.startsWith('Connected') ? 'ok' : 'err'}`} role="status">
                     {driveStatus}

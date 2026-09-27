@@ -3,6 +3,8 @@ import {
   uploadDatabaseBackup,
   downloadDatabaseBackup,
   connectGoogleDrive,
+  disconnectGoogleDrive,
+  getDriveConnectionStatus,
   parseImplicitGrantResponseUrl,
 } from '@/background/drive-sync';
 
@@ -165,5 +167,49 @@ describe('drive-sync (launchWebAuthFlow)', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     await expect(uploadDatabaseBackup('{"test":true}')).rejects.toThrow(/Could not reach Google Drive|500/i);
+  });
+  it('reports not connected when no token is stored', async () => {
+    await expect(getDriveConnectionStatus()).resolves.toEqual({ connected: false, email: undefined });
+  });
+
+  it('reports connected with the stored account email after connect', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({ email: 'reader@example.com' }) })
+    );
+    await connectGoogleDrive();
+    await expect(getDriveConnectionStatus()).resolves.toEqual({ connected: true, email: 'reader@example.com' });
+  });
+
+  it('disconnect revokes a live token with Google and clears local token and email', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({ email: 'reader@example.com' }) })
+    );
+    await connectGoogleDrive();
+
+    fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200 });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(disconnectGoogleDrive()).resolves.toEqual({ revoked: true });
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://oauth2.googleapis.com/revoke',
+      expect.objectContaining({ method: 'POST', body: 'token=fresh-token' })
+    );
+    expect(storage.subsume_google_drive_token).toBeUndefined();
+    expect(storage.subsume_google_drive_account_email).toBeUndefined();
+    await expect(getDriveConnectionStatus()).resolves.toEqual({ connected: false, email: undefined });
+  });
+
+  it('disconnect still clears local state when revoke fails or the token has expired', async () => {
+    storage.subsume_google_drive_token = { accessToken: 'stale', expiresAt: Date.now() - 1000 };
+    storage.subsume_google_drive_account_email = 'reader@example.com';
+    fetchMock = vi.fn().mockRejectedValue(new Error('offline'));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(disconnectGoogleDrive()).resolves.toEqual({ revoked: false });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(storage.subsume_google_drive_token).toBeUndefined();
+    expect(storage.subsume_google_drive_account_email).toBeUndefined();
   });
 });

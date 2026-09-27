@@ -32,7 +32,7 @@ Source file: `docs/privacy.html` (Markdown twin: `docs/PRIVACY.md`).
 1. Ensure `.github/workflows/pages.yml` is on `main`.
 2. In the GitHub repo: **Settings → Pages → Build and deployment → GitHub Actions**.
 3. Push `docs/privacy.html` (or merge to `main`) so the workflow deploys.
-4. Verify the URL loads the full policy (last updated September 26, 2026, contact email present).
+4. Verify the URL loads the full policy (last updated September 27, 2026, contact email present).
 
 ### Option B — Manual Pages or static host
 

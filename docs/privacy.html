@@ -223,7 +223,7 @@
     <header>
       <p class="brand">Subsume</p>
       <h1>Privacy Policy</h1>
-      <p class="meta">Effective date: July 1, 2026 · Last updated: September 26, 2026 · Developer: Harsha Balakrishnan</p>
+      <p class="meta">Effective date: July 1, 2026 · Last updated: September 27, 2026 · Developer: Harsha Balakrishnan</p>
     </header>
 
     <nav class="toc" aria-label="Table of contents">
@@ -344,9 +344,10 @@
         by your Google account. Sign-in uses Google’s OAuth implicit grant via <code>chrome.identity</code>; the resulting
         short-lived access token is stored on your device encrypted with the same per-install AES-GCM scheme described above
         (with the same limits). If Google returns your account email, Subsume also stores it locally to show “Connected as…”.
-        Subsume does not currently have an in-app “disconnect” button: the access token is short-lived (about an hour), stops
-        working when it expires, and is replaced when you reconnect; uninstalling removes it and the stored email from your
-        device. You can revoke Subsume’s access at any time in your Google Account’s third-party access settings. Drive is
+        You can disconnect at any time with <strong>Disconnect Google Drive</strong> in Settings: Subsume asks Google to revoke
+        the current access token and deletes the token and stored email from your device. Disconnecting does not delete the
+        backup file already in your Drive appData folder. The access token is also short-lived (about an hour) and stops
+        working when it expires; uninstalling removes it and the stored email from your device. You can revoke Subsume’s access at any time in your Google Account’s third-party access settings. Drive is
         optional; the extension works without it.
       </p>
 
