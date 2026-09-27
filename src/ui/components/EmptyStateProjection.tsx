@@ -1,4 +1,3 @@
-import { h } from 'preact';
 
 export interface EmptyStateAction {
   label: string;

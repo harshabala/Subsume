@@ -1,4 +1,3 @@
-import { h } from 'preact';
 import { useState, useEffect, useRef, useId, useCallback } from 'preact/hooks';
 import {
   MediaItem,

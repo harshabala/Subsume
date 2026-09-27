@@ -181,8 +181,8 @@ describe('mergeSeedCatalog', () => {
 
     const result = await storage.mergeSeedCatalog();
 
-    // 3 new catalogue rows + 3 full metadata refreshes for those same seed ids
-    expect(result.mediaAdded).toBe(6);
+    // Only genuinely new catalogue rows count as added
+    expect(result.mediaAdded).toBe(3);
     expect(result.libraryAdded).toBe(2);
 
     const alpha = await storage.getMediaItem('seed_alpha');
@@ -220,8 +220,8 @@ describe('mergeSeedCatalog', () => {
     expect(drishyam?.posterUrl).toBe('https://example.com/drishyam-seed.jpg');
     // Non-seed rows are never rewritten by catalogue merge
     expect(sentinel?.canonicalTitle).toBe('Sentinel');
-    // beta newly added + alpha/drishyam/beta refreshed (3) = 1 + 3
-    expect(result.mediaAdded).toBe(4);
+    // Only beta is new; alpha/drishyam are refreshed in place and not counted
+    expect(result.mediaAdded).toBe(1);
   });
 
   it('adds library entry with notes when missing', async () => {

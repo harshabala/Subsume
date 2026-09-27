@@ -1,4 +1,3 @@
-import { h } from 'preact';
 import { useEffect, useState, useRef, useCallback } from 'preact/hooks';
 import { Home } from './pages/Home';
 import { Library } from './pages/Library';
@@ -16,7 +15,7 @@ import {
   FIRST_INSCRIPTION_GATE_SESSION_KEY,
 } from './components/FirstInscriptionGate';
 import { sendMessage } from '../shared/messages';
-import { MessageType, UserPreferences, LibraryItem, MediaItem, PersonItem } from '../shared/types';
+import { MessageType, UserPreferences } from '../shared/types';
 import { usePrefetch, prefetchPage, prefetchProps, type Page } from './hooks/usePrefetch';
 import { applyThemePreference, applyCinemaAtmosphere, watchSystemTheme } from '../shared/theme';
 import { FilmGrain } from './components/FilmGrain';
@@ -31,11 +30,6 @@ import './styles/app-nav.css';
 
 const DRAWER_FOCUSABLE_SELECTOR =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
-
-interface LibraryStats {
-  movieCount: number;
-  tvCount: number;
-}
 
 interface NavItem {
   key: Page;
@@ -106,8 +100,6 @@ export function App() {
     return null;
   });
   const [prefs, setPrefs] = useState<UserPreferences | null>(null);
-  const [stats, setStats] = useState<LibraryStats>({ movieCount: 0, tvCount: 0 });
-  const [peopleCount, setPeopleCount] = useState(0);
   const initialPrefetchDone = useRef(false);
   const appOpenCounted = useRef(false);
   const menuToggleRef = useRef<HTMLButtonElement>(null);
@@ -174,17 +166,7 @@ export function App() {
       }
     }).catch(() => {});
 
-    ensureDemoLibraryIfEmpty().then((library) => {
-      const movieCount = library.filter((item) => item.media?.type === 'movie').length;
-      const tvCount = library.filter((item) => item.media?.type === 'tv').length;
-      setStats({ movieCount, tvCount });
-    }).catch(() => {});
-
-    sendMessage<Record<string, unknown>, { people: PersonItem[] }>(MessageType.GET_ALL_PEOPLE, {}).then((res) => {
-      if (res.success && res.data?.people) {
-        setPeopleCount(res.data.people.length);
-      }
-    }).catch(() => {});
+    ensureDemoLibraryIfEmpty().catch(() => {});
   }, []);
 
   // After first archive add, refresh prefs so the first-inscription gate can dismiss
@@ -221,19 +203,6 @@ export function App() {
     }
   }, [currentPage, prefetchPageOnMount]);
 
-  useEffect(() => {
-    const handleMessage = (message: unknown) => {
-      if (message && typeof message === 'object' && 'type' in message && (message as Record<string, unknown>).type === 'FILMMAKERS_UPDATED') {
-        sendMessage<Record<string, unknown>, { people: PersonItem[] }>(MessageType.GET_ALL_PEOPLE, {}).then((res) => {
-          if (res.success && res.data?.people) {
-            setPeopleCount(res.data.people.length);
-          }
-        }).catch(() => {});
-      }
-    };
-    chrome.runtime.onMessage.addListener(handleMessage);
-    return () => chrome.runtime.onMessage.removeListener(handleMessage);
-  }, []);
 
   // Drawer open: move focus in, trap Tab, Esc closes (interruptible spring)
   useEffect(() => {

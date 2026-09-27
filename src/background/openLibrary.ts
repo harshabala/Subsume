@@ -789,35 +789,6 @@ function mapAuthorSearchDoc(doc: OlAuthorSearchDoc, fetchedAt: number): Creator 
   };
 }
 
-function mapAuthorResponse(data: OlAuthorResponse, fetchedAt: number): Creator | null {
-  if (!data.key && !data.name) return null;
-  const olId = extractOlAuthorId(data.key || '');
-  if (!olId) return null;
-
-  const bio = extractDescription(data.bio);
-  const photo =
-    Array.isArray(data.photos) && typeof data.photos[0] === 'number'
-      ? authorPhotoUrl(data.photos[0])
-      : undefined;
-
-  return {
-    id: `openlibrary_author_${olId}`,
-    name: data.name || data.personal_name || 'Unknown author',
-    roles: ['author'],
-    biography: bio,
-    profileImageUrl: photo,
-    knownForWorkIds: [],
-    externalIds: [
-      {
-        provider: 'openlibrary',
-        externalId: olId,
-        url: authorSourceUrl(olId),
-      },
-    ],
-    lastSyncedAt: fetchedAt,
-  };
-}
-
 function mapAuthorWorkEntry(
   entry: OlAuthorWorksEntry,
   authorName: string,

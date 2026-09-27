@@ -31,7 +31,7 @@ npm run lint:eslint
 | `no-undef` | off | TypeScript + browser/extension types cover this |
 | `preserve-caught-error` / `no-useless-assignment` | warn | Useful, but not hard errors for baseline |
 
-`--max-warnings 200` keeps the script useful without failing on a large historical warning backlog (currently well under that budget).
+`--max-warnings 0`: the warning backlog was cleared on 2026-09-27, so any new warning fails `npm run lint:eslint`, `npm run ci` and the CI Lint step.
 
 ## CI policy (advisory)
 

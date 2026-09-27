@@ -1,4 +1,3 @@
-import { h } from 'preact';
 import { StreamingInfo } from '@/shared/types';
 import { formatPlatformName } from '@/shared/platforms';
 

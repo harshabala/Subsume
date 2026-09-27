@@ -124,7 +124,7 @@ export const peopleHandlers: MessageHandlerMap = {
 
       const now = Date.now();
       let workIds: string[] = [];
-      let profileImageUrl: string | undefined =
+      const profileImageUrl: string | undefined =
         req.profilePath && /^https?:\/\//i.test(req.profilePath)
           ? req.profilePath
           : undefined;

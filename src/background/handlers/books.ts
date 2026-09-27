@@ -172,7 +172,8 @@ export const bookHandlers: MessageHandlerMap = {
       const ol = await loadOpenLibrary();
       const isbns = [...(candidate.isbn13 ?? []), ...(candidate.isbn10 ?? [])];
       for (const raw of isbns) {
-        const isbn13 = toIsbn13(raw) ?? (isValidIsbn(raw) ? raw : null);
+        // toIsbn13 returns null exactly when the ISBN is invalid (and upgrades ISBN-10).
+        const isbn13 = toIsbn13(raw);
         if (!isbn13) continue;
         const resolved = await ol.resolveOpenLibraryIsbn(isbn13);
         if (resolved) {
@@ -462,9 +463,9 @@ export const bookHandlers: MessageHandlerMap = {
         ? Math.min(Math.floor(req.cap), GOODREADS_IMPORT_BATCH_CAP)
         : GOODREADS_IMPORT_BATCH_CAP;
 
-    let rows: GoodreadsImportRow[] = [];
-    let totalDataRows = 0;
-    let truncated = false;
+    let rows: GoodreadsImportRow[];
+    let totalDataRows: number;
+    let truncated: boolean;
     const warnings: string[] = [];
 
     if (Array.isArray(req.rows) && req.rows.length > 0) {

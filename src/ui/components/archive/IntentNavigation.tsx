@@ -1,4 +1,4 @@
-import { h, Fragment } from 'preact';
+import { Fragment } from 'preact';
 import type { JSX } from 'preact';
 import { useState } from 'preact/hooks';
 import { LibraryStatus } from '@/shared/types';

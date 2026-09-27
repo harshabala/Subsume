@@ -1,4 +1,4 @@
-import { h, ComponentChildren, createContext } from 'preact';
+import { ComponentChildren, createContext } from 'preact';
 import { useCallback, useContext, useEffect, useRef, useState } from 'preact/hooks';
 import './inline-notice.css';
 

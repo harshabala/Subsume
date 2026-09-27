@@ -1,4 +1,3 @@
-import { h } from 'preact';
 import { useId, useState } from 'preact/hooks';
 import {
   REFLECTION_CARD_EXCERPT_MAX,

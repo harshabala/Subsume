@@ -1,4 +1,4 @@
-import { h, Fragment } from 'preact';
+import { Fragment } from 'preact';
 import { useState, useEffect, useMemo, useRef } from 'preact/hooks';
 import { sendMessage } from '@/shared/messages';
 import { MessageType, LibraryItem, LibraryStatus, GetLibraryPageRequest } from '@/shared/types';

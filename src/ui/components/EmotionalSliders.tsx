@@ -1,4 +1,3 @@
-import { h } from 'preact';
 import { useId } from 'preact/hooks';
 import type { EmotionalSpectrum } from '@/shared/emotions';
 import { EMOTION_KEYS, EMOTION_LABELS } from '@/shared/emotions';

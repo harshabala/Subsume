@@ -122,7 +122,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
       return;
     }
 
-    const mediaRes = await sendMessage<any, MediaItem[]>(MessageType.GET_MEDIA_ITEMS, {
+    const mediaRes = await sendMessage<Record<string, unknown>, MediaItem[]>(MessageType.GET_MEDIA_ITEMS, {
       mediaIds: items.map((item) => item.mediaId),
     });
 
@@ -169,9 +169,9 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
       setLoading(true);
       try {
         const [prefsResult, digestResult, recsResult, feedResult] = await Promise.allSettled([
-          sendMessage<{}, UserPreferences>(MessageType.GET_PREFERENCES, {}),
-          sendMessage<{}, WeeklyDigest>(MessageType.GET_WEEKLY_DIGEST, {}),
-          sendMessage<any, Recommendation[]>(MessageType.GET_RECOMMENDATIONS, {}),
+          sendMessage<Record<string, never>, UserPreferences>(MessageType.GET_PREFERENCES, {}),
+          sendMessage<Record<string, never>, WeeklyDigest>(MessageType.GET_WEEKLY_DIGEST, {}),
+          sendMessage<Record<string, unknown>, Recommendation[]>(MessageType.GET_RECOMMENDATIONS, {}),
           sendMessage<{ force?: boolean }, DiscoveryFeed>(MessageType.GET_DISCOVERY_FEED, {}),
         ]);
 
@@ -221,7 +221,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
             .filter((r) => r && typeof r === 'object' && 'mediaId' in r)
             .map((r) => r.mediaId)
             .slice(0, 6);
-          const mediaRes = await sendMessage<any, MediaItem[]>(MessageType.GET_MEDIA_ITEMS, { mediaIds });
+          const mediaRes = await sendMessage<Record<string, unknown>, MediaItem[]>(MessageType.GET_MEDIA_ITEMS, { mediaIds });
           if (mediaRes.data) {
             const mediaMap = new Map(mediaRes.data.map((m) => [m.id, m]));
             const hydrated = (recData as Recommendation[])
@@ -245,7 +245,7 @@ export function Home({ onNavigate, onOpenCapture }: HomeProps) {
     setRefreshingDigest(true);
     try {
       const [digestRes, feedRes] = await Promise.all([
-        sendMessage<{}, WeeklyDigest>(MessageType.REGENERATE_WEEKLY_DIGEST, {}),
+        sendMessage<Record<string, never>, WeeklyDigest>(MessageType.REGENERATE_WEEKLY_DIGEST, {}),
         sendMessage<{ force?: boolean }, DiscoveryFeed>(MessageType.GET_DISCOVERY_FEED, { force: true }),
       ]);
 

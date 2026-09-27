@@ -1,5 +1,4 @@
-import { render, h } from 'preact';
-import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
+import { render } from 'preact';
 import { sendMessage } from '@/shared/messages';
 import {
   MessageType,

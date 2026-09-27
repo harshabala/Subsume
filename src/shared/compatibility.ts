@@ -4,7 +4,6 @@
 import type {
   MediaItem,
   LibraryItem,
-  LibraryStatus,
   PersonItem,
   MediaType,
   SanctuaryIntent,
@@ -18,7 +17,6 @@ import type {
   CreatorRole,
   Reflection,
   Experience,
-  SanctuaryIntentV2,
 } from './catalogTypes';
 import {
   legacyStatusToRelationship,

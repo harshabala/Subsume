@@ -1,4 +1,4 @@
-import { h, ComponentChildren } from 'preact';
+import { ComponentChildren } from 'preact';
 import { MediaItem } from '@/shared/types';
 import { mediumLabel, ADD_TO_ARCHIVE_LABEL, IN_ARCHIVE_LABEL } from '@/shared/productCopy';
 

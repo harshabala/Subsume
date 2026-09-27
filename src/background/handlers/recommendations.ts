@@ -272,7 +272,9 @@ export const recommendationHandlers: MessageHandlerMap = {
           if (existing) {
             const existingIds = new Set(existing.recommendations.map((r) => r.mediaId));
             for (const r of recommendations) {
-              if (!existingIds.has(r.mediaId)) existing.recommendations.push(r);
+              if (existingIds.has(r.mediaId)) continue;
+              existingIds.add(r.mediaId);
+              existing.recommendations.push(r);
             }
           } else {
             groups.push({ seedTitle, recommendations });

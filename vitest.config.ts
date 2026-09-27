@@ -22,6 +22,13 @@ export default defineConfig({
         'src/background/handlers/**/*.ts',
         'src/content/scanner.ts',
       ],
+      // Core logic is held at 100%: a drop fails `npm run test:coverage` and CI.
+      thresholds: {
+        statements: 100,
+        branches: 100,
+        functions: 100,
+        lines: 100,
+      },
       exclude: [
         'src/ui/**',
         'src/content/hoverCard.tsx',

@@ -1,5 +1,5 @@
-import { MediaItem, MediaType, MediaProvider, UserPreferences, CrewRole, StreamingInfo } from '@/shared/types';
-import { getMediaItem, putMediaItem, getAllMediaMap, putMediaItems, getPreferences } from './storage';
+import { MediaItem, MediaType, UserPreferences, CrewRole, StreamingInfo } from '@/shared/types';
+import { getAllMediaMap, putMediaItems, getPreferences } from './storage';
 import { fetchOmdbRatings, runWithConcurrency } from './omdb';
 
 const BASE_URL = 'https://api.themoviedb.org/3';
@@ -638,6 +638,27 @@ export async function getLatestReleases(
 /**
  * Searches TMDb for a person (actor/crew).
  */
+/** Raw TMDb person search result (fields Subsume reads). */
+interface TmdbRawPerson {
+  id?: number;
+  name?: string;
+  known_for_department?: string;
+  profile_path?: string | null;
+  known_for?: Array<{ media_type?: string; title?: string; name?: string }>;
+}
+
+/** Raw TMDb movie/tv credit row (cast or crew). */
+interface TmdbRawCredit {
+  id?: number;
+  job?: string;
+  title?: string;
+  name?: string;
+  release_date?: string;
+  first_air_date?: string;
+  poster_path?: string | null;
+  vote_average?: number;
+}
+
 export async function searchPerson(
   query: string,
   apiKey: string
@@ -653,8 +674,8 @@ export async function searchPerson(
   if (!res.ok) throw new Error(`TMDb Person search API error: ${res.status}`);
   const data = await res.json();
   
-  return (data.results || []).map((p: any) => {
-    const knownFor = (p.known_for || []).map((kf: any) => ({
+  return ((data.results || []) as TmdbRawPerson[]).map((p) => {
+    const knownFor = (p.known_for || []).map((kf) => ({
       title: (kf.media_type === 'movie' ? kf.title : kf.name) || 'Unknown Title',
       mediaType: kf.media_type as 'movie' | 'tv'
     }));
@@ -714,8 +735,8 @@ export async function fetchPersonFilmography(
   const movieData = await movieRes.json();
   const tvData = await tvRes.json();
 
-  let rawMovieItems: any[] = [];
-  let rawTvItems: any[] = [];
+  let rawMovieItems: TmdbRawCredit[];
+  let rawTvItems: TmdbRawCredit[];
 
   if (role === 'actor') {
     rawMovieItems = movieData.cast || [];
@@ -729,11 +750,11 @@ export async function fetchPersonFilmography(
     else if (role === 'editor') jobTitles = ['Editor'];
     else if (role === 'producer') jobTitles = ['Producer'];
 
-    rawMovieItems = (movieData.crew || []).filter((c: any) => jobTitles.includes(c.job));
-    rawTvItems = (tvData.crew || []).filter((c: any) => jobTitles.includes(c.job));
+    rawMovieItems = ((movieData.crew || []) as TmdbRawCredit[]).filter((c) => jobTitles.includes(c.job ?? ''));
+    rawTvItems = ((tvData.crew || []) as TmdbRawCredit[]).filter((c) => jobTitles.includes(c.job ?? ''));
   }
 
-  const movies = rawMovieItems.map((item: any) => {
+  const movies = rawMovieItems.map((item) => {
     const releaseDate = item.release_date || '';
     const year = releaseDate ? parseInt(releaseDate.substring(0, 4), 10) : 0;
     return {
@@ -746,7 +767,7 @@ export async function fetchPersonFilmography(
     };
   });
 
-  const tvs = rawTvItems.map((item: any) => {
+  const tvs = rawTvItems.map((item) => {
     const firstAirDate = item.first_air_date || '';
     const year = firstAirDate ? parseInt(firstAirDate.substring(0, 4), 10) : 0;
     return {

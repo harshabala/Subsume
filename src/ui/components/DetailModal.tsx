@@ -1,4 +1,3 @@
-import { h } from 'preact';
 import { useEffect, useState, useRef, useCallback } from 'preact/hooks';
 import { MediaItem, LibraryItem, LibraryStatus, MessageType } from '@/shared/types';
 import type { BookEdition, WorkRelationType } from '@/shared/catalogTypes';

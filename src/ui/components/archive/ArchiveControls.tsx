@@ -1,4 +1,3 @@
-import { h } from 'preact';
 import { SortOption } from './types';
 
 export interface ArchiveControlsProps {

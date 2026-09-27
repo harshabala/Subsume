@@ -11,7 +11,7 @@
  * re-processed on subsequent scans or by the MutationObserver.
  */
 
-import { PosterMatch, MessageType } from '@/shared/types';
+import { PosterMatch, MessageType, type ExtensionResponse } from '@/shared/types';
 import { sendMessage } from '@/shared/messages';
 import { isPosterAspectRatioImage } from './catalogDetector';
 
@@ -63,8 +63,9 @@ function isInsideSkipZone(el: Element): boolean {
 
 function extractTitleAndYear(text: string): { title: string; yearGuess?: number } | null {
   for (const pattern of TITLE_PATTERNS) {
+    // Every pattern requires a 3–60 char title group, so a match is always usable.
     const match = text.match(pattern.re);
-    if (match && match[pattern.titleIdx].length >= 3) {
+    if (match) {
       return {
         title: match[pattern.titleIdx].trim(),
         yearGuess: parseInt(match[pattern.yearIdx], 10),
@@ -139,7 +140,8 @@ function scanLinks(root: Element): DetectedTitle[] {
     }
 
     // Check text node for title pattern near media keywords
-    const parentText = (link.parentElement?.textContent || '').toLowerCase();
+    // Descendants of the scan root always have a parent, and it contains the link text.
+    const parentText = link.parentElement!.textContent!.toLowerCase();
     const hasMediaKeyword = MEDIA_KEYWORDS.some((kw) => parentText.includes(kw));
 
     if (hasMediaKeyword) {
@@ -172,7 +174,7 @@ function scanHeadings(root: Element): DetectedTitle[] {
 
     if (extracted) {
       // Also check if surrounding text has media keywords
-      const sectionText = (h.parentElement?.textContent || '').toLowerCase();
+      const sectionText = h.parentElement!.textContent!.toLowerCase();
       const hasMediaContext = MEDIA_KEYWORDS.some((kw) => sectionText.includes(kw));
 
       if (hasMediaContext) {
@@ -223,8 +225,6 @@ function filterNestedElements(elements: Element[]): Element[] {
 }
 
 function processPendingElements(onDetected: (titles: DetectedTitle[]) => void) {
-  if (pendingElements.length === 0) return;
-
   // 1. Filter out disconnected nodes
   let activeElements = pendingElements.filter((el) => document.body.contains(el));
 
@@ -297,9 +297,8 @@ const POSTER_CDN_PATTERNS = [
   'artworks.thetvdb.com',
 ] as const;
 
-function extractTmdbIdFromSrc(src: string, img?: HTMLImageElement): { tmdbId: string; mediaType: 'movie' | 'tv' } | null {
-  if (!src.includes(TMDB_IMAGE_CDN)) return null;
-
+/** Only called for image.tmdb.org URLs (the tmdb-cdn strategy). */
+function extractTmdbIdFromSrc(src: string, img: HTMLImageElement): { tmdbId: string; mediaType: 'movie' | 'tv' } | null {
   const parts = src.split('/');
   const lastPart = parts[parts.length - 1];
   if (!lastPart) return null;
@@ -309,15 +308,13 @@ function extractTmdbIdFromSrc(src: string, img?: HTMLImageElement): { tmdbId: st
 
   let mediaType: 'movie' | 'tv' = 'movie';
 
-  if (img) {
-    const anchor = img.closest('a');
-    if (anchor) {
-      const href = anchor.href.toLowerCase();
-      if (href.includes('/movie/')) {
-        mediaType = 'movie';
-      } else if (href.includes('/tv/')) {
-        mediaType = 'tv';
-      }
+  const anchor = img.closest('a');
+  if (anchor) {
+    const href = anchor.href.toLowerCase();
+    if (href.includes('/movie/')) {
+      mediaType = 'movie';
+    } else if (href.includes('/tv/')) {
+      mediaType = 'tv';
     }
   }
 
@@ -334,7 +331,7 @@ function looksLikePosterImage(img: HTMLImageElement, catalogMode = false): boole
     return false;
   }
 
-  if (SKIP_TAGS.has(img.tagName) || isInsideSkipZone(img)) {
+  if (isInsideSkipZone(img)) {
     return false;
   }
 
@@ -434,7 +431,7 @@ export async function scanImages(
         }
 
         try {
-          let res: any = null;
+          let res: ExtensionResponse<{ match: PosterMatch | null }>;
 
           if (strategy === 'tmdb-cdn') {
             const parsed = extractTmdbIdFromSrc(img.src, img);
@@ -443,18 +440,19 @@ export async function scanImages(
               return;
             }
             recordPosterResolve();
-            res = await sendMessage<any, { match: PosterMatch | null }>(MessageType.RESOLVE_POSTER, {
+            res = await sendMessage<Record<string, unknown>, { match: PosterMatch | null }>(MessageType.RESOLVE_POSTER, {
               strategy: 'tmdb-cdn',
               tmdbId: parsed.tmdbId,
               mediaType: parsed.mediaType,
             });
           } else if (strategy === 'alt-text') {
             recordPosterResolve();
-            res = await sendMessage<any, { match: PosterMatch | null }>(MessageType.RESOLVE_POSTER, {
+            res = await sendMessage<Record<string, unknown>, { match: PosterMatch | null }>(MessageType.RESOLVE_POSTER, {
               strategy: 'alt-text',
               query: altText,
             });
-          } else if (strategy === 'ancestor-text') {
+          } else {
+            // ancestor-text
             let parent = img.parentElement;
             let depth = 0;
             let shortestText = '';
@@ -480,14 +478,15 @@ export async function scanImages(
             }
 
             recordPosterResolve();
-            res = await sendMessage<any, { match: PosterMatch | null }>(MessageType.RESOLVE_POSTER, {
+            res = await sendMessage<Record<string, unknown>, { match: PosterMatch | null }>(MessageType.RESOLVE_POSTER, {
               strategy: 'ancestor-text',
               query: clampedText,
             });
           }
 
 
-          if (res && res.success && res.data && res.data.match) {
+          // sendMessage only resolves successful responses; a null match means no poster hit.
+          if (res.data?.match) {
             img.setAttribute('data-subsume-poster-scanned', 'matched');
             img.setAttribute('data-subsume-poster-id', res.data.match.tmdbId);
             onMatch(img, res.data.match);
@@ -511,6 +510,8 @@ let imageScanCallback: ((img: HTMLImageElement, match: PosterMatch) => void) | n
 let imageSensitivity: 'low' | 'medium' | 'high' = 'medium';
 let imageCatalogMode = false;
 let imageScanTimeout: ReturnType<typeof setTimeout> | null = null;
+/** Image roots collected across mutation batches until the debounced poster scan runs. */
+let pendingImageRoots: Element[] = [];
 
 export function setImageScanConfig(
   sensitivity: 'low' | 'medium' | 'high',
@@ -547,20 +548,23 @@ export function startObserving(
 
     // Debounced poster image scanning (separate 500ms timer) scoped to the
     // mutated subtree only — avoids re-querying the full document on every batch.
-    const mutatedRoots: Element[] = [];
+    // Roots accumulate across batches: restarting the timer must not drop images
+    // that arrived in an earlier batch within the same debounce window.
+    if (!imageScanCallback) return;
     for (const m of mutations) {
       for (const n of m.addedNodes) {
-        if (n.nodeName === 'IMG' && n instanceof HTMLImageElement) {
-          mutatedRoots.push(n);
-        } else if (n instanceof Element && n.querySelector('img')) {
-          mutatedRoots.push(n);
+        if (n instanceof HTMLImageElement || (n instanceof Element && n.querySelector('img'))) {
+          pendingImageRoots.push(n);
         }
       }
     }
 
-    if (mutatedRoots.length > 0 && imageScanCallback) {
+    if (pendingImageRoots.length > 0) {
       if (imageScanTimeout) clearTimeout(imageScanTimeout);
       imageScanTimeout = setTimeout(() => {
+        const mutatedRoots = pendingImageRoots;
+        pendingImageRoots = [];
+        imageScanTimeout = null;
         // Scan each mutated root independently to stay focused on new content.
         Promise.all(
           mutatedRoots.map((root) =>
@@ -595,4 +599,5 @@ export function stopObserving(): void {
     imageScanTimeout = null;
   }
   pendingElements = [];
+  pendingImageRoots = [];
 }

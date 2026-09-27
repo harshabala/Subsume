@@ -24,14 +24,26 @@ After merging to `main`:
 3. Open `https://harshabala.github.io/Subsume/privacy.html` and confirm it shows "Last updated: September 27, 2026"
 4. Paste that exact URL into the CWS privacy policy field
 
-## 3. Google OAuth consent screen (Drive backup)
+## 3. Google Drive backup: make it work for everyone (about 10 minutes)
 
-Drive backup only works if the production OAuth client is configured. In Google Cloud Console, confirm:
+Subsume only asks Google for two scopes: `drive.appdata` (a hidden app-only folder) and `userinfo.email`. Google classes both as **non-sensitive**, so publishing needs **no security review, no demo video and no fee**.
 
-- The Web application client ID in `src/shared/googleDriveOAuth.ts` exists and the Drive API is enabled
-- Scopes `drive.appdata` and `userinfo.email` are on the consent screen
-- Authorized redirect URI is `https://ehbkfdgpbemaimepgeeflenhbbpgokoj.chromiumapp.org/` for dev builds. **After the first store upload**, add `https://<store-item-id>.chromiumapp.org/` too: the store package has no `key`, so the store assigns a different ID and Drive sign-in fails for store installs until that URI is registered (see `store/MANIFEST_NOTES.md`)
-- Publishing status: while the app is in "Testing", only listed test users can connect. Move it to production (and complete Google verification if required) before advertising Drive backup, or remove Drive from the listing. Do not claim Drive works for all users until this is done.
+**A. Publish the consent screen (do this any time)**
+
+1. Open [console.cloud.google.com](https://console.cloud.google.com) and pick the project that owns the OAuth client in `src/shared/googleDriveOAuth.ts`.
+2. Go to **Google Auth Platform → Branding**. Check that the app name is `Subsume`, the support email is `harshabalakrishnan@proton.me`, and the privacy policy link is `https://harshabala.github.io/Subsume/privacy.html`. **Leave the logo empty**: uploading a logo is what triggers Google's brand-verification wait.
+3. Go to **Google Auth Platform → Data Access**. The scope list should show only `.../auth/drive.appdata` and `.../auth/userinfo.email`. Remove anything else.
+4. Go to **Google Auth Platform → Audience**. Under **Publishing status**, click **Publish app**, then **Confirm**. The status should read **In production**.
+
+**B. Register the store extension's address (do this between upload and submit)**
+
+The store gives the extension a new ID, and Google must know it or Drive sign-in fails for store installs. Doing it before you press Submit means no user ever sees that failure.
+
+1. In the Chrome Web Store dashboard, upload `subsume.zip` as a new item but **do not submit yet**. Copy the 32-letter **Item ID** at the top.
+2. Back in Google Cloud: **Google Auth Platform → Clients →** the Web application client → **Authorised redirect URIs → Add URI**. Enter `https://<item-id>.chromiumapp.org/` (with your ID, keeping the trailing slash). Keep the existing `https://ehbkfdgpbemaimepgeeflenhbbpgokoj.chromiumapp.org/` entry for dev builds. Click **Save**.
+3. Return to the store dashboard and finish the listing, then submit.
+
+If anyone still hits a problem, Subsume shows them a plain message and records the exact redirect URI in Settings → Diagnostics.
 
 ## 4. Review real screenshots
 
@@ -63,7 +75,7 @@ Preferred size: **1280×800** PNG. Details: `store/screenshots/README.md`.
 npm ci && npm run ci && npm run package
 ```
 
-Upload **`subsume.zip`** (repo root). Version in manifest: **0.3.0**. Click **Submit for review** yourself.
+Upload **`subsume.zip`** (repo root). Version in manifest: **0.3.0**. Before clicking **Submit for review**, do step 3B (register the store Item ID's redirect URI in Google Cloud).
 
 ## 7. Post-submit
 

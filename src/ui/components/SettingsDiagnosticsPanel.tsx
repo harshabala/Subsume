@@ -1,4 +1,3 @@
-import { h } from 'preact';
 import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
 import {
   clearDiagnosticLogs,

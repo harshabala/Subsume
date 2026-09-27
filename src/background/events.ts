@@ -20,10 +20,8 @@ import {
   NotificationBadgeKind,
 } from './notifications';
 
-async function notifyWatchAlertMatches(
-  matches: WatchAlertMatch[],
-  options?: { updateBadge?: boolean }
-) {
+/** One OS notification per alert; the caller owns the badge. */
+async function notifyWatchAlertMatches(matches: WatchAlertMatch[]) {
   if (matches.length === 0) return;
 
   const byAlert = new Map<string, WatchAlertMatch[]>();
@@ -48,10 +46,6 @@ async function notifyWatchAlertMatches(
       message,
       priority: 1,
     });
-  }
-
-  if (options?.updateBadge !== false) {
-    setNotificationBadge('watch-alert');
   }
 }
 
@@ -121,7 +115,7 @@ export function setupLifecycleAndAlarms(): void {
 
         try {
           const alertMatches = await checkWatchAlerts(prefs, allReleases);
-          await notifyWatchAlertMatches(alertMatches, { updateBadge: false });
+          await notifyWatchAlertMatches(alertMatches);
           if (alertMatches.length > 0) {
             dailyBadge = dailyBadge ?? 'watch-alert';
           }

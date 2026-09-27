@@ -1,4 +1,4 @@
-import { LibraryItem, MediaItem, Recommendation } from '@/shared/types';
+import { Recommendation } from '@/shared/types';
 import { getAllLibraryItems, getAllMediaMap } from './storage';
 
 /**

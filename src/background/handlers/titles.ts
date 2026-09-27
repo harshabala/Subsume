@@ -59,8 +59,8 @@ function queryCacheGet(key: string): MediaItem | null | undefined {
 function queryCacheSet(key: string, result: MediaItem | null): void {
   // Evict the oldest entry when at capacity.
   if (QUERY_CACHE.size >= QUERY_CACHE_MAX) {
-    const oldestKey = QUERY_CACHE.keys().next().value;
-    if (oldestKey !== undefined) QUERY_CACHE.delete(oldestKey);
+    // Map iterates in insertion order and is non-empty here, so the first key exists.
+    QUERY_CACHE.delete(QUERY_CACHE.keys().next().value as string);
   }
   QUERY_CACHE.set(key, { result, ts: Date.now() });
 }
@@ -108,8 +108,8 @@ function parseTitleYear(query: string): { title: string; year?: number } {
   const trimmed = query.trim();
   const match = trimmed.match(/^(.+?)\s*\((\d{4})\)\s*$/);
   if (match) {
-    const year = parseInt(match[2], 10);
-    return { title: match[1].trim(), year: isNaN(year) ? undefined : year };
+    // The pattern only captures four digits, so parseInt always yields a number.
+    return { title: match[1].trim(), year: parseInt(match[2], 10) };
   }
   return { title: trimmed };
 }
@@ -147,7 +147,7 @@ async function fetchMediaDetails(tmdbId: string, mediaType: 'movie' | 'tv', apiK
   const year = isNaN(parsedYear) ? 0 : parsedYear;
   
   const genres = Array.isArray(data.genres)
-    ? data.genres.map((g: any) => g.name).filter(Boolean)
+    ? data.genres.map((g: { name?: string }) => g.name).filter(Boolean)
     : [];
 
   const item: MediaItem = {
