@@ -101,7 +101,8 @@ export async function buildTasteProfileForMedium(medium: TasteMedium): Promise<W
   const topRatedRaw = validPairs
     .filter((p) => p.libraryItem.userRating !== undefined && p.libraryItem.userRating >= 8)
     .sort((a, b) => {
-      const ratingDiff = (b.libraryItem.userRating ?? 0) - (a.libraryItem.userRating ?? 0);
+      // Filtered above: every top-rated pair has a numeric userRating.
+      const ratingDiff = b.libraryItem.userRating! - a.libraryItem.userRating!;
       if (ratingDiff !== 0) return ratingDiff;
       return b.media.year - a.media.year;
     })
