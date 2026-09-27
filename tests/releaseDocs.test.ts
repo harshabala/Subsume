@@ -42,6 +42,8 @@ describe('release docs stay accurate', () => {
       expect(text, file).toContain('same browser profile');
       expect(text, file).toContain('September 27, 2026');
       expect(text, file).toContain('Disconnect Google Drive');
+      expect(text, file).toContain('harshabalakrishnan@proton.me');
+      expect(text, file).not.toContain('harsha16balakrishnan');
       expect(text, file).not.toMatch(/does not currently have an in-app/i);
     }
   });

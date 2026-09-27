@@ -62,7 +62,7 @@ Privacy
 No ads. No analytics SDKs. No selling your data. Full policy:
 https://harshabala.github.io/Subsume/privacy.html
 
-Developer contact: harsha16balakrishnan@proton.me
+Developer contact: harshabalakrishnan@proton.me
 ```
 
 ---
@@ -155,7 +155,7 @@ Use the live Chrome Web Store “Privacy practices” form; map answers as follo
 | Icon | 128×128 PNG (package already includes `icon128.png`) |
 | Screenshots | 1280×800 or 640×400; show library, capture, and on-page plaque if possible |
 | Privacy policy URL | Required for CWS; host `docs/privacy.html` |
-| Support email | harsha16balakrishnan@proton.me |
+| Support email | harshabalakrishnan@proton.me |
 
 ---
 

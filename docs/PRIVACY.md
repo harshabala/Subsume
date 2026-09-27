@@ -13,7 +13,7 @@ Subsume is a private multi-medium sanctuary: a client-side tool for tracking fil
 For privacy questions or requests, contact:
 
 **Harsha Balakrishnan**  
-Email: [harsha16balakrishnan@proton.me](mailto:harsha16balakrishnan@proton.me)
+Email: [harshabalakrishnan@proton.me](mailto:harshabalakrishnan@proton.me)
 
 ---
 
@@ -179,4 +179,4 @@ This policy is provided to describe Subsume’s actual architecture: a client-si
 ---
 
 *Subsume — a private sanctuary for screen and page, on your device.*  
-Developer: Harsha Balakrishnan · [harsha16balakrishnan@proton.me](mailto:harsha16balakrishnan@proton.me)
+Developer: Harsha Balakrishnan · [harshabalakrishnan@proton.me](mailto:harshabalakrishnan@proton.me)

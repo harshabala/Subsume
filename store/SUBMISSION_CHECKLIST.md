@@ -11,7 +11,7 @@ Legend: items marked **(repo)** are already done in the repository and guarded b
 - [ ] **(owner)** **Developer account** registered at [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole).
 - [ ] **(owner)** **One-time developer registration fee** paid (Google’s published fee; required for publishing).
 - [ ] **(owner)** Privacy policy **publicly reachable over HTTPS** (see hosting below).
-- [x] **(repo)** Support email ready: `harsha16balakrishnan@proton.me`.
+- [x] **(repo)** Support email ready: `harshabalakrishnan@proton.me`.
 - [x] **(repo)** `manifest.json`, `package.json`, and store docs all say 0.3.0 (`tests/releaseDocs.test.ts`).
 - [ ] **(owner)** Confirm the Google OAuth consent screen and client for Drive (see `docs/GOOGLE_DRIVE_SETUP.md`). Do not claim Drive works for everyone if the app is still in Testing or the production OAuth client is not configured. Drive is a manual snapshot backup, not live sync.
 
@@ -84,7 +84,7 @@ Use `store/LISTING.md` for paste-ready copy.
   - Suggested shots: Hardcover library archive, Poetic Capture / detail, on-page museum plaque on a public page, Settings (keys redacted)  
 - [ ] **Small promo tile / marquee** if required by current dashboard (sizes per Google’s asset guide)  
 - [ ] **Official URL** (optional): `https://github.com/harshabala/Subsume`  
-- [ ] **Support URL / email:** privacy page and/or `harsha16balakrishnan@proton.me`
+- [ ] **Support URL / email:** privacy page and/or `harshabalakrishnan@proton.me`
 
 ---
 

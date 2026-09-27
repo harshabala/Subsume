@@ -48,7 +48,7 @@ an individual is officially representing the project in public spaces.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the project maintainer at
-[harsha16balakrishnan@proton.me](mailto:harsha16balakrishnan@proton.me).
+[harshabalakrishnan@proton.me](mailto:harshabalakrishnan@proton.me).
 All complaints will be reviewed and investigated promptly and fairly.
 
 ## Attribution
