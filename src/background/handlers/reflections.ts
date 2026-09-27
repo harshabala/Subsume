@@ -148,7 +148,7 @@ export const reflectionHandlers: MessageHandlerMap = {
       statusChangedAt: now,
       currentRating: rel?.currentRating,
       userTags: rel?.userTags,
-      sanctuaryIntent: rel?.sanctuaryIntent ?? (status === 'in_progress' ? 'return_soon' : rel?.sanctuaryIntent),
+      sanctuaryIntent: rel?.sanctuaryIntent ?? (status === 'in_progress' ? 'return_soon' : undefined),
       preferredEditionId: experience.editionId ?? rel?.preferredEditionId,
       currentExperienceId: experience.id,
       emotionalSnapshot: rel?.emotionalSnapshot,

@@ -77,9 +77,9 @@ function mergePreferences(
   return merged;
 }
 
-function isValidUserPreferences(input: unknown): input is UserPreferences {
-  if (!input || typeof input !== 'object') return false;
-  const prefs = input as Record<string, unknown>;
+/** Runtime shape check for a merged preferences object (always an object: see mergePreferences). */
+function isValidUserPreferences(merged: UserPreferences): boolean {
+  const prefs = merged as unknown as Record<string, unknown>;
   const isStringArray = (v: unknown) => Array.isArray(v) && v.every((x) => typeof x === 'string');
   if (!isStringArray(prefs.favoriteGenres)) return false;
   if (!isStringArray(prefs.platforms)) return false;
