@@ -260,9 +260,7 @@ function isHTMLElement(value: BookPlaqueAnchor): value is HTMLElement {
   return typeof HTMLElement !== 'undefined' && value instanceof HTMLElement;
 }
 
-function truncateTitle(title: string, max = 36): string {
-  return truncateForExcerpt(title, max);
-}
+
 
 /**
  * Manager for book plaques on host pages.
@@ -473,7 +471,7 @@ export class BookPlaqueManager {
 
       const title = document.createElement('span');
       title.className = 'plaque-title';
-      title.textContent = truncateTitle(match.title);
+      title.textContent = truncateForExcerpt(match.title, 36);
       title.title = match.title;
       openBtn.appendChild(title);
 
@@ -512,7 +510,7 @@ export class BookPlaqueManager {
 
       const title = document.createElement('span');
       title.className = 'plaque-title';
-      title.textContent = truncateTitle(match.title);
+      title.textContent = truncateForExcerpt(match.title, 36);
       title.title = match.title;
       root.appendChild(title);
 

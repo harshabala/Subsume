@@ -33,7 +33,6 @@ export function pickDisplayRating(ratings: MediaRating[]): { provider: RatingPro
 
 interface PlaqueProps {
   match: PosterMatch;
-  inLibrary: boolean;
   onReflect: () => void;
 }
 
@@ -185,7 +184,6 @@ const PLAQUE_STYLES = `
 
 interface BadgeState {
   match: PosterMatch;
-  inLibrary: boolean;
   host: HTMLElement;
   shadowRoot: ShadowRoot;
   mount: HTMLElement;
@@ -194,13 +192,7 @@ interface BadgeState {
 
 export class MuseumPlaqueManager {
   private badges = new Map<HTMLImageElement, BadgeState>();
-  private libraryIds = new Set<string>();
   private createdWrappers = new Set<HTMLElement>();
-  private syncListener: ((message: unknown, sender: chrome.runtime.MessageSender) => void) | null = null;
-
-  constructor() {
-    this.setupSyncListener();
-  }
 
   private ensureWrapper(img: HTMLImageElement): HTMLElement {
     const parent = img.parentElement;
@@ -217,39 +209,7 @@ export class MuseumPlaqueManager {
     return wrap;
   }
 
-  private setupSyncListener(): void {
-    if (typeof chrome === 'undefined' || !chrome.runtime?.onMessage) return;
-    this.syncListener = (message: unknown, sender: chrome.runtime.MessageSender) => {
-      if (sender.id !== chrome.runtime.id) return;
-      if (!message || typeof message !== 'object') return;
-      if (!('type' in message) || (message as Record<string, unknown>).type !== 'LIBRARY_UPDATED') return;
-
-      const msg = message as { mediaId?: unknown; libraryItem?: { mediaId?: unknown }; action?: unknown };
-      const mediaId = typeof msg.mediaId === 'string' ? msg.mediaId : (typeof msg.libraryItem?.mediaId === 'string' ? msg.libraryItem.mediaId : undefined);
-      if (!mediaId) return;
-
-      if (msg.action === 'add' || msg.action === 'update') {
-        this.libraryIds.add(mediaId);
-      } else if (msg.action === 'remove') {
-        this.libraryIds.delete(mediaId);
-      }
-
-      for (const state of this.badges.values()) {
-        if (state.mediaId === mediaId) {
-          state.inLibrary = msg.action !== 'remove';
-          this.renderBadge(state);
-        }
-      }
-    };
-    chrome.runtime.onMessage.addListener(this.syncListener);
-  }
-
   public destroy(): void {
-    if (this.syncListener && typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
-      chrome.runtime.onMessage.removeListener(this.syncListener);
-      this.syncListener = null;
-    }
-
     for (const [img, state] of this.badges.entries()) {
       render(null, state.mount);
       state.host.remove();
@@ -274,7 +234,6 @@ export class MuseumPlaqueManager {
     }
     this.createdWrappers.clear();
     this.badges.clear();
-    this.libraryIds.clear();
   }
 
   attachBadge(img: HTMLImageElement, match: PosterMatch): void {
@@ -296,7 +255,6 @@ export class MuseumPlaqueManager {
 
     const state: BadgeState = {
       match,
-      inLibrary: match.inLibrary || this.libraryIds.has(mediaId),
       host,
       shadowRoot,
       mount,
@@ -312,7 +270,6 @@ export class MuseumPlaqueManager {
     render(
       h(MuseumPlaqueOverlay, {
         match: state.match,
-        inLibrary: state.inLibrary,
         onReflect: () => this.handleReflect(state),
       }),
       state.mount

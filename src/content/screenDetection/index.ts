@@ -8,6 +8,7 @@ import {
   type ScreenDetectionCandidate,
 } from './jsonLdScreen';
 import { detectViaScreenDomainAdapters } from './domainAdapters';
+import { normalizeTitleKey } from '../titleKey';
 
 export type { ScreenDetectionCandidate, ScreenKind } from './jsonLdScreen';
 export { detectJsonLdScreenWorks } from './jsonLdScreen';
@@ -18,14 +19,6 @@ export {
 
 /** Minimum confidence to report a screen page candidate (parity with book annotation floor). */
 export const MIN_SCREEN_PAGE_CONFIDENCE = 0.65;
-
-function normalizeTitleKey(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
 
 function mergeScreen(
   a: ScreenDetectionCandidate,
