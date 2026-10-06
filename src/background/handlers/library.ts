@@ -11,6 +11,8 @@ import {
   CheckLibraryStatusRequest,
   CheckLibraryStatusResponse,
   LibraryItem,
+  BroadcastMessage,
+  RatingHistoryEntry,
 } from '@/shared/types';
 import { v4 as uuidv4 } from 'uuid';
 import type { Reflection } from '@/shared/catalogTypes';
@@ -37,7 +39,20 @@ import { isSafeNavMediaId } from '@/shared/mediaIds';
 import { invalidateProfileCache } from '../context';
 import { mergeMediaItems } from '../mediaMerge';
 import { broadcastMessage, parseSetUserNotesRequest, parseUpdateStatusRequest } from './utils';
-import type { RatingHistoryEntry } from '@/shared/types';
+
+async function notifyLibraryUpdated(
+  action: Extract<BroadcastMessage, { type: 'LIBRARY_UPDATED' }>['action'],
+  mediaId: string,
+  libraryItem?: LibraryItem,
+): Promise<void> {
+  invalidateProfileCache();
+  await broadcastMessage({
+    type: 'LIBRARY_UPDATED',
+    action,
+    mediaId,
+    ...(libraryItem ? { libraryItem } : {}),
+  });
+}
 
 /** Max entries kept on `LibraryItem.ratingHistory`. */
 export const RATING_HISTORY_CAP = 50;
@@ -132,13 +147,7 @@ export const libraryHandlers: MessageHandlerMap = {
       await onNewLibraryItemCreated();
     }
 
-    invalidateProfileCache();
-    await broadcastMessage({
-      type: 'LIBRARY_UPDATED',
-      action: 'add',
-      mediaId: libraryItem.mediaId,
-      libraryItem,
-    });
+    await notifyLibraryUpdated('add', libraryItem.mediaId, libraryItem);
     return libraryItem;
   },
 
@@ -156,13 +165,7 @@ export const libraryHandlers: MessageHandlerMap = {
     existing.sanctuaryIntent = intentForStatus(req.status);
     existing.updatedAt = Date.now();
     await putLibraryItem(existing);
-    invalidateProfileCache();
-    await broadcastMessage({
-      type: 'LIBRARY_UPDATED',
-      action: 'update',
-      mediaId: existing.mediaId,
-      libraryItem: existing,
-    });
+    await notifyLibraryUpdated('update', existing.mediaId, existing);
     return { updated: true };
   },
 
@@ -181,13 +184,7 @@ export const libraryHandlers: MessageHandlerMap = {
     existing.userRating = req.rating;
     existing.updatedAt = Date.now();
     await putLibraryItem(existing);
-    invalidateProfileCache();
-    await broadcastMessage({
-      type: 'LIBRARY_UPDATED',
-      action: 'update',
-      mediaId: existing.mediaId,
-      libraryItem: existing,
-    });
+    await notifyLibraryUpdated('update', existing.mediaId, existing);
     return { updated: true };
   },
 
@@ -201,13 +198,7 @@ export const libraryHandlers: MessageHandlerMap = {
     existing.userTags = req.tags;
     existing.updatedAt = Date.now();
     await putLibraryItem(existing);
-    invalidateProfileCache();
-    await broadcastMessage({
-      type: 'LIBRARY_UPDATED',
-      action: 'update',
-      mediaId: existing.mediaId,
-      libraryItem: existing,
-    });
+    await notifyLibraryUpdated('update', existing.mediaId, existing);
     return { updated: true };
   },
 
@@ -246,13 +237,7 @@ export const libraryHandlers: MessageHandlerMap = {
       logger.warn('[Subsume] SET_USER_NOTES reflection append failed:', err);
     }
 
-    invalidateProfileCache();
-    await broadcastMessage({
-      type: 'LIBRARY_UPDATED',
-      action: 'update',
-      mediaId: existing.mediaId,
-      libraryItem: existing,
-    });
+    await notifyLibraryUpdated('update', existing.mediaId, existing);
     return { updated: true };
   },
 
@@ -263,12 +248,7 @@ export const libraryHandlers: MessageHandlerMap = {
       throw new Error('Invalid mediaId');
     }
     await removeLibraryItem(req.mediaId);
-    invalidateProfileCache();
-    await broadcastMessage({
-      type: 'LIBRARY_UPDATED',
-      action: 'remove',
-      mediaId: req.mediaId,
-    });
+    await notifyLibraryUpdated('remove', req.mediaId);
     return { removed: true };
   },
 
