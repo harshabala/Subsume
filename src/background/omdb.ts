@@ -1,34 +1,23 @@
 import { MediaRating } from '@/shared/types';
 import { getPreferences } from './storage';
+import { BoundedTtlCache } from './ttlCache';
 
 const BASE_URL = 'https://www.omdbapi.com/';
 
-const CACHE = new Map<string, { data: MediaRating[]; timestamp: number }>();
 const CACHE_TTL = 1000 * 60 * 60 * 24; // 24 hours
 export const MAX_CACHE_SIZE = 500;
-
-function setCacheEntry(key: string, data: MediaRating[]): void {
-  if (CACHE.has(key)) {
-    CACHE.delete(key);
-  } else if (CACHE.size >= MAX_CACHE_SIZE) {
-    const oldestKey = CACHE.keys().next().value;
-    if (oldestKey !== undefined) {
-      CACHE.delete(oldestKey);
-    }
-  }
-  CACHE.set(key, { data, timestamp: Date.now() });
-}
+const cache = new BoundedTtlCache<MediaRating[]>(MAX_CACHE_SIZE, CACHE_TTL);
 
 export function clearOmdbCache(): void {
-  CACHE.clear();
+  cache.clear();
 }
 
 export function getOmdbCacheSizeForTesting(): number {
-  return CACHE.size;
+  return cache.size;
 }
 
 export function setOmdbCacheEntryForTesting(key: string, data: MediaRating[]): void {
-  setCacheEntry(key, data);
+  cache.set(key, data);
 }
 
 let omdbApiKey: string | null = null;
@@ -92,9 +81,9 @@ export async function fetchOmdbRatings(
   }
 
   const cacheKey = `omdb_${title}_${year}_${type}`;
-  const cached = CACHE.get(cacheKey);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return cached.data;
+  const cached = cache.get(cacheKey);
+  if (cached !== undefined) {
+    return cached;
   }
 
   const omdbType = type === 'tv' ? 'series' : 'movie';
@@ -112,7 +101,7 @@ export async function fetchOmdbRatings(
       const isTransientError =
         error.includes('Invalid API key') || error.toLowerCase().includes('limit');
       if (!isTransientError) {
-        setCacheEntry(cacheKey, []);
+        cache.set(cacheKey, []);
       }
       return [];
     }
@@ -137,7 +126,7 @@ export async function fetchOmdbRatings(
       }
     }
 
-    setCacheEntry(cacheKey, ratings);
+    cache.set(cacheKey, ratings);
     return ratings;
   } catch (err) {
     console.error('[Subsume OMDb] Fetch failed', err);

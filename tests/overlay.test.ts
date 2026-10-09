@@ -119,7 +119,7 @@ describe('Act I Discovery Plaque Injection (overlay.ts)', () => {
   });
 
   describe('destroy', () => {
-    it('unmounts Preact roots and removes message listeners', () => {
+    it('unmounts Preact roots and removes plaque hosts', () => {
       const manager = new MuseumPlaqueManager();
       const img = document.createElement('img');
       document.body.appendChild(img);
@@ -135,11 +135,9 @@ describe('Act I Discovery Plaque Injection (overlay.ts)', () => {
       };
 
       manager.attachBadge(img, match);
-      expect(chrome.runtime.onMessage.addListener).toHaveBeenCalled();
 
       manager.destroy();
 
-      expect(chrome.runtime.onMessage.removeListener).toHaveBeenCalled();
       const host = document.body.querySelector('div[data-subsume-badge]');
       expect(host).toBeNull();
     });

@@ -18,6 +18,7 @@ import {
 } from './isbnContext';
 import { detectViaDomainAdapters } from './domainAdapters';
 import { detectTitleAuthorHeuristics } from './titleAuthorHeuristics';
+import { normalizeTitleKey } from '../titleKey';
 
 export { detectJsonLdBooks } from './jsonLdBooks';
 export { extractIsbnsFromDocument, candidatesFromIsbns } from './isbnContext';
@@ -28,14 +29,6 @@ export { detectTitleAuthorHeuristics } from './titleAuthorHeuristics';
 /** Annotation floor — candidates below this are dropped. */
 export const MIN_ANNOTATION_CONFIDENCE = 0.65;
 export const HIGH_CONFIDENCE = 0.85;
-
-function normalizeTitleKey(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
 
 function authorKey(authors?: string[]): string {
   return (authors || [])

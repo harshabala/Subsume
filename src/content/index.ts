@@ -61,8 +61,7 @@ async function resolveAndAttachBookPlaques(
 ): Promise<void> {
   const high = candidates
     .filter((c) => c.confidence >= HIGH_CONFIDENCE)
-    .slice(0, MAX_BOOK_PLAQUE_CANDIDATES)
-    .slice(0, MAX_BOOK_RESOLVE_CALLS);
+    .slice(0, Math.min(MAX_BOOK_PLAQUE_CANDIDATES, MAX_BOOK_RESOLVE_CALLS));
 
   for (const candidate of high) {
     try {

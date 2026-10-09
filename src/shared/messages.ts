@@ -122,42 +122,25 @@ export function createMessageRouter(
         return false;
       }
 
-      if (options?.onBeforeDispatch) {
-        Promise.resolve(options.onBeforeDispatch())
-          .catch((err) => {
-            console.error('[Subsume] Error in onBeforeDispatch:', err);
-          })
-          .then(() => handler(message.payload, sender))
-          .then((data) => sendResponse({ success: true, data }))
-          .catch((err) => {
-            const msg = err instanceof Error ? err.message : String(err);
-            logDiagnostic('error', 'bg.handler', msg, `type=${message.type}`);
-            sendResponse({
-              success: false,
-              error: msg,
-            });
+      const run = options?.onBeforeDispatch
+        ? Promise.resolve(options.onBeforeDispatch())
+            .catch((err) => {
+              console.error('[Subsume] Error in onBeforeDispatch:', err);
+            })
+            .then(() => handler(message.payload, sender))
+        : handler(message.payload, sender);
+
+      Promise.resolve(run)
+        .then((data) => sendResponse({ success: true, data }))
+        .catch((err) => {
+          const msg = err instanceof Error ? err.message : String(err);
+          logDiagnostic('error', 'bg.handler', msg, `type=${message.type}`);
+          sendResponse({
+            success: false,
+            error: msg,
           });
-        return true;
-      }
-
-      const result = handler(message.payload, sender);
-
-      if (result instanceof Promise) {
-        result
-          .then((data) => sendResponse({ success: true, data }))
-          .catch((err) => {
-            const msg = err instanceof Error ? err.message : String(err);
-            logDiagnostic('error', 'bg.handler', msg, `type=${message.type}`);
-            sendResponse({
-              success: false,
-              error: msg,
-            });
-          });
-        return true;
-      }
-
-      sendResponse({ success: true, data: result });
-      return false;
+        });
+      return true;
     }
   );
 }

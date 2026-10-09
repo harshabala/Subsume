@@ -13,12 +13,15 @@ import type {
 import { isValidIsbn, normalizeIsbn, toIsbn13 } from '@/shared/isbn';
 import type { BookSearchResult } from './openLibrary';
 import { getPreferences } from './storage';
+import { BoundedTtlCache } from './ttlCache';
+import { fetchJsonWithTimeout } from './fetchJson';
 
 const GB_BASE = 'https://www.googleapis.com/books/v1/volumes';
 const REQUEST_TIMEOUT_MS = 12_000;
 const CACHE_TTL_MS = 1000 * 60 * 60 * 6; // 6 hours
 
-const CACHE = new Map<string, { data: unknown; timestamp: number }>();
+export const MAX_CACHE_SIZE = 500;
+const cache = new BoundedTtlCache<unknown>(MAX_CACHE_SIZE, CACHE_TTL_MS);
 
 let googleBooksApiKey: string | null = null;
 
@@ -97,36 +100,20 @@ interface GbVolumesResponse {
 // ─── Cache ───────────────────────────────────────────────────────────
 
 function cacheGet<T>(key: string): T | undefined {
-  const entry = CACHE.get(key);
-  if (!entry) return undefined;
-  if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
-    CACHE.delete(key);
-    return undefined;
-  }
-  return entry.data as T;
+  return cache.get(key) as T | undefined;
 }
 
-export const MAX_CACHE_SIZE = 500;
-
 function cacheSet(key: string, data: unknown): void {
-  if (CACHE.has(key)) {
-    CACHE.delete(key);
-  } else if (CACHE.size >= MAX_CACHE_SIZE) {
-    const oldestKey = CACHE.keys().next().value;
-    if (oldestKey !== undefined) {
-      CACHE.delete(oldestKey);
-    }
-  }
-  CACHE.set(key, { data, timestamp: Date.now() });
+  cache.set(key, data);
 }
 
 /** Test helper — clears in-memory cache. */
 export function clearGoogleBooksCache(): void {
-  CACHE.clear();
+  cache.clear();
 }
 
 export function getGoogleBooksCacheSizeForTesting(): number {
-  return CACHE.size;
+  return cache.size;
 }
 
 export function setGoogleBooksCacheEntryForTesting(key: string, data: unknown): void {
@@ -159,23 +146,7 @@ function volumeSourceUrl(volumeId: string): string {
 // ─── Fetch with timeout ──────────────────────────────────────────────
 
 async function fetchJson<T>(url: string): Promise<T | null> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-  try {
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: { Accept: 'application/json' },
-    });
-    // Unauthenticated quota / forbidden — fail gracefully
-    if (res.status === 403 || res.status === 401) return null;
-    if (res.status === 404) return null;
-    if (!res.ok) return null;
-    return (await res.json()) as T;
-  } catch {
-    return null;
-  } finally {
-    clearTimeout(timer);
-  }
+  return fetchJsonWithTimeout<T>(url, REQUEST_TIMEOUT_MS);
 }
 
 function buildVolumesUrl(params: Record<string, string | number>): string {

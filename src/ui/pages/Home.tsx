@@ -3,7 +3,6 @@ import { sendMessage } from '@/shared/messages';
 import {
   MessageType,
   MediaItem,
-  LibraryItem,
   Recommendation,
   UserPreferences,
   WeeklyDigest,
@@ -38,11 +37,7 @@ import {
 } from '@/shared/productCopy';
 import { incrementWeeklySelectionOpens } from '@/shared/activationMetrics';
 import { shouldShowDiscoveryFirstInscriptionBanner } from '../components/FirstInscriptionGate';
-
-interface JoinedItem {
-  library: LibraryItem;
-  media: MediaItem;
-}
+import type { JoinedItem } from '../components/archive/types';
 
 interface DigestPick extends WeeklyDigestItem {
   media?: MediaItem;

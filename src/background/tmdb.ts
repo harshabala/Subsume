@@ -1,36 +1,25 @@
 import { MediaItem, MediaType, MediaProvider, UserPreferences, CrewRole, StreamingInfo } from '@/shared/types';
 import { getMediaItem, putMediaItem, getAllMediaMap, putMediaItems, getPreferences } from './storage';
 import { fetchOmdbRatings, runWithConcurrency } from './omdb';
+import { BoundedTtlCache } from './ttlCache';
 
 const BASE_URL = 'https://api.themoviedb.org/3';
 export const POSTER_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
-const CACHE = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_TTL = 1000 * 60 * 60 * 24; // 24 hours
 export const MAX_CACHE_SIZE = 500;
-
-function setCacheEntry(key: string, data: unknown): void {
-  if (CACHE.has(key)) {
-    CACHE.delete(key);
-  } else if (CACHE.size >= MAX_CACHE_SIZE) {
-    const oldestKey = CACHE.keys().next().value;
-    if (oldestKey !== undefined) {
-      CACHE.delete(oldestKey);
-    }
-  }
-  CACHE.set(key, { data, timestamp: Date.now() });
-}
+const cache = new BoundedTtlCache<unknown>(MAX_CACHE_SIZE, CACHE_TTL);
 
 export function clearTmdbCache(): void {
-  CACHE.clear();
+  cache.clear();
 }
 
 export function getTmdbCacheSizeForTesting(): number {
-  return CACHE.size;
+  return cache.size;
 }
 
 export function setTmdbCacheEntryForTesting(key: string, data: unknown): void {
-  setCacheEntry(key, data);
+  cache.set(key, data);
 }
 
 let tmdbApiKey: string | null = null;
@@ -319,9 +308,9 @@ export async function fetchWatchProviders(
   options?: { releaseDate?: string }
 ): Promise<StreamingInfo[]> {
   const cacheKey = `watch_providers_${type}_${tmdbNumericId}_${region}`;
-  const cached = CACHE.get(cacheKey);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return cached.data as StreamingInfo[];
+  const cached = cache.get(cacheKey);
+  if (cached !== undefined) {
+    return cached as StreamingInfo[];
   }
 
   try {
@@ -342,7 +331,7 @@ export async function fetchWatchProviders(
       theatricalReleaseDates,
     });
 
-    setCacheEntry(cacheKey, mapped);
+    cache.set(cacheKey, mapped);
     return mapped;
   } catch (err) {
     console.error('[Subsume TMDB] Watch providers fetch failed', err);
@@ -418,9 +407,9 @@ export async function searchTitle(
 ): Promise<MediaItem | null> {
   await loadGenreMap();
   const cacheKey = `search_${title}_${yearGuess}_${typeGuess}`;
-  const cached = CACHE.get(cacheKey);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return cached.data as MediaItem | null;
+  const cached = cache.get(cacheKey);
+  if (cached !== undefined) {
+    return cached as MediaItem | null;
   }
 
   // If we don't know the type, we search both and take the best match.
@@ -491,7 +480,7 @@ export async function searchTitle(
     const baseItem = mapTmdbToMediaItem(bestResult, finalType);
     const withRatings = await enrichMediaWithOmdbRatings(baseItem);
     const resultItem = await enrichMediaWithStreaming(withRatings, undefined, releaseDate);
-    setCacheEntry(cacheKey, resultItem);
+    cache.set(cacheKey, resultItem);
     return resultItem;
   } catch (err) {
     console.error('[Subsume TMDB] Search failed', err);
@@ -506,9 +495,9 @@ export async function searchTitles(
 ): Promise<MediaItem[]> {
   await loadGenreMap();
   const cacheKey = `search_multi_${query}_${type}_${year}`;
-  const cached = CACHE.get(cacheKey);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return cached.data as MediaItem[] || [];
+  const cachedMulti = cache.get(cacheKey);
+  if (cachedMulti !== undefined) {
+    return (cachedMulti as MediaItem[]) || [];
   }
 
   const key = await ensureTmdbApiKey();
@@ -555,7 +544,7 @@ export async function searchTitles(
       enrichMediaWithOmdbRatings,
       3
     );
-    setCacheEntry(cacheKey, limited);
+    cache.set(cacheKey, limited);
     return limited;
   } catch (err) {
     console.error('[Subsume TMDB] Multi-search failed', err);

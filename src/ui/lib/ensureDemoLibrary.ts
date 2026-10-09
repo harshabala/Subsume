@@ -1,10 +1,8 @@
 import { sendMessage } from '@/shared/messages';
-import { MessageType, LibraryItem, MediaItem } from '@/shared/types';
+import { MessageType } from '@/shared/types';
+import type { JoinedItem } from '../components/archive/types';
 
-export interface JoinedLibraryItem {
-  library: LibraryItem;
-  media: MediaItem;
-}
+export type JoinedLibraryItem = JoinedItem;
 
 /**
  * Loads the current library. Does **not** auto-seed demo titles.

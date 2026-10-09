@@ -1,7 +1,7 @@
 import { render, h } from 'preact';
 import { useEffect, useState, useRef } from 'preact/hooks';
 import { sendMessage } from '../shared/messages';
-import { MessageType, UserPreferences, LibraryItem, MediaItem, SanctuaryIntent, LibraryStatus } from '../shared/types';
+import { MessageType, UserPreferences, MediaItem, SanctuaryIntent, LibraryStatus } from '../shared/types';
 import { applyThemePreference, applyCinemaAtmosphere, watchSystemTheme } from '../shared/theme';
 import { DEFAULT_EMOTIONS, type EmotionalSpectrum } from '../shared/emotions';
 import { EmotionalSliders } from './components/EmotionalSliders';
@@ -31,11 +31,7 @@ import '../shared/tokens.css';
 import './styles/popup.css';
 import './styles/emotional-components.css';
 import './components/inline-notice.css';
-
-interface JoinedItem {
-  library: LibraryItem;
-  media: MediaItem;
-}
+import type { JoinedItem } from './components/archive/types';
 
 function openSanctuary(page?: string) {
   const url = chrome.runtime.getURL(`ui/index.html${page ? `?page=${page}` : ''}`);

@@ -14,13 +14,16 @@ import type {
   SourceProvenance,
 } from '@/shared/catalogTypes';
 import { isValidIsbn, normalizeIsbn, toIsbn13 } from '@/shared/isbn';
+import { BoundedTtlCache } from './ttlCache';
+import { fetchJsonWithTimeout } from './fetchJson';
 
 const OL_BASE = 'https://openlibrary.org';
 const COVERS_BASE = 'https://covers.openlibrary.org';
 const REQUEST_TIMEOUT_MS = 12_000;
 const CACHE_TTL_MS = 1000 * 60 * 60 * 6; // 6 hours
 
-const CACHE = new Map<string, { data: unknown; timestamp: number }>();
+export const MAX_CACHE_SIZE = 500;
+const cache = new BoundedTtlCache<unknown>(MAX_CACHE_SIZE, CACHE_TTL_MS);
 
 export interface BookSearchQuery {
   query: string;
@@ -147,22 +150,16 @@ interface OlAuthorWorksResponse {
 // ─── Cache ──────────────────────────────────────────────────────────────────
 
 function cacheGet<T>(key: string): T | undefined {
-  const entry = CACHE.get(key);
-  if (!entry) return undefined;
-  if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
-    CACHE.delete(key);
-    return undefined;
-  }
-  return entry.data as T;
+  return cache.get(key) as T | undefined;
 }
 
 function cacheSet(key: string, data: unknown): void {
-  CACHE.set(key, { data, timestamp: Date.now() });
+  cache.set(key, data);
 }
 
 /** Test helper — clears in-memory cache. */
 export function clearOpenLibraryCache(): void {
-  CACHE.clear();
+  cache.clear();
 }
 
 // ─── ID helpers ─────────────────────────────────────────────────────────────
@@ -262,22 +259,7 @@ export function coverUrlFromIsbn(isbn: string, size: 'S' | 'M' | 'L' = 'L'): str
 // ─── Fetch with timeout ─────────────────────────────────────────────────────
 
 async function fetchJson<T>(url: string): Promise<T | null> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-  try {
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: { Accept: 'application/json' },
-    });
-    if (res.status === 404) return null;
-    if (!res.ok) return null;
-    return (await res.json()) as T;
-  } catch {
-    // AbortError, network failure, parse error — graceful empty
-    return null;
-  } finally {
-    clearTimeout(timer);
-  }
+  return fetchJsonWithTimeout<T>(url, REQUEST_TIMEOUT_MS);
 }
 
 // ─── Mapping helpers ────────────────────────────────────────────────────────
